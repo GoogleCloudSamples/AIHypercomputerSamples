@@ -12,6 +12,8 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
+set -euo pipefail
+
 # [START hypercomputer_tpu_infer_qwen2_7b_res_setup]
 gcloud compute tpus tpu-vm create $TPU_NAME \
     --zone=$ZONE \

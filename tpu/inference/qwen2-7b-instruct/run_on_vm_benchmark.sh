@@ -12,6 +12,8 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
+set -euo pipefail
+
 # [START hypercomputer_tpu_infer_qwen2_7b_run_benchmark]
 export DOCKER_URI="vllm/vllm-tpu:v0.18.0"
 export CONTAINER_NAME="${USER}-vllm"

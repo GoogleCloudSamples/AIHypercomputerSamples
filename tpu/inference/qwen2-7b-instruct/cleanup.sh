@@ -12,6 +12,8 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
+set -euo pipefail
+
 # [START hypercomputer_tpu_infer_qwen2_7b_res_cleanup]
 gcloud compute tpus tpu-vm delete $TPU_NAME --zone $ZONE --project $PROJECT_ID --quiet
 # [END hypercomputer_tpu_infer_qwen2_7b_res_cleanup]

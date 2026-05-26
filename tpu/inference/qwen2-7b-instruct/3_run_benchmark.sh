@@ -12,6 +12,8 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
+set -euo pipefail
+
 gcloud compute tpus tpu-vm scp run_on_vm_benchmark.sh "${TPU_NAME}":~/ --zone $ZONE --project $PROJECT_ID
 
 gcloud compute tpus tpu-vm ssh $TPU_NAME --zone $ZONE --project $PROJECT_ID --command="HF_TOKEN=$HF_TOKEN bash ~/run_on_vm_benchmark.sh"
