@@ -6,6 +6,34 @@ This repo supports the following types of workloads:
 * Inference
 * Post-training
 
+## Repository structure
+The repository is organized as follows:
+
+```
+.
+├── gpu
+│   ├── inference
+│   ├── training
+│   └── tuning
+└── tpu
+    ├── inference
+    ├── training
+    └── tuning
+```
+
+In those directories you can find full end-to-end code samples that are periodically
+validated.
+
+### Sample structure
+
+Each sample consists of following files:
+
+* `0_env.sh`: Containing all necessary starting environment variables.
+* `cleanup.sh`: Containing instructions to terminate all created resources.
+* `metadata.yaml`: Mandatory metadata for the sample testing, specifically the `expected_runtime` to prevent indefinite execution.
+* `<N>_<step_name>.sh`: Code sample proper body divided into separate files.
+* `*_validation.sh`: Includes instructions to dump necessary logs for debugging and verify success (e.g., using `grep` to check for specific output).
+
 ## Official docs
 [AI Hypercomputer official documentation](https://docs.cloud.google.com/ai-hypercomputer/docs/overview)
 
@@ -13,4 +41,3 @@ This repo contains the sample code that is used in the official [AI Hypercompute
 
 ## How to contribute
 This project isn't currently accepting contributions.
-
