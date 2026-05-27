@@ -14,8 +14,9 @@
 
 # [START hypercomputer_tpu_infer_qwen2_7b_env]
 export PROJECT_ID=<PROJECT>
-export TPU_NAME=Qwen2-7B-tutorial
+export TPU_NAME=<TPU_NAME>
 export ZONE=<ZONE>
-export QR_ID=Qwen2-7B-qr
+export QR_ID=<QR_ID>
+export TPU_TYPE=<TPU_TYPE>
 export RESERVATION=<RESERVATION>
 # [END hypercomputer_tpu_infer_qwen2_7b_env]

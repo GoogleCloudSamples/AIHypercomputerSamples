@@ -18,7 +18,7 @@ set -euo pipefail
 gcloud compute tpus tpu-vm create $TPU_NAME \
     --zone=$ZONE \
     --project $PROJECT_ID \
-    --accelerator-type=v6e-4 \
+    --accelerator-type=$TPU_TYPE \
     --version=v2-alpha-tpuv6e \
     --provisioning-model=reservation-bound \
     --reservation=$RESERVATION

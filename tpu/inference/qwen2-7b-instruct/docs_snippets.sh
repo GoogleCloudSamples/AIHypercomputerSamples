@@ -17,7 +17,7 @@ gcloud alpha compute tpus queued-resources create $QR_ID \
  --node-id $TPU_NAME \
  --project $PROJECT_ID \
  --zone $ZONE \
- --accelerator-type v6e-4 \
+ --accelerator-type $TPU_TYPE \
  --runtime-version v2-alpha-tpuv6e
  # [END hypercomputer_tpu_infer_qwen2_7b_qr_setup]
 
