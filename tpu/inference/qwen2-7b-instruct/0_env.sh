@@ -16,7 +16,6 @@
 export PROJECT_ID=<PROJECT>
 export TPU_NAME=<TPU_NAME>
 export ZONE=<ZONE>
-export QR_ID=<QR_ID>
 export TPU_TYPE=<TPU_TYPE>
 export RESERVATION=<RESERVATION>
 # [END hypercomputer_tpu_infer_qwen2_7b_env]

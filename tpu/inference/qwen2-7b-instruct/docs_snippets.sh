@@ -12,6 +12,14 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
+# [START hypercomputer_tpu_infer_qwen2_7b_qr_env]
+export PROJECT_ID=<PROJECT>
+export TPU_NAME=<TPU_NAME>
+export ZONE=<ZONE>
+export QR_ID=<QR_ID>
+export TPU_TYPE=<TPU_TYPE>
+# [END hypercomputer_tpu_infer_qwen2_7b_qr_env]
+
 # [START hypercomputer_tpu_infer_qwen2_7b_qr_setup]
 gcloud alpha compute tpus queued-resources create $QR_ID \
  --node-id $TPU_NAME \
