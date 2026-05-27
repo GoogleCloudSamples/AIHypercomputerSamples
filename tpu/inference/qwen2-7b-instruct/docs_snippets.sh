@@ -46,4 +46,4 @@ gcloud alpha compute tpus queued-resources delete $QR_ID \
   --project=$PROJECT_ID \
   --zone=$ZONE \
   --force
-# [START hypercomputer_tpu_infer_qwen2_7b_qr_cleanup]
+# [END hypercomputer_tpu_infer_qwen2_7b_qr_cleanup]
