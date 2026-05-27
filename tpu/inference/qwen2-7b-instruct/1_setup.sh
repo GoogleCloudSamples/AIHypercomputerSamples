@@ -24,6 +24,13 @@ gcloud compute tpus tpu-vm create $TPU_NAME \
     --reservation=$RESERVATION
 # [END hypercomputer_tpu_infer_qwen2_7b_res_setup]
 
+LIMIT=60
+count=0
 while ! gcloud compute tpus tpu-vm describe $TPU_NAME --project $PROJECT_ID --zone $ZONE | grep -q 'state: READY'; do
+  if [ $count -ge $LIMIT ]; then
+    echo "Timeout waiting for TPU to become READY." >&2
+    exit 1
+  fi
   sleep 10
+  count=$((count+1))
 done

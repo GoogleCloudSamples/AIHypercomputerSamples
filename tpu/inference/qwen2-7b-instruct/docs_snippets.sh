@@ -21,8 +21,15 @@ gcloud alpha compute tpus queued-resources create $QR_ID \
  --runtime-version v2-alpha-tpuv6e
  # [END hypercomputer_tpu_infer_qwen2_7b_qr_setup]
 
+LIMIT=60
+count=0
 while ! gcloud compute tpus queued-resources describe $QR_ID --project $PROJECT_ID --zone $ZONE | grep -q 'state: ACTIVE'; do
+  if [ $count -ge $LIMIT ]; then
+    echo "Timeout waiting for queued resource to become ACTIVE." >&2
+    exit 1
+  fi
   sleep 10
+  count=$((count+1))
 done
 
 # [START hypercomputer_tpu_infer_qwen2_7b_qr_describe]

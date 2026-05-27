@@ -38,6 +38,10 @@ sudo docker run -d --name "${CONTAINER_NAME}" \
 # [END hypercomputer_tpu_infer_qwen2_7b_start_container]
 
 while ! sudo docker logs "${CONTAINER_NAME}" 2>&1 | grep -q 'Application startup complete.'; do
+  if ! sudo docker ps --format '{{.Names}}' | grep -q "^${CONTAINER_NAME}$"; then
+    echo "Container ${CONTAINER_NAME} has stopped or failed to start." >&2
+    exit 1
+  fi
   sleep 10
 done
 
