@@ -14,7 +14,7 @@
 
 set -euo pipefail
 
-
+export MODEL_NAME="Qwen/Qwen2-7B-Instruct"
 # [START hypercomputer_tpu_infer_qwen2_7b_start_container]
 export DOCKER_URI="vllm/vllm-tpu:v0.18.0"
 export CONTAINER_NAME="${USER}-vllm"
@@ -28,7 +28,7 @@ sudo docker run -d --name "${CONTAINER_NAME}" \
     -e "HF_HOME=/dev/shm" \
     -e "HF_TOKEN=${HF_TOKEN}" \
     -p 8000:8000 "${DOCKER_URI}" \
-        vllm serve Qwen/Qwen2-7B-Instruct \
+        vllm serve ${MODEL_NAME} \
             --seed 42 \
             --gpu-memory-utilization 0.98 \
             --max-num-batched-tokens 1024 \
@@ -50,7 +50,6 @@ sudo docker exec "${CONTAINER_NAME}" \
   curl http://localhost:8000/v1/completions \
     -H "Content-Type: application/json" \
     -d '{
-        "model": "Qwen/Qwen2-7B-Instruct",
         "prompt": "The future of AI is",
         "max_tokens": 200,
         "temperature": 0
