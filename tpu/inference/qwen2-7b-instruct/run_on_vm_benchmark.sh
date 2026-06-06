@@ -14,7 +14,6 @@
 
 set -euo pipefail
 
-
 export DOCKER_URI="vllm/vllm-tpu:v0.18.0"
 export CONTAINER_NAME="${USER}-vllm"
 export MAX_MODEL_LEN=4096
