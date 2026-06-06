@@ -19,9 +19,9 @@ export CONTAINER_NAME="${USER}-vllm"
 export MAX_MODEL_LEN=4096
 export TP=1 # number of chips
 
-# [START hypercomputer_tpu_infer_qwen2_7b_run_benchmark_pip]
+# [START hypercomputer_tpu_infer_qwen2_7b_run_pip]
 sudo docker exec "${CONTAINER_NAME}" pip install datasets
-# [END hypercomputer_tpu_infer_qwen2_7b_run_benchmark_pip]
+# [END hypercomputer_tpu_infer_qwen2_7b_run_pip]
 
 # [START hypercomputer_tpu_infer_qwen2_7b_run_benchmark]
 sudo docker exec "${CONTAINER_NAME}" \
