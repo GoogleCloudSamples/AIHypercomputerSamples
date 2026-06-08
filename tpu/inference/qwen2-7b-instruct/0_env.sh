@@ -16,6 +16,7 @@
 export PROJECT_ID=<PROJECT>
 export TPU_NAME=<TPU_NAME>
 export ZONE=<ZONE>
-export TPU_TYPE=<TPU_TYPE>
+export TPU_TYPE=v6e-8
+export HF_TOKEN=<HF_TOKEN>
 export RESERVATION=<RESERVATION>
 # [END hypercomputer_tpu_infer_qwen2_7b_env]
