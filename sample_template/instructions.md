@@ -1,7 +1,7 @@
 # Preparing new code sample
 
 ## Required files
-A proper code sample is build out of following files:
+A proper code sample is built out of the following files:
 
 * `0_env.sh`: Containing all necessary starting environment variables.
 * `cleanup.sh`: Containing instructions to terminate all created resources.
@@ -31,7 +31,7 @@ while ! gcloud compute tpus tpu-vm describe $TPU_NAME --project $PROJECT_ID --zo
 done 
 ```
 
-* Allow for easy reusability of your code by making use of environmental variables. For example, don't hardcode model
+* Allow for easy reusability of your code by making use of environment variables. For example, don't hardcode model
   names, regions, zones or machine types.
 * Use `--project $PROJECT_ID` flag for your `gcloud` commands, to be explicit about which project is used.
 
@@ -47,7 +47,7 @@ Typically, region tags for Python and shell scripts look the same - they are a c
 # [END hypercomputer_<region_tag_name>]
 ```
 
-To read more about region tags in [Sample Style Guide](https://googlecloudplatform.github.io/samples-style-guide/).
+Read more about region tags in the [Sample Style Guide](https://googlecloudplatform.github.io/samples-style-guide/).
 
 ## Prepare README file
 

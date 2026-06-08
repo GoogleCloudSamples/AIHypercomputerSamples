@@ -39,7 +39,7 @@ Each sample consists of following files:
 To create a new sample follow these steps:
 1. Prepare a step by step script that demonstrates what you want to do.
 2. Break it up into logical steps and save it in separate shell scripts.
-3. Add neccessary wait commands or wait loops, so the scripts can be reliably executed without human in the loop.
+3. Add necessary wait commands or wait loops, so the scripts can be reliably executed without human in the loop.
 4. Prepare a new Pull Request, where you provide an example output log from your terminal of you running the scripts.
 
 ## Official docs

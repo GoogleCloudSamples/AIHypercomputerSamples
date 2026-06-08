@@ -14,5 +14,5 @@
 
 set -euo pipefail
 
-# Set your environmental variables here.
+# Set your environment variables here.
 # DO NOT PUT ANY SECRET VALUES HERE!
