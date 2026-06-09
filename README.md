@@ -34,6 +34,14 @@ Each sample consists of following files:
 * `<N>_<step_name>.sh`: Code sample proper body divided into separate files.
 * `*_validation.sh`: Includes instructions to dump necessary logs for debugging and verify success (e.g., using `grep` to check for specific output).
 
+## Creating new sample
+
+To create a new sample follow these steps:
+1. Prepare a step by step script that demonstrates what you want to do.
+2. Break it up into logical steps and save it in separate shell scripts.
+3. Add necessary wait commands or wait loops, so the scripts can be reliably executed without human in the loop.
+4. Prepare a new Pull Request, where you provide an example output log from your terminal of you running the scripts.
+
 ## Official docs
 [AI Hypercomputer official documentation](https://docs.cloud.google.com/ai-hypercomputer/docs/overview)
 
