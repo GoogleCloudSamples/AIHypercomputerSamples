@@ -1,0 +1,59 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: finetune-job
+  namespace: default
+spec:
+  backoffLimit: 2
+  template:
+    metadata:
+      annotations:
+        kubectl.kubernetes.io/default-container: finetuner
+    spec:
+      terminationGracePeriodSeconds: 600
+      containers:
+      - name: finetuner
+        image: $IMAGE_URL
+        command: ["accelerate","launch"]
+        args:
+        - "--config_file"
+        - "accel_fsdp_gemma3_config.yaml"
+        - "finetune.py"
+        - "--model_id"
+        - "google/gemma-3-12b-pt"
+        - "--output_dir"
+        - "gemma-12b-text-to-sql"
+        - "--per_device_train_batch_size"
+        - "8"
+        - "--gradient_accumulation_steps"
+        - "8"
+        - "--num_train_epochs"
+        - "3"
+        - "--learning_rate"
+        - "1e-5"
+        - "--save_strategy"
+        - "steps"
+        - "--save_steps"
+        - "100"
+        resources:
+          limits:
+            nvidia.com/gpu: "8"
+        env:
+        - name: HF_TOKEN
+          valueFrom:
+            secretKeyRef:
+              name: hf-secret
+              key: hf_api_token
+        volumeMounts:
+        - mountPath: /dev/shm
+          name: dshm
+      volumes:
+      - name: dshm
+        emptyDir:
+          medium: Memory
+      nodeSelector:
+        cloud.google.com/gke-accelerator: nvidia-b200
+        cloud.google.com/reservation-name: $RESERVATION
+        cloud.google.com/reservation-affinity: "specific"
+        cloud.google.com/gke-gpu-driver-version: latest
+      restartPolicy: OnFailure
