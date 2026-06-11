@@ -1,3 +1,4 @@
+# [START hypercomputer_gpu_tune_gemma3_gke_finetune]
 import torch
 import argparse
 import subprocess
@@ -139,3 +140,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+# [END hypercomputer_gpu_tune_gemma3_gke_finetune]
