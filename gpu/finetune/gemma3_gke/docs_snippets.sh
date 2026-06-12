@@ -17,23 +17,6 @@ mkdir llm-finetuning-gemma
 cd llm-finetuning-gemma
 # [END hypercomputer_gpu_tune_gemma3_gke_setup_manifest_dir]
 
-# [START hypercomputer_gpu_tune_gemma3_gke_iam]
-declare -a ROLES=(
-  "roles/compute.admin"
-  "roles/storage.admin"
-  "roles/iam.serviceAccountUser"
-  "roles/artifactregistry.admin"
-  "roles/cloudbuild.builds.editor"
-  "roles/serviceusage.serviceUsageAdmin"
-)
-
-for i in "${ROLES[@]}"; do
-  gcloud projects add-iam-policy-binding "${PROJECT_ID}" \
-    --member="user:${USER_EMAIL}" \
-    --role="$i"
-done
-# [END hypercomputer_gpu_tune_gemma3_gke_iam]
-
 # [START hypercomputer_gpu_tune_gemma3_gke_monitor_pods]
 watch kubectl get pods
 # [END hypercomputer_gpu_tune_gemma3_gke_monitor_pods]
