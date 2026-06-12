@@ -34,13 +34,6 @@ for i in "${ROLES[@]}"; do
 done
 # [END hypercomputer_gpu_tune_gemma3_gke_iam]
 
-# [START hypercomputer_gpu_tune_gemma3_gke_create_repo]
-gcloud artifacts repositories create gemma \
-    --repository-format=docker \
-    --location="${REGION}" \
-    --description="Repository for Gemma fine tuning workload containers"
-# [END hypercomputer_gpu_tune_gemma3_gke_create_repo]
-
 # [START hypercomputer_gpu_tune_gemma3_gke_monitor_pods]
 kubectl get pods
 # [END hypercomputer_gpu_tune_gemma3_gke_monitor_pods]
