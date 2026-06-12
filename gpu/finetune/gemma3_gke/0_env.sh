@@ -14,10 +14,12 @@
 
 # [START hypercomputer_gpu_tune_gemma3_gke_env]
 export PROJECT_ID="<PROJECT_ID>"
-export USER_EMAIL="<USER_EMAIL>" 
-export CLUSTER_NAME="gemma3-finetune-cluster"
-export REGION="us-central1"
+export CLUSTER_NAME="<CLUSTER_NAME>"
+export REGION="<REGION>"
 export RESERVATION="<RESERVATION_ID>"
-export HF_TOKEN="<HF_TOKEN>"
-export IMAGE_URL="us-docker.pkg.dev/${PROJECT_ID}/gemma/finetune-gemma-gpu:1.0.0"
+export HF_TOKEN="<HUGGING_FACE_TOKEN>"
+export NETWORK="default"
+
+gcloud config set project "${PROJECT_ID}"
+gcloud config set billing/quota_project "${PROJECT_ID}"
 # [END hypercomputer_gpu_tune_gemma3_gke_env]
