@@ -1,5 +1,7 @@
+# [START hypercomputer_gpu_tune_gemma3_gke_cloudbuild_yaml]
 steps:
 - name: 'gcr.io/cloud-builders/docker'
   args: [ 'build', '-t', 'us-docker.pkg.dev/$PROJECT_ID/gemma/finetune-gemma-gpu:1.0.0', '.' ]
 images:
 - 'us-docker.pkg.dev/$PROJECT_ID/gemma/finetune-gemma-gpu:1.0.0'
+# [END hypercomputer_gpu_tune_gemma3_gke_cloudbuild_yaml]
