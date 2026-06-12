@@ -1,3 +1,4 @@
+# [START hypercomputer_gpu_tune_gemma3_gke_fsdp_config]
 compute_environment: LOCAL_MACHINE
 debug: false
 distributed_type: FSDP
@@ -23,3 +24,4 @@ tpu_env: []
 tpu_use_cluster: false
 tpu_use_sudo: false
 use_cpu: false
+# [END hypercomputer_gpu_tune_gemma3_gke_fsdp_config]
