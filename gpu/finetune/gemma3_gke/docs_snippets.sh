@@ -42,11 +42,15 @@ watch kubectl get pods
 kubectl logs job.batch/finetune-job -f
 # [END hypercomputer_gpu_tune_gemma3_gke_monitor_logs]
 
+# [START hypercomputer_gpu_tune_gemma3_gke_view_metrics]
+echo "https://console.cloud.google.com/kubernetes/clusters/details/${CLUSTER_REGION}/${CLUSTER_NAME}/observability?mods=monitoring_api_prod&project={{"<var>PROJECT_NAME</var>"}}&pageState=("timeRange":("duration":"PT1H"),"nav":("section":"gpu"),"groupBy":("groupByType":"namespacesTop5"))"
+# [END hypercomputer_gpu_tune_gemma3_gke_view_metrics]
+
 # [START hypercomputer_gpu_tune_gemma3_gke_delete_job]
 kubectl delete job finetune-job
 # [END hypercomputer_gpu_tune_gemma3_gke_delete_job]
 
 # [START hypercomputer_gpu_tune_gemma3_gke_delete_cluster]
 gcloud container clusters delete "${CLUSTER_NAME}" \
-    --region="${REGION}"
+    --region="${CLUSTER_REGION}"
 # [END hypercomputer_gpu_tune_gemma3_gke_delete_cluster]
