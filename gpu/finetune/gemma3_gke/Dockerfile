@@ -1,3 +1,4 @@
+# [START hypercomputer_gpu_tune_gemma3_gke_dockerfile]
 FROM nvidia/cuda:12.8.1-cudnn-devel-ubuntu24.04
 RUN apt-get update && \
     apt-get -y install python3 python3-dev gcc python3-pip python3-venv git curl vim
@@ -21,3 +22,4 @@ RUN pip3 install \
 COPY finetune.py /finetune.py
 COPY accel_fsdp_gemma3_config.yaml /accel_fsdp_gemma3_config.yaml
 CMD accelerate launch --config_file accel_fsdp_gemma3_config.yaml finetune.py
+# [END hypercomputer_gpu_tune_gemma3_gke_dockerfile]
