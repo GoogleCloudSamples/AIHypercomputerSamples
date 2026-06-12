@@ -35,11 +35,11 @@ done
 # [END hypercomputer_gpu_tune_gemma3_gke_iam]
 
 # [START hypercomputer_gpu_tune_gemma3_gke_monitor_pods]
-kubectl get pods
+watch kubectl get pods
 # [END hypercomputer_gpu_tune_gemma3_gke_monitor_pods]
 
 # [START hypercomputer_gpu_tune_gemma3_gke_monitor_logs]
-# kubectl logs job.batch/finetune-job -f
+kubectl logs job.batch/finetune-job -f
 # [END hypercomputer_gpu_tune_gemma3_gke_monitor_logs]
 
 # [START hypercomputer_gpu_tune_gemma3_gke_delete_job]
