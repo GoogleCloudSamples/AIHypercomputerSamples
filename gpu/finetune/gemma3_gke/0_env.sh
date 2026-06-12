@@ -18,6 +18,7 @@ export CLUSTER_NAME="<CLUSTER_NAME>"
 export CLUSTER_REGION="<CLUSTER_REGION>"
 export RESERVATION="<RESERVATION_ID>"
 export HF_TOKEN="<HUGGING_FACE_TOKEN>"
+export ARTIFACT_REPO_LOCATION="<LOCATION>"
 export NETWORK="default"
 
 gcloud config set project "${PROJECT_ID}"

@@ -29,6 +29,6 @@ kubectl create secret generic hf-secret \
 # [START hypercomputer_gpu_tune_gemma3_gke_create_repo]
 gcloud artifacts repositories create gemma \
     --repository-format=docker \
-    --location="${CLUSTER_REGION}" \
+    --location="${ARTIFACT_REPO_LOCATION}" \
     --description="Repository for Gemma fine tuning workload containers" || true
 # [END hypercomputer_gpu_tune_gemma3_gke_create_repo]
