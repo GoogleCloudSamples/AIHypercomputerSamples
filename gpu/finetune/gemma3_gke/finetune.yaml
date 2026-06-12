@@ -1,3 +1,4 @@
+# [START hypercomputer_gpu_tune_gemma3_gke_job_yaml]
 apiVersion: batch/v1
 kind: Job
 metadata:
@@ -57,3 +58,4 @@ spec:
         cloud.google.com/reservation-affinity: "specific"
         cloud.google.com/gke-gpu-driver-version: latest
       restartPolicy: OnFailure
+# [END hypercomputer_gpu_tune_gemma3_gke_job_yaml]
