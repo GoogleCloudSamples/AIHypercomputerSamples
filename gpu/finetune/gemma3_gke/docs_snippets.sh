@@ -11,8 +11,12 @@
 #  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
-#
-#
+# 
+# [START hypercomputer_gpu_tune_gemma3_gke_setup_manifest_dir]
+mkdir llm-finetuning-gemma
+cd llm-finetuning-gemma
+# [END hypercomputer_gpu_tune_gemma3_gke_setup_manifest_dir]
+
 # [START hypercomputer_gpu_tune_gemma3_gke_iam]
 declare -a ROLES=(
   "roles/compute.admin"
@@ -30,38 +34,12 @@ for i in "${ROLES[@]}"; do
 done
 # [END hypercomputer_gpu_tune_gemma3_gke_iam]
 
-# [START hypercomputer_gpu_tune_gemma3_gke_create_cluster]
-gcloud container clusters create-auto "${CLUSTER_NAME}" \
-    --project="${PROJECT_ID}" \
-    --location="${REGION}" \
-    --release-channel=rapid
-# [END hypercomputer_gpu_tune_gemma3_gke_create_cluster]
-
-# [START hypercomputer_gpu_tune_gemma3_gke_get_credentials]
-gcloud container clusters get-credentials "${CLUSTER_NAME}" \
-    --location="${REGION}"
-# [END hypercomputer_gpu_tune_gemma3_gke_get_credentials]
-
-# [START hypercomputer_gpu_tune_gemma3_gke_create_secret]
-kubectl create secret generic hf-secret \
-    --from-literal=hf_api_token="${HF_TOKEN}" \
-    --dry-run=client -o yaml | kubectl apply -f -
-# [END hypercomputer_gpu_tune_gemma3_gke_create_secret]
-
 # [START hypercomputer_gpu_tune_gemma3_gke_create_repo]
 gcloud artifacts repositories create gemma \
     --repository-format=docker \
     --location="${REGION}" \
     --description="Repository for Gemma fine tuning workload containers"
 # [END hypercomputer_gpu_tune_gemma3_gke_create_repo]
-
-# [START hypercomputer_gpu_tune_gemma3_gke_build_submit]
-gcloud builds submit .
-# [END hypercomputer_gpu_tune_gemma3_gke_build_submit]
-
-# [START hypercomputer_gpu_tune_gemma3_gke_deploy_job]
-envsubst < finetune.yaml | kubectl apply -f -
-# [END hypercomputer_gpu_tune_gemma3_gke_deploy_job]
 
 # [START hypercomputer_gpu_tune_gemma3_gke_monitor_pods]
 kubectl get pods
