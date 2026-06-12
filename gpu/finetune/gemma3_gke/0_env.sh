@@ -15,7 +15,7 @@
 # [START hypercomputer_gpu_tune_gemma3_gke_env]
 export PROJECT_ID="<PROJECT_ID>"
 export CLUSTER_NAME="<CLUSTER_NAME>"
-export REGION="<REGION>"
+export CLUSTER_REGION="<CLUSTER_REGION>"
 export RESERVATION="<RESERVATION_ID>"
 export HF_TOKEN="<HUGGING_FACE_TOKEN>"
 export NETWORK="default"
