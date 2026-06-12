@@ -9,7 +9,12 @@ set -x
 gcloud builds submit .
 # [END hypercomputer_gpu_tune_gemma3_gke_build_submit]
 
-# 2. Deploy Job
+# 2. Set image name for the job template
+# [START hypercomputer_gpu_tune_gemma3_gke_set_image_url]
+export IMAGE_URL="${CLUSTER_REGION}-docker.pkg.dev/${PROJECT_ID}/gemma/finetune-gemma-gpu:1.0.0"
+# [END hypercomputer_gpu_tune_gemma3_gke_set_image_url]
+
+# 3. Deploy Job
 # [START hypercomputer_gpu_tune_gemma3_gke_deploy_job]
 envsubst < finetune.yaml | kubectl apply -f -
 # [END hypercomputer_gpu_tune_gemma3_gke_deploy_job]
