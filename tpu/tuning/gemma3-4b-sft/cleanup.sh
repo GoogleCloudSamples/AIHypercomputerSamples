@@ -17,5 +17,5 @@ set -euo pipefail
 
 # Remove all resources created by your sample.
 # [START hypercomputer_tpu_tune_gemma3_sft_cleanup]
-gcloud alpha compute tpus tpu-vm delete $NAME --zone=$ZONE --project=$PROJECT
+gcloud alpha compute tpus tpu-vm delete $NAME --zone=$ZONE --project=$PROJECT --quiet
 # [END hypercomputer_tpu_tune_gemma3_sft_cleanup]

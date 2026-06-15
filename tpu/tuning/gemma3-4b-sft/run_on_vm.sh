@@ -37,11 +37,12 @@ uv pip install maxtext[tpu-post-train]==0.2.2 --resolution=lowest
 # [END hypercomputer_tpu_tune_gemma3_sft_maxtext_4]
 
 # [START hypercomputer_tpu_tune_gemma3_sft_maxtext_5]
-install_maxtext_tpu_post_train_extra_deps
+#install_maxtext_tpu_post_train_extra_deps
+install_tpu_post_train_extra_deps
 # [END hypercomputer_tpu_tune_gemma3_sft_maxtext_5]
 
 # [START hypercomputer_tpu_tune_gemma3_sft_tune_0_env]
-export HF_TOKEN=YOUR_HF_TOKEN
+export HF_TOKEN=$YOUR_HF_TOKEN
 export MODEL_NAME='gemma3-4b'
 export MODEL_CHECKPOINT_DIRECTORY=/dev/shm/$MODEL_NAME/mt-format/
 export USE_PATHWAYS=0 # Set to 1 for Pathways, 0 for McJAX
@@ -54,7 +55,7 @@ python3 -m maxtext.checkpoint_conversion.to_maxtext \
     hf_access_token=${HF_TOKEN?} \
     base_output_directory=${MODEL_CHECKPOINT_DIRECTORY?} \
     scan_layers=True \
-    use_multimodal=True \
+    use_multimodal=False \
     hardware=cpu \
     skip_jax_distributed_system=true \
     checkpoint_storage_use_zarr3=$((1 - USE_PATHWAYS)) \
@@ -102,6 +103,6 @@ python3 -m maxtext.checkpoint_conversion.to_huggingface \
     load_parameters_path=$POST_TRAIN_PATH \
     base_output_directory=$HF_EXPORT \
     scan_layers=True \
-    use_multimodal=True \
+    use_multimodal=False \
     weight_dtype=bfloat16
 # [END hypercomputer_tpu_tune_gemma3_sft_tune_5_convert]
