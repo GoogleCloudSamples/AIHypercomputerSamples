@@ -73,22 +73,22 @@ export PER_DEVICE_BATCH_SIZE=1
 # -- Dataset configuration --
 export DATASET_NAME="HuggingFaceH4/ultrachat_200k"
 export TRAIN_SPLIT="train_sft"
-export TRAIN_DATA_COLUMNS=['messages']
+export TRAIN_DATA_COLUMNS="['messages']"
 
 export MAXTEXT_CKPT_PATH=$MODEL_CHECKPOINT_DIRECTORY/0/items
 # [END hypercomputer_tpu_tune_gemma3_sft_tune_2_env]
 
 # [START hypercomputer_tpu_tune_gemma3_sft_tune_3_run]
 python3 -m maxtext.trainers.post_train.sft.train_sft \
-    run_name=${RUN_NAME?} \
-    base_output_directory=${BASE_OUTPUT_DIRECTORY?} \
-    model_name=${MODEL_NAME?} \
-    load_parameters_path=${MAXTEXT_CKPT_PATH?} \
-    per_device_batch_size=${PER_DEVICE_BATCH_SIZE?} \
-    steps=${STEPS?} \
-    hf_path=${DATASET_NAME?} \
-    train_split=${TRAIN_SPLIT?} \
-    train_data_columns=${TRAIN_DATA_COLUMNS?} \
+    run_name="${RUN_NAME?}" \
+    base_output_directory="${BASE_OUTPUT_DIRECTORY?}" \
+    model_name="${MODEL_NAME?}" \
+    load_parameters_path="${MAXTEXT_CKPT_PATH?}" \
+    per_device_batch_size="${PER_DEVICE_BATCH_SIZE?}" \
+    steps="${STEPS?}" \
+    hf_path="${DATASET_NAME?}" \
+    train_split="${TRAIN_SPLIT?}" \
+    train_data_columns="${TRAIN_DATA_COLUMNS?}" \
     profiler=xplane
 # [END hypercomputer_tpu_tune_gemma3_sft_tune_3_run]
 
