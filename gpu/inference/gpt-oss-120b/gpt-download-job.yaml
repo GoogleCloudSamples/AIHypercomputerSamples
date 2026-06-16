@@ -1,0 +1,67 @@
+# [START hypercomputer_gpu_infer_gptoss120b_job_yaml]
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: gpt-download-job
+  namespace: default
+spec:
+  template:
+    metadata:
+      labels:
+        app: gpt-oss-downloader
+      annotations:
+        gke-gcsfuse/volumes: "true"
+    spec:
+      restartPolicy: OnFailure
+      containers:
+      - name: downloader
+        image: python:3.11-slim
+        resources:
+          requests:
+            cpu: "4"
+            memory: "16Gi"
+          limits:
+            cpu: "4"
+            memory: "16Gi"
+        env:
+        - name: HUGGING_FACE_HUB_TOKEN
+          valueFrom:
+            secretKeyRef:
+              name: hf-secret
+              key: hf_token
+        - name: HF_HUB_ENABLE_HF_TRANSFER
+          value: "0"
+        - name: HF_HOME
+          value: "/tmp/hf_cache"
+        command: ["/bin/sh", "-c"]
+        args:
+        - |
+          echo "Installing Hugging Face Hub library..."
+          pip install -U "huggingface_hub"
+          
+          echo "Beginning model snapshot download to GCS Fuse..."
+          hf download openai/gpt-oss-120b \
+            --token "$HUGGING_FACE_HUB_TOKEN" \
+            --local-dir /mnt/gcs/gpt-oss-120b \
+            --max-workers 1
+
+          DOWNLOAD_STATUS=$?
+
+          if [ $DOWNLOAD_STATUS -eq 0 ]; then
+            echo "Download Complete!"
+          else 
+            echo "ERROR: Model download failed with exit code $DOWNLOAD_STATUS"
+            exit $DOWNLOAD_STATUS
+          fi
+
+        volumeMounts:
+        - mountPath: /mnt/gcs
+          name: gcs-bucket-volume
+      volumes:
+      - name: gcs-bucket-volume
+        csi:
+          driver: gcsfuse.csi.storage.gke.io
+          volumeAttributes:
+            bucketName: $GCS_BUCKET
+            mountOptions: "implicit-dirs"
+# [END hypercomputer_gpu_infer_gptoss120b_job_yaml]
