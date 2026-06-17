@@ -21,24 +21,23 @@ set -euo pipefail
 declare -r JOB_NAME="finetune-job"
 
 echo "Waiting for Job ${JOB_NAME} to complete..."
-kubectl wait --for=condition=complete job/${JOB_NAME} --timeout=14400s || {
+kubectl wait --for=condition=complete "job/${JOB_NAME}" --timeout=14400s || {
     echo "Job failed or timed out. Fetching status and logs..."
-    kubectl describe job ${JOB_NAME}
-    kubectl logs job.batch/${JOB_NAME} || true
+    kubectl describe job "${JOB_NAME}"
+    kubectl logs "jobs/${JOB_NAME}" || true
     exit 1
 }
 
 echo "Job completed. Fetching full logs for verification..."
-kubectl logs "job.batch/${JOB_NAME}"
+declare -r LOG_FILE="$(mktemp)"
+kubectl logs "jobs/${JOB_NAME}" > "${LOG_FILE}"
+trap 'rm -f "${LOG_FILE}"' EXIT
 
-declare -r TRAINING_COUNT="$(kubectl logs "job.batch/${JOB_NAME}" \
-    grep -o "Training finished." \
-    wc -l)"
-
+# Count how many times "Training finished." appears
+declare -r TRAINING_COUNT="$(grep -o "Training finished." "${LOG_FILE}" | wc -l)"
 if [[ "${TRAINING_COUNT}" -ne 8 ]]; then
-    echo "Validation Failed!"
+    echo "Validation Failed! Count = ${TRAINING_COUNT}"
     exit 1
 fi
 
 echo "Validation Succeeded!"
-
