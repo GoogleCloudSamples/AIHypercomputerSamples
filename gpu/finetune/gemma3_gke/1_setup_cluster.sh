@@ -19,6 +19,7 @@ source 0_env.sh
 set -euo pipefail
 
 # 1. Create Cluster
+echo "[$(date)] ==================== Creating Cluster... ===================="
 # [START hypercomputer_gpu_tune_gemma3_gke_create_cluster]
 gcloud container clusters create-auto "${CLUSTER_NAME}" \
     --project="${PROJECT_ID}" \
