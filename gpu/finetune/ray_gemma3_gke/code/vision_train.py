@@ -198,14 +198,13 @@ def train(args):
         labels = batch["input_ids"].clone()
 
         # Mask image tokens
-        image_token_id = [
-            processor.tokenizer.convert_tokens_to_ids(
-                processor.tokenizer.special_tokens_map["boi_token"]
-            )
-        ]
+        boi_token = processor.tokenizer.special_tokens_map.get("boi_token")
+        image_token_id = processor.tokenizer.convert_tokens_to_ids(boi_token) if boi_token else None
+
         # Mask tokens for not being used in the loss computation
         labels[labels == processor.tokenizer.pad_token_id] = -100
-        labels[labels == image_token_id] = -100
+        if image_token_id is not None:
+            labels[labels == image_token_id] = -100
         labels[labels == 262144] = -100
 
         batch["labels"] = labels
