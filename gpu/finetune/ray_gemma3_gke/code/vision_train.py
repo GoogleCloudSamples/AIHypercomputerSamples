@@ -113,7 +113,7 @@ def train(args):
 
     # Convert dataset to OAI messages
     # need to use list comprehension to keep Pil.Image type, .mape convert image to bytes
-    dataset = [format_data(sample) for sample in dataset]
+    dataset = (format_data(sample) for sample in dataset)
 
     # Hugging Face model id
     model_id = args.model_id
