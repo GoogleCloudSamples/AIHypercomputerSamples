@@ -13,15 +13,15 @@
 #  limitations under the License.
 
 # [START hypercomputer_gpu_tune_gemma3_ray_env]
-export PROJECT_ID="<PROJECT_ID>"
-export RESERVATION="<RESERVATION_ID>"
-export REGION="<REGION>"
-export CLUSTER_NAME="<CLUSTER_NAME>"
-export HF_TOKEN="<HUGGING_FACE_TOKEN>"
+export PROJECT_ID="PROJECT_ID"
+export RESERVATION="RESERVATION_ID"
+export REGION="REGION"
+export CLUSTER_NAME="CLUSTER_NAME"
+export HF_TOKEN="HUGGING_FACE_TOKEN"
 export NETWORK="default"
-export RAY_SA="<RAY_SA>"
-export GSA_NAME="<GSA_NAME>"
-export GCS_BUCKET="<GCS_BUCKET>"
+export RAY_SA="RAY_SA"
+export GSA_NAME="GSA_NAME"
+export GCS_BUCKET="GCS_BUCKET"
 
 gcloud config set project "${PROJECT_ID}"
 gcloud config set billing/quota_project "${PROJECT_ID}"
