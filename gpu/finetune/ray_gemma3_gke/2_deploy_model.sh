@@ -51,12 +51,15 @@ while [ "$ALL_READY" = false ]; do
 
     for ITEM in $COMPACT_STATUSES; do
         # Split the pair into READY and STATUS
-        READY_COUNT=$(echo "$ITEM" | cut -d':' -f1)
-        STATUS_NAME=$(echo "$ITEM" | cut -d':' -f2)
+        READY_COUNT=$(echo "$ITEM" | cut -d'-' -f1)
+        STATUS_NAME=$(echo "$ITEM" | cut -d'-' -f2)
 
-        # CONDITION: The pod must have the status "Running" AND the state "2/2"
+        # Split READY into ready_containers and total_containers
+        READY_LEFT=$(echo "$READY_COUNT" | cut -d'/' -f1)
+        READY_RIGHT=$(echo "$READY_COUNT" | cut -d'/' -f2)
 
-        if [ "$STATUS_NAME" != "Running" ] || [ "$READY_COUNT" != "2/2" ]; then
+        # CONDITION: The pod must have the status "Running" AND all containers must be ready
+        if [ "$STATUS_NAME" != "Running" ] || [ "$READY_LEFT" != "$READY_RIGHT" ] || [ "$READY_LEFT" = "0" ]; then
             ALL_READY=false
             break
         fi
