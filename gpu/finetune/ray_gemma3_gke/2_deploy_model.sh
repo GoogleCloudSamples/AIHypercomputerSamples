@@ -32,14 +32,26 @@ envsubst < ray_cluster.yaml | kubectl apply -f -
 echo "Waiting for all gemma3 PODS to transition to the state RUNNING..."
 
 ALL_READY=false
+TIMEOUT_SECONDS=600  # Maximum waiting time 10 minutes
+INTERVAL_SECONDS=10
+ELAPSED_SECONDS=0
 
 while [ "$ALL_READY" = false ]; do
+    if [ "$ELAPSED_SECONDS" -ge "$TIMEOUT_SECONDS" ]; then
+        echo "Critical Error: Timeout reached ($TIMEOUT_SECONDS seconds). Pods failed to become ready."
+        echo "Current status of deployment:"
+        kubectl get pods | grep -E "NAME|gemma3"
+        echo "Fetching last 20 cluster events for debugging:"
+        kubectl get events --sort-by='.metadata.creationTimestamp' | tail -n 20
+        exit 1
+    fi
     #  Retrieve data about the gemma3 pods (Name, Ready, Status)
     PODS_DATA=$(kubectl get pods 2>/dev/null | grep "gemma3" || true)
 
     if [ -z "$PODS_DATA" ]; then
         echo "Waiting for the pods to start"
-        sleep 10
+        sleep $INTERVAL_SECONDS
+        ELAPSED_SECONDS=$((ELAPSED_SECONDS + INTERVAL_SECONDS))
         continue
     fi
 
@@ -50,16 +62,11 @@ while [ "$ALL_READY" = false ]; do
     ALL_READY=true
 
     for ITEM in $COMPACT_STATUSES; do
-        # Split the pair into READY and STATUS
         READY_COUNT=$(echo "$ITEM" | cut -d'-' -f1)
         STATUS_NAME=$(echo "$ITEM" | cut -d'-' -f2)
 
-        # Split READY into ready_containers and total_containers
-        READY_LEFT=$(echo "$READY_COUNT" | cut -d'/' -f1)
-        READY_RIGHT=$(echo "$READY_COUNT" | cut -d'/' -f2)
-
-        # CONDITION: The pod must have the status "Running" AND all containers must be ready
-        if [ "$STATUS_NAME" != "Running" ] || [ "$READY_LEFT" != "$READY_RIGHT" ] || [ "$READY_LEFT" = "0" ]; then
+        # CONDITION: The pod must have the status "Running" AND the state "2/2"
+        if [ "$STATUS_NAME" != "Running" ] || [ "$READY_COUNT" != "2/2" ]; then
             ALL_READY=false
             break
         fi
@@ -70,7 +77,8 @@ while [ "$ALL_READY" = false ]; do
         # Display the current status
         kubectl get pods | grep -E "NAME|gemma3"
         echo "------------------------------------------------------------------------------"
-        sleep 10
+        sleep $INTERVAL_SECONDS
+        ELAPSED_SECONDS=$((ELAPSED_SECONDS + INTERVAL_SECONDS))
     fi
 done
 
