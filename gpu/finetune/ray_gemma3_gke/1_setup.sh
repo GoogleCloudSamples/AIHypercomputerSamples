@@ -13,7 +13,6 @@
 #  limitations under the License.
 
 #!/bin/bash
-source 0_env.sh
 
 set -euo pipefail
 
