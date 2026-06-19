@@ -64,8 +64,12 @@ spec:
           resources:
             limits:
               nvidia.com/gpu: "8"
+              cpu: "80"
+              memory: "320Gi"
             requests:
               nvidia.com/gpu: "8"
+              cpu: "80"
+              memory: "320Gi"
           env:
             - name: HF_TOKEN
               valueFrom:
