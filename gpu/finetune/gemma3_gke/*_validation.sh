@@ -14,8 +14,6 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
-source 0_env.sh
-
 set -euo pipefail
 
 declare -r JOB_NAME="finetune-job"

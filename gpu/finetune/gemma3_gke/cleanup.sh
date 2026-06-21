@@ -14,8 +14,6 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
-source 0_env.sh
-
 set -e
 
 kubectl delete job finetune-job --ignore-not-found=true || true
