@@ -73,7 +73,7 @@ print('Model Output:', generated_text)
 print('==============================================================================')
 "
 
-kubectl exec -it "${HEAD_POD}" -c ray-head -- ray job submit \
+kubectl exec "${HEAD_POD}" -c ray-head -- ray job submit \
     --entrypoint-num-gpus=1 \
     --entrypoint-num-cpus=4 \
     --runtime-env-json '{
