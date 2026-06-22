@@ -1,0 +1,25 @@
+# [START hypercomputer_gpu_tune_gemma3_ray_ray_job]
+
+apiVersion: ray.io/v1
+kind: RayJob
+metadata:
+  name: test-ray-job
+spec:
+  entrypoint: python /code/vision_train.py --gcs_bucket $GCS_BUCKET
+  runtimeEnvYAML: |
+    pip:
+      - torch==2.8.0
+      - torchvision==0.23.0
+      - ray==2.48.0
+      - transformers==4.55.2
+      - datasets==4.0.0
+      - evaluate==0.4.5
+      - accelerate==1.10.0
+      - pillow==11.3.0
+      - bitsandbytes==0.47.0
+      - trl==0.21.0
+      - peft==0.17.0
+  clusterSelector:
+    ray.io/cluster: gemma3-tuning
+
+# [END hypercomputer_gpu_tune_gemma3_ray_ray_job]

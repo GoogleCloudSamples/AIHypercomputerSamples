@@ -1,0 +1,96 @@
+# [START hypercomputer_gpu_tune_gemma3_ray_ray_cluster]
+
+apiVersion: ray.io/v1
+kind: RayCluster
+metadata:
+  name: gemma3-tuning
+spec:
+  rayVersion: '2.48.0'
+  headGroupSpec:
+    rayStartParams:
+      dashboard-host: '0.0.0.0'
+    template:
+      metadata:
+      spec:
+        serviceAccountName: $RAY_SA
+        containers:
+        - name: ray-head
+          image: rayproject/ray:2.48.0
+          ports:
+          - containerPort: 6379
+            name: gcs
+          - containerPort: 8265
+            name: dashboard
+          - containerPort: 10001
+            name: client
+          resources:
+            limits:
+              cpu: "24"
+              ephemeral-storage: "9Gi"
+              memory: "64Gi"
+            requests:
+              cpu: "24"
+              ephemeral-storage: "9Gi"
+              memory: "64Gi"
+          env:
+            - name: HF_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: hf-secret
+                  key: hf_api_token
+          volumeMounts:
+            - name: job-code
+              mountPath: /code/
+            - mountPath: /mnt/local-ssd/
+              name: local-storage
+        volumes:
+          - name: job-code
+            configMap:
+              name: ray-job-cm
+          - name: local-storage
+            emptyDir: { }
+  workerGroupSpecs:
+  - replicas: 2
+    minReplicas: 1
+    maxReplicas: 5
+    groupName: gpu-group
+    rayStartParams: {}
+    template:
+      spec:
+        serviceAccountName: $RAY_SA
+        containers:
+        - name: ray-worker
+          image: rayproject/ray:2.48.0-gpu
+          resources:
+            limits:
+              nvidia.com/gpu: "8"
+              cpu: "80"
+              memory: "320Gi"
+            requests:
+              nvidia.com/gpu: "8"
+              cpu: "80"
+              memory: "320Gi"
+          env:
+            - name: HF_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: hf-secret
+                  key: hf_api_token
+          volumeMounts:
+            - name: job-code
+              mountPath: /code/
+            - mountPath: /mnt/local-ssd/
+              name: local-storage
+        volumes:
+          - name: job-code
+            configMap:
+              name: ray-job-cm
+          - name: local-storage
+            emptyDir: { }
+        nodeSelector:
+          cloud.google.com/gke-accelerator: nvidia-b200
+          cloud.google.com/reservation-name: $RESERVATION
+          cloud.google.com/reservation-affinity: "specific"
+          cloud.google.com/gke-gpu-driver-version: latest
+
+# [END hypercomputer_gpu_tune_gemma3_ray_ray_cluster]
