@@ -14,8 +14,11 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
-source ./0_env.sh
 set -euo pipefail
+
+declare -r CLUSTER_TOOLKIT_VERSION="v1.94.0"
+declare -r CLUSTER_TOOLKIT_URL="https://github.com/GoogleCloudPlatform/cluster-toolkit/releases/download/${CLUSTER_TOOLKIT_VERSION}/gcluster_bundle_linux_amd64.tgz"
+declare -r CLUSTER_TOOLKIT_PATH="$(realpath "gcluster_release/")"
 
 echo "[$(date)] ==================== Starting Cluster Deployment ===================="
 
@@ -27,23 +30,19 @@ else
   echo "Bucket gs://${BUCKET_NAME} already exists."
 fi
 
-# 2. Clone cluster-toolkit
-echo "[$(date)] Cloning cluster-toolkit..."
-if [ ! -d "cluster-toolkit" ]; then
-  git clone https://github.com/GoogleCloudPlatform/cluster-toolkit.git
-else
-  echo "cluster-toolkit directory already exists, skipping clone."
-fi
+# 2. Download cluster-toolkit release
+curl -L -o gcluster.tgz "${CLUSTER_TOOLKIT_URL}" \
+  && mkdir -p gcluster_release  \
+  && tar -xf gcluster.tgz -C gcluster_release \
+  && rm -f gcluster.tgz \
+  && mv gcluster_release/gcluster . \
+  && ./gcluster --version
 
-# 3. Build gcluster
-echo "[$(date)] Building gcluster..."
-cd cluster-toolkit
-make
-cd ..
-
-# 4. Configure deployment YAML
+# 3. Configure deployment YAML
 echo "[$(date)] Configuring a4high-slurm-deployment.yaml..."
-cat <<EOF > cluster-toolkit/examples/machine-learning/a4-highgpu-8g/a4high-slurm-deployment.yaml
+declare -r MANIFEST_PATH="${CLUSTER_TOOLKIT_PATH}/examples/machine-learning/a4-highgpu-8g"
+
+cat <<EOF > "${MANIFEST_PATH}/a4high-slurm-deployment.yaml"
 terraform_backend_defaults:
   type: gcs
   configuration:
@@ -58,10 +57,8 @@ vars:
   a4h_reservation_name: ${RESERVATION_URL}
 EOF
 
-# 5. Deploy cluster
+# 4. Deploy cluster
 echo "[$(date)] Deploying Slurm cluster (this can take up to 35-40 minutes)..."
-cd cluster-toolkit
-./gcluster deploy -d examples/machine-learning/a4-highgpu-8g/a4high-slurm-deployment.yaml examples/machine-learning/a4-highgpu-8g/a4high-slurm-blueprint.yaml --auto-approve
-cd ..
+./gcluster deploy -d "${MANIFEST_PATH}/a4high-slurm-deployment.yaml" "${MANIFEST_PATH}/a4high-slurm-blueprint.yaml" --auto-approve
 
-echo "[$(date)] ==================== Cluster Deployment Complete ===================="
+echo "[$(date)] ==================== Cluster Deployment Complete! ===================="
