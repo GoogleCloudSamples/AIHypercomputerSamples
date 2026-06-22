@@ -32,6 +32,10 @@ echo "Found latest checkpoint artifact: ${LATEST_CHECKPOINT}"
 echo "=============================================================================="
 
 HEAD_POD=$(kubectl get pods -l ray.io/node-type=head -o jsonpath='{.items[0].metadata.name}')
+if [[ -z "$HEAD_POD" ]]; then
+    echo "Error: Ray head pod not found."
+    exit 1
+fi
 
 echo "Submitting validation job directly to Head Pod: ${HEAD_POD}..."
 
