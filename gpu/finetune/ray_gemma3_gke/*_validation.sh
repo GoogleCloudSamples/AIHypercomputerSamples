@@ -21,7 +21,7 @@ echo "==========================================================================
 echo "Running Ultra-Light Gemma 3 Vision validation job via Ray..."
 
 echo "Checking for the latest fine-tuned checkpoint in gs://${GCS_BUCKET}..."
-LATEST_CHECKPOINT=$(gcloud storage ls "gs://${GCS_BUCKET}/" | grep "gemma_vision_train_" | sort | tail -n 1)
+LATEST_CHECKPOINT=$(gcloud storage ls "gs://${GCS_BUCKET}/" | grep "gemma_vision_train_" | sort | tail -n 1 || true)
 
 if [[ -z "$LATEST_CHECKPOINT" ]]; then
     echo "Error: No fine-tuning checkpoints found in gs://${GCS_BUCKET}"
