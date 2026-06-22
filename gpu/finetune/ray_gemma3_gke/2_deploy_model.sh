@@ -62,8 +62,8 @@ while [ "$ALL_READY" = false ]; do
     ALL_READY=true
 
     for ITEM in $COMPACT_STATUSES; do
-        READY_COUNT=$(echo "$ITEM" | cut -d'-' -f1)
-        STATUS_NAME=$(echo "$ITEM" | cut -d'-' -f2)
+        READY_COUNT=$(echo "$ITEM" | cut -d':' -f1)
+        STATUS_NAME=$(echo "$ITEM" | cut -d':' -f2)
 
         # CONDITION: The pod must have the status "Running" AND the state "2/2"
         if [ "$STATUS_NAME" != "Running" ] || [ "$READY_COUNT" != "2/2" ]; then
