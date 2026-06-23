@@ -19,7 +19,7 @@ set -euo pipefail
 # 1. Deploy Manifests
 echo "[$(date)] ==================== Deploying manifests. ===================="
 # [START hypercomputer_gpu_infer_llama4scout_deploy_manifests]
-envsubst < manifests/vllm-l4-17b.yaml | kubectl apply -f -
+envsubst < vllm-l4-17b.yaml | kubectl apply -f -
 # [END hypercomputer_gpu_infer_llama4scout_deploy_manifests]
 echo "[$(date)] ==================== Manifests deployed. ===================="
 

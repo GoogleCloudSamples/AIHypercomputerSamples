@@ -26,6 +26,6 @@ export HUGGING_FACE_TOKEN="HUGGING_FACE_TOKEN"
 export NETWORK="NETWORK_NAME"
 export SUBNETWORK="SUBNETWORK_NAME"
 
-gcloud config set project PROJECT_ID
-gcloud config set billing/quota_project PROJECT_ID
+gcloud config set project ${PROJECT_ID}
+gcloud config set billing/quota_project ${PROJECT_ID}
 # [END hypercomputer_gpu_infer_llama4scout_gke_env]

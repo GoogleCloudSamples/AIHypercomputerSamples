@@ -17,7 +17,7 @@ set -euo pipefail
 
 # Remove all resources created by your sample.
 
-kubectl delete deployment vllm-gemma-deployment
+kubectl delete deployment vllm-llama4-deployment
 kubectl delete secret hf-secret
 
 # [START hypercomputer_gpu_infer_llama4scout_cluster_cleanup]
