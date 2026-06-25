@@ -131,9 +131,9 @@ gcloud iam service-accounts add-iam-policy-binding $GSA_NAME@$PROJECT_ID.iam.gse
 # [END hypercomputer_gpu_tune_gemma3_ray_wi]
 
 # 9. Annotate Kubernetes Service Account
-# [START hypercomputer_gpu_tune_gemma3_ray_annotate_sa_account]
+# [START hypercomputer_gpu_tune_gemma3_ray_asa]
 kubectl annotate serviceaccount $RAY_SA iam.gke.io/gcp-service-account=$GSA_NAME@$PROJECT_ID.iam.gserviceaccount.com --overwrite
-# [END hypercomputer_gpu_tune_gemma3_ray_annotate_sa_account]
+# [END hypercomputer_gpu_tune_gemma3_ray_asa]
 
 # 10. Protection against Race Condition
 # [START hypercomputer_gpu_tune_gemma3_ray_rc]
