@@ -17,9 +17,9 @@ set -euo pipefail
 # Set your environment variables here.
 # DO NOT PUT ANY SECRET VALUES HERE!
 # [START hypercomputer_tpu_tune_llama_rl_env]
-export PROJECT="<YOUR_PROJECT_ID>"
-export ZONE="<ZONE_NAME>"
-export RESERVATION="<RESERVATION_NAME>"
-export TPU_NAME="<TPU_MACHINE_NAME>"
+export PROJECT="YOUR_PROJECT_ID"
+export ZONE="ZONE_NAME"
+export RESERVATION="RESERVATION_NAME"
+export TPU_NAME="TPU_MACHINE_NAME"
 # [END hypercomputer_tpu_tune_llama_rl_env]
-export HF_TOKEN="<HF_TOKEN>"
+export HF_TOKEN="YOUR_HF_TOKEN"

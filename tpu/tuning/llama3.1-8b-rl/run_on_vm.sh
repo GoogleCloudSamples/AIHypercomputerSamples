@@ -33,11 +33,11 @@ source maxtext_venv/bin/activate
 # [END hypercomputer_tpu_tune_llama_rl_maxtext_3]
 
 # [START hypercomputer_tpu_tune_llama_rl_maxtext_4]
-uv pip install maxtext[tpu-post-train]==0.2.1 --resolution=lowest
+uv pip install maxtext[tpu-post-train]==0.2.2 --resolution=lowest
 # [END hypercomputer_tpu_tune_llama_rl_maxtext_4]
 
 # [START hypercomputer_tpu_tune_llama_rl_maxtext_5]
-install_maxtext_tpu_post_train_extra_deps
+install_tpu_post_train_extra_deps
 # [END hypercomputer_tpu_tune_llama_rl_maxtext_5]
 
 # [START hypercomputer_tpu_tune_llama_rl_tune_0_env]
