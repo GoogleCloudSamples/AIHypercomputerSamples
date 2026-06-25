@@ -22,4 +22,4 @@ kubectl logs -f <test-ray-job-UNIQUE_ID>
 
 # [START hypercomputer_gpu_tune_gemma3_ray_port_forward]
 kubectl port-forward service/gemma3-tuning-head-svc 8265:8265 > fwd.log 2>&1 &
-# [END hypercomputer_gpu_tune_gemma3_ray_port_forward
+# [END hypercomputer_gpu_tune_gemma3_ray_port_forward]
