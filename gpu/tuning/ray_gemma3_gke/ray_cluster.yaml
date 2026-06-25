@@ -1,5 +1,4 @@
 # [START hypercomputer_gpu_tune_gemma3_ray_ray_cluster]
-
 apiVersion: ray.io/v1
 kind: RayCluster
 metadata:
@@ -92,5 +91,4 @@ spec:
           cloud.google.com/reservation-name: $RESERVATION
           cloud.google.com/reservation-affinity: "specific"
           cloud.google.com/gke-gpu-driver-version: latest
-
 # [END hypercomputer_gpu_tune_gemma3_ray_ray_cluster]
