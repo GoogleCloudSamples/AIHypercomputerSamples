@@ -23,3 +23,12 @@ kubectl logs -f <test-ray-job-UNIQUE_ID>
 # [START hypercomputer_gpu_tune_gemma3_ray_port_forward]
 kubectl port-forward service/gemma3-tuning-head-svc 8265:8265 > fwd.log 2>&1 &
 # [END hypercomputer_gpu_tune_gemma3_ray_port_forward]
+
+# [START hypercomputer_gpu_tune_gemma3_ray_delete_ray_cluster]
+kubectl delete -f ray_cluster.yaml
+# [END hypercomputer_gpu_tune_gemma3_ray_delete_ray_cluster]
+
+# [START hypercomputer_gpu_tune_gemma3_ray_delete_gke_cluster]
+    gcloud container clusters delete $CLUSTER_NAME \
+    --region=$REGION
+# [END hypercomputer_gpu_tune_gemma3_ray_delete_gke_cluster]
