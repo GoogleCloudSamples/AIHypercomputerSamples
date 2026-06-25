@@ -136,6 +136,7 @@ kubectl annotate serviceaccount $RAY_SA iam.gke.io/gcp-service-account=$GSA_NAME
 # [END hypercomputer_gpu_tune_gemma3_ray_annonate_sa_account]
 
 # 10. Protection against Race Condition
+# [START hypercomputer_gpu_tune_gemma3_ray_rc]
 echo "Waiting 30 seconds for Workload Identity IAM replication..."
 sleep 30
-
+# [END hypercomputer_gpu_tune_gemma3_ray_rc]
