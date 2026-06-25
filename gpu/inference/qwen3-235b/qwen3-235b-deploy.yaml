@@ -1,0 +1,99 @@
+# [START hypercomputer_gpu_infer_qwen3_235b_yaml]
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: vllm-qwen3-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: qwen3-server
+  template:
+    metadata:
+      labels:
+        app: qwen3-server
+        ai.gke.io/model: Qwen3-235B-A22B-Instruct-2507
+        ai.gke.io/inference-server: vllm
+    spec:
+      containers:
+      - name: qwen-inference-server
+        image: us-docker.pkg.dev/vertex-ai/vertex-vision-model-garden-dockers/pytorch-vllm-serve:20250801_0916_RC01
+        resources:
+          requests:
+            cpu: "10"
+            memory: "1000Gi"
+            ephemeral-storage: "500Gi"
+            nvidia.com/gpu: "8"
+          limits:
+            cpu: "10"
+            memory: "1000Gi"
+            ephemeral-storage: "500Gi"
+            nvidia.com/gpu: "8"
+        command: ["python3", "-m", "vllm.entrypoints.openai.api_server"]
+        args:
+        - --model=$(MODEL_ID)
+        - --tensor-parallel-size=8
+        - --host=0.0.0.0
+        - --port=8000
+        - --max-model-len=8192
+        - --max-num-seqs=4
+        - --dtype=bfloat16
+        env:
+        - name: MODEL_ID
+          value: "Qwen/Qwen3-235B-A22B-Instruct-2507"
+        - name: HUGGING_FACE_HUB_TOKEN
+          valueFrom:
+            secretKeyRef:
+              name: hf-secret
+              key: hf_token
+        volumeMounts:
+        - mountPath: /dev/shm
+          name: dshm
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8000
+          initialDelaySeconds: 1320
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 8000
+          initialDelaySeconds: 1320
+          periodSeconds: 5
+      volumes:
+      - name: dshm
+        emptyDir:
+          medium: Memory
+      nodeSelector:
+        cloud.google.com/gke-accelerator: nvidia-b200
+        cloud.google.com/reservation-name: $RESERVATION_URL
+        cloud.google.com/reservation-affinity: "specific"
+        cloud.google.com/gke-gpu-driver-version: latest
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: qwen3-service
+spec:
+  selector:
+    app: qwen3-server
+  type: ClusterIP
+  ports:
+    - protocol: TCP
+      port: 8000
+      targetPort: 8000
+---
+apiVersion: monitoring.googleapis.com/v1
+kind: PodMonitoring
+metadata:
+  name: vllm-qwen3-monitoring
+spec:
+  selector:
+    matchLabels:
+      app: qwen3-server
+  endpoints:
+  - port: 8000
+    path: /metrics
+    interval: 30s
+# [END hypercomputer_gpu_infer_qwen3_235b_yaml]
