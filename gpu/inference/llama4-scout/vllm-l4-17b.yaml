@@ -1,3 +1,4 @@
+# [START hypercomputer_gpu_infer_llama4scout_vllm-l4-17b_yaml]
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -101,3 +102,4 @@ spec:
   - port: 8000
     path: /metrics
     interval: 30s
+# [END hypercomputer_gpu_infer_llama4scout_vllm-l4-17b_yaml]
