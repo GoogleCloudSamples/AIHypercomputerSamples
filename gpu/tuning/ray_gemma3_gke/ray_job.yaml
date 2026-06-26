@@ -1,5 +1,4 @@
 # [START hypercomputer_gpu_tune_gemma3_ray_ray_job]
-
 apiVersion: ray.io/v1
 kind: RayJob
 metadata:
@@ -21,5 +20,4 @@ spec:
       - peft==0.17.0
   clusterSelector:
     ray.io/cluster: gemma3-tuning
-
 # [END hypercomputer_gpu_tune_gemma3_ray_ray_job]

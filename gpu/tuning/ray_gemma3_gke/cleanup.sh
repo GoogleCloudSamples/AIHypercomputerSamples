@@ -26,12 +26,12 @@ echo "[$(date)] ==================== ConfigMap deleted. ===================="
 kubectl delete -f ray_cluster.yaml --ignore-not-found=true || true
 echo "[$(date)] ==================== Ray cluster deleted. ===================="
 
-gcloud container clusters delete "${CLUSTER_NAME}" \
-    --region="${REGION}" --quiet || true
+gcloud container clusters delete $CLUSTER_NAME \
+    --region=$REGION --quiet || true
 echo "[$(date)] ==================== GKE cluster deleted. ===================="
 
-if gcloud storage buckets describe gs://"${GCS_BUCKET}" > /dev/null 2>&1; then
-    gcloud storage rm -r gs://"${GCS_BUCKET}"
+if gcloud storage buckets describe gs://$GCS_BUCKET > /dev/null 2>&1; then
+    gcloud storage rm -r gs://$GCS_BUCKET
     echo "[$(date)] ==================== GCS bucket deleted. ===================="
 else
     echo "[$(date)] ==================== GCS bucket did not exist (Skipping). ===================="
