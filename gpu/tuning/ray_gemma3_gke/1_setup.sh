@@ -62,7 +62,7 @@ gcloud container clusters get-credentials $CLUSTER_NAME \
 # 3. Create HF Secret
 # [START hypercomputer_gpu_tune_gemma3_ray_create_secret]
 kubectl create secret generic hf-secret \
-    --from-literal=hf_api_token=${HF_TOKEN} \
+    --from-literal=hf_api_token=$HF_TOKEN \
     --dry-run=client -o yaml | kubectl apply -f -
 # [END hypercomputer_gpu_tune_gemma3_ray_create_secret]
 

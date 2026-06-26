@@ -23,6 +23,6 @@ export RAY_SA="YOUR_RAY_SA"
 export GSA_NAME="YOUR_GSA_NAME"
 export GCS_BUCKET="YOUR_GCS_BUCKET"
 
-gcloud config set project "${PROJECT_ID}"
-gcloud config set billing/quota_project "${PROJECT_ID}"
+gcloud config set project $PROJECT_ID
+gcloud config set billing/quota_project $PROJECT_ID
 # [END hypercomputer_gpu_tune_gemma3_ray_env]
