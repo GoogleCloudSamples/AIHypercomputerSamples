@@ -27,10 +27,10 @@ echo "[$(date)] ==================== Manifests deployed. ===================="
 # 2. Wait for deployment ---
 echo "[$(date)] ==================== Waiting for deployment. ===================="
 # [START hypercomputer_gpu_infer_llama4scout_wait_for_deployment]
-echo "Waiting for deployment to be ready (this may take up to 30 minutes)..."
+echo "Waiting for deployment to be ready (this may take up to 30-40 minutes)..."
 kubectl wait \
     --for=condition=Available \
-    --timeout=1800s \
+    --timeout=3000s \
     deployment/vllm-llama4-deployment
 # [END hypercomputer_gpu_infer_llama4scout_wait_for_deployment]
 echo "[$(date)] ==================== Deployment is available. ===================="

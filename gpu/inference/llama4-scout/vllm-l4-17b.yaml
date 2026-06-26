@@ -48,17 +48,23 @@ spec:
         volumeMounts:
         - mountPath: /dev/shm
           name: dshm
+        startupProbe:
+          httpGet:
+            path: /health
+            port: 8000
+          failureThreshold: 200
+          periodSeconds: 15
         livenessProbe:
           httpGet:
             path: /health
             port: 8000
-          initialDelaySeconds: 1800
+          initialDelaySeconds: 15
           periodSeconds: 10
         readinessProbe:
           httpGet:
             path: /health
             port: 8000
-          initialDelaySeconds: 1800
+          initialDelaySeconds: 15
           periodSeconds: 5
       volumes:
       - name: dshm

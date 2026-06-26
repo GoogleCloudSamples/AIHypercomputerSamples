@@ -53,3 +53,6 @@ kubectl create secret generic hf-secret \
     --dry-run=client -o yaml | kubectl apply -f -
 # [END hypercomputer_gpu_infer_llama4scout_create_secret]
 echo "[$(date)] ==================== Secret created. ===================="
+
+echo "[$(date)] ==================== Stabilizing API and Networking (300s) ===================="
+sleep 300
