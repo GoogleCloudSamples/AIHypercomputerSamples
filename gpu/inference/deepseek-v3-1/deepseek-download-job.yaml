@@ -1,0 +1,74 @@
+# [START hypercomputer_gpu_infer_deepseek31_job_yaml]
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: deepseek-download-job
+  namespace: default
+spec:
+  template:
+    metadata:
+      labels:
+        app: deepseek-oss-downloader
+    spec:
+      restartPolicy: OnFailure
+      containers:
+      - name: downloader
+        image: google/cloud-sdk:slim
+        resources:
+          requests:
+            cpu: "8"
+            memory: "32Gi"
+          limits:
+            cpu: "8"
+            memory: "32Gi"
+        env:
+        - name: HUGGING_FACE_HUB_TOKEN
+          valueFrom:
+            secretKeyRef:
+              name: hf-secret
+              key: hf_token
+        - name: HF_XET_HIGH_PERFORMANCE
+          value: "0"
+        - name: PIP_BREAK_SYSTEM_PACKAGES
+          value: "1"
+        command: ["/bin/sh", "-c"]
+        args:
+        - |
+          set -e
+          echo "Installing Hugging Face Hub CLI..."
+          pip install -U "huggingface_hub[cli]"
+          
+          LOCAL_DIR="/mnt/model-download/deepseek-v3-1"
+          mkdir -p "$LOCAL_DIR"
+          
+          echo "Downloading model from HF to local SSD using parallel workers..."
+          hf download deepseek-ai/DeepSeek-V3.1-Base \
+            --token "$HUGGING_FACE_HUB_TOKEN" \
+            --local-dir "$LOCAL_DIR" \
+            --max-workers 8
+
+          DOWNLOAD_STATUS=$?
+          
+          if [ $DOWNLOAD_STATUS -ne 0 ]; then
+            echo "ERROR: Model download failed with exit code $DOWNLOAD_STATUS"
+            exit $DOWNLOAD_STATUS
+          fi
+          
+          echo "Download to SSD complete. Syncing to GCS..."
+          gcloud storage rsync "$LOCAL_DIR" "gs://$GCS_BUCKET/deepseek-v3-1" --recursive
+
+          echo "Process successfully completed!"
+        volumeMounts:
+        - mountPath: /mnt/model-download
+          name: download-storage
+      volumes:
+      - name: download-storage
+        ephemeral:
+          volumeClaimTemplate:
+            spec:
+              accessModes: [ "ReadWriteOnce" ]
+              storageClassName: premium-rwo
+              resources:
+                requests:
+                  storage: 800Gi
+# [END hypercomputer_gpu_infer_deepseek31_job_yaml]
