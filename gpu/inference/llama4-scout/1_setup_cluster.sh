@@ -49,7 +49,7 @@ echo "[$(date)] ==================== Credentials got. ===================="
 echo "[$(date)] ==================== Creating the HF secret. ===================="
 # [START hypercomputer_gpu_infer_llama4scout_create_secret]
 kubectl create secret generic hf-secret \
-    --from-literal=hf_api_token="${HUGGING_FACE_TOKEN}" \
+    --from-literal=hf_api_token="${HF_TOKEN}" \
     --dry-run=client -o yaml | kubectl apply -f -
 # [END hypercomputer_gpu_infer_llama4scout_create_secret]
 echo "[$(date)] ==================== Secret created. ===================="
