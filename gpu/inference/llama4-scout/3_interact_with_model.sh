@@ -19,7 +19,7 @@ kubectl port-forward service/llm-service 8000:8000 > /dev/null 2>&1 &
 PORT_FORWARD_PID=$!
 
 cleanup() {
-  kill "$PORT_FORWARD_PID" 2>/dev/null || true
+  kill "${PORT_FORWARD_PID}" 2>/dev/null || true
 }
 trap cleanup EXIT
 
@@ -28,11 +28,11 @@ MAX_WAIT_SECONDS=30
 SECONDS_WAITED=1
 
 while ! curl -s -f --connect-timeout 2 --max-time 2 "http://127.0.0.1:8000/health" >/dev/null; do
-    if ! kill -0 "$PORT_FORWARD_PID" 2>/dev/null; then
+    if ! kill -0 "${PORT_FORWARD_PID}" 2>/dev/null; then
         echo "Error: Port forwarding failed to start or died unexpectedly." >&2
         exit 1
     fi
-    if [ "$SECONDS_WAITED" -ge "$MAX_WAIT_SECONDS" ]; then
+    if [ "${SECONDS_WAITED}" -ge "${MAX_WAIT_SECONDS}" ]; then
         echo "Error: Timed out after ${MAX_WAIT_SECONDS}s waiting for port 8000 to return a healthy status." >&2
         exit 1
     fi

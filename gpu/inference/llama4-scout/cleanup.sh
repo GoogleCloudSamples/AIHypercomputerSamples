@@ -21,7 +21,7 @@ kubectl delete deployment vllm-llama4-deployment
 kubectl delete secret hf-secret
 
 # [START hypercomputer_gpu_infer_llama4scout_cluster_cleanup]
-gcloud container clusters delete $CLUSTER_NAME \
-    --region=$REGION \
+gcloud container clusters delete ${CLUSTER_NAME} \
+    --region=${REGION} \
     --quiet
 # [END hypercomputer_gpu_infer_llama4scout_cluster_cleanup]

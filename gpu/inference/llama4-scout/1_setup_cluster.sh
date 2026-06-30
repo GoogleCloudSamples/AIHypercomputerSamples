@@ -29,11 +29,11 @@ gcloud container clusters create-auto "${CLUSTER_NAME}" \
 echo "[$(date)] ==================== Cluster created. ===================="
 
 echo "[$(date)] ==================== Verifying cluster status... ===================="
-STATUS=$(gcloud container clusters describe $CLUSTER_NAME --region $REGION --format="value(status)")
-if [ "$STATUS" = "RUNNING" ]; then
-    echo "[$(date)] ==================== Success! Cluster $CLUSTER_NAME is RUNNING and ready for deployment. ===================="
+STATUS=$(gcloud container clusters describe ${CLUSTER_NAME} --region ${REGION} --format="value(status)")
+if [ "${STATUS}" = "RUNNING" ]; then
+    echo "[$(date)] ==================== Success! Cluster ${CLUSTER_NAME} is RUNNING and ready for deployment. ===================="
 else
-    echo "[$(date)] ==================== Warning: Cluster is in '$STATUS' state.===================="
+    echo "[$(date)] ==================== Warning: Cluster is in '${STATUS}' state.===================="
     exit 1
 fi
 
