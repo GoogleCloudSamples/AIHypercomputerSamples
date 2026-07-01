@@ -15,6 +15,7 @@
 #  limitations under the License.
 
 # [START hypercomputer_gpu_tune_gemma3_slurm_install_environment]
+#!/bin/bash
 # This script should be run ONCE on the login node to set up the
 # shared Python virtual environment.
 

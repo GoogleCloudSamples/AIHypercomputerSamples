@@ -15,29 +15,6 @@
 #  limitations under the License.
 
 # ==============================================================================
-# Prerequisites
-# ==============================================================================
-
-# [START hypercomputer_gpu_tune_gemma3_slurm_enable_sa]
-gcloud iam service-accounts enable PROJECT_NUMBER-compute@developer.gserviceaccount.com \
-    --project=PROJECT_ID
-# [END hypercomputer_gpu_tune_gemma3_slurm_enable_sa]
-
-# [START hypercomputer_gpu_tune_gemma3_slurm_add_iam]
-gcloud projects add-iam-policy-binding PROJECT_ID \
-    --member="serviceAccount:PROJECT_NUMBER-compute@developer.gserviceaccount.com" \
-    --role=roles/editor
-# [END hypercomputer_gpu_tune_gemma3_slurm_add_iam]
-
-# [START hypercomputer_gpu_tune_gemma3_slurm_adc]
-gcloud auth application-default login
-# [END hypercomputer_gpu_tune_gemma3_slurm_adc]
-
-# [START hypercomputer_gpu_tune_gemma3_slurm_oslogin]
-gcloud compute project-info add-metadata --metadata=enable-oslogin=TRUE
-# [END hypercomputer_gpu_tune_gemma3_slurm_oslogin]
-
-# ==============================================================================
 # Prepare Environment
 # ==============================================================================
 
@@ -45,41 +22,24 @@ gcloud compute project-info add-metadata --metadata=enable-oslogin=TRUE
 git clone https://github.com/GoogleCloudPlatform/cluster-toolkit.git
 # [END hypercomputer_gpu_tune_gemma3_slurm_clone_toolkit]
 
-# [START hypercomputer_gpu_tune_gemma3_slurm_create_bucket]
-gcloud storage buckets create gs://BUCKET_NAME \
-    --project=PROJECT_ID
-# [END hypercomputer_gpu_tune_gemma3_slurm_create_bucket]
-
 # ==============================================================================
 # Create an A4 Slurm Cluster
 # ==============================================================================
 
-# [START hypercomputer_gpu_tune_gemma3_slurm_build_gcluster]
+# [START hypercomputer_gpu_tune_gemma3_slurm_cd_toolkit]
 cd cluster-toolkit
+# [END hypercomputer_gpu_tune_gemma3_slurm_cd_toolkit]
+
+# [START hypercomputer_gpu_tune_gemma3_slurm_build_gcluster]
 make
 # [END hypercomputer_gpu_tune_gemma3_slurm_build_gcluster]
 
-# [START hypercomputer_gpu_tune_gemma3_slurm_deploy_yaml]
-terraform_backend_defaults:
-  type: gcs
-  configuration:
-    bucket: BUCKET_NAME
-
-vars:
-  deployment_name: a4-high
-  project_id: PROJECT_ID
-  region: REGION
-  zone: ZONE
-  a4h_cluster_size: 2
-  a4h_reservation_name: RESERVATION_URL
-# [END hypercomputer_gpu_tune_gemma3_slurm_deploy_yaml]
-
-# [START hypercomputer_gpu_tune_gemma3_slurm_deploy_cluster]
-./gcluster deploy -d examples/machine-learning/a4-highgpu-8g/a4high-slurm-deployment.yaml examples/machine-learning/a4-highgpu-8g/a4high-slurm-blueprint.yaml --auto-approve
-# [END hypercomputer_gpu_tune_gemma3_slurm_deploy_cluster]
+# [START hypercomputer_gpu_tune_gemma3_slurm_change_dir]
+cd examples/machine-learning/a4-highgpu-8g/
+# [END hypercomputer_gpu_tune_gemma3_slurm_change_dir]
 
 # [START hypercomputer_gpu_tune_gemma3_slurm_deploy_cluster_skip]
-./gcluster deploy -d examples/machine-learning/a4-highgpu-8g/a4high-slurm-deployment.yaml examples/machine-learning/a4-highgpu-8g/a4high-slurm-blueprint.yaml --auto-approve --skip "image" -w
+gcluster deploy "${CLUSTER_NAME}" --auto-approve --skip "image" -w
 # [END hypercomputer_gpu_tune_gemma3_slurm_deploy_cluster_skip]
 
 # ==============================================================================

@@ -15,12 +15,12 @@
 #  limitations under the License.
 
 # [START hypercomputer_gpu_tune_gemma3_slurm_env]
-export PROJECT_ID="PROJECT_ID"
-export CLUSTER_NAME="a4-high"
-export ZONE="ZONE"
-export REGION="REGION"
-export RESERVATION_URL="RESERVATION_URL"
-export BUCKET_NAME="BUCKET_NAME"
+export PROJECT_ID="YOUR_PROJECT_ID"
+export ZONE="YOUR_ZONE"
+export REGION="YOUR_REGION"
+export RESERVATION_URL="RESERVATION_NAME"
+export CLUSTER_NAME="YOUR_CLUSTER_NAME"
+export BUCKET_NAME="YOUR_BUCKET_NAME"
 export HF_TOKEN="HUGGING_FACE_TOKEN"
 
 gcloud config set project "${PROJECT_ID}"

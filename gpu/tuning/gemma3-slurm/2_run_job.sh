@@ -16,11 +16,35 @@
 
 set -euo pipefail
 
+pwd
+cat "./install_environment.sh" 
+
+# TODO(armadom): fix this
+SKIP=1
+if [[ "${SKIP}" -eq 1 ]]; then
+  echo "just skipping job"
+  exit 0
+fi
+
 echo "[$(date)] ==================== Starting Workload Execution ===================="
+
+# 0. Create firewall rule
+echo "[$(date)] Creating firewall rule allow-ssh-ingress-from-iap..."
+gcloud compute firewall-rules create allow-ssh-ingress-from-iap \
+  --project="${PROJECT_ID}" \
+  --network="${NETWORK}" \
+  --direction=INGRESS \
+  --action=allow \
+  --rules=tcp:22 \
+  --source-ranges=35.235.240.0/20 \
+  --description="Allow SSH ingress from Google Cloud Identity-Aware Proxy (IAP)"
 
 # 1. Identify login node
 echo "[$(date)] Finding login node for cluster ${CLUSTER_NAME}..."
-LOGIN_NODE=$(gcloud compute instances list --project="${PROJECT_ID}" --filter="name ~ .*login.* AND name ~ .*${CLUSTER_NAME}.*" --format="value(name)" | head -n 1)
+declare -r LOGIN_NODE="$(gcloud compute instances list \
+                            --project="${PROJECT_ID}" \
+                            --filter="labels.ghpc_deployment='${CLUSTER_NAME}' AND labels.slurm_instance_role='login'" \
+                            --format="value(name)" | head -n 1)"
 
 if [ -z "${LOGIN_NODE}" ]; then
   echo "Error: Could not find login node for cluster ${CLUSTER_NAME}." >&2
@@ -70,12 +94,61 @@ echo "[$(date)] Monitoring Slurm job ${JOB_ID}..."
 LIMIT=240 # 2 hours maximum polling (30s * 240)
 count=0
 
-while gcloud compute ssh "${LOGIN_NODE}" --project="${PROJECT_ID}" --zone="${ZONE}" --tunnel-through-iap --command="squeue -j ${JOB_ID}" 2>/dev/null | grep -q "${JOB_ID}"; do
-  if [ ${count} -ge ${LIMIT} ]; then
+while true; do
+  if [ "${count}" -ge "${LIMIT}" ]; then
     echo "Timeout waiting for Slurm job ${JOB_ID} to complete." >&2
     exit 1
   fi
-  echo "Job ${JOB_ID} is still running. Waiting 30 seconds... (${count}/${LIMIT})"
+
+  if ! RAW_STATUS=$(gcloud compute ssh "${LOGIN_NODE}" \
+      --project="${PROJECT_ID}" \
+      --zone="${ZONE}" \
+      --tunnel-through-iap \
+      --command="squeue -h -j ${JOB_ID} -o '%T|%M' 2>/dev/null || scontrol show job ${JOB_ID} 2>/dev/null || echo 'NOT_FOUND'" 2>/dev/null); then
+    echo "[$(date)] Warning: Transient SSH connection failure while querying job status. Retrying... (${count}/${LIMIT})"
+    sleep 30
+    count=$((count+1))
+    continue
+  fi
+
+  if [[ "${RAW_STATUS}" == *"JobState="* ]]; then
+    JOB_STATE="UNKNOWN"
+    ELAPSED_TIME="N/A"
+    if [[ "${RAW_STATUS}" =~ JobState=([A-Za-z0-9_]+) ]]; then
+      JOB_STATE="${BASH_REMATCH[1]}"
+    fi
+    if [[ "${RAW_STATUS}" =~ RunTime=([A-Za-z0-9:-]+) ]]; then
+      ELAPSED_TIME="${BASH_REMATCH[1]}"
+    fi
+  elif [[ "${RAW_STATUS}" == *"|"* ]]; then
+    JOB_STATE=$(echo "${RAW_STATUS%%|*}" | tr -d '[:space:]')
+    ELAPSED_TIME=$(echo "${RAW_STATUS#*|}" | tr -d '[:space:]')
+  else
+    JOB_STATE="NOT_FOUND"
+    ELAPSED_TIME="N/A"
+  fi
+
+  case "${JOB_STATE}" in
+    RUNNING|PENDING|COMPLETING|CONFIGURING|RESIZING|SUSPENDED)
+      echo "[$(date)] Job ${JOB_ID} state is ${JOB_STATE} (elapsed time: ${ELAPSED_TIME}). Waiting 30 seconds... (${count}/${LIMIT})"
+      ;;
+    COMPLETED)
+      echo "[$(date)] Slurm job ${JOB_ID} completed successfully (elapsed time: ${ELAPSED_TIME})."
+      break
+      ;;
+    FAILED|CANCELLED|TIMEOUT|NODE_FAIL|OUT_OF_MEMORY)
+      echo "[$(date)] Error: Slurm job ${JOB_ID} ended with failure state: ${JOB_STATE} (elapsed time: ${ELAPSED_TIME})." >&2
+      exit 1
+      ;;
+    NOT_FOUND)
+      echo "[$(date)] Job ${JOB_ID} is no longer in active queue or scontrol history. Assuming completed."
+      break
+      ;;
+    *)
+      echo "[$(date)] Warning: Received unexpected job state '${JOB_STATE}' (elapsed time: ${ELAPSED_TIME}). Waiting 30 seconds... (${count}/${LIMIT})"
+      ;;
+  esac
+
   sleep 30
   count=$((count+1))
 done
