@@ -28,23 +28,15 @@ fi
 
 echo "[$(date)] ==================== Starting Workload Execution ===================="
 
-# 0. Create firewall rule
-echo "[$(date)] Creating firewall rule allow-ssh-ingress-from-iap..."
-gcloud compute firewall-rules create allow-ssh-ingress-from-iap \
-  --project="${PROJECT_ID}" \
-  --network="${NETWORK}" \
-  --direction=INGRESS \
-  --action=allow \
-  --rules=tcp:22 \
-  --source-ranges=35.235.240.0/20 \
-  --description="Allow SSH ingress from Google Cloud Identity-Aware Proxy (IAP)"
-
 # 1. Identify login node
 echo "[$(date)] Finding login node for cluster ${CLUSTER_NAME}..."
-declare -r LOGIN_NODE="$(gcloud compute instances list \
-                            --project="${PROJECT_ID}" \
-                            --filter="labels.ghpc_deployment='${CLUSTER_NAME}' AND labels.slurm_instance_role='login'" \
-                            --format="value(name)" | head -n 1)"
+
+# [START hypercomputer_gpu_tune_gemma3_slurm_find_login_node]
+LOGIN_NODE="$(gcloud compute instances list \
+                --project="${PROJECT_ID}" \
+                --filter="labels.ghpc_deployment='${CLUSTER_NAME}' AND labels.slurm_instance_role='login'" \
+                --format="value(name)" | head -n 1)"
+# [END hypercomputer_gpu_tune_gemma3_slurm_find_login_node]
 
 if [ -z "${LOGIN_NODE}" ]; then
   echo "Error: Could not find login node for cluster ${CLUSTER_NAME}." >&2
@@ -54,6 +46,7 @@ echo "Found login node: ${LOGIN_NODE}"
 
 # 2. SCP scripts to login node
 echo "[$(date)] Uploading workload scripts to login node..."
+# [START hypercomputer_gpu_tune_gemma3_slurm_scp_scripts]
 gcloud compute scp \
   --project="${PROJECT_ID}" \
   --zone="${ZONE}" \
@@ -64,6 +57,7 @@ gcloud compute scp \
   ./accelerate_config.yaml \
   ./train.py \
   "${LOGIN_NODE}":~/
+# [END hypercomputer_gpu_tune_gemma3_slurm_scp_scripts]
 
 # 3. Connect and run environment setup & submit job
 echo "[$(date)] Running environment setup and submitting Slurm job on login node..."

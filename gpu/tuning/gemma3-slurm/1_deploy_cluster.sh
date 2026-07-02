@@ -80,15 +80,15 @@ EOF
 # [END hypercomputer_gpu_tune_gemma3_slurm_deploy_yaml]
 
 # 4. Create, Patch, and Deploy cluster
-# [START hypercomputer_gpu_tune_gemma3_slurm_create_tf]
 echo "[$(date)] Creating deployment directory ${CLUSTER_NAME}..."
+# [START hypercomputer_gpu_tune_gemma3_slurm_create_tf]
 gcluster create \
   -d "${MANIFEST_PATH}/a4high-slurm-deployment.yaml" \
   "${MANIFEST_PATH}/a4high-slurm-blueprint.yaml"
 # [END hypercomputer_gpu_tune_gemma3_slurm_create_tf]
 
 # [START hypercomputer_gpu_tune_gemma3_slurm_patch_tf]
-# Patch due to https://github.com/GoogleCloudPlatform/cluster-toolkit/pull/5848
+# Patch due to https://github.com/GoogleCloudPlatform/cluster-toolkit/pull/5848 not included in v1.96.0
 echo "[$(date)] Patching Packer version constraint in ${CLUSTER_NAME}..."
 sed -i 's/required_version = ">= 1.15.3, < 2.0.0"/required_version = ">= 1.15.0, < 2.0.0"/g' "${CLUSTER_NAME}/image/slurm-a4high-image/versions.pkr.hcl"
 

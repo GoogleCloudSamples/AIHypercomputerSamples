@@ -56,10 +56,6 @@ gcluster --version
 # Create an A4 Slurm Cluster
 # ==============================================================================
 
-# [START hypercomputer_gpu_tune_gemma3_slurm_change_dir]
-cd "${CLUSTER_TOOLKIT_PATH}/examples/machine-learning/a4-highgpu-8g/"
-# [END hypercomputer_gpu_tune_gemma3_slurm_change_dir]
-
 # [START hypercomputer_gpu_tune_gemma3_slurm_deploy_cluster_skip]
 gcluster deploy "${CLUSTER_NAME}" --auto-approve --skip "image" -w
 # [END hypercomputer_gpu_tune_gemma3_slurm_deploy_cluster_skip]
@@ -67,23 +63,6 @@ gcluster deploy "${CLUSTER_NAME}" --auto-approve --skip "image" -w
 # ==============================================================================
 # Prepare Workload
 # ==============================================================================
-
-# [START hypercomputer_gpu_tune_gemma3_slurm_list_vms]
-gcloud compute instances list --filter="machineType:a4-highgpu-8g"
-# [END hypercomputer_gpu_tune_gemma3_slurm_list_vms]
-
-# [START hypercomputer_gpu_tune_gemma3_slurm_scp_scripts]
-gcloud compute scp \
-  --project="PROJECT_ID" \
-  --zone="ZONE" \
-  --tunnel-through-iap \
-  ./train.py \
-  ./requirements.txt \
-  ./submit.slurm \
-  ./install_environment.sh \
-  ./accelerate_config.yaml \
-  "LOGIN_NODE_NAME":~/
-# [END hypercomputer_gpu_tune_gemma3_slurm_scp_scripts]
 
 # [START hypercomputer_gpu_tune_gemma3_slurm_ssh_login]
 gcloud compute ssh LOGIN_NODE_NAME \
