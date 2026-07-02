@@ -96,5 +96,5 @@ tail -f "slurm-${JOB_ID}.out" "slurm-${JOB_ID}.err"
 # ==============================================================================
 
 # [START hypercomputer_gpu_tune_gemma3_slurm_destroy_cluster]
-./gcluster destroy "${CLUSTER_NAME}" --auto-approve
+gcluster destroy "${CLUSTER_NAME}" --auto-approve
 # [END hypercomputer_gpu_tune_gemma3_slurm_destroy_cluster]
