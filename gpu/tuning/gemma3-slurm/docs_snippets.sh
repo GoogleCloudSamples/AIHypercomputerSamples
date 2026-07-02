@@ -69,7 +69,7 @@ gcloud compute ssh "${LOGIN_NODE}" \
     --project="${PROJECT_ID}" \
     --tunnel-through-iap \
     --zone="${ZONE}" \
-    -- -t "export HUGGING_FACE_TOKEN='${HF_TOKEN}'; bash -l"
+    -- -t "export HF_TOKEN='${HF_TOKEN}'; bash -l"
 # [END hypercomputer_gpu_tune_gemma3_slurm_ssh_login]
 
 # [START hypercomputer_gpu_tune_gemma3_slurm_install_tools]
@@ -82,11 +82,13 @@ chmod +x install_environment.sh
 # ==============================================================================
 
 # [START hypercomputer_gpu_tune_gemma3_slurm_sbatch]
-sbatch submit.slurm
+JOB_ID="$(sbatch submit.slurm 2>&1 \
+  | tee /dev/tty \
+  | grep -oP 'Submitted batch job \K\d+')"
 # [END hypercomputer_gpu_tune_gemma3_slurm_sbatch]
 
 # [START hypercomputer_gpu_tune_gemma3_slurm_monitor_tail]
-tail -f slurm-gemma3-finetune.err
+tail -f "slurm-${JOB_ID}.out" "slurm-${JOB_ID}.err"
 # [END hypercomputer_gpu_tune_gemma3_slurm_monitor_tail]
 
 # ==============================================================================
@@ -94,5 +96,5 @@ tail -f slurm-gemma3-finetune.err
 # ==============================================================================
 
 # [START hypercomputer_gpu_tune_gemma3_slurm_destroy_cluster]
-./gcluster destroy a4-high --auto-approve
+./gcluster destroy "${CLUSTER_NAME}" --auto-approve
 # [END hypercomputer_gpu_tune_gemma3_slurm_destroy_cluster]
