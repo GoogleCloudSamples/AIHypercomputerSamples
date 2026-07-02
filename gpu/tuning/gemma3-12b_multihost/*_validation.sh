@@ -16,7 +16,7 @@
 
 set -euo pipefail
 
-declare -r JOB_NAME="finetune-job"
+declare -r JOB_NAME="finetune-jobset-workers-0"
 
 echo "Waiting for Job ${JOB_NAME} to complete..."
 kubectl wait --for=condition=complete "job/${JOB_NAME}" --timeout=14400s || {
