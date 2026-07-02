@@ -65,15 +65,12 @@ gcluster deploy "${CLUSTER_NAME}" --auto-approve --skip "image" -w
 # ==============================================================================
 
 # [START hypercomputer_gpu_tune_gemma3_slurm_ssh_login]
-gcloud compute ssh LOGIN_NODE_NAME \
-    --project="PROJECT_ID" \
+gcloud compute ssh "${LOGIN_NODE}" \
+    --project="${PROJECT_ID}" \
     --tunnel-through-iap \
-    --zone="ZONE"
+    --zone="${ZONE}" \
+    -- -t "export HUGGING_FACE_TOKEN='${HF_TOKEN}'; bash -l"
 # [END hypercomputer_gpu_tune_gemma3_slurm_ssh_login]
-
-# [START hypercomputer_gpu_tune_gemma3_slurm_hf_token]
-export HUGGING_FACE_TOKEN="HUGGING_FACE_TOKEN"
-# [END hypercomputer_gpu_tune_gemma3_slurm_hf_token]
 
 # [START hypercomputer_gpu_tune_gemma3_slurm_install_tools]
 chmod +x install_environment.sh
