@@ -33,7 +33,7 @@ trap 'rm -f "${LOG_FILE}"' EXIT
 
 # Count how many times "Training finished." appears
 declare -r TRAINING_COUNT="$(grep -o "Training finished." "${LOG_FILE}" | wc -l)"
-if [[ "${TRAINING_COUNT}" -ne 8 ]]; then
+if [[ "${TRAINING_COUNT}" -ne 16 ]]; then
     echo "Validation Failed! Count = ${TRAINING_COUNT}"
     exit 1
 fi
