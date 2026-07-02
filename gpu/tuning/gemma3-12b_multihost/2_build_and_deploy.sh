@@ -24,7 +24,7 @@ echo "[$(date)] ==================== Build finished. ===================="
 
 # 2. Set image name for the job template
 # [START hypercomputer_gpu_tune_gemma3_multihost_gke_set_image_url]
-export IMAGE_URL="${ARTIFACT_REPO_LOCATION}-docker.pkg.dev/${PROJECT_ID}/gemma/finetune-gemma-gpu:1.0.0"
+export IMAGE_URL="${ARTIFACT_REPO_LOCATION}-docker.pkg.dev/${PROJECT_ID}/gemma/finetune-gemma-multihost-gpu:1.0.0"
 # [END hypercomputer_gpu_tune_gemma3_multihost_gke_set_image_url]
 
 # 3. Deploy Job
