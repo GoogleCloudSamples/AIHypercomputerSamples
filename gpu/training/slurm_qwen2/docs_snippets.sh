@@ -71,9 +71,9 @@ gcloud compute ssh "${LOGIN_NODE}" \
     --zone="${ZONE}"
 # [END hypercomputer_gpu_train_qwen2_slurm_ssh_login]
 
-# [START hypercomputer_gpu_tune_gemma3_slurm_hf_token]
+# [START hypercomputer_gpu_train_qwen2_slurm_hf_token]
 export HF_TOKEN="HUGGING_FACE_TOKEN"
-# [END hypercomputer_gpu_tune_gemma3_slurm_hf_token]
+# [END hypercomputer_gpu_train_qwen2_slurm_hf_token]
 
 # [START hypercomputer_gpu_train_qwen2_slurm_install_environment]
 chmod +x install_environment.sh
