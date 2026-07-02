@@ -36,7 +36,7 @@ case "$(uname -m)" in
   aarch64|arm64) ARCH="arm64" ;;
   *)          echo "Error: Unsupported architecture: $(uname -m)" >&2; exit 1 ;;
 esac
-# [END hypercomputer_gpu_tune_gemma3_slurm_toolkit_prepare_vars]
+# [END hypercomputer_gpu_tune_gemma3_slurm_toolkit_download]
 
 # [START hypercomputer_gpu_tune_gemma3_slurm_install_toolkit]
 # Download and extract the platform-specific bundle
@@ -46,7 +46,8 @@ rm -f "gcluster_bundle_${OS}_${ARCH}.zip"
 # [END hypercomputer_gpu_tune_gemma3_slurm_install_toolkit]
 
 # [START hypercomputer_gpu_tune_gemma3_slurm_toolkit_setpath]
-export PATH="$(pwd)/cluster-toolkit:${PATH}"
+export CLUSTER_TOOLKIT_PATH="$(pwd)/cluster-toolkit"
+export PATH="${CLUSTER_TOOLKIT_PATH}:${PATH}"
 gcluster --version
 # [END hypercomputer_gpu_tune_gemma3_slurm_toolkit_setpath]
 
@@ -56,7 +57,7 @@ gcluster --version
 # ==============================================================================
 
 # [START hypercomputer_gpu_tune_gemma3_slurm_change_dir]
-cd examples/machine-learning/a4-highgpu-8g/
+cd "${CLUSTER_TOOLKIT_PATH}/examples/machine-learning/a4-highgpu-8g/"
 # [END hypercomputer_gpu_tune_gemma3_slurm_change_dir]
 
 # [START hypercomputer_gpu_tune_gemma3_slurm_deploy_cluster_skip]
