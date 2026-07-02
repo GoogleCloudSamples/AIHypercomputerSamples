@@ -60,9 +60,9 @@ gcluster --version
 
 # 3. Configure deployment YAML
 echo "[$(date)] Configuring a4high-slurm-deployment.yaml..."
-declare -r MANIFEST_PATH="${CLUSTER_TOOLKIT_PATH}/examples/machine-learning/a4-highgpu-8g"
 
 # [START hypercomputer_gpu_tune_gemma3_slurm_deploy_yaml]
+MANIFEST_PATH="${CLUSTER_TOOLKIT_PATH}/examples/machine-learning/a4-highgpu-8g"
 cat <<EOF > "${MANIFEST_PATH}/a4high-slurm-deployment.yaml"
 terraform_backend_defaults:
   type: gcs
