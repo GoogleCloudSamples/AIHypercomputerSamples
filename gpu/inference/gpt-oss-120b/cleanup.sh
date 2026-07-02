@@ -21,7 +21,9 @@ kubectl delete secret hf-secret
 # [END hypercomputer_gpu_infer_gptoss120b_deploy_cleanup]
 
 echo "[$(date)] ==================== Deleting the bucket ===================="
+# [START hypercomputer_gpu_infer_gptoss120b_bucket_cleanup]
 gcloud storage rm --recursive gs://$GCS_BUCKET
+# [END hypercomputer_gpu_infer_gptoss120b_bucket_cleanup]
 
 echo "[$(date)] ==================== Deleting the cluster ===================="
 # [START hypercomputer_gpu_infer_gptoss120b_cluster_cleanup]
