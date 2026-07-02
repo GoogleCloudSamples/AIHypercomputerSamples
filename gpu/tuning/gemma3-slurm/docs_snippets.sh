@@ -18,21 +18,42 @@
 # Prepare Environment
 # ==============================================================================
 
-# [START hypercomputer_gpu_tune_gemma3_slurm_clone_toolkit]
-git clone https://github.com/GoogleCloudPlatform/cluster-toolkit.git
-# [END hypercomputer_gpu_tune_gemma3_slurm_clone_toolkit]
+# [START hypercomputer_gpu_tune_gemma3_slurm_toolkit_download]
+# Find all available releases at: https://github.com/GoogleCloudPlatform/cluster-toolkit/releases
+# Set the desired version TAG (e.g., v1.96.0)
+export CLUSTER_TOOLKIT_TAG=v1.96.0
+
+# Detect OS (linux or mac)
+case "$(uname -s)" in
+  Linux*)     OS="linux" ;;
+  Darwin*)    OS="mac" ;;
+  *)          echo "Error: Unsupported operating system: $(uname -s)" >&2; exit 1 ;; 
+esac
+
+# Detect Architecture (amd64 or arm64)
+case "$(uname -m)" in
+  x86_64)     ARCH="amd64" ;; 
+  aarch64|arm64) ARCH="arm64" ;;
+  *)          echo "Error: Unsupported architecture: $(uname -m)" >&2; exit 1 ;;
+esac
+# [END hypercomputer_gpu_tune_gemma3_slurm_toolkit_prepare_vars]
+
+# [START hypercomputer_gpu_tune_gemma3_slurm_install_toolkit]
+# Download and extract the platform-specific bundle
+curl -LO "https://github.com/GoogleCloudPlatform/cluster-toolkit/releases/download/${CLUSTER_TOOLKIT_TAG}/gcluster_bundle_${OS}_${ARCH}.zip"
+unzip "gcluster_bundle_${OS}_${ARCH}.zip" -d cluster-toolkit/
+rm -f "gcluster_bundle_${OS}_${ARCH}.zip"
+# [END hypercomputer_gpu_tune_gemma3_slurm_install_toolkit]
+
+# [START hypercomputer_gpu_tune_gemma3_slurm_toolkit_setpath]
+export PATH="$(pwd)/cluster-toolkit:${PATH}"
+gcluster --version
+# [END hypercomputer_gpu_tune_gemma3_slurm_toolkit_setpath]
+
 
 # ==============================================================================
 # Create an A4 Slurm Cluster
 # ==============================================================================
-
-# [START hypercomputer_gpu_tune_gemma3_slurm_cd_toolkit]
-cd cluster-toolkit
-# [END hypercomputer_gpu_tune_gemma3_slurm_cd_toolkit]
-
-# [START hypercomputer_gpu_tune_gemma3_slurm_build_gcluster]
-make
-# [END hypercomputer_gpu_tune_gemma3_slurm_build_gcluster]
 
 # [START hypercomputer_gpu_tune_gemma3_slurm_change_dir]
 cd examples/machine-learning/a4-highgpu-8g/
