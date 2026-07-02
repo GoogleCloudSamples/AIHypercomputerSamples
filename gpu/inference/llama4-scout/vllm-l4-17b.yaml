@@ -1,0 +1,105 @@
+# [START hypercomputer_gpu_infer_llama4scout_vllm-l4-17b_yaml]
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: vllm-llama4-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: llama4-server
+  template:
+    metadata:
+      labels:
+        app: llama4-server
+        ai.gke.io/model: llama-4-scout-17b
+        ai.gke.io/inference-server: vllm
+        examples.ai.gke.io/source: user-guide
+    spec:
+      containers:
+      - name: inference-server
+        image: us-docker.pkg.dev/vertex-ai/vertex-vision-model-garden-dockers/pytorch-vllm-serve:20250722_0916_RC01
+        resources:
+          requests:
+            cpu: "10"
+            memory: "128Gi"
+            ephemeral-storage: "240Gi"
+            nvidia.com/gpu: "8"
+          limits:
+            cpu: "10"
+            memory: "128Gi"
+            ephemeral-storage: "240Gi"
+            nvidia.com/gpu: "8"
+        command: ["python3", "-m", "vllm.entrypoints.openai.api_server"]
+        args:
+        - --model=$(MODEL_ID)
+        - --tensor-parallel-size=8
+        - --host=0.0.0.0
+        - --port=8000
+        - --max-model-len=4096
+        - --max-num-seqs=4
+        env:
+        - name: MODEL_ID
+          value: meta-llama/Llama-4-Scout-17B-16E-Instruct
+        - name: HUGGING_FACE_HUB_TOKEN
+          valueFrom:
+            secretKeyRef:
+              name: hf-secret
+              key: hf_api_token
+        volumeMounts:
+        - mountPath: /dev/shm
+          name: dshm
+        startupProbe:
+          httpGet:
+            path: /health
+            port: 8000
+          failureThreshold: 200
+          periodSeconds: 15
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8000
+          initialDelaySeconds: 15
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 8000
+          initialDelaySeconds: 15
+          periodSeconds: 5
+      volumes:
+      - name: dshm
+        emptyDir:
+            medium: Memory
+      nodeSelector:
+        cloud.google.com/gke-accelerator: nvidia-b200
+        cloud.google.com/reservation-name: ${RESERVATION_NAME}
+        cloud.google.com/reservation-affinity: "specific"
+        cloud.google.com/gke-gpu-driver-version: latest
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: llm-service
+spec:
+  selector:
+    app: llama4-server
+  type: ClusterIP
+  ports:
+    - protocol: TCP
+      port: 8000
+      targetPort: 8000
+---
+apiVersion: monitoring.googleapis.com/v1
+kind: PodMonitoring
+metadata:
+  name: vllm-llama4-monitoring
+spec:
+  selector:
+    matchLabels:
+      app: llama4-server
+  endpoints:
+  - port: 8000
+    path: /metrics
+    interval: 30s
+# [END hypercomputer_gpu_infer_llama4scout_vllm-l4-17b_yaml]
