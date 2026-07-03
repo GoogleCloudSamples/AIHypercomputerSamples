@@ -54,9 +54,8 @@ curl -L -o gcluster.tgz "${CLUSTER_TOOLKIT_URL}" \
 
 # 3. Configure deployment YAML
 echo "[$(date)] Configuring a4high-slurm-deployment.yaml..."
-declare -r MANIFEST_PATH="${CLUSTER_TOOLKIT_PATH}/examples/machine-learning/a4-highgpu-8g"
-
 # [START hypercomputer_gpu_train_qwen2_slurm_download_deployment_yaml]
+MANIFEST_PATH="${CLUSTER_TOOLKIT_PATH}/examples/machine-learning/a4-highgpu-8g"
 cat <<EOF > "${MANIFEST_PATH}/a4high-slurm-deployment.yaml"
 terraform_backend_defaults:
   type: gcs
