@@ -9,11 +9,16 @@ from trl import SFTTrainer, SFTConfig
 from huggingface_hub import login
 
 def get_args():
+    def str2bool(v):
+        if isinstance(v, bool):
+            return v
+        return v.lower() in ("yes", "true", "t", "1")
+
     parser = argparse.ArgumentParser()
     parser.add_argument("--model_id", type=str, default="google/gemma-3-12b-pt", help="Hugging Face model ID")
     parser.add_argument("--hf_token", type=str, default=None, help="Hugging Face token for private models")
-    parser.add_argument("--trust_remote", type=bool, default="False", help="Trust remote code when loading tokenizer")
-    parser.add_argument("--use_fast", type=bool, default="True", help="Determines if a fast Rust-based tokenizer should be used")
+    parser.add_argument("--trust_remote", type=str2bool, default=False, help="Trust remote code when loading tokenizer")
+    parser.add_argument("--use_fast", type=str2bool, default=True, help="Determines if a fast Rust-based tokenizer should be used")
     parser.add_argument("--dataset_name", type=str, default="philschmid/gretel-synthetic-text-to-sql", help="Hugging Face dataset name")
     parser.add_argument("--output_dir", type=str, default="gemma-12b-text-to-sql", help="Directory to save model checkpoints")
 
@@ -31,7 +36,7 @@ def get_args():
     parser.add_argument("--save_strategy", type=str, default="steps", help="Checkpoint save strategy")
     parser.add_argument("--save_steps", type=int, default=100, help="Save checkpoint every X steps")
     parser.add_argument("--push_to_hub", action='store_true', help="Push model back up to HF")
-    parser.add_argument("--hub_private_repo", type=bool, default="True", help="Push to a private repo")
+    parser.add_argument("--hub_private_repo", type=str2bool, default=True, help="Push to a private repo")
     return parser.parse_args()
 
 def main():
@@ -66,8 +71,8 @@ def main():
         user_prompt = "Given the <USER_QUERY> and the <SCHEMA>, generate the corresponding SQL command to retrieve the desired data, considering the query's syntax, semantics, and schema constraints.\n\n<SCHEMA>\n{context}\n</SCHEMA>\n\n<USER_QUERY>\n{question}\n</USER_QUERY>\n"
 
         messages = [
-            {"role": "user", "content": user_prompt.format(question=example["sql_prompt"][0], context=example["sql_context"][0])},
-            {"role": "assistant", "content": example["sql"][0]}
+            {"role": "user", "content": user_prompt.format(question=example["sql_prompt"], context=example["sql_context"])},
+            {"role": "assistant", "content": example["sql"]}
         ]
         return tokenizer.apply_chat_template(messages, tokenize=False)
     # --- 5. Load Model and Apply PEFT ---
@@ -105,7 +110,6 @@ def main():
         save_strategy=args.save_strategy,
         save_steps=args.save_steps,
         packing=False,
-        label_names=["domain"],
         gradient_checkpointing=True,
         gradient_checkpointing_kwargs={"use_reentrant": False},
         optim="adamw_torch",
@@ -114,7 +118,8 @@ def main():
         max_grad_norm=0.3,
         warmup_ratio=0.03,
         lr_scheduler_type="constant",
-        push_to_hub=True,
+        push_to_hub=args.push_to_hub,
+        hub_private_repo=args.hub_private_repo,
         report_to="tensorboard",
         dataset_kwargs={
             "add_special_tokens": False,
@@ -134,9 +139,9 @@ def main():
     print("Training finished.")
     # --- 8. Save the final model ---
     print(f"Saving final model to {args.output_dir}")
-    model.cpu()
     trainer.save_model(args.output_dir)
-    torch.distributed.destroy_process_group()
+    if torch.distributed.is_initialized():
+        torch.distributed.destroy_process_group()
 
 if __name__ == "__main__":
     main()
