@@ -25,7 +25,7 @@ gcloud container clusters create-auto $CLUSTER_NAME \
 # [END hypercomputer_gpu_infer_deepseek31_cluster_create_auto]
 
 echo "Verifying cluster status..."
-STATUS=$(gcloud container clusters describe $CLUSTER_NAME --region $REGION --format="value(status)")
+STATUS=$(gcloud container clusters describe "$CLUSTER_NAME" --region "$REGION" --format="value(status)")
 
 if [ "$STATUS" = "RUNNING" ]; then
     echo "Success! Cluster $CLUSTER_NAME is RUNNING and ready for deployment."
