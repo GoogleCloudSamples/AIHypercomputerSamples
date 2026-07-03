@@ -15,8 +15,3 @@
 # [START hypercomputer_gpu_infer_gemma3_port_forward]
 kubectl port-forward service/llm-service 8000:8000
 # [END hypercomputer_gpu_infer_gemma3_port_forward]
-
-# [START hypercomputer_gpu_infer_gemma3_27b_deploy_cleanup]
-kubectl delete -f vllm-3-27b-it.yaml
-kubectl delete secret hf-secret
-# [END hypercomputer_gpu_infer_gemma3_27b_deploy_cleanup]

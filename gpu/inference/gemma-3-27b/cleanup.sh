@@ -14,8 +14,10 @@
 
 set -euo pipefail
 
-kubectl delete deployment vllm-gemma-deployment
+# [START hypercomputer_gpu_infer_gemma3_27b_deploy_cleanup]
+envsubst < vllm-3-27b-it.yaml | kubectl delete -f -
 kubectl delete secret hf-secret
+# [END hypercomputer_gpu_infer_gemma3_27b_deploy_cleanup]
 
 # [START hypercomputer_gpu_infer_gemma3_27b_cluster_cleanup]
 gcloud container clusters delete $CLUSTER_NAME \
