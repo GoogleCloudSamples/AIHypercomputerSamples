@@ -17,6 +17,10 @@
 # This script should be run ONCE on the login node to set up the
 # shared Python virtual environment.
 # [START hypercomputer_gpu_train_qwen2_slurm_install_environment]
+#!/bin/bash
+# This script should be run ONCE on the login node to set up the
+# shared Python virtual environment.
+
 set -e
 echo "--- Creating Python virtual environment in /home ---"
 python3 -m venv ~/.venv
