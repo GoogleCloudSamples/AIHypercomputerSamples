@@ -89,7 +89,7 @@ sbatch submit.slurm
 # [END hypercomputer_gpu_train_qwen2_slurm_sbatch]
 
 # [START hypercomputer_gpu_train_qwen2_slurm_monitor_logs]
-tail -f ~/logs/slurm-1.out
+tail -f ~/logs/slurm-1.err
 # [END hypercomputer_gpu_train_qwen2_slurm_monitor_logs]
 
 # ==============================================================================
