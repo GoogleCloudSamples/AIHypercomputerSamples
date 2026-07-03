@@ -14,21 +14,16 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
-source ./0_env.sh
 set -euo pipefail
-
-# TODO(armadom): fix this
-SKIP=1
-if [[ "${SKIP}" -eq 1 ]]; then
-  echo "just skipping validation"
-  exit 0
-fi
 
 echo "[$(date)] ==================== Starting Validation... ===================="
 
 # 1. Identify login node
 echo "[$(date)] Finding login node for cluster ${CLUSTER_NAME}..."
-LOGIN_NODE=$(gcloud compute instances list --project="${PROJECT_ID}" --filter="labels.ghpc_deployment='${CLUSTER_NAME}' AND labels.slurm_instance_role='login'" --format="value(name)" | head -n 1)
+declare -r LOGIN_NODE="$(gcloud compute instances list \
+                          --project="${PROJECT_ID}" \
+                          --filter="labels.ghpc_deployment='${CLUSTER_NAME}' AND labels.slurm_instance_role='login'" \
+                          --format="value(name)" | head -n 1)"
 
 if [ -z "${LOGIN_NODE}" ]; then
   echo "Error: Could not find login node for cluster ${CLUSTER_NAME}." >&2

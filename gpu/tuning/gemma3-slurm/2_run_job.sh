@@ -16,16 +16,6 @@
 
 set -euo pipefail
 
-pwd
-cat "./install_environment.sh" 
-
-# TODO(armadom): fix this
-SKIP=1
-if [[ "${SKIP}" -eq 1 ]]; then
-  echo "just skipping job"
-  exit 0
-fi
-
 echo "[$(date)] ==================== Starting Workload Execution ===================="
 
 # 1. Identify login node
@@ -66,15 +56,13 @@ echo "[$(date)] Running environment setup and submitting Slurm job on login node
 # Since we need to run multiple commands, we chain them.
 SSH_CMD="export HF_TOKEN='${HF_TOKEN}' && export HUGGING_FACE_TOKEN='${HF_TOKEN}' && chmod +x install_environment.sh && ./install_environment.sh && sbatch submit.slurm"
 
-SSH_OUTPUT=$(gcloud compute ssh "${LOGIN_NODE}" \
+SSH_OUTPUT="$(gcloud compute ssh "${LOGIN_NODE}" \
   --project="${PROJECT_ID}" \
   --zone="${ZONE}" \
   --tunnel-through-iap \
-  --command="${SSH_CMD}")
+  --command="${SSH_CMD}")"
 
 echo "${SSH_OUTPUT}"
-
-# Parse job ID
 JOB_ID=$(echo "${SSH_OUTPUT}" | grep -oP 'Submitted batch job \K\d+')
 
 if [ -z "${JOB_ID}" ]; then
@@ -83,68 +71,25 @@ if [ -z "${JOB_ID}" ]; then
 fi
 echo "Successfully submitted Slurm job ID: ${JOB_ID}"
 
+echo "[$(date)] ==================== Waiting for the job to finish ===================="
+
 # 4. Poll job status until it finishes
 echo "[$(date)] Monitoring Slurm job ${JOB_ID}..."
-LIMIT=240 # 2 hours maximum polling (30s * 240)
-count=0
 
 while true; do
-  if [ "${count}" -ge "${LIMIT}" ]; then
-    echo "Timeout waiting for Slurm job ${JOB_ID} to complete." >&2
-    exit 1
+  SSH_CMD="squeue -h -j '${JOB_ID}' 2>/dev/null"
+  STATUS="$(gcloud compute ssh "${LOGIN_NODE}" \
+    --project="${PROJECT_ID}" \
+    --zone="${ZONE}" \
+    --tunnel-through-iap \
+    --command="${SSH_CMD}")"
+
+  if [ -z "${STATUS}" ]; then
+    echo "[$(date)] Job ${JOB_ID} is no longer in squeue."
+    break
   fi
-
-  if ! RAW_STATUS=$(gcloud compute ssh "${LOGIN_NODE}" \
-      --project="${PROJECT_ID}" \
-      --zone="${ZONE}" \
-      --tunnel-through-iap \
-      --command="squeue -h -j ${JOB_ID} -o '%T|%M' 2>/dev/null || scontrol show job ${JOB_ID} 2>/dev/null || echo 'NOT_FOUND'" 2>/dev/null); then
-    echo "[$(date)] Warning: Transient SSH connection failure while querying job status. Retrying... (${count}/${LIMIT})"
-    sleep 30
-    count=$((count+1))
-    continue
-  fi
-
-  if [[ "${RAW_STATUS}" == *"JobState="* ]]; then
-    JOB_STATE="UNKNOWN"
-    ELAPSED_TIME="N/A"
-    if [[ "${RAW_STATUS}" =~ JobState=([A-Za-z0-9_]+) ]]; then
-      JOB_STATE="${BASH_REMATCH[1]}"
-    fi
-    if [[ "${RAW_STATUS}" =~ RunTime=([A-Za-z0-9:-]+) ]]; then
-      ELAPSED_TIME="${BASH_REMATCH[1]}"
-    fi
-  elif [[ "${RAW_STATUS}" == *"|"* ]]; then
-    JOB_STATE=$(echo "${RAW_STATUS%%|*}" | tr -d '[:space:]')
-    ELAPSED_TIME=$(echo "${RAW_STATUS#*|}" | tr -d '[:space:]')
-  else
-    JOB_STATE="NOT_FOUND"
-    ELAPSED_TIME="N/A"
-  fi
-
-  case "${JOB_STATE}" in
-    RUNNING|PENDING|COMPLETING|CONFIGURING|RESIZING|SUSPENDED)
-      echo "[$(date)] Job ${JOB_ID} state is ${JOB_STATE} (elapsed time: ${ELAPSED_TIME}). Waiting 30 seconds... (${count}/${LIMIT})"
-      ;;
-    COMPLETED)
-      echo "[$(date)] Slurm job ${JOB_ID} completed successfully (elapsed time: ${ELAPSED_TIME})."
-      break
-      ;;
-    FAILED|CANCELLED|TIMEOUT|NODE_FAIL|OUT_OF_MEMORY)
-      echo "[$(date)] Error: Slurm job ${JOB_ID} ended with failure state: ${JOB_STATE} (elapsed time: ${ELAPSED_TIME})." >&2
-      exit 1
-      ;;
-    NOT_FOUND)
-      echo "[$(date)] Job ${JOB_ID} is no longer in active queue or scontrol history. Assuming completed."
-      break
-      ;;
-    *)
-      echo "[$(date)] Warning: Received unexpected job state '${JOB_STATE}' (elapsed time: ${ELAPSED_TIME}). Waiting 30 seconds... (${count}/${LIMIT})"
-      ;;
-  esac
-
-  sleep 30
-  count=$((count+1))
+  echo "[$(date)] Job ${JOB_ID} is active in squeue. Waiting 60 seconds..."
+  sleep 60
 done
 
 echo "[$(date)] Slurm job ${JOB_ID} has finished execution."
