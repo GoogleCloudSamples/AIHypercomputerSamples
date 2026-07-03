@@ -20,7 +20,7 @@
 
 # [START hypercomputer_gpu_train_qwen2_slurm_clone_toolkit]
 git clone https://github.com/GoogleCloudPlatform/cluster-toolkit.git
-# [END START hypercomputer_gpu_train_qwen2_slurm_clone_toolkit]
+# [END hypercomputer_gpu_train_qwen2_slurm_clone_toolkit]
 
 # ==============================================================================
 # Create an A4 Slurm Cluster
