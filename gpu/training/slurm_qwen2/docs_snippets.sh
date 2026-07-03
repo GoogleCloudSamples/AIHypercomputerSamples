@@ -36,7 +36,7 @@ make
 
 # [START hypercomputer_gpu_train_qwen2_slurm_cd_directory]
 cd examples/machine-learning/a4-highgpu-8g/
-# [START hypercomputer_gpu_train_qwen2_slurm_cd_directory]
+# [END hypercomputer_gpu_train_qwen2_slurm_cd_directory]
 
 # [START hypercomputer_gpu_train_qwen2_slurm_deploy_cluster_skip]
 gcluster deploy "${CLUSTER_NAME}" --auto-approve --skip "image" -w ???
