@@ -32,7 +32,7 @@ cd cluster-toolkit
 
 # [START hypercomputer_gpu_train_qwen2_slurm_build_gcluster]
 make
-# [END hypercomputer_gpu_train_qwen2_slurm_build_cluster]
+# [END hypercomputer_gpu_train_qwen2_slurm_build_gcluster]
 
 # [START hypercomputer_gpu_train_qwen2_slurm_cd_directory]
 cd examples/machine-learning/a4-highgpu-8g/
