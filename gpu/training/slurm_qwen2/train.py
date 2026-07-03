@@ -32,11 +32,11 @@ def get_args():
     parser.add_argument("--model_config_id", type=str, default="Qwen/Qwen2-1.5B", help="Hugging Face model config to use for architecture.")
     # Data arguments - used if preprocessed data is not available
     parser.add_argument("--dataset_name", type=str, default="HuggingFaceFW/fineweb-edu", help="Hugging Face dataset for pre-training.")
-    parser.add_argument("--dataset_config", type=str, default="CC-MAIN-2024-10", help="Config for the smollm-corpus dataset, e.g., 'fineweb-edu-dedup'.")
+    parser.add_argument("--dataset_config", type=str, default="CC-MAIN-2024-10", help="Config for the fineweb-edu dataset, e.g., 'CC-MAIN-2024-10'.")
     parser.add_argument("--preprocessed_data_path", type=str, default=None, help="Path to a preprocessed dataset on disk. If provided, skips download and processing.")
     # General arguments
     parser.add_argument("--hf_token", type=str, default=None, help="Hugging Face token for private models/tokenizers")
-    parser.add_argument("--output_dir", type=str, default="qwen2-from-scratch-on-olmo", help="Directory to save model checkpoints")
+    parser.add_argument("--output_dir", type=str, default="qwen2-from-scratch-on-smollm-fineweb", help="Directory to save model checkpoints")
 
     # TrainingArguments
     parser.add_argument("--max_seq_length", type=int, default=1024, help="Maximum sequence length")
