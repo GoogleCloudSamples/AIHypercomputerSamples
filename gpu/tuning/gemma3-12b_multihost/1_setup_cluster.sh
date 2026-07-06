@@ -49,3 +49,9 @@ gcloud artifacts repositories create gemma \
     --description="Repository for Gemma fine tuning workload containers" || true
 # [END hypercomputer_gpu_tune_gemma3_multihost_gke_create_repo]
 echo "[$(date)] ==================== Artifact Registry Repository created. ===================="
+
+# 5. Install JobSet CRDs
+# [START hypercomputer_gpu_tune_gemma3_multihost_gke_install_jobset]
+kubectl apply --server-side -f https://github.com/kubernetes-sigs/jobset/releases/download/v0.12.0/manifests.yaml
+# [END hypercomputer_gpu_tune_gemma3_multihost_gke_install_jobset]
+echo "[$(date)] ==================== JobSet CRDs installed. ===================="

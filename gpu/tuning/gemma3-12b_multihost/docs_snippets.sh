@@ -22,7 +22,7 @@ watch kubectl get pods
 # [END hypercomputer_gpu_tune_gemma3_multihost_gke_monitor_pods]
 
 # [START hypercomputer_gpu_tune_gemma3_multihost_gke_monitor_logs]
-kubectl logs job.batch/finetune-jobset-workers-0 -f
+kubectl logs -l "job-name=finetune-jobset-workers-0" -f
 # [END hypercomputer_gpu_tune_gemma3_multihost_gke_monitor_logs]
 
 # [START hypercomputer_gpu_tune_gemma3_multihost_gke_view_metrics]

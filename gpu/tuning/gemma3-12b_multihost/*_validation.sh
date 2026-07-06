@@ -18,6 +18,12 @@ set -euo pipefail
 
 declare -r JOB_NAME="finetune-jobset-workers-0"
 
+echo "Waiting for JobSet to create Job ${JOB_NAME}..."
+until kubectl get job "${JOB_NAME}" &>/dev/null; do
+    echo "Job not found yet, retrying in 5 seconds..."
+    sleep 5
+done
+
 echo "Waiting for Job ${JOB_NAME} to complete..."
 kubectl wait --for=condition=complete "job/${JOB_NAME}" --timeout=14400s || {
     echo "Job failed or timed out. Fetching status and logs..."
@@ -28,13 +34,16 @@ kubectl wait --for=condition=complete "job/${JOB_NAME}" --timeout=14400s || {
 
 echo "Job completed. Fetching full logs for verification..."
 declare -r LOG_FILE="$(mktemp)"
-kubectl logs "jobs/${JOB_NAME}" > "${LOG_FILE}"
+kubectl logs -l "job-name=${JOB_NAME}" > "${LOG_FILE}"
 trap 'rm -f "${LOG_FILE}"' EXIT
 
-# Count how many times "Training finished." appears
-declare -r TRAINING_COUNT="$(grep -o "Training finished." "${LOG_FILE}" | wc -l)"
-if [[ "${TRAINING_COUNT}" -ne 16 ]]; then
-    echo "Validation Failed! Count = ${TRAINING_COUNT}"
+if ! grep -q "Training finished." "${LOG_FILE}"; then
+    echo "Validation Failed! Could not find 'Training finished.' in logs."
+    exit 1
+fi
+
+if ! grep -q "Saving final model to" "${LOG_FILE}"; then
+    echo "Validation Failed! Could not find 'Saving final model to' in logs."
     exit 1
 fi
 

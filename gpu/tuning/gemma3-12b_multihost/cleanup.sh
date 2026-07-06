@@ -19,8 +19,6 @@ set -e
 kubectl delete jobset finetune-jobset --ignore-not-found=true || true
 echo "[$(date)] ==================== JobSet deleted. ===================="
 
-kubectl delete resourceclaimtemplate mrdma --ignore-not-found=true || true
-echo "[$(date)] ==================== ResourceClaimTemplate deleted. ===================="
 
 gcloud container clusters delete "${CLUSTER_NAME}" \
     --region="${CLUSTER_REGION}" --quiet || true

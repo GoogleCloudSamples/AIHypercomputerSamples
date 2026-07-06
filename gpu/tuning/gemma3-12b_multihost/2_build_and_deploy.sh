@@ -29,7 +29,7 @@ export IMAGE_URL="${ARTIFACT_REPO_LOCATION}-docker.pkg.dev/${PROJECT_ID}/gemma/f
 
 # 3. Deploy Job
 # [START hypercomputer_gpu_tune_gemma3_multihost_gke_deploy_job]
-envsubst '${RESERVATION} ${IMAGE_URL}' < finetune.yaml | kubectl apply -f -
+envsubst '${RESERVATION} ${IMAGE_URL} ${NUM_NODES}' < finetune.yaml | kubectl apply -f -
 # [END hypercomputer_gpu_tune_gemma3_multihost_gke_deploy_job]
 echo "[$(date)] ==================== Job deployed. ===================="
 
