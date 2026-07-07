@@ -26,10 +26,12 @@ CURRENT_USER="${USER:-$(whoami)}"
 
 # Build a secure filter:
 # Search for a machine that has 'login' in its name and the current user's name
+# [START hypercomputer_gpu_train_qwen2_slurm_download_login_node]
 LOGIN_NODE=$(gcloud compute instances list \
   --project="${PROJECT_ID}" \
   --filter="name ~ .*login.* AND name ~ .*${CURRENT_USER}.*" \
   --format="value(name)" | head -n 1)
+# [END hypercomputer_gpu_train_qwen2_slurm_download_login_node]
 
 if [ -z "${LOGIN_NODE}" ]; then
   echo "Error: Could not find login node for user '${CURRENT_USER}' containing 'login'." >&2
