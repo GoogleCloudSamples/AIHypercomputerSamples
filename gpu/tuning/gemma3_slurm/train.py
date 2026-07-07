@@ -94,8 +94,9 @@ def main():
         user_prompt = "Given the <USER_QUERY> and the <SCHEMA>, generate the corresponding SQL command to retrieve the desired data, considering the query's syntax, semantics, and schema constraints.\n\n<SCHEMA>\n{context}\n</SCHEMA>\n\n<USER_QUERY>\n{question}\n</USER_QUERY>\n"
 
         messages = [
-            {"role": "user", "content": user_prompt.format(question=example["sql_prompt"][0], context=example["sql_context"][0])},
-            {"role": "assistant", "content": example["sql"][0]}
+            {"role": "system", "content": system_message},
+            {"role": "user", "content": user_prompt.format(question=example["sql_prompt"], context=example["sql_context"])},
+            {"role": "assistant", "content": example["sql"]}
         ]
         return tokenizer.apply_chat_template(messages, tokenize=False)
 
