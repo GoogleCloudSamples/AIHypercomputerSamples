@@ -14,8 +14,6 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 #
-# This script should be run ONCE on the login node to set up the
-# shared Python virtual environment.
 # [START hypercomputer_gpu_train_qwen2_slurm_install_environment]
 #!/bin/bash
 # This script should be run ONCE on the login node to set up the
