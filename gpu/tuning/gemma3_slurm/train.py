@@ -103,28 +103,17 @@ def main():
     # --- 5. Load Quantized Model and Apply PEFT ---
 
     # Define the quantization configuration
-    quantization_config = BitsAndBytesConfig(
-        load_in_4bit=True,
-        bnb_4bit_quant_type='nf4',
-        bnb_4bit_compute_dtype=torch_dtype_obj,
-        bnb_4bit_use_double_quant=True,
-    )
-
     config = AutoConfig.from_pretrained(args.model_id)
     config.use_cache = False
 
-    # Load the base model with quantization
+    # Load the base model in native precision
     print("Loading base model...")
     model = AutoModelForCausalLM.from_pretrained(
         args.model_id,
         config=config,
-        quantization_config=quantization_config,
-        attn_implementation="eager",
+        attn_implementation="sdpa",
         torch_dtype=torch_dtype_obj,
     )
-
-    # Prepare the model for k-bit training
-    model = prepare_model_for_kbit_training(model)
 
     # Configure LoRA.
     peft_config = LoraConfig(
