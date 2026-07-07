@@ -46,7 +46,7 @@ echo "[$(date)] Identifying VPC Network and ensuring IAP firewall rule exists...
 # Retrieve the full URI of the network where the Login Node is located
 VPC_NETWORK_URI=$(gcloud compute instances describe "${LOGIN_NODE}" \
   --project="${PROJECT_ID:-}" \
-  --zone="${ZONE:-us-west3-c}" \
+  --zone="${ZONE:-}" \
   --format="value(networkInterfaces[0].network)" 2>/dev/null || echo "")
 
 CLUSTER_NETWORK=$(basename "${VPC_NETWORK_URI}")
@@ -65,6 +65,7 @@ FIREWALL_EXISTS=$(gcloud compute firewall-rules list \
 
 if [ -z "${FIREWALL_EXISTS}" ]; then
   echo "Creating missing firewall rule 'allow-ssh-ingress-from-iap' for network ${CLUSTER_NETWORK}..."
+# [START hypercomputer_gpu_train_qwen2_slurm_firewall_rule]
   gcloud compute firewall-rules create allow-ssh-ingress-from-iap \
     --project="${PROJECT_ID:-}" \
     --network="${CLUSTER_NETWORK}" \
@@ -73,6 +74,7 @@ if [ -z "${FIREWALL_EXISTS}" ]; then
     --rules=tcp:22 \
     --source-ranges=35.235.240.0/20 \
     --description="Allow SSH ingress from Google Cloud Identity-Aware Proxy (IAP)"
+# [END hypercomputer_gpu_train_qwen2_slurm_firewall_rule]
   echo "Firewall rule created successfully."
 else
   echo "Firewall rule 'allow-ssh-ingress-from-iap' already exists for this network. Skipping creation."
