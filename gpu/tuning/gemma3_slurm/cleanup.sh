@@ -14,25 +14,28 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
-set -euo pipefail
+if [[ -z "${WORK_DIR:-}" ]]; then
+  echo "Error: WORK_DIR is not set. Please source 0_env.sh" >&2
+  exit 1
+fi
 
 echo "[$(date)] ==================== Starting Cleanup... ===================="
 
-# gpu/tuning/gemma3-slurm/miani-cluster/.ghpc/artifacts/cluster-env_outputs.tfvars
-
-declare -r SCRIPT_PATH="$(realpath "${BASH_SOURCE[0]}")"
-declare -r BASEDIR="$(dirname "${SCRIPT_PATH}")"
-declare -r CLUSTER_TOOLKIT_PATH="${BASEDIR}/cluster_toolkit"
+declare -r CLUSTER_TOOLKIT_PATH="${WORK_DIR}/cluster_toolkit"
 
 export PATH="${CLUSTER_TOOLKIT_PATH}:$PATH"
 gcluster --version
 
 # 1. Delete Slurm cluster
 echo "[$(date)] Destroying Slurm cluster ${CLUSTER_NAME}..."
-gcluster destroy "${CLUSTER_NAME}" --auto-approve || true
+gcluster destroy "${WORK_DIR}/${CLUSTER_NAME}" --auto-approve || true
 
 # 2. Delete GCS bucket
 echo "[$(date)] Deleting GCS bucket gs://${BUCKET_NAME}..."
 gcloud storage buckets delete "gs://${BUCKET_NAME}" --quiet || true
+
+# 3. Clean up temporary directory
+echo "[$(date)] Cleaning up temporary directory ${WORK_DIR}..."
+rm -rf "${WORK_DIR}"
 
 echo "[$(date)] ==================== Cleanup Complete. ===================="
