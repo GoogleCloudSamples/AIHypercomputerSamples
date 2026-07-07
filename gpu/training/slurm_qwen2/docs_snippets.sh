@@ -131,7 +131,7 @@ gcloud compute scp --project="${PROJECT_ID}" --zone="${ZONE}" --tunnel-through-i
 # ==============================================================================
 
 # [START hypercomputer_gpu_train_qwen2_slurm_destroy_cluster]
-./gcluster destroy a4-high --auto-approve
+./gcluster destroy "${CLUSTER_NAME}" --auto-approve
 # [END hypercomputer_gpu_train_qwen2_slurm_destroy_cluster]
 
 # [START hypercomputer_gpu_train_qwen2_slurm_destroy_image]
