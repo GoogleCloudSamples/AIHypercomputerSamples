@@ -101,7 +101,7 @@ sbatch submit.slurm
 # [END hypercomputer_gpu_train_qwen2_slurm_sbatch]
 
 # [START hypercomputer_gpu_train_qwen2_slurm_monitor_logs]
-tail -f ~/logs/slurm-1.err
+tail -f ~/logs/slurm-1.out # (or .err, depending on where the script is currently sending logs)
 # [END hypercomputer_gpu_train_qwen2_slurm_monitor_logs]
 
 # ==============================================================================
