@@ -41,7 +41,7 @@ esac
 curl -LO "https://github.com/GoogleCloudPlatform/cluster-toolkit/releases/download/${CLUSTER_TOOLKIT_TAG}/gcluster_bundle_${OS}_${ARCH}.zip"
 unzip "gcluster_bundle_${OS}_${ARCH}.zip" -d cluster-toolkit/
 rm -f "gcluster_bundle_${OS}_${ARCH}.zip"
-# [END hypercomputer_gpu_tune_gemma3_slurm_install_toolkit]
+# [END hypercomputer_gpu_train_qwen2_slurm_instal_toolkit]
 
 # [START hypercomputer_gpu_train_qwen2_slurm_path]
 export CLUSTER_TOOLKIT_PATH="$(pwd)/cluster-toolkit"
