@@ -101,7 +101,7 @@ sbatch submit.slurm
 # [END hypercomputer_gpu_train_qwen2_slurm_sbatch]
 
 # [START hypercomputer_gpu_train_qwen2_slurm_monitor_logs]
-tail -f ~/logs/slurm-1.out # (or .err, depending on where the script is currently sending logs)
+tail -f ~/logs/slurm-1.err # (or .out, depending on where the script is currently sending logs)
 # [END hypercomputer_gpu_train_qwen2_slurm_monitor_logs]
 
 # ==============================================================================
@@ -122,10 +122,6 @@ https://console.cloud.google.com/monitoring/metrics-explorer?project=PROJECT_ID&
 
 # [START hypercomputer_gpu_train_qwen2_slurm_download_model]
 # From your local machine
-LOGIN_NODE="your-login-node-name" # e.g., a4high-login-001
-PROJECT_ID="your-gcp-project-id"
-ZONE="your-cluster-zone" # e.g., us-west4-a
-
 gcloud compute scp --project="${PROJECT_ID}" --zone="${ZONE}" --tunnel-through-iap \
   "${LOGIN_NODE}":~/qwen2-from-scratch-on-smollm-fineweb/ ./qwen2-trained-model/ --recurse
 # [END hypercomputer_gpu_train_qwen2_slurm_download_model]
