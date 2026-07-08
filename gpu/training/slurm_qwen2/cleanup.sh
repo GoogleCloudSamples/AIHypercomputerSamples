@@ -119,8 +119,8 @@ echo "========================================================================="
 # [END hypercomputer_gpu_train_qwen2_slurm_networks_delete]
 
 # 3. Delete GCS bucket
-# [START hypercomputer_gpu_train_qwen2_slurm_bucket_deletion]
 echo "[$(date)] Deleting GCS bucket gs://${BUCKET_NAME}..."
+# [START hypercomputer_gpu_train_qwen2_slurm_bucket_deletion]
 gcloud storage buckets delete "gs://${BUCKET_NAME}" --quiet || true
 # [END hypercomputer_gpu_train_qwen2_slurm_bucket_deletion]
 
