@@ -30,7 +30,7 @@ echo "[$(date)] Destroying Slurm cluster ${CLUSTER_NAME}..."
 gcluster destroy "${CLUSTER_NAME}" --auto-approve || true
 
 # 2. Delete Networks
-
+# [START hypercomputer_gpu_train_qwen2_slurm_networks_delete]
 echo "========================================================================="
 echo " STARTING AUTOMATED NETWORK CLEANUP FOR CLUSTER: ${CLUSTER_NAME}"
 echo "========================================================================="
@@ -116,9 +116,12 @@ done
 echo "========================================================================="
 echo " SUCCESS: All network resources for cluster ${CLUSTER_NAME} have been wiped!"
 echo "========================================================================="
+# [END hypercomputer_gpu_train_qwen2_slurm_networks_delete]
 
 # 3. Delete GCS bucket
+# [START hypercomputer_gpu_train_qwen2_slurm_bucket_deletion]
 echo "[$(date)] Deleting GCS bucket gs://${BUCKET_NAME}..."
 gcloud storage buckets delete "gs://${BUCKET_NAME}" --quiet || true
+# [END hypercomputer_gpu_train_qwen2_slurm_bucket_deletion]
 
 echo "[$(date)] ==================== Cleanup Complete. ===================="
