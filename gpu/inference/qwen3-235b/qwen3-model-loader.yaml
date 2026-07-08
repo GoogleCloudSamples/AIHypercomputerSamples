@@ -1,0 +1,67 @@
+# [START hypercomputer_gpu_infer_qwen3_model_loader_yaml]
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: qwen3-model-loader
+spec:
+  template:
+    metadata:
+      annotations:
+        gke-gcsfuse/volumes: "true"
+        gke-gcsfuse/cpu-limit: "0"
+        gke-gcsfuse/memory-limit: "0"
+        gke-gcsfuse/ephemeral-storage-limit: "0"
+    spec:
+      serviceAccountName: qwen-ksa
+      restartPolicy: OnFailure
+      containers:
+      - name: downloader
+        image: python:3.11-slim
+        resources:
+          requests:
+            cpu: "4"
+            memory: "16Gi"
+            ephemeral-storage: "100Gi"
+          limits:
+            cpu: "4"
+            memory: "16Gi"
+            ephemeral-storage: "100Gi"
+        command: ["/bin/sh", "-c"]
+        args:
+        - |
+          pip install huggingface_hub
+          python3 -c '
+          import os
+          from huggingface_hub import snapshot_download
+          model_id = "Qwen/Qwen3-235B-A22B-Instruct-2507"
+          local_dir = "/data/Qwen/Qwen3-235B-A22B-Instruct-2507"
+          config_path = os.path.join(local_dir, "config.json")
+          if os.path.exists(config_path):
+              print(f"Model already exists at {local_dir}. Skipping download.")
+          else:
+              print(f"Downloading model {model_id} to {local_dir}...")
+              snapshot_download(
+                  repo_id=model_id,
+                  local_dir=local_dir,
+                  local_dir_use_symlinks=False,
+                  token=os.environ.get("HUGGING_FACE_HUB_TOKEN")
+              )
+              print("Download completed successfully!")
+          '
+        env:
+        - name: HUGGING_FACE_HUB_TOKEN
+          valueFrom:
+            secretKeyRef:
+              name: hf-secret
+              key: hf_token
+        volumeMounts:
+        - name: gcs-fuse-volume
+          mountPath: /data
+      volumes:
+      - name: gcs-fuse-volume
+        csi:
+          driver: gcsfuse.csi.storage.gke.io
+          volumeAttributes:
+            bucketName: $GCS_BUCKET_NAME
+            mountOptions: "implicit-dirs"
+# [END hypercomputer_gpu_infer_qwen3_model_loader_yaml]

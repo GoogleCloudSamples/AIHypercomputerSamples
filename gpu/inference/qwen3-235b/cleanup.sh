@@ -15,7 +15,14 @@
 set -euo pipefail
 
 kubectl delete deployment vllm-qwen3-deployment || true
+kubectl delete job qwen3-model-loader || true
 kubectl delete secret hf-secret || true
+kubectl delete serviceaccount qwen-ksa || true
+
+gcloud iam service-accounts delete qwen-gcs-sa@$PROJECT_ID.iam.gserviceaccount.com \
+    --project=$PROJECT_ID --quiet || true
+
+gcloud storage rm --recursive gs://$GCS_BUCKET_NAME || true
 
 # [START hypercomputer_gpu_infer_qwen3_cluster_cleanup]
 gcloud container clusters delete "$CLUSTER_NAME" \

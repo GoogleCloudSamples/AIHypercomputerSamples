@@ -18,5 +18,12 @@ kubectl port-forward service/qwen3-service 8000:8000
 
 # [START hypercomputer_gpu_infer_qwen3_deploy_cleanup]
 kubectl delete -f qwen3-235b-deploy.yaml
+kubectl delete -f qwen3-model-loader.yaml
 kubectl delete secret hf-secret
+kubectl delete serviceaccount qwen-ksa
+
+gcloud iam service-accounts delete qwen-gcs-sa@$PROJECT_ID.iam.gserviceaccount.com \
+    --project=$PROJECT_ID --quiet
+
+gcloud storage rm --recursive gs://$GCS_BUCKET_NAME
 # [END hypercomputer_gpu_infer_qwen3_deploy_cleanup]

@@ -15,6 +15,7 @@ spec:
         ai.gke.io/model: Qwen3-235B-A22B-Instruct-2507
         ai.gke.io/inference-server: vllm
     spec:
+      serviceAccountName: qwen-ksa
       containers:
       - name: qwen-inference-server
         image: us-docker.pkg.dev/vertex-ai/vertex-vision-model-garden-dockers/pytorch-vllm-serve:20250801_0916_RC01
@@ -32,6 +33,8 @@ spec:
         command: ["python3", "-m", "vllm.entrypoints.openai.api_server"]
         args:
         - --model=$(MODEL_ID)
+        - --load-format=runai_streamer
+        - --model-loader-extra-config={"distributed":true}
         - --tensor-parallel-size=8
         - --host=0.0.0.0
         - --port=8000
@@ -40,7 +43,7 @@ spec:
         - --dtype=bfloat16
         env:
         - name: MODEL_ID
-          value: "Qwen/Qwen3-235B-A22B-Instruct-2507"
+          value: "gs://$GCS_BUCKET_NAME/Qwen/Qwen3-235B-A22B-Instruct-2507"
         - name: HUGGING_FACE_HUB_TOKEN
           valueFrom:
             secretKeyRef:
@@ -53,13 +56,13 @@ spec:
           httpGet:
             path: /health
             port: 8000
-          initialDelaySeconds: 1320
+          initialDelaySeconds: 200
           periodSeconds: 10
         readinessProbe:
           httpGet:
             path: /health
             port: 8000
-          initialDelaySeconds: 1320
+          initialDelaySeconds: 200
           periodSeconds: 5
       volumes:
       - name: dshm

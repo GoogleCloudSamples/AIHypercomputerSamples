@@ -44,3 +44,30 @@ kubectl create secret generic hf-secret \
     --from-literal=hf_token="${HUGGING_FACE_TOKEN}" \
     --dry-run=client -o yaml | kubectl apply -f -
 # [END hypercomputer_gpu_infer_qwen3_secret_create]
+
+# [START hypercomputer_gpu_infer_qwen3_storage_bucket_create]
+gcloud storage buckets create gs://$GCS_BUCKET_NAME \
+    --project=$PROJECT_ID \
+    --location=$REGION
+# [END hypercomputer_gpu_infer_qwen3_storage_bucket_create]
+
+# [START hypercomputer_gpu_infer_qwen3_wif_setup]
+gcloud iam service-accounts create qwen-gcs-sa \
+    --project=$PROJECT_ID
+
+gcloud storage buckets add-iam-policy-binding gs://$GCS_BUCKET_NAME \
+    --member="serviceAccount:qwen-gcs-sa@$PROJECT_ID.iam.gserviceaccount.com" \
+    --role="roles/storage.objectAdmin"
+
+kubectl create serviceaccount qwen-ksa \
+    --namespace=default
+
+gcloud iam service-accounts add-iam-policy-binding qwen-gcs-sa@$PROJECT_ID.iam.gserviceaccount.com \
+    --project=$PROJECT_ID \
+    --role=roles/iam.workloadIdentityUser \
+    --member="serviceAccount:$PROJECT_ID.svc.id.goog[default/qwen-ksa]"
+
+kubectl annotate serviceaccount qwen-ksa \
+    --namespace=default \
+    iam.gke.io/gcp-service-account="qwen-gcs-sa@$PROJECT_ID.iam.gserviceaccount.com"
+# [END hypercomputer_gpu_infer_qwen3_wif_setup]
