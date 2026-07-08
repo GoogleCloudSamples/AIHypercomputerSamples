@@ -23,7 +23,7 @@ cleanup() {
 trap cleanup EXIT
 
 echo "Waiting for port forwarding to be ready..."
-until curl -s http://localhost:8000/health >/dev/null; do
+until curl -s http://127.0.0.1:8000/health >/dev/null; do
   if ! kill -0 "$PORT_FORWARD_PID" 2>/dev/null; then
     echo "Error: Port forwarding failed to start or died unexpectedly." >&2
     exit 1

@@ -31,7 +31,7 @@ trap cleanup EXIT
 echo "Polling /health endpoint..."
 LIMIT=300
 count=0
-until curl -s http://localhost:8000/health >/dev/null; do
+until curl -s http://127.0.0.1:8000/health >/dev/null; do
   if [ "$count" -ge "$LIMIT" ]; then
     echo "Timeout waiting for model endpoint to become healthy." >&2
     exit 1

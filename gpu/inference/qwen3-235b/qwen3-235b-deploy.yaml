@@ -70,7 +70,7 @@ spec:
           medium: Memory
       nodeSelector:
         cloud.google.com/gke-accelerator: nvidia-b200
-        cloud.google.com/reservation-name: $RESERVATION_URL
+        cloud.google.com/reservation-name: $RESERVATION_NAME
         cloud.google.com/reservation-affinity: "specific"
         cloud.google.com/gke-gpu-driver-version: latest
 ---
