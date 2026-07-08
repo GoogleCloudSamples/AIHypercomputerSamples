@@ -22,4 +22,4 @@ export ZONE="ZONE_NAME"
 export RESERVATION="RESERVATION_NAME"
 export NAME="TPU_MACHINE_NAME"
 # [END hypercomputer_tpu_tune_gemma3_sft_env]
-export HF_TOKEN="HF_TOKEN"
+export HF_TOKEN="YOUR_HF_TOKEN"

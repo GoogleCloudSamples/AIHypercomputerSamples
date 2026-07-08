@@ -13,10 +13,10 @@
 #  limitations under the License.
 
 # [START hypercomputer_tpu_infer_qwen2_7b_env]
-export PROJECT_ID=<PROJECT>
-export TPU_NAME=<TPU_NAME>
-export ZONE=<ZONE>
+export PROJECT_ID="YOUR_PROJECT_ID"
+export TPU_NAME="TPU_MACHINE_NAME"
+export ZONE="ZONE_NAME"
 export TPU_TYPE=v6e-8
-export HF_TOKEN=<HF_TOKEN>
-export RESERVATION=<RESERVATION>
+export HF_TOKEN="YOUR_HF_TOKEN"
+export RESERVATION="RESERVATION_NAME"
 # [END hypercomputer_tpu_infer_qwen2_7b_env]
