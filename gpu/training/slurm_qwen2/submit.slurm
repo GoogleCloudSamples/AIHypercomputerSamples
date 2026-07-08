@@ -17,8 +17,8 @@
 # [START hypercomputer_gpu_train_qwen2_slurm_submit_slurm]
 #SBATCH --job-name=qwen2-pretrain-smollm-fineweb
 #SBATCH --nodes=2
-#SBATCH --ntasks-per-node=8 # 8 tasks per node
-#SBATCH --gpus-per-task=1   # 1 GPU per task
+#SBATCH --ntasks-per-node=1  # 1 main srun task on the node that manages accelerate
+#SBATCH --gpus-per-node=8    # access to all 8 GPUs on the node
 #SBATCH --partition=a4high
 #SBATCH --output=logs/slurm-%j.out
 #SBATCH --error=logs/slurm-%j.err
@@ -27,7 +27,7 @@ set -euo pipefail
 echo "--- Slurm Job Started ---"
 
 # --- STAGE 1: Setup environment and pre-process data on each node's local SSD ---
-srun --ntasks=$SLURM_NNODES --ntasks-per-node=1 bash -c '
+srun --ntasks=$SLURM_NNODES --ntasks-per-node=1 --gpu-bind=none bash -c '
   set -e
   echo "Setting up local environment on $(hostname)..."
   LOCAL_VENV="/mnt/localssd/venv_job_${SLURM_JOB_ID}"
@@ -65,20 +65,50 @@ LOCAL_VENV="/mnt/localssd/venv_job_${SLURM_JOB_ID}"
 PROCESSED_DATA_DIR="/mnt/localssd/processed_data_${SLURM_JOB_ID}"
 LOCAL_OUTPUT_DIR="/mnt/localssd/outputs_${SLURM_JOB_ID}"
 
-srun --ntasks=$((SLURM_NNODES * 8)) --gpus-per-task=1 bash -c "
+export MASTER_ADDR=$(scontrol show hostnames "$SLURM_JOB_NODELIST" | head -n 1)
+export MASTER_PORT=29505
+
+# Network and initialization debugging configurations
+export NCCL_DEBUG=INFO
+export NCCL_DEBUG_SUBSYS=INIT,COLL
+export TORCH_DISTRIBUTED_DEBUG=INFO
+export NCCL_IB_DISABLE=0
+
+# Launching with full GPU access enabled for accelerate
+srun --ntasks=$SLURM_NNODES --ntasks-per-node=1 --gpu-bind=none bash -c "
   mkdir -p ${LOCAL_OUTPUT_DIR}
   source ${LOCAL_VENV}/bin/activate
 
-  python train.py \
-    --model_config_id 'Qwen/Qwen2-1.5B' \
-    --preprocessed_data_path ${PROCESSED_DATA_DIR} \
-    --output_dir ${LOCAL_OUTPUT_DIR} \
-    --per_device_train_batch_size 4 \
-    --gradient_accumulation_steps 4 \
-    --max_steps 10000 \
-    --learning_rate 5e-5 \
-    --save_strategy steps \
-    --save_steps 500
+  # Reset the forced Slurm isolation to expose all 8 GPUs to the processes
+  unset CUDA_VISIBLE_DEVICES
+
+  # Retrieve the default network device.
+  DETECTED_IFACE=\$(ip route show | grep default | awk '{print \$5}' | head -n 1)
+  echo \"[INFO] Automatically detected cluster network interface: \$DETECTED_IFACE\"
+
+  # Dynamic injection of the detected interface into the network configuration
+  export NCCL_SOCKET_IFNAME=\"\${DETECTED_IFACE},gpu*\"
+  export TP_SOCKET_IFNAME=\"\${DETECTED_IFACE}\"
+  export GLOO_SOCKET_IFNAME=\"\${DETECTED_IFACE}\"
+
+  accelerate launch \
+    --config_file ~/accelerate_config.yaml \
+    --num_machines \$SLURM_NNODES \
+    --num_processes \$((SLURM_NNODES * 8)) \
+    --machine_rank \$SLURM_NODEID \
+    --main_process_ip \$MASTER_ADDR \
+    --main_process_port \$MASTER_PORT \
+    train.py \
+      --model_config_id 'Qwen/Qwen2-1.5B' \
+      --preprocessed_data_path ${PROCESSED_DATA_DIR} \
+      --output_dir ${LOCAL_OUTPUT_DIR} \
+      --per_device_train_batch_size 4 \
+      --gradient_accumulation_steps 4 \
+      --max_steps 10000 \
+      --learning_rate 5e-5 \
+      --save_strategy steps \
+      --save_steps 500 \
+      --logging_steps 1
 "
 
 # --- STAGE 3: Copy Final Model from Local SSD to Home Directory ---

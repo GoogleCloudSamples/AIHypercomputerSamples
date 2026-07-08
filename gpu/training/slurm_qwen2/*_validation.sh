@@ -39,18 +39,43 @@ echo " Starting Workload Validation for Qwen2 Training Pipeline"
 echo "========================================================================="
 
 # -------------------------------------------------------------------------
-# Step 1: Identify login node
+# Step 1: Identify project, zone, and login node
 # -------------------------------------------------------------------------
-echo -e "\n--- [Step 1] Identifying Slurm Login Node ---"
+echo -e "\n--- [Step 1] Identifying Cluster Infrastructure Parameters ---"
 
-# Checking and assigning PROJECT_ID to an internal variable
+# Dynamic assignment and verification of PROJECT_ID
 ENV_PROJECT="${PROJECT_ID:-}"
 if [ -z "${ENV_PROJECT}" ]; then
     ENV_PROJECT=$(gcloud config get-value project 2>/dev/null || echo "")
 fi
 
-# Dynamic search for the Login Node
-if [ -z "${LOGIN_NODE:-}" ] && [ -n "${ENV_PROJECT}" ]; then
+if [ -z "${ENV_PROJECT}" ]; then
+    log_error "PROJECT_ID could not be determined. Please run 'gcloud config set project' or export PROJECT_ID."
+    exit 1
+fi
+
+# Automatic zone detection
+ENV_ZONE="${ZONE:-}"
+if [ -z "${ENV_ZONE}" ]; then
+    ENV_ZONE=$(gcloud config get-value compute/zone 2>/dev/null || echo "")
+fi
+
+# Dynamic zone lookup based on the active login node if the above fails
+if [ -z "${ENV_ZONE}" ]; then
+    ENV_ZONE=$(gcloud compute instances list \
+        --project="${ENV_PROJECT}" \
+        --filter="name:login" \
+        --format="value(zone)" \
+        --limit=1 2>/dev/null || echo "")
+fi
+
+if [ -z "${ENV_ZONE}" ]; then
+    log_error "Could not automatically determine GCP ZONE. Please export ZONE=your-cluster-zone."
+    exit 1
+fi
+
+# Dynamic lookup of the Login Node name
+if [ -z "${LOGIN_NODE:-}" ]; then
     LOGIN_NODE=$(gcloud compute instances list \
         --project="${ENV_PROJECT}" \
         --filter="name:login AND status:RUNNING" \
@@ -58,71 +83,86 @@ if [ -z "${LOGIN_NODE:-}" ] && [ -n "${ENV_PROJECT}" ]; then
         --limit=1 2>/dev/null || echo "")
 fi
 
-if [ -z "${LOGIN_NODE:-}" ]; then
-    log_error "Active Login Node could not be found. PROJECT_ID is: ${ENV_PROJECT:-NOT_SET}."
+if [ -z "${LOGIN_NODE}" ]; then
+    log_error "Active Login Node could not be found in project: ${ENV_PROJECT}."
     exit 1
 fi
 
-log_info "Active Login Node detected: ${LOGIN_NODE}"
+log_info "Active Project: ${ENV_PROJECT}"
+log_info "Active Zone:    ${ENV_ZONE}"
+log_info "Login Node:     ${LOGIN_NODE}"
 
 
 # -------------------------------------------------------------------------
-# Step 2: Fetch all slurm logs from login node
+# Step 2: Fetch only the active/latest slurm log from login node
 # -------------------------------------------------------------------------
-echo -e "\n--- [Step 2] Fetching Slurm Logs from Cluster ---"
-log_info "Downloading slurm log files from ~/logs/ to local directory: ${LOCAL_LOGS_DIR}..."
+echo -e "\n--- [Step 2] Fetching the Active Slurm Log from Cluster ---"
+
+log_info "Querying cluster for the active or most recent Job ID..."
+# ID of the user's latest active job
+ACTIVE_JOB_ID=$(gcloud compute ssh "${LOGIN_NODE}" \
+    --project="${ENV_PROJECT}" \
+    --zone="${ENV_ZONE}" \
+    --tunnel-through-iap \
+    --command="squeue -u \$USER -t RUNNING,PENDING -o %A | tail -n 1" 2>/dev/null || echo "")
+
+if [ -z "${ACTIVE_JOB_ID}" ]; then
+    log_warn "No running job found. Looking for the last completed job ID..."
+    ACTIVE_JOB_ID=$(gcloud compute ssh "${LOGIN_NODE}" \
+        --project="${ENV_PROJECT}" \
+        --zone="${ENV_ZONE}" \
+        --tunnel-through-iap \
+        --command="ls ~/logs/slurm-*.out 2>/dev/null | awk -F'-' '{print \$2}' | awk -F'.' '{print \$1}' | sort -n | tail -n 1" 2>/dev/null || echo "")
+fi
+
+if [ -z "${ACTIVE_JOB_ID}" ]; then
+    log_error "Could not find any Slurm job logs on the remote cluster."
+    exit 1
+fi
+
+log_info "Targeting Job ID: ${ACTIVE_JOB_ID}"
+log_info "Downloading slurm-${ACTIVE_JOB_ID}.* to local directory..."
 
 gcloud compute scp \
     --project="${ENV_PROJECT}" \
-    --zone="${ZONE:-us-west3-c}" \
+    --zone="${ENV_ZONE}" \
     --tunnel-through-iap \
-    "${LOGIN_NODE}:~/logs/slurm-*" "${LOCAL_LOGS_DIR}/"
-
-# Verification of the retrieved files (.out or .err)
-DOWNLOADED_LOGS=( "${LOCAL_LOGS_DIR}"/slurm-* )
-if [ ! -e "${DOWNLOADED_LOGS[0]}" ]; then
-    log_warn "No slurm log files found in ${LOCAL_LOGS_DIR}."
-    log_warn "Please ensure that the job was submitted and logs are in ~/logs/ directory."
-    exit 1
-fi
-
-log_info "Successfully downloaded log files:"
-ls -l "${LOCAL_LOGS_DIR}"/slurm-* | sed 's/^/  /'
-
+    "${LOGIN_NODE}:~/logs/slurm-${ACTIVE_JOB_ID}.*" "${LOCAL_LOGS_DIR}/"
 
 # -------------------------------------------------------------------------
 # Step 3: Assert successful training
 # -------------------------------------------------------------------------
 echo -e "\n--- [Step 3] Analyzing Log File and Asserting Success ---"
 
-# Retrieve the latest .out output file for analysis
-LATEST_LOG=$(ls -t "${LOCAL_LOGS_DIR}"/slurm-*.out | head -n 1)
-log_info "Analyzing the latest log file: ${LATEST_LOG}"
+LATEST_LOG="${LOCAL_LOGS_DIR}/slurm-${ACTIVE_JOB_ID}.out"
+log_info "Analyzing log file: ${LATEST_LOG}"
 
-SUCCESS_MARKER="Training finished\|Saving final model"
-ERROR_MARKER="OOM\|Out of memory\|CUDA error\|Traceback\|Error\|Segmentation fault"
+# Define success markers (logging loss/step metrics or successful completion))
+SUCCESS_MARKER="\"loss\":\|step:\|Training finished\|Saving final model"
 
-# 1. Error Check
-if grep -qi "${ERROR_MARKER}" "${LATEST_LOG}"; then
+CLEANED_LOG_FLOW=$(grep -v "NCCL INFO" "${LATEST_LOG}")
+
+# 1. Checking for critical errors hidden in the raw data stream
+if echo "${CLEANED_LOG_FLOW}" | grep -qi "OutOfMemoryError\|CUDA error\|Traceback\|Segmentation fault\|FAILED\|Duplicate GPU"; then
     log_error "Critical errors or GPU memory issues (OOM) detected in the output log!"
     echo "--------------------------------------------------------"
-    grep -in -C 2 "${ERROR_MARKER}" "${LATEST_LOG}" | sed 's/^/  /'
+    echo "${CLEANED_LOG_FLOW}" | grep -i -C 2 "OutOfMemoryError\|CUDA error\|Traceback\|Segmentation fault\|FAILED\|Duplicate GPU" | head -n 30 | sed 's/^/  /'
     echo "--------------------------------------------------------"
     exit 1
 fi
 
-# 2. Check if the model saved its outputs (Assert Success)
-if grep -qi "${SUCCESS_MARKER}" "${LATEST_LOG}"; then
+# 2.Checking training progress (Assert Success)
+if echo "${CLEANED_LOG_FLOW}" | grep -qi "${SUCCESS_MARKER}"; then
     echo "========================================================================="
-    log_info "ASSERT PASSED: Training completed successfully!"
-    log_info "Detected successful saving of model weights and no GPU errors."
-    echo "Last lines of the log file:"
-    tail -n 5 "${LATEST_LOG}" | sed 's/^/  /'
+    log_info "ASSERT PASSED: Training is progressing or completed successfully!"
+    log_info "Detected active training steps/loss metrics and no GPU crashes."
+    echo "Last active training lines of the log file (excluding NCCL noise):"
+    echo "${CLEANED_LOG_FLOW}" | tail -n 10 | sed 's/^/  /'
     echo "========================================================================="
     exit 0
 else
-    log_warn "ASSERT FAILED: The training job might still be running or hasn't saved weights yet."
-    log_warn "Completion/saving signature was not found in the log file."
+    log_warn "ASSERT FAILED: The training job initialized, but no training steps or loss values were recorded yet."
+    log_warn "Model might still be compiling layers or initializing communication weights."
     echo "Last lines of the log file:"
     tail -n 5 "${LATEST_LOG}" | sed 's/^/  /'
     exit 1

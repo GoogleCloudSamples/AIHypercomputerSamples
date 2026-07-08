@@ -57,27 +57,26 @@ if [ -z "${CLUSTER_NETWORK}" ]; then
 fi
 echo "Detected VPC Network: ${CLUSTER_NETWORK}"
 
-# Checking if the rule for IAP already exists to avoid creating a duplicate
+FIREWALL_RULE_NAME="allow-ssh-from-iap-${CLUSTER_NETWORK}"
+
 FIREWALL_EXISTS=$(gcloud compute firewall-rules list \
   --project="${PROJECT_ID:-}" \
-  --filter="name=allow-ssh-ingress-from-iap AND network=${CLUSTER_NETWORK}" \
+  --filter="name=${FIREWALL_RULE_NAME} AND network=${CLUSTER_NETWORK}" \
   --format="value(name)" 2>/dev/null || echo "")
 
 if [ -z "${FIREWALL_EXISTS}" ]; then
-  echo "Creating missing firewall rule 'allow-ssh-ingress-from-iap' for network ${CLUSTER_NETWORK}..."
-# [START hypercomputer_gpu_train_qwen2_slurm_firewall_rule]
-  gcloud compute firewall-rules create allow-ssh-ingress-from-iap \
+  echo "Creating missing firewall rule '${FIREWALL_RULE_NAME}' for network ${CLUSTER_NETWORK}..."
+  gcloud compute firewall-rules create "${FIREWALL_RULE_NAME}" \
     --project="${PROJECT_ID:-}" \
     --network="${CLUSTER_NETWORK}" \
     --direction=INGRESS \
     --action=allow \
     --rules=tcp:22 \
     --source-ranges=35.235.240.0/20 \
-    --description="Allow SSH ingress from Google Cloud Identity-Aware Proxy (IAP)"
-# [END hypercomputer_gpu_train_qwen2_slurm_firewall_rule]
+    --description="Allow SSH ingress from Google Cloud Identity-Aware Proxy (IAP) for ${CLUSTER_NETWORK}"
   echo "Firewall rule created successfully."
 else
-  echo "Firewall rule 'allow-ssh-ingress-from-iap' already exists for this network. Skipping creation."
+  echo "Firewall rule '${FIREWALL_RULE_NAME}' already exists for this network. Skipping creation."
 fi
 
 # 2. SCP scripts to login node
