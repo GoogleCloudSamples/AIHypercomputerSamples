@@ -37,3 +37,9 @@ kubectl delete jobset finetune-jobset
 gcloud container clusters delete "${CLUSTER_NAME}" \
     --region="${CLUSTER_REGION}"
 # [END hypercomputer_gpu_tune_gemma3_multihost_gke_delete_cluster]
+
+# [START hypercomputer_gpu_tune_gemma3_multihost_gke_delete_repo]
+gcloud artifacts repositories delete gemma \
+    --location="${ARTIFACT_REPO_LOCATION}" \
+    --quiet
+# [END hypercomputer_gpu_tune_gemma3_multihost_gke_delete_repo]
