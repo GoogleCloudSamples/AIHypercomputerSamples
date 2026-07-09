@@ -61,9 +61,16 @@ gcluster deploy "${CLUSTER_NAME}" --auto-approve --skip "image" -w
 # Prepare Workload
 # ==============================================================================
 
-# [START hypercomputer_gpu_train_qwen2_slurm_list_vms]
-gcloud compute instances list --filter="machineType:a4-highgpu-8g"
-# [END hypercomputer_gpu_train_qwen2_slurm_list_vms]
+# [START hypercomputer_gpu_train_qwen2_slurm_firewall_rule]
+gcloud compute firewall-rules create allow-ssh-ingress-from-iap \
+  --project="${PROJECT_ID}" \
+  --network="${CLUSTER_NETWORK}" \
+  --direction=INGRESS \
+  --action=allow \
+  --rules=tcp:22 \
+  --source-ranges=35.235.240.0/20 \
+  --description="Allow SSH ingress from Google Cloud Identity-Aware Proxy (IAP)"
+# [END hypercomputer_gpu_train_qwen2_slurm_firewall_rule]
 
 # [START hypercomputer_gpu_train_qwen2_slurm_scp_script]
 gcloud compute scp \
