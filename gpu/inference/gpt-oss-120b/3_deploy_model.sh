@@ -22,5 +22,5 @@ envsubst < vllm-gpt-oss-120b.yaml | kubectl apply -f -
 # [START hypercomputer_gpu_infer_gptoss120b_deploy_wait]
 kubectl wait \
     --for=condition=Available \
-    --timeout=1800s deployment/vllm-gpt-oss-deployment
+    --timeout=7200s deployment/vllm-gpt-oss-deployment
 # [END hypercomputer_gpu_infer_gptoss120b_deploy_wait]

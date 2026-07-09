@@ -16,7 +16,7 @@ set -euo pipefail
 
 echo "[$(date)] ==================== Creating a Google Cloud Storage bucket... ==================="
 # [START hypercomputer_gpu_infer_gptoss120b_bucket_create]
-gcloud storage buckets create gs://$GCS_BUCKET --location=$REGION
+gcloud storage buckets create gs://$GCS_BUCKET --location=$REGION --uniform-bucket-level-access
 # [END hypercomputer_gpu_infer_gptoss120b_bucket_create]
 
 echo "[$(date)] ==================== Adding bucket permissions... ==================="
@@ -35,7 +35,7 @@ echo "[$(date)] ==================== Waiting for the model download to complete.
 # [START hypercomputer_gpu_infer_gptoss120b_wait_job_completion]
 kubectl wait \
     --for=condition=Complete \
-    --timeout=3600s job/gpt-download-job
+    --timeout=7200s job/gpt-download-job
 # [END hypercomputer_gpu_infer_gptoss120b_wait_job_completion]
 
 echo "[$(date)] ==================== Deleting the model download job... ==================="

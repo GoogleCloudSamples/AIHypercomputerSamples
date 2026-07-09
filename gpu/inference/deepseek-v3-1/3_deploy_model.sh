@@ -23,5 +23,5 @@ echo "Deploying the model and tracking progress..."
 # [START hypercomputer_gpu_infer_deepseek31_deploy_wait]
 kubectl wait \
   --for=condition=Available \
-  --timeout=2400s deployment/deepseek3-1-deploy
+  --timeout=7200s deployment/deepseek3-1-deploy
 # [END hypercomputer_gpu_infer_deepseek31_deploy_wait]
