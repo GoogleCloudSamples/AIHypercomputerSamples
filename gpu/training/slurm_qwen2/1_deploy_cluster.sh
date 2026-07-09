@@ -103,12 +103,14 @@ gcluster create \
 # [END hypercomputer_gpu_train_qwen2_slurm_download_gcluster_create]
 
 echo "[$(date)] Step 4b: Modifying the Packer version requirements in the generated files..."
-# [START hypercomputer_gpu_train_qwen2_slurm_manifests_patch]
+# [START hypercomputer_gpu_train_qwen2_slurm_manifests_packer]
 find . -type f -name "versions.pkr.hcl" -exec sed -i 's/>= 1.15.3/>= 1.15.0/g' {} +
+# [END hypercomputer_gpu_train_qwen2_slurm_manifests_packer]
 
 echo "[$(date)] Patching Filestore deletion protection in ${CLUSTER_NAME}..."
+# [START hypercomputer_gpu_train_qwen2_slurm_manifests_filestore]
 sed -i '/deletion_protection = {/,/}/ { s/enabled = true/enabled = false/; /reason  = "Avoid data loss"/d; }' "${CLUSTER_NAME}/${CLUSTER_NAME}/cluster-env/main.tf"
-# [END hypercomputer_gpu_train_qwen2_slurm_manifests_patch]
+# [END hypercomputer_gpu_train_qwen2_slurm_manifests_filestore]
 
 echo "[$(date)] Step 4c: Launching the deployment from the folder..."
 # [START hypercomputer_gpu_train_qwen2_slurm_download_deploy_cluster]
