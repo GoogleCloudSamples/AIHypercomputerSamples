@@ -93,7 +93,7 @@ def main():
         # and generate chunks of max_seq_length.
         def group_texts(examples):
             # Concatenate all texts.
-            concatenated_examples = {k: sum(examples[k], []) for k in examples.keys()}
+            concatenated_examples = {k: [item for sublist in examples[k] for item in sublist] for k in examples.keys()}
             total_length = len(concatenated_examples[list(examples.keys())[0]])
             # We drop the small remainder.
             if total_length >= args.max_seq_length:
