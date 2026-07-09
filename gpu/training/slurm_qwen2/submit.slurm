@@ -35,7 +35,7 @@ srun --ntasks=$SLURM_NNODES --ntasks-per-node=1 --gpu-bind=none bash -c '
   PROCESSED_DATA_DIR="/mnt/localssd/processed_data_${SLURM_JOB_ID}"
   LOCAL_TMP="/mnt/localssd/tmp_job_${SLURM_JOB_ID}"
 
-  rsync -a --info=progress2 ~/./.venv/ ${LOCAL_VENV}/
+  rsync -a --info=progress2 ~/.venv/ ${LOCAL_VENV}/
   mkdir -p ${LOCAL_CACHE} ${PROCESSED_DATA_DIR} ${LOCAL_TMP}
 
   echo "Pre-processing data on $(hostname)..."
