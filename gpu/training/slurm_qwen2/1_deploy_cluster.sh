@@ -104,6 +104,8 @@ gcluster create \
 
 echo "[$(date)] Step 4b: Modifying the Packer version requirements in the generated files..."
 # [START hypercomputer_gpu_train_qwen2_slurm_manifests_packer]
+# TODO(manikowski): This section will be removed when v1.97.0 is released
+# Patch due to https://github.com/GoogleCloudPlatform/cluster-toolkit/pull/5848 not being included in v1.96.0
 find . -type f -name "versions.pkr.hcl" -exec sed -i 's/>= 1.15.3/>= 1.15.0/g' {} +
 # [END hypercomputer_gpu_train_qwen2_slurm_manifests_packer]
 
