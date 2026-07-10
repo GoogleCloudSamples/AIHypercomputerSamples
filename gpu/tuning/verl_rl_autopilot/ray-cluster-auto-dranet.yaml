@@ -1,0 +1,131 @@
+# Copyright 2026 Google LLC. All rights reserved.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+apiVersion: ray.io/v1
+kind: RayCluster
+metadata:
+  name: b200-ray-cluster-dranet
+spec:
+  rayVersion: '2.47.0'
+  headGroupSpec:
+    rayStartParams:
+      dashboard-host: '0.0.0.0'
+    template:
+      metadata:
+        annotations:
+          gke-gcsfuse/volumes: "true"
+      spec:
+        serviceAccountName: ${KSA_NAME}
+        nodeSelector:
+          cloud.google.com/gke-spot: "true"
+          cloud.google.com/machine-family: "c2"
+          cloud.google.com/compute-class: Performance
+        containers:
+        - name: ray-head
+          image: verlai/verl:vllm011.latest 
+          ports:
+            - containerPort: 6379
+              name: gcs-server
+            - containerPort: 8265
+              name: dashboard
+            - containerPort: 10001
+              name: client
+          resources:
+            limits:
+              cpu: "12"
+              memory: "32G"
+              ephemeral-storage: "9Gi"
+            requests:
+              cpu: "12"
+              memory: "32G"
+              ephemeral-storage: "9Gi"
+          volumeMounts:
+            - mountPath: /tmp/ray
+              name: ray-logs
+            - name: training-bucket-vol
+              mountPath: /data
+        volumes:
+          - name: ray-logs
+            emptyDir: {}
+          - name: training-bucket-vol
+            persistentVolumeClaim:
+              claimName: training-bucket-pvc
+  workerGroupSpecs:
+  - replicas: 2
+    minReplicas: 2
+    maxReplicas: 2
+    groupName: gpu-group
+    rayStartParams:
+      num-cpus: "220"
+    template:
+      metadata:
+        annotations:
+          gke-gcsfuse/volumes: "true"
+      spec:
+        resourceClaims:
+          - name: rdma-claim
+            resourceClaimTemplateName: all-mrdma
+        initContainers:
+        - name: verl-setup
+          image: verlai/verl:vllm011.latest
+          command: ["/bin/bash", "-c"]
+          args:
+            - |
+              echo "Performing local editable install..."
+              cd /data/verl && pip3 install --no-deps -e .
+          volumeMounts:
+          - name: training-bucket-vol
+            mountPath: /data
+        serviceAccountName: ${KSA_NAME}
+        nodeSelector:
+          cloud.google.com/compute-class: dranet-a4-computeclass-v3
+        tolerations:
+          - key: "nvidia.com/gpu"
+            operator: "Exists"
+            effect: "NoSchedule"
+        containers:
+        - name: ray-worker
+          image: verlai/verl:vllm011.latest
+          env:
+           - name: LD_LIBRARY_PATH
+             value: /usr/local/nvidia/lib64
+          resources:
+            limits:
+              cpu: "180"
+              memory: "2000Gi"
+              nvidia.com/gpu: "8"
+              ephemeral-storage: "1000Gi"
+            requests:
+              cpu: "180"
+              memory: "2000Gi"
+              nvidia.com/gpu: "8"
+              ephemeral-storage: "1000Gi"
+            claims:
+            - name: rdma-claim
+          volumeMounts:
+          - name: shared-memory
+            mountPath: /dev/shm
+          - name: ray-tmp-storage
+            mountPath: /tmp
+          - name: training-bucket-vol
+            mountPath: /data
+        volumes:
+        - name: shared-memory
+          emptyDir:
+            medium: "Memory"
+            sizeLimit: 250Gi 
+        - name: ray-tmp-storage
+          emptyDir: {}
+        - name: training-bucket-vol
+          persistentVolumeClaim:
+            claimName: training-bucket-pvc

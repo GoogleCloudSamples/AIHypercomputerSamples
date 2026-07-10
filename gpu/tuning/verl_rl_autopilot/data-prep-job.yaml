@@ -1,0 +1,86 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: data-prep-job
+  namespace: ${NAMESPACE}
+spec:
+  template:
+    metadata:
+      annotations:
+        gke-gcsfuse/volumes: "true"
+        gke-gcsfuse/cpu-limit: "2"
+        gke-gcsfuse/memory-limit: "4Gi"
+        gke-gcsfuse/ephemeral-storage-limit: "50Gi"
+    spec:
+      serviceAccountName: ${KSA_NAME}
+      restartPolicy: OnFailure
+      nodeSelector:
+        cloud.google.com/compute-class: Performance
+      containers:
+      - name: prep-data
+        image: verlai/verl:vllm011.latest
+        resources:
+          requests:
+            cpu: "4"
+            memory: "8Gi"
+            ephemeral-storage: "50Gi"
+          limits:
+            cpu: "4"
+            memory: "8Gi"
+            ephemeral-storage: "50Gi"
+        env:
+        - name: HF_TOKEN
+          valueFrom:
+            secretKeyRef:
+              name: hf-secret
+              key: hf_token
+        - name: HF_HOME
+          value: /data/.cache/huggingface
+        - name: HF_HUB_DISABLE_XET
+          value: "1"
+        command: ["/bin/bash", "-c"]
+        args:
+        - |
+          set -euo pipefail
+          
+          # Clone verl to GCS (for worker pods)
+          if [ ! -d "/data/verl" ]; then
+            echo "Cloning verl to GCS..."
+            git clone https://github.com/volcengine/verl.git /data/verl
+          else
+            echo "verl already exists in /data/verl"
+          fi
+          
+          # Clone verl locally for fast installation
+          echo "Cloning verl locally..."
+          git clone https://github.com/volcengine/verl.git /tmp/verl
+          
+          # Install verl package from local clone
+          echo "Installing verl package..."
+          pip3 install --no-cache-dir --no-deps /tmp/verl
+          rm -rf /tmp/verl
+          
+          # Preprocess GSM8K
+          if [ ! -d "/data/gsm8k" ]; then
+            echo "Preprocessing GSM8K..."
+            python /data/verl/examples/data_preprocess/gsm8k.py --local_save_dir /data/gsm8k
+          else
+            echo "GSM8K data already exists in /data/gsm8k"
+          fi
+          
+          # Download model
+          if [ ! -d "/data/Qwen2.5-32B-Instruct" ]; then
+            echo "Downloading Qwen2.5-32B-Instruct..."
+            huggingface-cli download Qwen/Qwen2.5-32B-Instruct --local-dir /data/Qwen2.5-32B-Instruct --local-dir-use-symlinks False
+          else
+            echo "Model Qwen2.5-32B-Instruct already exists in /data/Qwen2.5-32B-Instruct"
+          fi
+          
+          echo "Data preparation complete!"
+        volumeMounts:
+        - name: training-bucket-vol
+          mountPath: /data
+      volumes:
+      - name: training-bucket-vol
+        persistentVolumeClaim:
+          claimName: training-bucket-pvc
