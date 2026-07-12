@@ -24,6 +24,6 @@ peft==0.16.0
 
 # Other dependencies
 tensorboard==2.20.0
-protobuf==6.31.1
+protobuf==6.33.5
 sentencepiece==0.2.0
 # [END hypercomputer_gpu_train_qwen2_slurm_requirements]
