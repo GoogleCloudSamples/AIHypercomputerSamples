@@ -1,6 +1,6 @@
 #!/bin/bash
 
-source 0_env.sh
+# Environment variables are expected to be loaded in the active shell session.
 
 # Determine the directory where the script is located
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
