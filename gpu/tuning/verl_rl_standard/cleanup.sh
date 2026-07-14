@@ -75,6 +75,11 @@ wait
 
 # Delete RDMA network
 if gcloud compute networks describe ${RDMA_NETWORK_PREFIX}-net --project=${PROJECT_ID} >/dev/null 2>&1; then
+  echo "Deleting firewall rules for ${RDMA_NETWORK_PREFIX}-net..."
+  for rule in $(gcloud compute firewall-rules list --filter="network:${RDMA_NETWORK_PREFIX}-net" --format="value(name)" --project=${PROJECT_ID} 2>/dev/null); do
+    echo "Deleting firewall rule ${rule}..."
+    gcloud compute firewall-rules delete ${rule} --project=${PROJECT_ID} --quiet || true
+  done
   echo "Deleting RDMA network ${RDMA_NETWORK_PREFIX}-net..."
   gcloud compute networks delete ${RDMA_NETWORK_PREFIX}-net --project=${PROJECT_ID} --quiet || true
 fi
@@ -93,6 +98,11 @@ fi
 
 # Delete GVNIC network
 if gcloud compute networks describe ${GVNIC_NETWORK_PREFIX}-net --project=${PROJECT_ID} >/dev/null 2>&1; then
+  echo "Deleting firewall rules for ${GVNIC_NETWORK_PREFIX}-net..."
+  for rule in $(gcloud compute firewall-rules list --filter="network:${GVNIC_NETWORK_PREFIX}-net" --format="value(name)" --project=${PROJECT_ID} 2>/dev/null); do
+    echo "Deleting firewall rule ${rule}..."
+    gcloud compute firewall-rules delete ${rule} --project=${PROJECT_ID} --quiet || true
+  done
   echo "Deleting GVNIC network ${GVNIC_NETWORK_PREFIX}-net..."
   gcloud compute networks delete ${GVNIC_NETWORK_PREFIX}-net --project=${PROJECT_ID} --quiet || true
 fi
