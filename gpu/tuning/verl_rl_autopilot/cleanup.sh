@@ -45,7 +45,7 @@ fi
 echo "Deleting GCS Bucket gs://${GS_BUCKET}..."
 # [START hypercomputer_gpu_train_ray_verl_auto_delete_bucket]
 if gcloud storage buckets describe gs://${GS_BUCKET} >/dev/null 2>&1; then
-  gcloud storage rm "gs://${GS_BUCKET}/**"
+  gcloud storage rm -r "gs://${GS_BUCKET}" || true
   gcloud storage buckets delete gs://${GS_BUCKET} --quiet || true
 fi
 # [END hypercomputer_gpu_train_ray_verl_auto_delete_bucket]
