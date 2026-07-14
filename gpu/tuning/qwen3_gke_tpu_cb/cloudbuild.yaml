@@ -1,0 +1,30 @@
+steps:
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk:latest'
+    entrypoint: 'bash'
+    args:
+      - '-c'
+      - |
+        set -euo pipefail
+        
+        # 1. Install uv
+        curl -LsSf https://astral.sh/uv/install.sh | sh
+        source $$HOME/.local/bin/env
+        
+        # 2. Setup Python environment and install MaxText runner
+        uv venv --python 3.12 --seed maxtext_venv
+        source maxtext_venv/bin/activate
+        uv pip install maxtext[runner]==0.2.1 --resolution=lowest
+        
+        # 3. Build the Docker image (Cloud Build has Docker pre-configured)
+        build_maxtext_docker_image WORKFLOW=post-training
+        
+        # 4. Tag the image properly
+        docker tag maxtext_base_image ${_CLOUD_IMAGE_NAME}
+
+# Cloud Build automatically pushes images listed here
+images:
+  - '${_CLOUD_IMAGE_NAME}'
+
+options:
+  # We use a high-CPU machine to match the n4-standard-16 from the VM tutorial
+  machineType: 'E2_HIGHCPU_32'
