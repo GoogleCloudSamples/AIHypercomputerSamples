@@ -87,7 +87,7 @@ echo "Port 8265 is open. Port-forwarding is ready."
 # 3. Submit the job
 echo "Submitting Ray job..."
 # [START hypercomputer_gpu_train_ray_verl_std_job_submit]
-ray -- job submit \
+ray job submit \
 --address "http://localhost:8265" \
 --runtime-env runtime-env-local.yaml \
 -- \
