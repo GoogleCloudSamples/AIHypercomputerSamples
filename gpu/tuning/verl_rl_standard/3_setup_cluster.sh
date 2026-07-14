@@ -54,33 +54,35 @@ if ! gcloud container node-pools describe gpu-pool --cluster=${CLUSTER_NAME} --l
   
   # Build the gcloud command. We need to handle reservation if it is set.
   # [START hypercomputer_gpu_train_ray_verl_std_create_nodepool]
-  CMD="gcloud container node-pools create gpu-pool \
-      --cluster=${CLUSTER_NAME} \
-      --location=${CONTROL_PLANE_REGION} \
-      --node-locations=${NODE_ZONE} \
-      --machine-type=${MACHINE_TYPE} \
-      --accelerator=type=${GPU_TYPE},count=8,gpu-driver-version=DEFAULT \
-      --enable-autoscaling \
-      --num-nodes=2 \
-      --total-max-nodes=10 \
-      --additional-node-network=network=${GVNIC_NETWORK_PREFIX}-net,subnetwork=${GVNIC_NETWORK_PREFIX}-sub \
-      --additional-node-network=network=${RDMA_NETWORK_PREFIX}-net,subnetwork=${RDMA_NETWORK_PREFIX}-sub-0 \
-      --additional-node-network=network=${RDMA_NETWORK_PREFIX}-net,subnetwork=${RDMA_NETWORK_PREFIX}-sub-1 \
-      --additional-node-network=network=${RDMA_NETWORK_PREFIX}-net,subnetwork=${RDMA_NETWORK_PREFIX}-sub-2 \
-      --additional-node-network=network=${RDMA_NETWORK_PREFIX}-net,subnetwork=${RDMA_NETWORK_PREFIX}-sub-3 \
-      --additional-node-network=network=${RDMA_NETWORK_PREFIX}-net,subnetwork=${RDMA_NETWORK_PREFIX}-sub-4 \
-      --additional-node-network=network=${RDMA_NETWORK_PREFIX}-net,subnetwork=${RDMA_NETWORK_PREFIX}-sub-5 \
-      --additional-node-network=network=${RDMA_NETWORK_PREFIX}-net,subnetwork=${RDMA_NETWORK_PREFIX}-sub-6 \
-      --additional-node-network=network=${RDMA_NETWORK_PREFIX}-net,subnetwork=${RDMA_NETWORK_PREFIX}-sub-7 \
-      --project=${PROJECT_ID}"
+  CMD=(
+    gcloud container node-pools create gpu-pool
+    --cluster="${CLUSTER_NAME}"
+    --location="${CONTROL_PLANE_REGION}"
+    --node-locations="${NODE_ZONE}"
+    --machine-type="${MACHINE_TYPE}"
+    --accelerator="type=${GPU_TYPE},count=8,gpu-driver-version=DEFAULT"
+    --enable-autoscaling
+    --num-nodes=2
+    --total-max-nodes=10
+    --additional-node-network="network=${GVNIC_NETWORK_PREFIX}-net,subnetwork=${GVNIC_NETWORK_PREFIX}-sub"
+    --additional-node-network="network=${RDMA_NETWORK_PREFIX}-net,subnetwork=${RDMA_NETWORK_PREFIX}-sub-0"
+    --additional-node-network="network=${RDMA_NETWORK_PREFIX}-net,subnetwork=${RDMA_NETWORK_PREFIX}-sub-1"
+    --additional-node-network="network=${RDMA_NETWORK_PREFIX}-net,subnetwork=${RDMA_NETWORK_PREFIX}-sub-2"
+    --additional-node-network="network=${RDMA_NETWORK_PREFIX}-net,subnetwork=${RDMA_NETWORK_PREFIX}-sub-3"
+    --additional-node-network="network=${RDMA_NETWORK_PREFIX}-net,subnetwork=${RDMA_NETWORK_PREFIX}-sub-4"
+    --additional-node-network="network=${RDMA_NETWORK_PREFIX}-net,subnetwork=${RDMA_NETWORK_PREFIX}-sub-5"
+    --additional-node-network="network=${RDMA_NETWORK_PREFIX}-net,subnetwork=${RDMA_NETWORK_PREFIX}-sub-6"
+    --additional-node-network="network=${RDMA_NETWORK_PREFIX}-net,subnetwork=${RDMA_NETWORK_PREFIX}-sub-7"
+    --project="${PROJECT_ID}"
+  )
 
   if [ -n "${RESERVATION:-}" ]; then
-    CMD="${CMD} --reservation-affinity=specific --reservation=${RESERVATION}"
+    CMD+=("--reservation-affinity=specific" "--reservation=${RESERVATION}")
   else
-    CMD="${CMD} --reservation-affinity=none"
+    CMD+=("--reservation-affinity=none")
   fi
 
-  eval $CMD
+  "${CMD[@]}"
   # [END hypercomputer_gpu_train_ray_verl_std_create_nodepool]
 else
   echo "Node pool gpu-pool already exists."
