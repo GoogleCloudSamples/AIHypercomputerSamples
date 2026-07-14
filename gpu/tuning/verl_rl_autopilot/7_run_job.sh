@@ -94,6 +94,7 @@ echo "Port 8265 is open. Port-forwarding is ready."
 
 # 3. Submit the job
 echo "Submitting Ray job..."
+# [START hypercomputer_gpu_train_ray_verl_auto_job_submit]
 ray -- job submit \
 --address "http://localhost:8265" \
 --runtime-env runtime-env-local.yaml \
@@ -126,5 +127,6 @@ bash -c "
     algorithm.adv_estimator=grpo \
     actor_rollout_ref.rollout.n=8 \
     trainer.total_epochs=2"
+# [END hypercomputer_gpu_train_ray_verl_auto_job_submit]
 
 echo "Job execution completed."

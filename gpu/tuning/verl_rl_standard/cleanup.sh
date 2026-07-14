@@ -26,6 +26,7 @@ echo "=== Starting Cleanup ==="
 
 # 1. Delete Ray Cluster
 echo "Deleting Ray Cluster (if exists)..."
+# [START hypercomputer_gpu_train_ray_verl_std_delete_ray]
 if [ -f "${SCRIPT_DIR}/ray-cluster-standard.yaml" ]; then
   # We need to make sure we have credentials to run kubectl
   if gcloud container clusters describe ${CLUSTER_NAME} --location=${CONTROL_PLANE_REGION} --project=${PROJECT_ID} >/dev/null 2>&1; then
@@ -33,6 +34,7 @@ if [ -f "${SCRIPT_DIR}/ray-cluster-standard.yaml" ]; then
     envsubst < "${SCRIPT_DIR}/ray-cluster-standard.yaml" | kubectl delete -f - --ignore-not-found=true || true
   fi
 fi
+# [END hypercomputer_gpu_train_ray_verl_std_delete_ray]
 
 # 2. Delete GCS FUSE Storage
 echo "Deleting GCS FUSE Storage..."
@@ -51,18 +53,23 @@ fi
 
 # 4. Delete GCS Bucket
 echo "Deleting GCS Bucket gs://${GS_BUCKET}..."
+# [START hypercomputer_gpu_train_ray_verl_std_delete_bucket]
 if gcloud storage buckets describe gs://${GS_BUCKET} --project="${PROJECT_ID}" >/dev/null 2>&1; then
   gcloud storage rm -r "gs://${GS_BUCKET}" --project="${PROJECT_ID}" || true
 fi
+# [END hypercomputer_gpu_train_ray_verl_std_delete_bucket]
 
 # 5. Delete GKE Cluster
 echo "Deleting GKE Cluster ${CLUSTER_NAME}..."
+# [START hypercomputer_gpu_train_ray_verl_std_delete_cluster]
 if gcloud container clusters describe ${CLUSTER_NAME} --location=${CONTROL_PLANE_REGION} --project=${PROJECT_ID} >/dev/null 2>&1; then
   gcloud container clusters delete ${CLUSTER_NAME} --location=${CONTROL_PLANE_REGION} --project=${PROJECT_ID} --quiet || true
 fi
+# [END hypercomputer_gpu_train_ray_verl_std_delete_cluster]
 
 # 6. Delete VPC Networks and Subnets
 echo "Deleting VPC Networks and Subnets..."
+# [START hypercomputer_gpu_train_ray_verl_std_delete_networks]
 
 # Delete RDMA subnets first
 echo "Deleting RDMA subnets..."
@@ -106,6 +113,7 @@ if gcloud compute networks describe ${GVNIC_NETWORK_PREFIX}-net --project=${PROJ
   echo "Deleting GVNIC network ${GVNIC_NETWORK_PREFIX}-net..."
   gcloud compute networks delete ${GVNIC_NETWORK_PREFIX}-net --project=${PROJECT_ID} --quiet || true
 fi
+# [END hypercomputer_gpu_train_ray_verl_std_delete_networks]
 
 # 7. Delete local files
 echo "Deleting local files and directories..."

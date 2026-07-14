@@ -11,6 +11,8 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+
+# [START hypercomputer_gpu_train_ray_verl_auto_ray_cluster]
 apiVersion: ray.io/v1
 kind: RayCluster
 metadata:
@@ -129,3 +131,5 @@ spec:
         - name: training-bucket-vol
           persistentVolumeClaim:
             claimName: training-bucket-pvc
+# [END hypercomputer_gpu_train_ray_verl_auto_ray_cluster]
+

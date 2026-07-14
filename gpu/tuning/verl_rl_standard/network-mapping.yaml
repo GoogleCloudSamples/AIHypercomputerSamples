@@ -11,6 +11,8 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+
+# [START hypercomputer_gpu_train_ray_verl_std_network_mapping]
 apiVersion: networking.gke.io/v1
 kind: GKENetworkParamSet
 metadata:
@@ -190,3 +192,5 @@ spec:
     group: networking.gke.io
     kind: GKENetworkParamSet
     name: rdma-7
+# [END hypercomputer_gpu_train_ray_verl_std_network_mapping]
+

@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+# [START hypercomputer_gpu_train_ray_verl_std_runtime_env]
 py_modules: ["."]
 working_dir: "."
 excludes:
@@ -37,4 +38,6 @@ env_vars:
   NCCL_TUNER_CONFIG_PATH: "/usr/local/gib/configs/tuner_config_a4.txtpb" 
   HF_HOME: "/data/huggingface_cache"
   GLOO_SOCKET_IFNAME: "eth0" 
+# [END hypercomputer_gpu_train_ray_verl_std_runtime_env]
+ 
 

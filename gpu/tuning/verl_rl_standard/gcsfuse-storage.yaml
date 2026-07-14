@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+# [START hypercomputer_gpu_train_ray_verl_std_gcsfuse_storage]
 apiVersion: v1
 kind: PersistentVolume
 metadata:
@@ -53,3 +54,5 @@ spec:
     requests:
       storage: 768Gi
   storageClassName: gcsfuse-sc
+# [END hypercomputer_gpu_train_ray_verl_std_gcsfuse_storage]
+
