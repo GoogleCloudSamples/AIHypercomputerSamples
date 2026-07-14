@@ -29,7 +29,7 @@ kubectl delete -f ray_cluster.yaml
 # [END hypercomputer_gpu_tune_gemma3_ray_delete_ray_cluster]
 
 # [START hypercomputer_gpu_tune_gemma3_ray_delete_gke_cluster]
-    gcloud container clusters delete $CLUSTER_NAME \
+gcloud container clusters delete $CLUSTER_NAME \
     --region=$REGION
 # [END hypercomputer_gpu_tune_gemma3_ray_delete_gke_cluster]
 
