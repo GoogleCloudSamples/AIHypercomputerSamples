@@ -75,17 +75,13 @@ def main():
         print(f"Loading preprocessed dataset from {args.preprocessed_data_path}...")
 
         # Synchronization of distributed processes
-        if torch.distributed.is_initialized():
-            local_rank = int(os.environ.get("LOCAL_RANK", 0))
+        local_rank = int(os.environ.get("LOCAL_RANK", -1))
+        if local_rank != -1:
             # Introducing a minimal time offset per GPU to avoid I/O collisions.
             import time
             time.sleep(local_rank * 0.2)
 
-            lm_dataset = load_from_disk(args.preprocessed_data_path, keep_in_memory=False)
-
-            torch.distributed.barrier()
-        else:
-            lm_dataset = load_from_disk(args.preprocessed_data_path, keep_in_memory=False)
+        lm_dataset = load_from_disk(args.preprocessed_data_path, keep_in_memory=False)
 
     else:
         print("No preprocessed dataset found, starting from raw data...")
