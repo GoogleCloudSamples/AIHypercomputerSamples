@@ -125,39 +125,6 @@ def main():
             desc=f"Grouping texts in chunks of {args.max_seq_length}",
         )
 
-        # Tokenization function
-        def tokenize_function(examples):
-            return tokenizer(examples["text"])
-
-        tokenized_dataset = raw_dataset.map(
-            tokenize_function,
-            batched=True,
-            remove_columns=raw_dataset.column_names,
-            desc="Running tokenizer on dataset",
-        )
-
-        # Main data processing function that will concatenate all texts from our dataset
-        # and generate chunks of max_seq_length.
-        def group_texts(examples):
-            # Concatenate all texts.
-            concatenated_examples = {k: [item for sublist in examples[k] for item in sublist] for k in examples.keys()}
-            total_length = len(concatenated_examples[list(examples.keys())[0]])
-            # We drop the small remainder.
-            if total_length >= args.max_seq_length:
-                total_length = (total_length // args.max_seq_length) * args.max_seq_length
-            # Split by chunks of max_len.
-            result = {
-                k: [t[i : i + args.max_seq_length] for i in range(0, total_length, args.max_seq_length)]
-                for k, t in concatenated_examples.items()
-            }
-            result["labels"] = result["input_ids"].copy()
-            return result
-
-        lm_dataset = tokenized_dataset.map(
-            group_texts,
-            batched=True,
-            desc=f"Grouping texts in chunks of {args.max_seq_length}",
-        )
 
     # --- 5. Configure Training Arguments ---
     # Check for bfloat16 support
