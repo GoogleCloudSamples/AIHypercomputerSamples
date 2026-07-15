@@ -19,7 +19,7 @@ set -euo pipefail
 declare -r SCRIPT_PATH="$(realpath "${BASH_SOURCE[0]}")"
 declare -r BASEDIR="$(dirname "${SCRIPT_PATH}")"
 
-declare -r CLUSTER_TOOLKIT_VERSION="v1.94.0"
+declare -r CLUSTER_TOOLKIT_VERSION="v1.97.0"
 declare -r CLUSTER_TOOLKIT_URL="https://github.com/GoogleCloudPlatform/cluster-toolkit/releases/download/${CLUSTER_TOOLKIT_VERSION}/gcluster_bundle_linux_amd64.tgz"
 declare -r CLUSTER_TOOLKIT_PATH="${BASEDIR}/cluster_toolkit"
 
@@ -102,19 +102,12 @@ gcluster create \
   -o "${CLUSTER_NAME}"
 # [END hypercomputer_gpu_train_qwen2_slurm_download_gcluster_create]
 
-echo "[$(date)] Step 4b: Modifying the Packer version requirements in the generated files..."
-# [START hypercomputer_gpu_train_qwen2_slurm_manifests_packer]
-# TODO(manikowski): This section will be removed when v1.97.0 is released
-# Patch due to https://github.com/GoogleCloudPlatform/cluster-toolkit/pull/5848 not being included in v1.96.0
-find . -type f -name "versions.pkr.hcl" -exec sed -i 's/>= 1.15.3/>= 1.15.0/g' {} +
-# [END hypercomputer_gpu_train_qwen2_slurm_manifests_packer]
-
 echo "[$(date)] Patching Filestore deletion protection in ${CLUSTER_NAME}..."
 # [START hypercomputer_gpu_train_qwen2_slurm_manifests_filestore]
 sed -i '/deletion_protection = {/,/}/ { s/enabled = true/enabled = false/; /reason  = "Avoid data loss"/d; }' "${CLUSTER_NAME}/${CLUSTER_NAME}/cluster-env/main.tf"
 # [END hypercomputer_gpu_train_qwen2_slurm_manifests_filestore]
 
-echo "[$(date)] Step 4c: Launching the deployment from the folder..."
+echo "[$(date)] Step 4b: Launching the deployment from the folder..."
 # [START hypercomputer_gpu_train_qwen2_slurm_download_deploy_cluster]
 gcluster deploy "${CLUSTER_NAME}/${CLUSTER_NAME}" --auto-approve
 # [END hypercomputer_gpu_train_qwen2_slurm_download_deploy_cluster]

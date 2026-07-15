@@ -63,7 +63,7 @@ def main():
     # with the model architecture (e.g., special tokens).
     tokenizer = AutoTokenizer.from_pretrained(args.model_config_id)
 
-    # --- 4. Initialize Model from Scratch ---
+    # --- 3. Initialize Model from Scratch ---
     print(f"Initializing a new model from {args.model_config_id} configuration...")
     config = AutoConfig.from_pretrained(args.model_config_id)
     model = AutoModelForCausalLM.from_config(config)
@@ -73,10 +73,57 @@ def main():
     # --- 3. Load or Create and prepare the training dataset ---
     if args.preprocessed_data_path and os.path.exists(args.preprocessed_data_path):
         print(f"Loading preprocessed dataset from {args.preprocessed_data_path}...")
-        lm_dataset = load_from_disk(args.preprocessed_data_path)
+
+        # Synchronization of distributed processes
+        if torch.distributed.is_initialized():
+            local_rank = int(os.environ.get("LOCAL_RANK", 0))
+            # Introducing a minimal time offset per GPU to avoid I/O collisions.
+            import time
+            time.sleep(local_rank * 0.2)
+
+            lm_dataset = load_from_disk(args.preprocessed_data_path, keep_in_memory=False)
+
+            torch.distributed.barrier()
+        else:
+            lm_dataset = load_from_disk(args.preprocessed_data_path, keep_in_memory=False)
+
     else:
         print("No preprocessed dataset found, starting from raw data...")
         raw_dataset = load_dataset(args.dataset_name, name=args.dataset_config, split="train")
+
+        # Tokenization function
+        def tokenize_function(examples):
+            return tokenizer(examples["text"])
+
+        tokenized_dataset = raw_dataset.map(
+            tokenize_function,
+            batched=True,
+            remove_columns=raw_dataset.column_names,
+            desc="Running tokenizer on dataset",
+        )
+
+        # Main data processing function that will concatenate all texts from our dataset
+        # and generate chunks of max_seq_length.
+        def group_texts(examples):
+            # Concatenate all texts.
+            concatenated_examples = {k: [item for sublist in examples[k] for item in sublist] for k in examples.keys()}
+            total_length = len(concatenated_examples[list(examples.keys())[0]])
+            # We drop the small remainder.
+            if total_length >= args.max_seq_length:
+                total_length = (total_length // args.max_seq_length) * args.max_seq_length
+            # Split by chunks of max_len.
+            result = {
+                k: [t[i : i + args.max_seq_length] for i in range(0, total_length, args.max_seq_length)]
+                for k, t in concatenated_examples.items()
+            }
+            result["labels"] = result["input_ids"].copy()
+            return result
+
+        lm_dataset = tokenized_dataset.map(
+            group_texts,
+            batched=True,
+            desc=f"Grouping texts in chunks of {args.max_seq_length}",
+        )
 
         # Tokenization function
         def tokenize_function(examples):

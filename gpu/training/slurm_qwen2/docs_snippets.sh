@@ -19,7 +19,7 @@
 # ==============================================================================
 
 # [START hypercomputer_gpu_train_qwen2_slurm_download_toolkit]
-export CLUSTER_TOOLKIT_TAG=v1.96.0
+export CLUSTER_TOOLKIT_TAG=v1.97.0
 
 # Detect OS (linux or mac)
 case "$(uname -s)" in
