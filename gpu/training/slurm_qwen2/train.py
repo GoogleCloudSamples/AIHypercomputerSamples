@@ -70,7 +70,7 @@ def main():
 
     print(f"Model has {model.num_parameters():,} parameters.")
 
-    # --- 3. Load or Create and prepare the training dataset ---
+    # --- 4. Load or Create and prepare the training dataset ---
     if args.preprocessed_data_path and os.path.exists(args.preprocessed_data_path):
         print(f"Loading preprocessed dataset from {args.preprocessed_data_path}...")
 
