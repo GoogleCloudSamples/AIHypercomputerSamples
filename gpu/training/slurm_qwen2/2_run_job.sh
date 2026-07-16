@@ -27,10 +27,10 @@ CURRENT_USER="${USER:-$(whoami)}"
 # Build a secure filter:
 # Search for a machine that has 'login' in its name and the current user's name
 # [START hypercomputer_gpu_train_qwen2_slurm_download_login_node]
-LOGIN_NODE=$(gcloud compute instances list \
-  --project="${PROJECT_ID}" \
-  --filter="name ~ .*login.* AND name ~ .*${CURRENT_USER}.*" \
-  --format="value(name)" | head -n 1)
+LOGIN_NODE="$(gcloud compute instances list \
+                --project="${PROJECT_ID}" \
+                --filter="labels.ghpc_deployment='${CLUSTER_NAME}' AND labels.slurm_instance_role='login'" \
+                --format="value(name)" | head -n 1)"
 # [END hypercomputer_gpu_train_qwen2_slurm_download_login_node]
 
 if [ -z "${LOGIN_NODE}" ]; then

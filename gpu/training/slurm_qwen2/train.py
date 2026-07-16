@@ -63,17 +63,26 @@ def main():
     # with the model architecture (e.g., special tokens).
     tokenizer = AutoTokenizer.from_pretrained(args.model_config_id)
 
-    # --- 4. Initialize Model from Scratch ---
+    # --- 3. Initialize Model from Scratch ---
     print(f"Initializing a new model from {args.model_config_id} configuration...")
     config = AutoConfig.from_pretrained(args.model_config_id)
     model = AutoModelForCausalLM.from_config(config)
 
     print(f"Model has {model.num_parameters():,} parameters.")
 
-    # --- 3. Load or Create and prepare the training dataset ---
+    # --- 4. Load or Create and prepare the training dataset ---
     if args.preprocessed_data_path and os.path.exists(args.preprocessed_data_path):
         print(f"Loading preprocessed dataset from {args.preprocessed_data_path}...")
-        lm_dataset = load_from_disk(args.preprocessed_data_path)
+
+        # Synchronization of distributed processes
+        local_rank = int(os.environ.get("LOCAL_RANK", -1))
+        if local_rank != -1:
+            # Introducing a minimal time offset per GPU to avoid I/O collisions.
+            import time
+            time.sleep(local_rank * 0.2)
+
+        lm_dataset = load_from_disk(args.preprocessed_data_path, keep_in_memory=False)
+
     else:
         print("No preprocessed dataset found, starting from raw data...")
         raw_dataset = load_dataset(args.dataset_name, name=args.dataset_config, split="train")
@@ -111,6 +120,7 @@ def main():
             batched=True,
             desc=f"Grouping texts in chunks of {args.max_seq_length}",
         )
+
 
     # --- 5. Configure Training Arguments ---
     # Check for bfloat16 support
