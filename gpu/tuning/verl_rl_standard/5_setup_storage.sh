@@ -61,7 +61,7 @@ echo "Creating GCS fuse PV and PVC..."
 # Determine the directory where the script is located
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # [START hypercomputer_gpu_train_ray_verl_std_apply_storage]
-envsubst < "${SCRIPT_DIR}/gcsfuse-storage.yaml" | kubectl apply -f -
+envsubst < gcsfuse-storage.yaml | kubectl apply -f -
 # [END hypercomputer_gpu_train_ray_verl_std_apply_storage]
 
 echo "Storage setup complete. Bucket: gs://${GS_BUCKET}"
