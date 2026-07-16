@@ -3,9 +3,9 @@ git clone https://github.com/GoogleCloudSamples/AIHypercomputerSamples.git
 # [END hypercomputer_gpu_train_ray_verl_clone]
 
 # [START hypercomputer_gpu_train_ray_chdir_autopilot]
-cd gpu/tuning/verl_rl_autopilot
+cd AIHypercomputerSamples/gpu/tuning/verl_rl_autopilot
 # [END hypercomputer_gpu_train_ray_chdir_autopilot]
 
 # [START hypercomputer_gpu_train_ray_chdir_std]
-cd gpu/tuning/verl_rl_standard
+cd AIHypercomputerSamples/gpu/tuning/verl_rl_standard
 # [END hypercomputer_gpu_train_ray_chdir_std]
