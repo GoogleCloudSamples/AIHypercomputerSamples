@@ -16,12 +16,12 @@ set -euo pipefail
 
 echo "[$(date)] ==================== Creating Cluster... ===================="
 # [START hypercomputer_gpu_infer_deepseek32_cluster_create_auto]
-gcloud container clusters create-auto $CLUSTER_NAME \
-    --project=$PROJECT_ID \
-    --region=$REGION \
+gcloud container clusters create-auto "$CLUSTER_NAME" \
+    --project="$PROJECT_ID" \
+    --region="$REGION" \
     --release-channel=rapid \
-    --network=$NETWORK \
-    --subnetwork=$SUBNETWORK
+    --network="$NETWORK" \
+    --subnetwork="$SUBNETWORK"
 # [END hypercomputer_gpu_infer_deepseek32_cluster_create_auto]
 
 echo "Verifying cluster status..."
@@ -35,13 +35,13 @@ else
 fi
 
 # [START hypercomputer_gpu_infer_deepseek32_cluster_get_creds]
-gcloud container clusters get-credentials $CLUSTER_NAME \
-    --location=$REGION
+gcloud container clusters get-credentials "$CLUSTER_NAME" \
+    --location="$REGION"
 # [END hypercomputer_gpu_infer_deepseek32_cluster_get_creds]
 
 echo "[$(date)] ==================== Creating hf-secret secret... ===================="
 # [START hypercomputer_gpu_infer_deepseek32_secret_create]
 kubectl create secret generic hf-secret \
-    --from-literal=hf_token=${HUGGING_FACE_TOKEN} \
+    --from-literal=hf_token="${HUGGING_FACE_TOKEN}" \
     --dry-run=client -o yaml | kubectl apply -f -
 # [END hypercomputer_gpu_infer_deepseek32_secret_create]

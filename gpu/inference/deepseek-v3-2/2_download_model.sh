@@ -16,12 +16,12 @@ set -euo pipefail
 
 echo "[$(date)] ==================== Creating a Google Cloud Storage bucket... ==================="
 # [START hypercomputer_gpu_infer_deepseek32_bucket_create]
-gcloud storage buckets create gs://$GCS_BUCKET --location=$REGION --uniform-bucket-level-access
+gcloud storage buckets create gs://"$GCS_BUCKET" --location="$REGION" --uniform-bucket-level-access
 # [END hypercomputer_gpu_infer_deepseek32_bucket_create]
 
 echo "[$(date)] ==================== Adding bucket permissions... ==================="
 # [START hypercomputer_gpu_infer_deepseek32_add_bucket_permissions]
-gcloud storage buckets add-iam-policy-binding gs://$GCS_BUCKET \
+gcloud storage buckets add-iam-policy-binding gs://"$GCS_BUCKET" \
     --member="principal://iam.googleapis.com/projects/$PROJECT_NUMBER/locations/global/workloadIdentityPools/$PROJECT_ID.svc.id.goog/subject/ns/default/sa/default" \
     --role="roles/storage.objectAdmin"
 # [END hypercomputer_gpu_infer_deepseek32_add_bucket_permissions]

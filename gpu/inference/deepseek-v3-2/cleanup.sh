@@ -22,12 +22,12 @@ kubectl delete secret hf-secret
 
 echo "[$(date)] ==================== Deleting the bucket ===================="
 # [START hypercomputer_gpu_infer_deepseek32_bucket_cleanup]
-gcloud storage rm --recursive gs://$GCS_BUCKET
+gcloud storage rm --recursive gs://"$GCS_BUCKET"
 # [END hypercomputer_gpu_infer_deepseek32_bucket_cleanup]
 
 echo "[$(date)] ==================== Deleting the cluster ===================="
 # [START hypercomputer_gpu_infer_deepseek32_cluster_cleanup]
-gcloud container clusters delete $CLUSTER_NAME \
-    --region=$REGION \
+gcloud container clusters delete "$CLUSTER_NAME" \
+    --region="$REGION" \
     --quiet
 # [END hypercomputer_gpu_infer_deepseek32_cluster_cleanup]

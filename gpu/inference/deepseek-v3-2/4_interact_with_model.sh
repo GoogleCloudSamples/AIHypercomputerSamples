@@ -16,7 +16,7 @@ set -euo pipefail
 
 echo "[$(date)] ==================== The model is deployed. Setting up port forwarding... ===================="
 # Set up port forwarding to the deepseek-v3-2 model
-kubectl port-forward service/deepseek-service 8000:8000 &
+kubectl port-forward service/deepseek-service 8000:8000 >/dev/null 2>&1 &
 PORT_FORWARD_PID=$!
 
 cleanup() {
