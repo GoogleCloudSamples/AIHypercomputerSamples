@@ -46,24 +46,33 @@ LOCAL_OUTPUT_DIR="/mnt/localssd/outputs_${SLURM_JOB_ID}"
 mkdir -p ${LOCAL_OUTPUT_DIR}
 
 # This is the main training command.
-srun --ntasks=$((SLURM_NNODES * 8)) --gpus-per-task=1 bash -c "
-  source ${LOCAL_VENV}/bin/activate
+srun --ntasks=$SLURM_NNODES --ntasks-per-node=1 bash -c '
+  source '"${LOCAL_VENV}"'/bin/activate
 
-  export HF_HOME=${LOCAL_CACHE}
-  export HF_DATASETS_CACHE=${LOCAL_CACHE}
+  export HF_HOME='"${LOCAL_CACHE}"'
+  export HF_DATASETS_CACHE='"${LOCAL_CACHE}"'
 
-  # Run the Python script directly.
-  # Accelerate will divide the work
-  python ~/train.py \
+  export MASTER_ADDR=$(scontrol show hostnames "$SLURM_JOB_NODELIST" | head -n 1)
+  export MASTER_PORT=29500
+
+  # Use accelerate launch to properly run the distributed FSDP job
+  accelerate launch \
+    --config_file ~/accelerate_config.yaml \
+    --machine_rank $SLURM_NODEID \
+    --main_process_ip $MASTER_ADDR \
+    --main_process_port $MASTER_PORT \
+    --num_machines $SLURM_NNODES \
+    --num_processes $((SLURM_NNODES * 8)) \
+    ~/train.py \
     --model_id google/gemma-3-12b-pt \
-    --output_dir ${LOCAL_OUTPUT_DIR} \
+    --output_dir '"${LOCAL_OUTPUT_DIR}"' \
     --per_device_train_batch_size 1 \
     --gradient_accumulation_steps 8 \
     --num_train_epochs 3 \
     --learning_rate 1e-5 \
     --save_strategy steps \
     --save_steps 100
-"
+'
 
 # --- STAGE 3: Copy Final Model from Local SSD to Home Directory ---
 echo "--- Copying final model from local SSD to /home ---"
