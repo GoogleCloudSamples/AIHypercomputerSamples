@@ -55,7 +55,8 @@ RESPONSE=$(curl -s http://127.0.0.1:8000/v1/chat/completions \
         "role": "user",
         "content": "Describe a GPU in one short sentence?"
       }
-    ]
+    ],
+    "stream": false
   }')
 
 echo "Verifying JSON completion structure..."

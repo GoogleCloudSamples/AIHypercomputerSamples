@@ -14,14 +14,22 @@
 
 set -euo pipefail
 
-# [START hypercomputer_gpu_infer_qwen3_deploy]
+# [START hypercomputer_gpu_infer_qwen3_model_loader_apply]
 envsubst < qwen3-model-loader.yaml | kubectl apply -f -
+# [END hypercomputer_gpu_infer_qwen3_model_loader_apply]
 
 echo "Waiting for the model loader job to complete..."
+# [START hypercomputer_gpu_infer_qwen3_model_loader_wait]
 kubectl wait \
-    --for=condition=complete \
+    --for=condition=Complete \
     --timeout=1800s job/qwen3-model-loader
+# [END hypercomputer_gpu_infer_qwen3_model_loader_wait]
 
+# [START hypercomputer_gpu_infer_qwen3_model_loader_delete]
+kubectl delete job qwen3-model-loader --ignore-not-found
+# [END hypercomputer_gpu_infer_qwen3_model_loader_delete]
+
+# [START hypercomputer_gpu_infer_qwen3_deploy]
 envsubst < qwen3-235b-deploy.yaml | kubectl apply -f -
 # [END hypercomputer_gpu_infer_qwen3_deploy]
 
