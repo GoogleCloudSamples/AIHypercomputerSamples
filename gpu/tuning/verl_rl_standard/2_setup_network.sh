@@ -19,56 +19,35 @@ set -euo pipefail
 source 0_env.sh
 
 # Create a VPC network for the gVNIC interface:
-if ! gcloud compute networks describe ${GVNIC_NETWORK_PREFIX}-net --project=${PROJECT_ID} >/dev/null 2>&1; then
-  echo "Creating VPC network ${GVNIC_NETWORK_PREFIX}-net..."
-  # [START hypercomputer_gpu_train_ray_verl_std_create_gvnic_net]
-  gcloud compute networks create ${GVNIC_NETWORK_PREFIX}-net \
-      --subnet-mode=custom \
-      --project=${PROJECT_ID}
-  # [END hypercomputer_gpu_train_ray_verl_std_create_gvnic_net]
-else
-  echo "VPC network ${GVNIC_NETWORK_PREFIX}-net already exists."
-fi
+echo "Creating VPC network ${GVNIC_NETWORK_PREFIX}-net..."
+  
+# [START hypercomputer_gpu_train_ray_verl_std_create_gvnic_net]
+gcloud compute networks create ${GVNIC_NETWORK_PREFIX}-net \
+  --subnet-mode=custom \
+  --project=${PROJECT_ID}
 
-if ! gcloud compute networks subnets describe ${GVNIC_NETWORK_PREFIX}-sub --region=${CONTROL_PLANE_REGION} --project=${PROJECT_ID} >/dev/null 2>&1; then
-  echo "Creating subnet ${GVNIC_NETWORK_PREFIX}-sub..."
-  # [START hypercomputer_gpu_train_ray_verl_std_create_gvnic_sub]
-  gcloud compute networks subnets create ${GVNIC_NETWORK_PREFIX}-sub \
-      --network=${GVNIC_NETWORK_PREFIX}-net \
-      --region=${CONTROL_PLANE_REGION} \
-      --range=192.168.0.0/24 \
-      --project=${PROJECT_ID}
-  # [END hypercomputer_gpu_train_ray_verl_std_create_gvnic_sub]
-else
-  echo "Subnet ${GVNIC_NETWORK_PREFIX}-sub already exists."
-fi
+gcloud compute networks subnets create ${GVNIC_NETWORK_PREFIX}-sub \
+  --network=${GVNIC_NETWORK_PREFIX}-net \
+  --region=${CONTROL_PLANE_REGION} \
+  --range=192.168.0.0/24 \
+  --project=${PROJECT_ID}
 
-if ! gcloud compute firewall-rules describe ${GVNIC_NETWORK_PREFIX}-internal --project=${PROJECT_ID} >/dev/null 2>&1; then
-  echo "Creating firewall rule ${GVNIC_NETWORK_PREFIX}-internal..."
-  # [START hypercomputer_gpu_train_ray_verl_std_create_gvnic_firewall]
-  gcloud compute firewall-rules create ${GVNIC_NETWORK_PREFIX}-internal \
-      --network=${GVNIC_NETWORK_PREFIX}-net \
-      --action=ALLOW \
-      --rules=tcp:0-65535,udp:0-65535,icmp \
-      --source-ranges=192.168.0.0/16 \
-      --project=${PROJECT_ID}
-  # [END hypercomputer_gpu_train_ray_verl_std_create_gvnic_firewall]
-else
-  echo "Firewall rule ${GVNIC_NETWORK_PREFIX}-internal already exists."
-fi
+gcloud compute firewall-rules create ${GVNIC_NETWORK_PREFIX}-internal \
+  --network=${GVNIC_NETWORK_PREFIX}-net \
+  --action=ALLOW \
+  --rules=tcp:0-65535,udp:0-65535,icmp \
+  --source-ranges=192.168.0.0/16 \
+  --project=${PROJECT_ID}
+# [END hypercomputer_gpu_train_ray_verl_std_create_gvnic_net]
+
 
 # Create a VPC network and subnets for RDMA with 8 subnets for 8 GPUs:
-if ! gcloud compute networks describe ${RDMA_NETWORK_PREFIX}-net --project=${PROJECT_ID} >/dev/null 2>&1; then
-  echo "Creating VPC network ${RDMA_NETWORK_PREFIX}-net..."
-  # [START hypercomputer_gpu_train_ray_verl_std_create_rdma_net]
-  gcloud beta compute networks create ${RDMA_NETWORK_PREFIX}-net \
-      --network-profile=${NODE_ZONE}-vpc-roce \
-      --subnet-mode=custom \
-      --project=${PROJECT_ID}
-  # [END hypercomputer_gpu_train_ray_verl_std_create_rdma_net]
-else
-  echo "VPC network ${RDMA_NETWORK_PREFIX}-net already exists."
-fi
+# [START hypercomputer_gpu_train_ray_verl_std_create_rdma_net]
+gcloud beta compute networks create ${RDMA_NETWORK_PREFIX}-net \
+  --network-profile=${NODE_ZONE}-vpc-roce \
+  --subnet-mode=custom \
+  --project=${PROJECT_ID}
+# [END hypercomputer_gpu_train_ray_verl_std_create_rdma_net]
 
 echo "Creating RDMA subnets..."
 # [START hypercomputer_gpu_train_ray_verl_std_create_rdma_subs]
