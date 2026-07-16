@@ -24,7 +24,7 @@ export CLUSTER_NAME="YOUR_CLUSTER_NAME"
 export KSA_NAME="YOUR_KSA_NAME"
 export GS_BUCKET="YOUR_BUCKET_NAME"
 export HF_TOKEN="HUGGING_FACE_TOKEN"
-export RESERVATION_NAME="YOUR_RESERVATION_NAME"
+export RESERVATION="YOUR_RESERVATION_NAME"
 export MACHINE_TYPE="a4-highgpu-8g"
 export NAMESPACE="default"
 # [END hypercomputer_gpu_train_ray_verl_auto_env]
