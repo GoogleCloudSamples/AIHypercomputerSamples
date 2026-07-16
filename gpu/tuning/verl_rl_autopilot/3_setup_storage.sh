@@ -35,16 +35,14 @@ fi
 # Create KSA if it doesn't exist
 if ! kubectl get serviceaccount ${KSA_NAME} -n ${NAMESPACE} >/dev/null 2>&1; then
   echo "Creating Kubernetes Service Account ${KSA_NAME} in namespace ${NAMESPACE}..."
-  kubectl create serviceaccount ${KSA_NAME} -n ${NAMESPACE}
-fi
 
-# Bind KSA to the bucket using Workload Identity (direct binding)
-echo "Binding KSA ${KSA_NAME} to bucket gs://${GS_BUCKET}..."
-# [START hypercomputer_gpu_train_ray_verl_auto_bind_iam]
-gcloud storage buckets add-iam-policy-binding "gs://${GS_BUCKET}" \
+  # [START hypercomputer_gpu_train_ray_verl_auto_create_sa]
+  kubectl create serviceaccount ${KSA_NAME} -n ${NAMESPACE}
+  gcloud storage buckets add-iam-policy-binding "gs://${GS_BUCKET}" \
     --member="principal://iam.googleapis.com/projects/${PROJECT_NUMBER}/locations/global/workloadIdentityPools/${PROJECT_ID}.svc.id.goog/subject/ns/${NAMESPACE}/sa/${KSA_NAME}" \
     --role="roles/storage.objectUser"
-# [END hypercomputer_gpu_train_ray_verl_auto_bind_iam]
+  # [END hypercomputer_gpu_train_ray_verl_auto_create_sa]
+fi
 
 # Create Hugging Face Token
 if kubectl get secret hf-secret >/dev/null 2>&1; then
