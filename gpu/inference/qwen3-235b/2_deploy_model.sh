@@ -26,7 +26,7 @@ kubectl wait \
 # [END hypercomputer_gpu_infer_qwen3_model_loader_wait]
 
 # [START hypercomputer_gpu_infer_qwen3_model_loader_delete]
-kubectl delete job qwen3-model-loader
+kubectl delete job qwen3-model-loader --ignore-not-found
 # [END hypercomputer_gpu_infer_qwen3_model_loader_delete]
 
 # [START hypercomputer_gpu_infer_qwen3_deploy]
