@@ -16,6 +16,10 @@
 
 set -euo pipefail
 
+if [ -d "venvp3" ]; then
+  source venvp3/bin/activate
+fi
+
 echo "[$(date)] ==================== Submitting Model Conversion Workload... ===================="
 # [START hypercomputer_tpu_tune_qwen3_sft_convert_model]
 xpk workload create \

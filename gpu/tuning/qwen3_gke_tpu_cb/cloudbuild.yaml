@@ -1,10 +1,13 @@
 steps:
-  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk:latest'
+  - name: 'gcr.io/cloud-builders/docker'
     entrypoint: 'bash'
     args:
       - '-c'
       - |
         set -euo pipefail
+        
+        # 0. Install prerequisites (if needed)
+        apt-get update && apt-get install -y curl || apk add curl || true
         
         # 1. Install uv
         curl -LsSf https://astral.sh/uv/install.sh | sh

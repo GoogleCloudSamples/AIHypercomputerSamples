@@ -16,11 +16,15 @@
 
 set -euo pipefail
 
+if [ -d "venvp3" ]; then
+  source venvp3/bin/activate
+fi
+
 echo "[$(date)] ==================== Cleaning up resources... ===================="
 # [START hypercomputer_tpu_tune_qwen3_sft_cleanup]
 xpk cluster delete --cluster $CLUSTER_NAME --project $PROJECT --zone $ZONE
 
-gcloud storage buckets delete gs://$GCS_BUCKET --recursive
+gcloud storage rm --recursive gs://$GCS_BUCKET
 
 gcloud artifacts repositories delete maxtext-images --location=$REGION --project=$PROJECT --quiet
 # [END hypercomputer_tpu_tune_qwen3_sft_cleanup]

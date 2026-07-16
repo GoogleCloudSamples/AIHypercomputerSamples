@@ -16,6 +16,10 @@
 
 set -euo pipefail
 
+if [ -d "venvp3" ]; then
+  source venvp3/bin/activate
+fi
+
 echo "[$(date)] ==================== Submitting Training Workload... ===================="
 # [START hypercomputer_tpu_tune_qwen3_sft_train]
 xpk workload create-pathways \
