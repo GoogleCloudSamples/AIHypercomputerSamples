@@ -20,8 +20,8 @@
 
 # [START hypercomputer_gpu_tune_gemma3_slurm_toolkit_download]
 # Find all available releases at: https://github.com/GoogleCloudPlatform/cluster-toolkit/releases
-# Set the desired version TAG (e.g., v1.96.0)
-export CLUSTER_TOOLKIT_TAG=v1.96.0
+# Set the desired version TAG (e.g., v1.97.0)
+export CLUSTER_TOOLKIT_TAG=v1.97.0
 
 # Detect OS (linux or mac)
 case "$(uname -s)" in
