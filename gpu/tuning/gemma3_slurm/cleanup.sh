@@ -32,7 +32,7 @@ gcluster destroy "${WORK_DIR}/${CLUSTER_NAME}" --auto-approve || true
 
 # 2. Delete GCS bucket
 echo "[$(date)] Deleting GCS bucket gs://${BUCKET_NAME}..."
-gcloud storage buckets delete "gs://${BUCKET_NAME}" --quiet || true
+gcloud storage rm --recursive "gs://${BUCKET_NAME}" --quiet || true
 
 # 3. Clean up temporary directory
 echo "[$(date)] Cleaning up temporary directory ${WORK_DIR}..."

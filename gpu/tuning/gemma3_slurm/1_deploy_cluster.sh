@@ -21,7 +21,7 @@ if [[ -z "${WORK_DIR:-}" ]]; then
   exit 1
 fi
 
-declare -r CLUSTER_TOOLKIT_VERSION="v1.96.0"
+declare -r CLUSTER_TOOLKIT_VERSION="v1.97.0"
 declare -r CLUSTER_TOOLKIT_URL="https://github.com/GoogleCloudPlatform/cluster-toolkit/releases/download/${CLUSTER_TOOLKIT_VERSION}/gcluster_bundle_linux_amd64.tgz"
 declare -r CLUSTER_TOOLKIT_PATH="${WORK_DIR}/cluster_toolkit"
 
@@ -91,11 +91,6 @@ gcluster create \
 # [END hypercomputer_gpu_tune_gemma3_slurm_create_tf]
 
 # [START hypercomputer_gpu_tune_gemma3_slurm_patch_tf]
-# TODO(armandomiani): Remove when v1.97.0 is released
-# Patch due to https://github.com/GoogleCloudPlatform/cluster-toolkit/pull/5848 not included in v1.96.0
-echo "[$(date)] Patching Packer version constraint in ${CLUSTER_NAME}..."
-sed -i 's/required_version = ">= 1.15.3, < 2.0.0"/required_version = ">= 1.15.0, < 2.0.0"/g' "${WORK_DIR}/${CLUSTER_NAME}/image/slurm-a4high-image/versions.pkr.hcl"
-
 echo "[$(date)] Patching Filestore deletion protection in ${CLUSTER_NAME}..."
 sed -i '/deletion_protection = {/,/}/ { s/enabled = true/enabled = false/; /reason  = "Avoid data loss"/d; }' "${WORK_DIR}/${CLUSTER_NAME}/cluster-env/main.tf"
 # [END hypercomputer_gpu_tune_gemma3_slurm_patch_tf]
