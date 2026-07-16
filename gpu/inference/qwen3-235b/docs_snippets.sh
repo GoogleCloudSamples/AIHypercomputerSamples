@@ -17,8 +17,8 @@ kubectl port-forward service/qwen3-service 8000:8000
 # [END hypercomputer_gpu_infer_qwen3_port_forward]
 
 # [START hypercomputer_gpu_infer_qwen3_deploy_cleanup]
-kubectl delete -f qwen3-235b-deploy.yaml
-kubectl delete -f qwen3-model-loader.yaml
+envsubst < qwen3-235b-deploy.yaml | kubectl delete -f -
+envsubst < qwen3-model-loader.yaml | kubectl delete -f -
 kubectl delete secret hf-secret
 kubectl delete serviceaccount qwen-ksa
 

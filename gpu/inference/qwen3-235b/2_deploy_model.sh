@@ -19,8 +19,10 @@ envsubst < qwen3-model-loader.yaml | kubectl apply -f -
 
 echo "Waiting for the model loader job to complete..."
 kubectl wait \
-    --for=condition=complete \
+    --for=condition=Complete \
     --timeout=1800s job/qwen3-model-loader
+
+kubectl delete job qwen3-model-loader
 
 envsubst < qwen3-235b-deploy.yaml | kubectl apply -f -
 # [END hypercomputer_gpu_infer_qwen3_deploy]

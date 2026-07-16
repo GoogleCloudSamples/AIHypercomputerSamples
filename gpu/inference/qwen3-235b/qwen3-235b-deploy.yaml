@@ -14,6 +14,7 @@ spec:
         app: qwen3-server
         ai.gke.io/model: Qwen3-235B-A22B-Instruct-2507
         ai.gke.io/inference-server: vllm
+        examples.ai.gke.io/source: user-guide
     spec:
       serviceAccountName: qwen-ksa
       containers:

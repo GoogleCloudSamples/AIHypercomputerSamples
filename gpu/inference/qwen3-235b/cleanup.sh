@@ -14,8 +14,8 @@
 
 set -euo pipefail
 
-kubectl delete deployment vllm-qwen3-deployment || true
-kubectl delete job qwen3-model-loader || true
+envsubst < qwen3-235b-deploy.yaml | kubectl delete -f - || true
+envsubst < qwen3-model-loader.yaml | kubectl delete -f - || true
 kubectl delete secret hf-secret || true
 kubectl delete serviceaccount qwen-ksa || true
 
