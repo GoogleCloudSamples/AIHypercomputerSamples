@@ -133,6 +133,7 @@ def main():
     # --- 6. Configure Training Arguments ---
     training_args = SFTConfig(
         output_dir=args.output_dir,
+        ddp_timeout=300.0,
         max_seq_length=args.max_seq_length,
         num_train_epochs=args.num_train_epochs,
         per_device_train_batch_size=args.per_device_train_batch_size,
@@ -141,7 +142,7 @@ def main():
         logging_steps=args.logging_steps,
         save_strategy=args.save_strategy,
         save_steps=args.save_steps,
-        packing=True,
+        packing=False,
         gradient_checkpointing=True,
         gradient_checkpointing_kwargs={"use_reentrant": False},
         optim="adamw_torch",
