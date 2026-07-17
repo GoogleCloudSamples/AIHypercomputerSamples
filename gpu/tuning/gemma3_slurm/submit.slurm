@@ -18,8 +18,8 @@
 #!/bin/bash
 #SBATCH --job-name=gemma3-finetune
 #SBATCH --nodes=2
-#SBATCH --ntasks-per-node=8 # 8 tasks per node
-#SBATCH --gpus-per-task=1   # 1 GPU per task
+#SBATCH --ntasks-per-node=1 # 1 task per node
+#SBATCH --gpus-per-node=8   # 8 GPUs per node
 #SBATCH --partition=a4high
 #SBATCH --output=slurm-%j.out
 #SBATCH --error=slurm-%j.err
@@ -47,10 +47,23 @@ mkdir -p ${LOCAL_OUTPUT_DIR}
 
 # This is the main training command.
 srun --ntasks=$SLURM_NNODES --ntasks-per-node=1 bash -c '
+  # Ensure nccl-gib is at version 1.1.2-1
+  INSTALLED_VERSION=$(dpkg-query -W -f="\${Version}" nccl-gib 2>/dev/null || echo "not_installed")
+  if [ "${INSTALLED_VERSION}" != "1.1.2-1" ]; then
+    echo "Upgrading nccl-gib to 1.1.2-1..."
+    sudo apt-get update && sudo apt-get install -y --allow-change-held-packages nccl-gib=1.1.2-1
+  fi
+
   source '"${LOCAL_VENV}"'/bin/activate
 
   export HF_HOME='"${LOCAL_CACHE}"'
   export HF_DATASETS_CACHE='"${LOCAL_CACHE}"'
+
+  if [ -f /usr/local/gib/scripts/set_nccl_env.sh ]; then
+    echo "Sourcing set_nccl_env.sh"
+    source /usr/local/gib/scripts/set_nccl_env.sh
+  fi
+  export LD_LIBRARY_PATH=/usr/local/gib/lib64:${LD_LIBRARY_PATH:-}
 
   export MASTER_ADDR=$(scontrol show hostnames "$SLURM_JOB_NODELIST" | head -n 1)
   export MASTER_PORT=29500
