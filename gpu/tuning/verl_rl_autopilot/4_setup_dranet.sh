@@ -18,8 +18,8 @@ set -euo pipefail
 
 source 0_env.sh
 
-# [START hypercomputer_gpu_train_ray_verl_auto_setup_dranet]
 # Generate ComputeClass YAML
+# [START hypercomputer_gpu_train_ray_verl_auto_create_computeclass]
 echo "Generating computeclass-dranet.yaml..."
 cat <<EOF > computeclass-dranet.yaml
 apiVersion: cloud.google.com/v1
@@ -51,7 +51,9 @@ if [ -n "${RESERVATION_NAME:-}" ]; then
         project: ${PROJECT_ID}
 EOF
 fi
+# [END hypercomputer_gpu_train_ray_verl_auto_create_computeclass]
 
+# [START hypercomputer_gpu_train_ray_verl_auto_setup_dranet]
 echo "Applying ComputeClass..."
 kubectl apply -f computeclass-dranet.yaml
 
