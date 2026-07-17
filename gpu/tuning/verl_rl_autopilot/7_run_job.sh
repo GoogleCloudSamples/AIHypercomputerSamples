@@ -16,12 +16,7 @@
 
 set -euo pipefail
 
-# Determine the directory where the script is located
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-cd "${SCRIPT_DIR}"
-
-source 0_env.sh
-
+# [START hypercomputer_gpu_train_ray_verl_auto_create_env]
 if [ ! -d "env" ]; then
   virtualenv -p $(which python3) env
 else
@@ -29,45 +24,34 @@ else
 fi
 source env/bin/activate
 pip3 install ray[default]
+# [END hypercomputer_gpu_train_ray_verl_auto_create_env]  
 
-# Ensure kubernetes-engine-samples is cloned to get runtime-env.yaml
-if [ ! -d "kubernetes-engine-samples" ]; then
-    echo "Please clone the kubernetes-engine-samples repository first"
-    echo "Use: ./1_clone_repo.sh"
-    exit 1
-fi
-
-# Prepare runtime-env-local.yaml
-cp kubernetes-engine-samples/ai-ml/verl-on-gke/runtime-env.yaml ./runtime-env-local.yaml
-
-# Modify runtime-env-local.yaml based on GPU type if needed
+# 1. Modify runtime-env.yaml based on GPU type if needed
 # (e.g. if we are using H200, we need tuner_config_a3u.txtpb)
 if [[ "${GPU_TYPE:-}" == *"h200"* ]]; then
-    echo "H200 GPU detected. Updating NCCL_TUNER_CONFIG_PATH in runtime-env-local.yaml..."
-    sed -i 's|/usr/local/gib/configs/tuner_config_a4.txtpb|/usr/local/gib/configs/tuner_config_a3u.txtpb|g' runtime-env-local.yaml
+    echo "H200 GPU detected. Updating NCCL_TUNER_CONFIG_PATH in runtime-env.yaml..."
+    # [START hypercomputer_gpu_train_ray_verl_auto_seth200]
+    sed -i 's|/usr/local/gib/configs/tuner_config_a4.txtpb|/usr/local/gib/configs/tuner_config_a3u.txtpb|g' runtime-env.yaml
+    # [END hypercomputer_gpu_train_ray_verl_auto_seth200]
 fi
 
-echo "Adding TransferQueue to pip packages in runtime-env-local.yaml..."
-echo "    - TransferQueue" >> runtime-env-local.yaml
-
 # 2. Port forwarding setup
+# [START hypercomputer_gpu_train_ray_verl_auto_get_svc]
 SVC_NAME="$(kubectl get svc -l "ray.io/node-type=head" -o jsonpath='{..metadata.name}')"
 echo "Ray head service name: ${SVC_NAME}"
+# [END hypercomputer_gpu_train_ray_verl_auto_get_svc]
+
 if [ -z "${SVC_NAME}" ]; then
     echo "No service found for label ray.io/node-type=head"
     kubectl get svc -n "${NAMESPACE}"
     exit 1
 fi
 
-echo "Waiting for service ${SVC_NAME} to be available..."
-until kubectl get svc "${SVC_NAME}" -n "${NAMESPACE}" &> /dev/null; do
-    echo "Waiting for service ${SVC_NAME}..."
-    sleep 5
-done
-
 # Start port forwarding in background
+# [START hypercomputer_gpu_train_ray_verl_auto_ray_port_fwd]
 echo "Starting port-forwarding to ${SVC_NAME} on port 8265..."
 kubectl port-forward svc/"${SVC_NAME}" 8265:8265 -n "${NAMESPACE}" &
+# [END hypercomputer_gpu_train_ray_verl_auto_ray_port_fwd]
 PF_PID=$!
 
 # Ensure we kill port forwarding on exit
