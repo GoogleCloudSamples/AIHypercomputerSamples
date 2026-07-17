@@ -14,22 +14,20 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-source 0_env.sh
-
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-
 echo "=== Starting Cleanup ==="
 
 echo "Deleting Ray Cluster (if exists)..."
-# [START hypercomputer_gpu_train_ray_verl_auto_delete_ray]
-if [ -f "${SCRIPT_DIR}/ray-cluster-auto-dranet.yaml" ]; then
-  envsubst < "${SCRIPT_DIR}/ray-cluster-auto-dranet.yaml" | kubectl delete -f - --ignore-not-found=true || true
+if [ -f "ray-cluster-auto-dranet.yaml" ]; then
+  # [START hypercomputer_gpu_train_ray_verl_auto_delete_ray]
+  envsubst < ray-cluster-auto-dranet.yaml | kubectl delete -f - --ignore-not-found=true || true
+  # [END hypercomputer_gpu_train_ray_verl_auto_delete_ray]
 fi
-# [END hypercomputer_gpu_train_ray_verl_auto_delete_ray]
 
 echo "Deleting GCS FUSE Storage..."
 if [ -f "${SCRIPT_DIR}/gcsfuse-storage.yaml" ]; then
-  envsubst < "${SCRIPT_DIR}/gcsfuse-storage.yaml" | kubectl delete -f - --ignore-not-found=true || true
+  # [START hypercomputer_gpu_train_ray_verl_auto_delete_gcsfuse]
+  envsubst < gcsfuse-storage.yaml | kubectl delete -f - --ignore-not-found=true || true
+  # [END hypercomputer_gpu_train_ray_verl_auto_delete_gcsfuse]
 fi
 
 echo "Deleting secrets and service accounts..."
@@ -37,10 +35,10 @@ kubectl delete secret hf-secret -n ${NAMESPACE} --ignore-not-found=true || true
 kubectl delete serviceaccount ${KSA_NAME} -n ${NAMESPACE} --ignore-not-found=true || true
 
 echo "Deleting DRANET resources..."
-kubectl delete -f "${SCRIPT_DIR}/resourceclaim-dranet.yaml" --ignore-not-found=true || true
-if [ -f "${SCRIPT_DIR}/computeclass-dranet.yaml" ]; then
-  kubectl delete -f "${SCRIPT_DIR}/computeclass-dranet.yaml" --ignore-not-found=true || true
-fi
+# [START hypercomputer_gpu_train_ray_verl_auto_delete_dranet]
+kubectl delete -f "resourceclaim-dranet.yaml" --ignore-not-found=true || true
+kubectl delete -f "computeclass-dranet.yaml" --ignore-not-found=true || true
+# [END hypercomputer_gpu_train_ray_verl_auto_delete_dranet]
 
 echo "Deleting GCS Bucket gs://${GS_BUCKET}..."
 # [START hypercomputer_gpu_train_ray_verl_auto_delete_bucket]
