@@ -25,5 +25,5 @@ peft==0.16.0
 # Other dependencies
 tensorboard==2.20.0
 protobuf==6.31.1
-sentencepiece==0.2.0
+sentencepiece==0.2.1
 # [END hypercomputer_gpu_tune_gemma3_slurm_requirements]
