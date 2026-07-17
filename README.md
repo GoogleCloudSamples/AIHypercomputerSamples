@@ -1,13 +1,20 @@
-# AI Hypercomputer Samples
-This repo contains samples to help you run AI/ML workloads with AI Hypercomputer infrastructure, namely, TPUs and GPUs that run on Compute Engine and GKE and include instructions about how to set up LLM libraries like MaxText.
+# AI Hypercomputer samples
+This repository contains code samples to help you run artificial intelligence and machine learning (AI/ML) workloads on Google Cloud. These samples demonstrate how to use AI Hypercomputer infrastructure, including Cloud TPUs and GPUs on Compute Engine and Google Kubernetes Engine (GKE). You will also find instructions for setting up large language model (LLM) libraries, such as MaxText.
 
-This repo supports the following types of workloads:
+This repository supports the following types of workloads:
 * Pre-training
 * Inference
 * Post-training
 
-## Repository structure
-The repository is organized as follows:
+## Intended audience
+
+This content is for you if you are an AI developer, customer, or partner who needs to:
+* Browse verified code snippets to deploy models directly on AI Hypercomputer infrastructure.
+* Learn how to set up LLM libraries like MaxText and run AI/ML workloads on TPUs and GPUs using Compute Engine or GKE.
+
+## Repository organization
+
+The AI Hypercomputer samples repository is organized as follows:
 
 ```
 .
@@ -21,31 +28,45 @@ The repository is organized as follows:
     └── tuning
 ```
 
-In those directories you can find full end-to-end code samples that are periodically
-validated.
+The`./gpu` and `./tpu` directories contain complete, end-to-end code samples with instructions for running AI/ML workloads on Google Cloud accelerators. The directories are organized into `inference`, `training`, and `tuning` subdirectories.
+* `./inference`: This directory contains code samples and configurations that     demonstrate how to deploy models for serving predictions safely and             predictably on AI Hypercomputer infrastructure.
+* `./training`: This directory contains code samples and tutorials to guide you through pre-training large language models from scratch using supported frameworks on Google Cloud accelerators.
+* `./tuning`: This directory contains validated code samples and instructions for post-training and fine-tuning existing models to adapt them to your specific use cases.
 
-### Sample structure
+## Sample structure
 
-Each sample consists of following files:
+Each sample consists of the following files:
+* `0_env.sh`: Contains all necessary starting environment variables.
+* `cleanup.sh`: Contains instructions to terminate all created resources.
+* `metadata.yaml`: Contains mandatory metadata for the sample testing, specifically the `expected_runtime` to prevent indefinite execution.
+* `<N>_<step_name>.sh`: Contains the core execution scripts for the sample, broken down into sequential steps, for example, `1_download.sh` or `2_train.sh`.
+* `*_validation.sh`: Contains instructions to export the necessary logs to debug and verify success. For example, using `grep` to check for specific output.
 
-* `0_env.sh`: Containing all necessary starting environment variables.
-* `cleanup.sh`: Containing instructions to terminate all created resources.
-* `metadata.yaml`: Mandatory metadata for the sample testing, specifically the `expected_runtime` to prevent indefinite execution.
-* `<N>_<step_name>.sh`: Code sample proper body divided into separate files.
-* `*_validation.sh`: Includes instructions to dump necessary logs for debugging and verify success (e.g., using `grep` to check for specific output).
+## Create a new sample
 
-## Creating new sample
+To create a new sample, follow these steps:
+1. Prepare a step-by-step script that demonstrates your intended workflow.
+2. Divide the script into logical steps and save them in separate shell scripts.
+3. Add any necessary wait commands or wait loops so the scripts can be reliably executed without manual intervention.
+4. Create a pull request, and include an example output log from your terminal that shows the scripts running successfully.
 
-To create a new sample follow these steps:
-1. Prepare a step by step script that demonstrates what you want to do.
-2. Break it up into logical steps and save it in separate shell scripts.
-3. Add necessary wait commands or wait loops, so the scripts can be reliably executed without human in the loop.
-4. Prepare a new Pull Request, where you provide an example output log from your terminal of you running the scripts.
+## Maintenance policy
 
-## Official docs
-[AI Hypercomputer official documentation](https://docs.cloud.google.com/ai-hypercomputer/docs/overview)
+This repository contains verified and validated code samples that are periodically tested to ensure they run reliably on AI Hypercomputer infrastructure. 
 
-This repo contains the sample code that is used in the official [AI Hypercomputer tutorials](https://docs.cloud.google.com/ai-hypercomputer/docs/tutorials). For the best experience running workloads, we recommend that you refer to the official docs in addition to the samples contained within this repo.
+## Resources
 
-## How to contribute
-This project isn't currently accepting contributions.
+For general guidance on using Google Cloud compute products, see the official documentation and tutorials:
+* [Compute Engine overview](https://docs.cloud.google.com/compute/docs/overview)
+* [Compute Engine samples](https://docs.cloud.google.com/compute/docs/samples)
+* [Cloud TPU documentation](https://docs.cloud.google.com/tpu/docs)
+* [AI Hypercomputer documentation](https://docs.cloud.google.com/ai-hypercomputer/docs)
+* [Automated TPU environment deployment with Cluster Toolkit](https://cloud.google.com/cluster-toolkit/docs/deploy/gke/gke-tpu-overview)
+
+## Report issues
+
+If you have questions or encounter problems with this repository, report them through [GitHub Issues](https://github.com/GoogleCloudSamples/AIHypercomputerSamples/issues) or reach out to your Google Cloud account team for assistance.
+
+## Contributor notes
+
+**Note:** This is not an officially supported Google product. This project is not eligible for the [Google Open Source Software Vulnerability Rewards Program](https://bughunters.google.com/open-source-security).
