@@ -26,21 +26,23 @@ echo "=== Starting Cleanup ==="
 
 # 1. Delete Ray Cluster
 echo "Deleting Ray Cluster (if exists)..."
-# [START hypercomputer_gpu_train_ray_verl_std_delete_ray]
 if [ -f "${SCRIPT_DIR}/ray-cluster-standard.yaml" ]; then
   # We need to make sure we have credentials to run kubectl
   if gcloud container clusters describe ${CLUSTER_NAME} --location=${CONTROL_PLANE_REGION} --project=${PROJECT_ID} >/dev/null 2>&1; then
     gcloud container clusters get-credentials ${CLUSTER_NAME} --location=${CONTROL_PLANE_REGION} --project=${PROJECT_ID}
+    # [START hypercomputer_gpu_train_ray_verl_std_delete_ray]
     envsubst < "${SCRIPT_DIR}/ray-cluster-standard.yaml" | kubectl delete -f - --ignore-not-found=true || true
+    # [END hypercomputer_gpu_train_ray_verl_std_delete_ray]
   fi
 fi
-# [END hypercomputer_gpu_train_ray_verl_std_delete_ray]
 
 # 2. Delete GCS FUSE Storage
 echo "Deleting GCS FUSE Storage..."
 if [ -f "${SCRIPT_DIR}/gcsfuse-storage.yaml" ]; then
   if gcloud container clusters describe ${CLUSTER_NAME} --location=${CONTROL_PLANE_REGION} --project=${PROJECT_ID} >/dev/null 2>&1; then
+    # [START hypercomputer_gpu_train_ray_verl_std_delete_gcsfuse]
     envsubst < "${SCRIPT_DIR}/gcsfuse-storage.yaml" | kubectl delete -f - --ignore-not-found=true || true
+    # [END hypercomputer_gpu_train_ray_verl_std_delete_gcsfuse]
   fi
 fi
 
@@ -53,24 +55,24 @@ fi
 
 # 4. Delete GCS Bucket
 echo "Deleting GCS Bucket gs://${GS_BUCKET}..."
-# [START hypercomputer_gpu_train_ray_verl_std_delete_bucket]
 if gcloud storage buckets describe gs://${GS_BUCKET} --project="${PROJECT_ID}" >/dev/null 2>&1; then
+  # [START hypercomputer_gpu_train_ray_verl_std_delete_bucket]
   gcloud storage rm -r "gs://${GS_BUCKET}" --project="${PROJECT_ID}" || true
+  # [END hypercomputer_gpu_train_ray_verl_std_delete_bucket]
 fi
-# [END hypercomputer_gpu_train_ray_verl_std_delete_bucket]
 
 # 5. Delete GKE Cluster
 echo "Deleting GKE Cluster ${CLUSTER_NAME}..."
-# [START hypercomputer_gpu_train_ray_verl_std_delete_cluster]
 if gcloud container clusters describe ${CLUSTER_NAME} --location=${CONTROL_PLANE_REGION} --project=${PROJECT_ID} >/dev/null 2>&1; then
+  # [START hypercomputer_gpu_train_ray_verl_std_delete_cluster]
   gcloud container clusters delete ${CLUSTER_NAME} --location=${CONTROL_PLANE_REGION} --project=${PROJECT_ID} --quiet || true
+  # [END hypercomputer_gpu_train_ray_verl_std_delete_cluster]
 fi
-# [END hypercomputer_gpu_train_ray_verl_std_delete_cluster]
 
 # 6. Delete VPC Networks and Subnets
 echo "Deleting VPC Networks and Subnets..."
-# [START hypercomputer_gpu_train_ray_verl_std_delete_networks]
 
+# [START hypercomputer_gpu_train_ray_verl_std_delete_networks]
 # Delete RDMA subnets first
 echo "Deleting RDMA subnets..."
 for N in $(seq 0 7); do
@@ -114,11 +116,5 @@ if gcloud compute networks describe ${GVNIC_NETWORK_PREFIX}-net --project=${PROJ
   gcloud compute networks delete ${GVNIC_NETWORK_PREFIX}-net --project=${PROJECT_ID} --quiet || true
 fi
 # [END hypercomputer_gpu_train_ray_verl_std_delete_networks]
-
-# 7. Delete local files
-echo "Deleting local files and directories..."
-rm -rf "${SCRIPT_DIR}/kubernetes-engine-samples"
-rm -rf "${SCRIPT_DIR}/env"
-rm -f "${SCRIPT_DIR}/runtime-env-local.yaml"
 
 echo "=== Cleanup Complete ==="
