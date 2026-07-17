@@ -10,6 +10,6 @@ cd AIHypercomputerSamples/gpu/tuning/verl_rl_autopilot
 cd AIHypercomputerSamples/gpu/tuning/verl_rl_standard
 # [END hypercomputer_gpu_train_ray_chdir_std]
 
-# [START hypercomputer_gpu_train_ray_verl_auto_logs_data_prep]
+# [START hypercomputer_gpu_train_ray_logs_data_prep]
 kubectl logs -n ${NAMESPACE} -l job-name=data-prep-job -f
-# [END hypercomputer_gpu_train_ray_verl_auto_logs_data_prep]
+# [END hypercomputer_gpu_train_ray_logs_data_prep]
