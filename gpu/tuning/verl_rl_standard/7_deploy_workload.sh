@@ -20,10 +20,8 @@ source 0_env.sh
 
 echo "Deploying RayCluster..."
 
-# Determine the directory where the script is located
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # [START hypercomputer_gpu_train_ray_verl_std_deploy_ray]
-envsubst < "${SCRIPT_DIR}/ray-cluster-standard.yaml" | kubectl apply -f -
+envsubst < "ray-cluster-standard.yaml" | kubectl apply -f -
 # [END hypercomputer_gpu_train_ray_verl_std_deploy_ray]
 
 echo "Workload deployment initiated."
