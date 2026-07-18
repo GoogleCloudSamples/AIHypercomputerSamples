@@ -41,12 +41,12 @@ kubectl delete -f "computeclass-dranet.yaml" --ignore-not-found=true || true
 # [END hypercomputer_gpu_train_ray_verl_auto_delete_dranet]
 
 echo "Deleting GCS Bucket gs://${GS_BUCKET}..."
-# [START hypercomputer_gpu_train_ray_verl_auto_delete_bucket]
 if gcloud storage buckets describe gs://${GS_BUCKET} >/dev/null 2>&1; then
+  # [START hypercomputer_gpu_train_ray_verl_auto_delete_bucket]
   gcloud storage rm -r "gs://${GS_BUCKET}" || true
   gcloud storage buckets delete gs://${GS_BUCKET} --quiet || true
+  # [END hypercomputer_gpu_train_ray_verl_auto_delete_bucket]
 fi
-# [END hypercomputer_gpu_train_ray_verl_auto_delete_bucket]
 
 echo "Deleting GKE Cluster ${CLUSTER_NAME}..."
 # [START hypercomputer_gpu_train_ray_verl_auto_delete_cluster]
