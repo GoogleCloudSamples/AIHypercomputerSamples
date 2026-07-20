@@ -142,8 +142,7 @@ xpk workload create-pathways \
       rollout_expert_parallelism=4 \
       trainer_devices_fraction=0.5 \
       sampler_devices_fraction=0.5 \
-      tokenizer_path='Qwen/Qwen3-30B-A3B-Instruct-2507' \
-      per_device_batch_size=1 \
+      tokenizer_path='Qwen/Qwen3-30B-A3B-Instruct-2507' \\
       ici_tensor_parallelism=4 \
       ici_expert_parallelism=4 \
       hbm_utilization_vllm=0.2 \
