@@ -20,7 +20,6 @@ export REGION="YOUR_REGION"
 export ZONE="YOUR_ZONE"
 export CLUSTER_NAME="YOUR_CLUSTER_NAME"
 export GCS_BUCKET="YOUR_UNIQUE_BUCKET_NAME"
-export VM_NAME="YOUR_VM_NAME"
 export CLOUD_IMAGE_NAME="$REGION-docker.pkg.dev/$PROJECT/maxtext-images/maxtext_base:latest"
 export TPU_TYPE="v6e-32"
 export CLUSTER_NODEPOOL_COUNT=1

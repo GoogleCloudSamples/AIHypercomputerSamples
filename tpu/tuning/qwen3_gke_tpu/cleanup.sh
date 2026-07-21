@@ -21,11 +21,12 @@ if [ -d "venvp3" ]; then
 fi
 
 echo "[$(date)] ==================== Cleaning up resources... ===================="
-# [START hypercomputer_tpu_tune_qwen3_sft_cleanup]
 echo "Waiting for background cluster operations (like autoscaling) to finish..."
 while gcloud container operations list --project=$PROJECT --location=$REGION --filter="status=RUNNING AND targetLink:$CLUSTER_NAME" --format="value(name)" | grep -q .; do
   sleep 30
 done
+
+# [START hypercomputer_tpu_tune_qwen3_sft_cleanup]
 xpk cluster delete --cluster $CLUSTER_NAME --project $PROJECT --zone $ZONE --force
 gcloud storage rm --recursive gs://$GCS_BUCKET
 
