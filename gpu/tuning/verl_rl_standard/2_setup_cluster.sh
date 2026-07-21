@@ -16,8 +16,6 @@
 
 set -euo pipefail
 
-source 0_env.sh
-
 # Create GKE Standard Cluster
 if ! gcloud container clusters describe ${CLUSTER_NAME} --location=${CONTROL_PLANE_REGION} --project=${PROJECT_ID} >/dev/null 2>&1; then
   echo "Creating GKE Standard cluster ${CLUSTER_NAME}..."

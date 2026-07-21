@@ -16,8 +16,6 @@
 
 set -euo pipefail
 
-source 0_env.sh
-
 # Create a VPC network for the gVNIC interface:
 echo "Creating VPC network ${GVNIC_NETWORK_PREFIX}-net..."
   

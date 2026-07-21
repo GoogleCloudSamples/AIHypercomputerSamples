@@ -16,8 +16,6 @@
 
 set -euo pipefail
 
-source 0_env.sh
-
 # Generate ComputeClass YAML
 # [START hypercomputer_gpu_train_ray_verl_auto_create_computeclass]
 echo "Generating computeclass-dranet.yaml..."

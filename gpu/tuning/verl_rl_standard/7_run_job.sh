@@ -20,8 +20,6 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd "${SCRIPT_DIR}"
 
-source 0_env.sh
-
 if [ ! -d "env" ]; then
   echo "Creating local virtual environment for Ray client..."
   virtualenv -p $(which python3) env

@@ -16,8 +16,6 @@
 
 set -euo pipefail
 
-source 0_env.sh
-
 # Create GCS Bucket if it doesn't exist
 if ! gcloud storage buckets describe "gs://${GS_BUCKET}" >/dev/null 2>&1; then
   echo "Creating bucket gs://${GS_BUCKET}..."

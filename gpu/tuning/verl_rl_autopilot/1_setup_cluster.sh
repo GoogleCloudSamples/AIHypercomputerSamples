@@ -16,8 +16,6 @@
 
 set -euo pipefail
 
-source 0_env.sh
-
 # Create an Autopilot cluster on Rapid channel (required for DRANET in some versions)
 # We also enable-ray-operator as in the original script.
 echo "Creating Autopilot cluster ${CLUSTER_NAME}..."

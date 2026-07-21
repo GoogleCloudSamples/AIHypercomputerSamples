@@ -15,7 +15,6 @@
 # limitations under the License.
 
 set -euo pipefail
-source 0_env.sh
 
 # Apply Data Prep Job
 echo "Applying Data Prep Job..."

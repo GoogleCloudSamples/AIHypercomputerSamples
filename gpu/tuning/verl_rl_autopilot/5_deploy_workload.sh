@@ -16,8 +16,6 @@
 
 set -euo pipefail
 
-source 0_env.sh
-
 echo "Applying Ray Cluster..."
 # [START hypercomputer_gpu_train_ray_verl_auto_deploy_ray]
 envsubst < "ray-cluster-auto-dranet.yaml" | kubectl apply -f -

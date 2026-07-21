@@ -16,8 +16,6 @@
 
 set -euo pipefail
 
-source 0_env.sh
-
 # Check connection
 if ! kubectl cluster-info >/dev/null 2>&1; then
   echo "Error: Cannot connect to cluster. Run 'gcloud container clusters get-credentials' first."

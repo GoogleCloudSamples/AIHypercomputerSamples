@@ -16,8 +16,6 @@
 
 set -euo pipefail
 
-source 0_env.sh
-
 echo "Deploying RayCluster..."
 
 # [START hypercomputer_gpu_train_ray_verl_std_deploy_ray]
