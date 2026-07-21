@@ -41,13 +41,13 @@ spec:
     acceleratorNetworkProfile: auto
 EOF
 
-if [ -n "${RESERVATION_NAME:-}" ]; then
-  echo "Adding reservation affinity for ${RESERVATION_NAME} to ComputeClass..."
+if [ -n "${RESERVATION:-}" ]; then
+  echo "Adding reservation affinity for ${RESERVATION} to ComputeClass..."
   cat <<EOF >> computeclass-dranet.yaml
     reservations:
       affinity: Specific
       specific:
-      - name: ${RESERVATION_NAME}
+      - name: ${RESERVATION}
         project: ${PROJECT_ID}
 EOF
 fi
