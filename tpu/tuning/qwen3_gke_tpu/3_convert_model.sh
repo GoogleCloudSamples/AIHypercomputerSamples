@@ -45,15 +45,31 @@ echo "[$(date)] ==================== Waiting for Model Conversion to Complete...
 # Give the cluster a moment to schedule the pod
 sleep 15
 # Find the pod created by the conversion workload
-POD_NAME=$(kubectl get pods | grep qwen-hf-to-mt | awk '{print $1}' | head -n 1)
+POD_NAME=$(kubectl get pods | grep qwen-hf-to-mt | awk '{print $1}' | head -n 1) || true
 
 if [ -n "$POD_NAME" ]; then
   echo "Found conversion pod: $POD_NAME"
+  echo "Waiting for pod to start running (this can take 5-10 minutes if autoscaler is provisioning nodes)..."
+  while true; do
+    POD_STATUS=$(kubectl get pod $POD_NAME -o jsonpath='{.status.phase}')
+    if [[ "$POD_STATUS" == "Running" || "$POD_STATUS" == "Succeeded" || "$POD_STATUS" == "Failed" ]]; then
+      break
+    fi
+    sleep 10
+  done
+
   echo "Tailing logs... (this will block until the conversion finishes)"
   kubectl logs -f $POD_NAME || true
   
-  # Check if the pod actually succeeded
-  POD_STATUS=$(kubectl get pod $POD_NAME -o jsonpath='{.status.phase}')
+  # Give Kubernetes a moment to update the pod's phase after logs stream finishes
+  for i in {1..10}; do
+    POD_STATUS=$(kubectl get pod $POD_NAME -o jsonpath='{.status.phase}')
+    if [[ "$POD_STATUS" == "Succeeded" || "$POD_STATUS" == "Failed" ]]; then
+      break
+    fi
+    sleep 3
+  done
+
   if [ "$POD_STATUS" != "Succeeded" ]; then
     echo "ERROR: Conversion pod did not succeed (Status: $POD_STATUS)."
     exit 1
