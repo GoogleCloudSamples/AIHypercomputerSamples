@@ -26,10 +26,7 @@ while gcloud container operations list --project=$PROJECT --location=$REGION --f
   sleep 30
 done
 
-# [START hypercomputer_tpu_tune_qwen3_sft_cleanup]
-xpk cluster delete --cluster $CLUSTER_NAME --project $PROJECT --zone $ZONE --force
-gcloud storage rm --recursive gs://$GCS_BUCKET
-
-gcloud artifacts repositories delete maxtext-images --location=$REGION --project=$PROJECT --quiet
-# [END hypercomputer_tpu_tune_qwen3_sft_cleanup]
+xpk cluster delete --cluster $CLUSTER_NAME --project $PROJECT --zone $ZONE --force  || echo "Warning: Failed to delete cluster"
+gcloud storage rm --recursive gs://$GCS_BUCKET || echo "Warning: Failed to delete bucket"
+gcloud artifacts repositories delete maxtext-images --location=$REGION --project=$PROJECT --quiet || echo "Warning: Failed to delete repository"
 echo "[$(date)] ==================== Resources cleaned up. ===================="
