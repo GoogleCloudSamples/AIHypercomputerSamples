@@ -54,7 +54,6 @@ gcloud container clusters delete ${CLUSTER_NAME} --location=${CONTROL_PLANE_REGI
 # [END hypercomputer_gpu_train_ray_verl_auto_delete_cluster]
 
 echo "Deleting local files and directories..."
-rm -rf "${SCRIPT_DIR}/kubernetes-engine-samples"
 rm -rf "${SCRIPT_DIR}/env"
 
 echo "=== Cleanup Complete ==="
