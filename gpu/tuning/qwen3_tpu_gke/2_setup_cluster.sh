@@ -32,9 +32,9 @@ xpk cluster create-pathways \
   --zone=${ZONE} \
   --cluster=${CLUSTER_NAME} \
   --custom-cluster-arguments="--enable-ip-alias" \
-  --on-demand \
+  --reservation=$RESERVATION \
   --enable-autoprovisioning \
-  --autoprovisioning-max-chips=32 \
+  --autoprovisioning-max-chips=256 \
   --default-pool-cpu-machine-type=n4-standard-16
 
 gcloud container clusters get-credentials $CLUSTER_NAME \

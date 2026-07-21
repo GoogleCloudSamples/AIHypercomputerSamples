@@ -22,7 +22,7 @@ echo "[$(date)] ==================== Creating Cluster... ===================="
 VENV_DIR=venvp3
 python3 -m venv $VENV_DIR
 source $VENV_DIR/bin/activate
-pip install xpk==1.9.0
+pip install xpk==1.14.0
 
 xpk cluster create-pathways \
   --num-slices=${CLUSTER_NODEPOOL_COUNT} \
@@ -32,9 +32,7 @@ xpk cluster create-pathways \
   --zone=${ZONE} \
   --cluster=${CLUSTER_NAME} \
   --custom-cluster-arguments="--enable-ip-alias" \
-  --on-demand \
-  --enable-autoprovisioning \
-  --autoprovisioning-max-chips=32 \
+  --reservation=$RESERVATION \
   --default-pool-cpu-machine-type=n4-standard-16
 
 gcloud container clusters get-credentials $CLUSTER_NAME \

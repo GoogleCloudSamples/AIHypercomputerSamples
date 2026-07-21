@@ -16,8 +16,8 @@
 
 # [START hypercomputer_tpu_tune_qwen3_sft_env]
 export PROJECT="YOUR_PROJECT_ID"
-export REGION="YOUR_REGION"
-export ZONE="YOUR_ZONE"
+export REGION="europe-west4"
+export ZONE="europe-west4-a"
 export CLUSTER_NAME="YOUR_CLUSTER_NAME"
 export GCS_BUCKET="YOUR_UNIQUE_BUCKET_NAME"
 export VM_NAME="YOUR_VM_NAME"
@@ -25,7 +25,7 @@ export CLOUD_IMAGE_NAME="$REGION-docker.pkg.dev/$PROJECT/maxtext-images/maxtext_
 export TPU_TYPE="v6e-32"
 export CLUSTER_NODEPOOL_COUNT=1
 export PW_CPU_MACHINE_TYPE="c4d-standard-96"
-export RESERVATION="YOUR_RESERVATION_NAME"
+export RESERVATION="kirylf-test-b532930181"
 export MODEL_NAME="qwen3-14b"
 export HF_TOKEN="YOUR_HF_TOKEN"
 # [END hypercomputer_tpu_tune_qwen3_sft_env]
