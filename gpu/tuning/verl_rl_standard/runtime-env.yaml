@@ -17,7 +17,6 @@ py_modules: ["."]
 working_dir: "."
 excludes:
   - ".git"
-  - "kubernetes-engine-samples"
   - "env"
 env_vars:
   PYTHONPATH: "/data/verl"
