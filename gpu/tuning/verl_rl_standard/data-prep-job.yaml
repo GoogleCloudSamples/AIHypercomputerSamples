@@ -61,14 +61,14 @@ spec:
           # Clone verl to GCS (for worker pods)
           if [ ! -d "/data/verl" ]; then
             echo "Cloning verl to GCS..."
-            git clone https://github.com/volcengine/verl.git /data/verl
+            git clone --branch v0.6.1 https://github.com/volcengine/verl.git /data/verl
           else
             echo "verl already exists in /data/verl"
           fi
           
           # Clone verl locally for fast installation
           echo "Cloning verl locally..."
-          git clone https://github.com/volcengine/verl.git /tmp/verl
+          git clone --branch v0.6.1 https://github.com/volcengine/verl.git /tmp/verl
           
           # Install verl package from local clone
           echo "Installing verl package..."

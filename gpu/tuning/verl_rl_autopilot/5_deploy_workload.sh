@@ -23,3 +23,6 @@ envsubst < "ray-cluster-auto-dranet.yaml" | kubectl apply -f -
 
 echo "Workload deployment initiated."
 
+echo "Waiting for Ray GPU worker pods to become Ready..."
+kubectl wait --for=condition=ready pod -l "ray.io/node-type=worker" -n "${NAMESPACE}" --timeout=900s
+
