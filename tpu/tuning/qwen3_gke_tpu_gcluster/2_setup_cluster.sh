@@ -19,6 +19,7 @@ set -euo pipefail
 echo "[$(date)] ==================== Downloading gcluster blueprint... ===================="
 # [START hypercomputer_tpu_tune_qwen3_sft_gcluster_download_blueprint]
 wget https://raw.githubusercontent.com/GoogleCloudPlatform/cluster-toolkit/refs/heads/develop/examples/gke-tpu-v6e/gke-tpu-v6e-advanced.yaml -O gke-tpu-v6e-advanced.yaml
+wget https://raw.githubusercontent.com/GoogleCloudPlatform/cluster-toolkit/refs/heads/develop/examples/gke-tpu-v6e/kueue-configuration.yaml.tftpl -O kueue-configuration.yaml.tftpl
 # [END hypercomputer_tpu_tune_qwen3_sft_gcluster_download_blueprint]
 
 echo "[$(date)] ==================== Configuring blueprint... ===================="

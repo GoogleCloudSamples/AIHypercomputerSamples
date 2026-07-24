@@ -38,8 +38,7 @@ export CLOUD_IMAGE_NAME="$REGION-docker.pkg.dev/$PROJECT/maxtext-images/maxtext_
 #  
 #    # This should be unique across all of your Cluster
 #    # Toolkit Deployments.
-# -  deployment_name: gke-tpu-v6e
-# +  deployment_name: YOUR_CLUSTER_NAME
+#    deployment_name: gke-tpu-v6e
 #  
 #    # The GCP Region used for this deployment.
 # -  region:
@@ -93,4 +92,5 @@ kubectl logs mt-to-hf-main-job-0-0-<pod suffix> -f
 # [START hypercomputer_tpu_tune_qwen3_sft_gcluster_cleanup_storage]
 gcloud storage rm --recursive gs://$GCS_BUCKET
 gcloud artifacts repositories delete maxtext-images --location=$REGION --project=$PROJECT --quiet
+rm -f cloudbuild.yaml gke-tpu-v6e-advanced.yaml kueue-configuration.yaml.tftpl
 # [END hypercomputer_tpu_tune_qwen3_sft_gcluster_cleanup_storage]
