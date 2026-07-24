@@ -22,7 +22,6 @@ export CLUSTER_NAME="YOUR_CLUSTER_NAME"
 export CLOUD_IMAGE_NAME="$REGION-docker.pkg.dev/$PROJECT/maxtext-images/maxtext_base:latest"
 export TPU_TYPE="v6e-32"
 export RESERVATION="YOUR_RESERVATION_NAME"
-
 export MODEL_NAME="qwen3-14b"
 export HF_TOKEN="YOUR_HF_TOKEN"
 export GCS_BUCKET="YOUR_UNIQUE_BUCKET_NAME"

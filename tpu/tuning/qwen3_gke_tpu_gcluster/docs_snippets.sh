@@ -38,7 +38,8 @@ export CLOUD_IMAGE_NAME="$REGION-docker.pkg.dev/$PROJECT/maxtext-images/maxtext_
 #  
 #    # This should be unique across all of your Cluster
 #    # Toolkit Deployments.
-#    deployment_name: gke-tpu-v6e
+# -  deployment_name: gke-tpu-v6e
+# +  deployment_name: YOUR_CLUSTER_NAME
 #  
 #    # The GCP Region used for this deployment.
 # -  region:

@@ -24,6 +24,7 @@ wget https://raw.githubusercontent.com/GoogleCloudPlatform/cluster-toolkit/refs/
 echo "[$(date)] ==================== Configuring blueprint... ===================="
 # We inject the environment variables into the downloaded YAML blueprint using sed.
 sed -i "s/project_id:.*/project_id: ${PROJECT}/" gke-tpu-v6e-advanced.yaml
+sed -i "s/deployment_name:.*/deployment_name: ${CLUSTER_NAME}/" gke-tpu-v6e-advanced.yaml
 sed -i "s/region:.*/region: ${REGION}/" gke-tpu-v6e-advanced.yaml
 sed -i "s/zone:.*/zone: ${ZONE}/" gke-tpu-v6e-advanced.yaml
 sed -i "s/num_slices:.*/num_slices: 1/" gke-tpu-v6e-advanced.yaml
