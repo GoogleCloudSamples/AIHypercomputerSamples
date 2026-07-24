@@ -17,6 +17,12 @@
 # This file contains the exact documentation snippets for checking logs,
 # containing placeholders like <pod suffix> that shouldn't be executed in CI.
 
+# [START hypercomputer_tpu_tune_qwen3_sft_gcluster_cb_env]
+export PROJECT="YOUR_PROJECT_ID"
+export REGION="YOUR_REGION"
+export CLOUD_IMAGE_NAME="$REGION-docker.pkg.dev/$PROJECT/maxtext-images/maxtext_base:latest"
+# [END hypercomputer_tpu_tune_qwen3_sft_gcluster_cb_env]
+
 # [START hypercomputer_tpu_tune_qwen3_sft_gcluster_configure_blueprint]
 # Example git diff output:
 # diff --git a/examples/gke-tpu-v6e/gke-tpu-v6e-advanced.yaml b/examples/gke-tpu-v6e/gke-tpu-v6e-advanced.yaml
