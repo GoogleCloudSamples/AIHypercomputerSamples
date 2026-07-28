@@ -16,7 +16,7 @@
 
 # [START hypercomputer_gpu_tune_gemma3_27b_nemo_rl_env]
 export CONTROL_PLANE_REGION="YOUR_REGION"
-export NODE_ZONE="YOUR_NODE_ZONE"
+export NODE_ZONE="YOUR_ZONE"
 export CLUSTER_NAME="YOUR_CLUSTER_NAME"
 export GPU_TYPE="YOUR_GPU_TYPE"
 export MACHINE_TYPE="YOUR_MACHINE_TYPE"
