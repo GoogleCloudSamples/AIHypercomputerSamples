@@ -21,7 +21,7 @@ export ZONE="YOUR_ZONE"
 export REGION="YOUR_REGION"
 export RESERVATION_URL="RESERVATION_NAME"
 export GCS_BUCKET="YOUR_GCS_BUCKET"
-export HF_TOKEN="HUGGING_FACE_TOKEN"
+export HF_TOKEN="YOUR_HF_TOKEN"
 
 gcloud config set project "${PROJECT_ID}"
 gcloud config set billing/quota_project "${PROJECT_ID}"
