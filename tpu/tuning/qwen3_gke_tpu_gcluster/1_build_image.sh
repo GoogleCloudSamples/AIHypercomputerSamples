@@ -26,7 +26,7 @@ echo "[$(date)] ==================== Cloud Storage bucket created. =============
 
 echo "[$(date)] ==================== Creating Artifact Registry repository... ===================="
 # [START hypercomputer_tpu_tune_qwen3_sft_gcluster_create_repo]
-gcloud artifacts repositories create maxtext-images \
+gcloud artifacts repositories create ${REPOSITORY_NAME} \
     --repository-format=docker \
     --location=$REGION \
     --project=$PROJECT \

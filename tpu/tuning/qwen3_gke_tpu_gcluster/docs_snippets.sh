@@ -90,7 +90,9 @@ kubectl logs mt-to-hf-main-job-0-0-<pod suffix> -f
 # [END hypercomputer_tpu_tune_qwen3_sft_gcluster_convert_hf_logs]
 
 # [START hypercomputer_tpu_tune_qwen3_sft_gcluster_cleanup_storage]
+gcluster destroy ${CLUSTER_NAME} --auto-approve 
 gcloud storage rm --recursive gs://$GCS_BUCKET
-gcloud artifacts repositories delete maxtext-images --location=$REGION --project=$PROJECT --quiet
+gcloud artifacts repositories delete ${REPOSITORY_NAME} --location=$REGION --project=$PROJECT --quiet
 rm -f cloudbuild.yaml gke-tpu-v6e-advanced.yaml kueue-configuration.yaml.tftpl
+rm -rf ${CLUSTER_NAME}
 # [END hypercomputer_tpu_tune_qwen3_sft_gcluster_cleanup_storage]

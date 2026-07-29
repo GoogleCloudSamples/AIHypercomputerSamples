@@ -40,24 +40,43 @@ gcluster job submit --name hf-to-mt \
 # [END hypercomputer_tpu_tune_qwen3_sft_gcluster_convert_model]
 
 echo "[$(date)] ==================== Waiting for Model Conversion to Complete... ===================="
-# Give the cluster a moment to schedule the pod
-sleep 15
-# Find the pod created by the conversion workload
-POD_NAME=$(kubectl get pods -l job-name=hf-to-mt-main-job-0 -o jsonpath="{.items[0].metadata.name}")
-
-if [ -n "$POD_NAME" ]; then
-  echo "Found conversion pod: $POD_NAME"
-  echo "Tailing logs... (this will block until the conversion finishes)"
-  kubectl logs -f $POD_NAME || true
-  
-  # Check if the pod actually succeeded
-  POD_STATUS=$(kubectl get pod $POD_NAME -o jsonpath='{.status.phase}')
-  if [ "$POD_STATUS" != "Succeeded" ]; then
-    echo "ERROR: Conversion pod did not succeed (Status: $POD_STATUS)."
+echo "Waiting for pod to be scheduled..."
+POD_NAME=""
+ATTEMPTS=0
+while [ -z "$POD_NAME" ]; do
+  if [ $ATTEMPTS -ge 60 ]; then
+    echo "ERROR: Timeout (10 minutes) waiting for pod to be scheduled."
     exit 1
   fi
-  echo "[$(date)] ==================== Model converted successfully. ===================="
-else
-  echo "ERROR: Could not find the conversion pod. It may have failed to schedule."
+  POD_NAME=$(kubectl get pods -l job-name=hf-to-mt-main-job-0 -o jsonpath="{.items[0].metadata.name}" 2>/dev/null || true)
+  if [ -z "$POD_NAME" ]; then
+    sleep 10
+    ATTEMPTS=$((ATTEMPTS+1))
+  fi
+done
+
+echo "Found conversion pod: $POD_NAME"
+echo "Waiting for pod to download image and start running..."
+while true; do
+  POD_STATUS=$(kubectl get pod $POD_NAME -o jsonpath='{.status.phase}' 2>/dev/null || echo "Pending")
+  if [ "$POD_STATUS" != "Pending" ]; then
+    break
+  fi
+  sleep 10
+done
+
+echo "Tailing logs for $POD_NAME..."
+kubectl logs -f $POD_NAME
+
+# Wait for Kubernetes to update the pod phase after logs finish
+POD_STATUS=$(kubectl get pod $POD_NAME -o jsonpath="{.status.phase}" 2>/dev/null || true)
+while [ "$POD_STATUS" == "Running" ] || [ "$POD_STATUS" == "Pending" ]; do
+  sleep 5
+  POD_STATUS=$(kubectl get pod $POD_NAME -o jsonpath="{.status.phase}" 2>/dev/null || true)
+done
+
+if [ "$POD_STATUS" != "Succeeded" ]; then
+  echo "ERROR: Conversion pod did not succeed (Status: $POD_STATUS)."
   exit 1
 fi
+echo "[$(date)] ==================== Model converted successfully. ===================="
