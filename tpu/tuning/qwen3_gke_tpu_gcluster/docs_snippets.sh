@@ -46,7 +46,7 @@ export CLOUD_IMAGE_NAME="$REGION-docker.pkg.dev/$PROJECT/maxtext-images/maxtext_
 #  
 #    # The GCP Zone used for this deployment.
 # -  zone:
-# +  zone: us-east5-b
+# +  zone: us-east5-a
 #  
 #    # The number of TPU slices to create
 # -  num_slices:
@@ -91,7 +91,7 @@ kubectl logs mt-to-hf-main-job-0-0-<pod suffix> -f
 
 # [START hypercomputer_tpu_tune_qwen3_sft_gcluster_cleanup_storage]
 gcluster destroy ${CLUSTER_NAME} --auto-approve 
-gcloud storage rm --recursive gs://$GCS_BUCKET
+gcloud storage rm -r gs://$GCS_BUCKET
 gcloud artifacts repositories delete ${REPOSITORY_NAME} --location=$REGION --project=$PROJECT --quiet
 rm -f cloudbuild.yaml gke-tpu-v6e-advanced.yaml kueue-configuration.yaml.tftpl
 rm -rf ${CLUSTER_NAME}

@@ -21,6 +21,8 @@ echo "[$(date)] ==================== Destroying Cluster... ===================="
 gcluster destroy ${CLUSTER_NAME} --auto-approve || echo "Warning: gcluster destroy failed (likely due to gcee_giraffe firewall daemon). Falling back to aggressive cleanup!"
 
 echo "[$(date)] ==================== Bypassing gcee_giraffe daemon to delete VPCs... ===================="
+echo "Forcefully ensuring GKE cluster is deleted first..."
+gcloud container clusters delete ${CLUSTER_NAME} --region=$REGION --project=$PROJECT --quiet || true
 for net in gke-tpu-v6e-net-0 gke-tpu-v6e-net-1; do
   echo "Aggressively tearing down $net..."
   while gcloud compute networks describe $net --project=$PROJECT >/dev/null 2>&1; do
@@ -29,6 +31,10 @@ for net in gke-tpu-v6e-net-0 gke-tpu-v6e-net-1; do
 
     echo "Blasting routers for $net..."
     gcloud compute routers list --project=$PROJECT --format="value(name)" | grep "^${net}-router$" | xargs -r -P 20 -I {} gcloud compute routers delete {} --region=$REGION --project=$PROJECT --quiet >/dev/null 2>&1 || true
+
+    echo "Blasting static NAT IPs for $net..."
+    gcloud compute addresses delete ${net}-nat-ips-${REGION}-0 --region=$REGION --project=$PROJECT --quiet >/dev/null 2>&1 || true
+    gcloud compute addresses delete ${net}-nat-ips-${REGION}-1 --region=$REGION --project=$PROJECT --quiet >/dev/null 2>&1 || true
 
     echo "Blasting routes for $net..."
     gcloud compute routes list --project=$PROJECT --filter="network=$net" --format="value(name)" | grep -v "default-route" | xargs -r -P 20 -I {} gcloud compute routes delete {} --project=$PROJECT --quiet >/dev/null 2>&1 || true
@@ -39,11 +45,16 @@ for net in gke-tpu-v6e-net-0 gke-tpu-v6e-net-1; do
     gcloud compute networks delete $net --project=$PROJECT --quiet >/dev/null 2>&1 && echo "✅ Successfully vaporized network: $net" || sleep 1
   done
 done
+
+echo "Cleaning up orphaned Service Accounts..."
+gcloud iam service-accounts delete ${CLUSTER_NAME}-gke-wl-sa@${PROJECT}.iam.gserviceaccount.com --project=$PROJECT --quiet >/dev/null 2>&1 || true
+gcloud iam service-accounts delete ${CLUSTER_NAME}-gke-np-sa@${PROJECT}.iam.gserviceaccount.com --project=$PROJECT --quiet >/dev/null 2>&1 || true
 # [END hypercomputer_tpu_tune_qwen3_sft_gcluster_destroy_cluster]
 
 echo "[$(date)] ==================== Deleting storage and artifacts... ===================="
-gcloud storage rm --recursive gs://$GCS_BUCKET || echo "Warning: Failed to delete bucket"
+gcloud storage rm -r gs://$GCS_BUCKET || echo "Warning: Failed to delete bucket"
 gcloud artifacts repositories delete ${REPOSITORY_NAME} --location=$REGION --project=$PROJECT --quiet || echo "Warning: Failed to delete repository"
 rm -f gke-tpu-v6e-advanced.yaml kueue-configuration.yaml.tftpl
+rm -rf .ghpc
 rm -rf ${CLUSTER_NAME}
 echo "[$(date)] ==================== Resources cleaned up. ===================="
