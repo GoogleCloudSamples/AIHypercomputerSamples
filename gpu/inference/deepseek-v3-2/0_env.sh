@@ -19,8 +19,8 @@ export REGION="YOUR_REGION"
 export CLUSTER_NAME="YOUR_CLUSTER_NAME"
 export GCS_BUCKET="YOUR_GCS_BUCKET"
 export HUGGING_FACE_TOKEN="YOUR_HF_TOKEN"
-export NETWORK="NETWORK_NAME"
-export SUBNETWORK="SUBNETWORK_NAME"
+export NETWORK="YOUR_NETWORK_NAME"
+export SUBNETWORK="YOUR_SUBNETWORK_NAME"
 export PROJECT_NUMBER=$(gcloud projects describe "${PROJECT_ID}" --format="value(projectNumber)")
 
 gcloud config set project "${PROJECT_ID}"
