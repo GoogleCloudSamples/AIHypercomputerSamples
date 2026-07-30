@@ -17,16 +17,16 @@
 # [START hypercomputer_gpu_train_ray_verl_std_env]
 export PROJECT_ID=$(gcloud config get project)
 export PROJECT_NUMBER=$(gcloud projects describe ${PROJECT_ID} --format="value(projectNumber)")
-export CONTROL_PLANE_REGION="YOUR_CONTROL_PLANE_REGION"
-export NODE_ZONE="YOUR_NODE_ZONE"
+export CONTROL_PLANE_REGION="YOUR_REGION"
+export NODE_ZONE="YOUR_ZONE"
 export CLUSTER_NAME="YOUR_CLUSTER_NAME"
 export KSA_NAME="YOUR_KSA_NAME"
-export GS_BUCKET="YOUR_BUCKET_NAME"
+export GS_BUCKET="YOUR_GCS_BUCKET"
 export NAMESPACE="default"
 export GPU_TYPE="YOUR_GPU_TYPE"
 export MACHINE_TYPE="YOUR_MACHINE_TYPE"
 export RESERVATION="YOUR_RESERVATION_NAME"
-export HF_TOKEN="YOUR_HUGGING_FACE_TOKEN"
+export HF_TOKEN="YOUR_HF_TOKEN"
 
 export GVNIC_NETWORK_PREFIX="GVNIC_NAME"
 export RDMA_NETWORK_PREFIX="RDMA_NAME"
