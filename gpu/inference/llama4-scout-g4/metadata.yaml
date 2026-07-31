@@ -1,0 +1,2 @@
+# Mandatory run annotation for PKB validation suite
+expected_runtime: 3600  # Expected execution time in seconds (max 5400 / 1.5 hours)
