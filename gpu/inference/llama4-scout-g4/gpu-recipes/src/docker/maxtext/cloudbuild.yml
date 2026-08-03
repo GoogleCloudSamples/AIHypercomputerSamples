@@ -1,0 +1,11 @@
+steps:
+- name: 'docker'
+  args:
+    - 'build'
+    - '--tag=${_ARTIFACT_REGISTRY}/maxtext-benchmark'
+    - '--file=maxtext.Dockerfile'
+    - '.'
+  automapSubstitutions: true
+
+images:
+- '${_ARTIFACT_REGISTRY}/maxtext-benchmark'
