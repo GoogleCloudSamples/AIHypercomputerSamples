@@ -42,7 +42,7 @@ else
         --quiet
 fi
 
-# 2. Create G4/A4 GPU node pool with 8x B200 GPUs
+# 2. Create A4 GPU node pool with 8x B200 GPUs
 if gcloud container node-pools describe "$NODE_POOL_NAME" --cluster "$CLUSTER_NAME" --region "$CLUSTER_REGION" --project "$PROJECT_ID" >/dev/null 2>&1; then
     echo "✓ Node pool '$NODE_POOL_NAME' already exists."
 else

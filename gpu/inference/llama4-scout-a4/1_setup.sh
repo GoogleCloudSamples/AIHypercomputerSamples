@@ -17,8 +17,6 @@
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-export REPO_ROOT="${SCRIPT_DIR}/gpu-recipes"
-export RECIPE_ROOT="${REPO_ROOT}/inference/a4/single-host-serving"
 
 # 1. Check required CLI tools (gcloud, kubectl, helm)
 echo "--------------------------------------------------------"
@@ -99,21 +97,6 @@ fi
 
 # 6. Configure Docker authentication
 gcloud auth configure-docker "${REGION}-docker.pkg.dev" --quiet
-
-# 7. Clone or sync GPU recipes repository
-echo "--------------------------------------------------------"
-echo "Step 4: Synchronizing GPU Recipes Repository"
-echo "--------------------------------------------------------"
-
-if [ -d "${REPO_ROOT}/.git" ]; then
-    echo "✓ Fetching updates for gpu-recipes..."
-    git -C "${REPO_ROOT}" pull --ff-only || echo "Continuing with local version."
-else
-    echo "Cloning ai-hypercomputer/gpu-recipes..."
-    git clone https://github.com/ai-hypercomputer/gpu-recipes.git "${REPO_ROOT}"
-fi
-
-echo "✓ Recipe root set to: ${RECIPE_ROOT}"
 
 echo "--------------------------------------------------------"
 echo "Setup completed successfully! Environment is ready."
