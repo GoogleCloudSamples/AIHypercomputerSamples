@@ -117,7 +117,7 @@ echo "✓ Secret 'hf-secret' applied."
 
 # 6. Deploy Llama 4 serving workload via Helm
 echo "--------------------------------------------------------"
-echo "Step 5 & 6: Deploying Llama 4 on B200 (A4 Natywny Chart)"
+echo "Step 5 & 6: Deploying Llama 4 on B200 (A4 Native Chart)"
 echo "--------------------------------------------------------"
 
 RELEASE_NAME="${USER}-serving-llama-4-a4"
