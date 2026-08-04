@@ -17,8 +17,10 @@
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# [START hypercomputer_gpu_infer_llama4scout_g4_gpu_recipes_repo]
 export REPO_ROOT="${SCRIPT_DIR}/gpu-recipes"
 export RECIPE_ROOT="${REPO_ROOT}/inference/a4/single-host-serving"
+# [END hypercomputer_gpu_infer_llama4scout_g4_gpu_recipes_repo]
 
 # 1. Create GKE cluster (if not existing)
 echo "--------------------------------------------------------"
@@ -29,7 +31,8 @@ if gcloud container clusters describe "$CLUSTER_NAME" --region "$CLUSTER_REGION"
     echo "✓ Cluster '$CLUSTER_NAME' already exists."
 else
     echo "Creating GKE cluster..."
-    gcloud container clusters create "$CLUSTER_NAME" \
+# [START hypercomputer_gpu_infer_llama4scout_g4_gpu_cluster_create]
+    gcloud container clusters create "${CLUSTER_NAME}" \
         --project="${PROJECT_ID}" \
         --region="${CLUSTER_REGION}" \
         --release-channel="stable" \
@@ -40,6 +43,7 @@ else
         --logging=SYSTEM,WORKLOAD \
         --monitoring=SYSTEM \
         --quiet
+# [END hypercomputer_gpu_infer_llama4scout_g4_gpu_cluster_create]
 fi
 
 # 2. Create G4 node pool with 8x RTX Pro 6000 GPUs
@@ -47,7 +51,8 @@ if gcloud container node-pools describe "$NODE_POOL_NAME" --cluster "$CLUSTER_NA
     echo "✓ Node pool '$NODE_POOL_NAME' already exists."
 else
     echo "Creating node pool with 8x RTX Pro 6000 GPUs (G4) and 32x Local SSDs..."
-    gcloud container node-pools create "$NODE_POOL_NAME" \
+# [START hypercomputer_gpu_infer_llama4scout_g4_gpu_node_pool_create]
+    gcloud container node-pools create "${NODE_POOL_NAME}" \
         --cluster="${CLUSTER_NAME}" \
         --region="${CLUSTER_REGION}" \
         --node-locations="${ZONE}" \
@@ -60,11 +65,14 @@ else
         --reservation="${RESERVATION}" \
         --node-taints="cloud.google.com/gke-accelerator=nvidia-rtx-pro-6000:NoSchedule" \
         --quiet
+# [END hypercomputer_gpu_infer_llama4scout_g4_gpu_node_pool_create]
 fi
 
 # 3. Fetch cluster credentials for kubectl
 echo "Fetching cluster credentials..."
-gcloud container clusters get-credentials "$CLUSTER_NAME" --region "$CLUSTER_REGION" --project "${PROJECT_ID}"
+# [START hypercomputer_gpu_infer_llama4scout_g4_gpu_fetch_cred]
+gcloud container clusters get-credentials "${CLUSTER_NAME}" --region "${CLUSTER_REGION}" --project "${PROJECT_ID}"
+# [END hypercomputer_gpu_infer_llama4scout_g4_gpu_fetch_cred]
 
 echo "✓ Cluster setup completed."
 
@@ -73,7 +81,8 @@ echo "--------------------------------------------------------"
 echo "Step 2 & 3: Direct Docker Build for G4 (RTX Pro 6000)"
 echo "--------------------------------------------------------"
 
-BUILD_DIR="${SCRIPT_DIR}/build_g4"
+# [START hypercomputer_gpu_infer_llama4scout_g4_gpu_container_image_build]
+BUILD_DIR="${SCRIPT_DIR}/build_rtx6000"
 mkdir -p "${BUILD_DIR}"
 
 cat <<EOF > "${BUILD_DIR}/Dockerfile"
@@ -86,16 +95,21 @@ ENV HF_HUB_ENABLE_HF_TRANSFER=1
 RUN ln -sf /usr/bin/python3 /usr/bin/python || true
 RUN python3 -m pip install --no-cache-dir hf_transfer pyyaml
 EOF
+# [END hypercomputer_gpu_infer_llama4scout_g4_gpu_container_image_build]
 
+# [START hypercomputer_gpu_infer_llama4scout_g4_gpu_ar_image]
 FULL_IMAGE_NAME="${ARTIFACT_REGISTRY}/${VLLM_IMAGE}:${VLLM_VERSION}"
+# [END hypercomputer_gpu_infer_llama4scout_g4_gpu_ar_image]
 echo "Submitting direct Cloud Build (synchronous wait) for: ${FULL_IMAGE_NAME}..."
 
+# [START hypercomputer_gpu_infer_llama4scout_g4_gpu_gcloud_build]
 gcloud builds submit "${BUILD_DIR}" \
     --tag="${FULL_IMAGE_NAME}" \
     --region="${REGION}" \
     --timeout="2h" \
     --machine-type=e2-highcpu-32 \
     --disk-size=1000
+# [END hypercomputer_gpu_infer_llama4scout_g4_gpu_gcloud_build]
 
 echo "✓ Docker image successfully built and pushed to Artifact Registry:"
 echo "  ${FULL_IMAGE_NAME}"
@@ -110,9 +124,11 @@ if [ -z "${HF_TOKEN:-}" ]; then
     exit 1
 fi
 
+# [START hypercomputer_gpu_infer_llama4scout_g4_gpu_create_hf_token]
 kubectl create secret generic hf-secret \
     --from-literal=hf_api_token="${HF_TOKEN}" \
     --dry-run=client -o yaml | kubectl apply -f -
+# [START hypercomputer_gpu_infer_llama4scout_g4_gpu_create_hf_token]
 
 echo "✓ Secret 'hf-secret' applied."
 
@@ -121,15 +137,18 @@ echo "--------------------------------------------------------"
 echo "Step 5 & 6: Deploying Llama 4 on G4 (8x RTX Pro 6000)"
 echo "--------------------------------------------------------"
 
+# [START hypercomputer_gpu_infer_llama4scout_g4_gpu_path_configuration]
 RELEASE_NAME="${USER}-serving-llama-4-g4"
 CHART_PATH="${REPO_ROOT}/src/helm-charts/a4/inference-templates/deployment"
 VALUES_FILE="${REPO_ROOT}/inference/a4/single-host-serving/vllm/values.yaml"
 TARGET_MODEL="${MODEL_ID}"
+# [END hypercomputer_gpu_infer_llama4scout_g4_gpu_path_configuration]
 
 echo "Installing Helm chart release: ${RELEASE_NAME}"
 echo "Model: ${TARGET_MODEL}"
 
 # 7. Install Helm release
+# [START hypercomputer_gpu_infer_llama4scout_g4_helm_installation]
 helm upgrade --install "${RELEASE_NAME}" "${CHART_PATH}" \
     -f "${VALUES_FILE}" \
     --set volumes.gcsMounts[0].bucketName="${GCS_BUCKET}" \
@@ -150,9 +169,11 @@ helm upgrade --install "${RELEASE_NAME}" "${CHART_PATH}" \
     --set workload.tolerations[1].key="nvidia.com/gpu" \
     --set workload.tolerations[1].operator="Exists" \
     --set workload.tolerations[1].effect="NoSchedule"
+# [END hypercomputer_gpu_infer_llama4scout_g4_helm_installation]
 
 # 8. Apply customized G4 workload launcher ConfigMap
-echo "Applying G4 launcher ConfigMap..."
+echo "Applying RTX Pro 6000 launcher ConfigMap..."
+# [START hypercomputer_gpu_infer_llama4scout_g4_launcher_configmap]
 SCRIPT_CONTENT='#!/bin/bash
 if [[ -n "${NCCL_INIT_SCRIPT}" ]]; then
   echo "Running NCCL init script: ${NCCL_INIT_SCRIPT}"
@@ -177,16 +198,20 @@ exec python3 -m vllm.entrypoints.openai.api_server \
   --enforce-eager \
   --trust-remote-code
 '
+# [END hypercomputer_gpu_infer_llama4scout_g4_launcher_configmap]
 
+# [START hypercomputer_gpu_infer_llama4scout_g4_create_configmap]
 kubectl create configmap "${RELEASE_NAME}-launcher" \
     --from-literal=launch-workload.sh="${SCRIPT_CONTENT}" \
     --dry-run=client -o yaml | \
 kubectl label --local -f - "app.kubernetes.io/managed-by=Helm" -o yaml | \
 kubectl annotate --local -f - "meta.helm.sh/release-name=${RELEASE_NAME}" "meta.helm.sh/release-namespace=default" -o yaml | \
 kubectl apply -f -
+# [END hypercomputer_gpu_infer_llama4scout_g4_create_configmap]
 
 # 9. Apply tolerations patch
-echo "Applying toleration patch for G4 GPUs..."
+# [START hypercomputer_gpu_infer_llama4scout_g4_apply_patch]
+echo "Applying toleration patch for RTX Pro 6000 GPUs..."
 sleep 2
 
 kubectl patch deployment "${RELEASE_NAME}" --type=strategic -p '{
@@ -210,6 +235,7 @@ kubectl patch deployment "${RELEASE_NAME}" --type=strategic -p '{
     }
   }
 }'
+# [END hypercomputer_gpu_infer_llama4scout_g4_apply_patch]
 
 echo "--------------------------------------------------------"
 echo "Deployment submitted! Check pods using:"

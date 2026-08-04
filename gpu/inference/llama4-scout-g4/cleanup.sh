@@ -72,11 +72,14 @@ echo "--------------------------------------------------------"
 
 if gcloud container node-pools describe "${NODE_POOL_NAME}" --cluster "${CLUSTER_NAME}" --region "${CLUSTER_REGION}" --project "${PROJECT_ID}" >/dev/null 2>&1; then
     echo "Deleting node pool '${NODE_POOL_NAME}' (releasing RTX Pro 6000 GPUs)..."
-    gcloud container node-pools delete "$NODE_POOL_NAME" \
+# [START hypercomputer_gpu_infer_llama4scout_g4_delete_node_pool]
+    gcloud container node-pools delete "${NODE_POOL_NAME}" \
         --cluster="${CLUSTER_NAME}" \
         --region="${CLUSTER_REGION}" \
         --project="${PROJECT_ID}" \
         --quiet
+# [END hypercomputer_gpu_infer_llama4scout_g4_delete_node_pool]
+
     echo "✓ Node pool deleted."
 else
     echo "✓ Node pool '${NODE_POOL_NAME}' does not exist."
@@ -88,10 +91,13 @@ echo "--------------------------------------------------------"
 
 if gcloud container clusters describe "${CLUSTER_NAME}" --region "${CLUSTER_REGION}" --project "${PROJECT_ID}" >/dev/null 2>&1; then
     echo "Deleting GKE Cluster '${CLUSTER_NAME}'..."
-    gcloud container clusters delete "$CLUSTER_NAME" \
+# [START hypercomputer_gpu_infer_llama4scout_g4_delete_gke_cluster]
+    gcloud container clusters delete "${CLUSTER_NAME}" \
         --region="${CLUSTER_REGION}" \
         --project="${PROJECT_ID}" \
         --quiet
+# [END hypercomputer_gpu_infer_llama4scout_g4_delete_gke_cluster]
+
     echo "✓ Cluster deleted."
 else
     echo "✓ Cluster '${CLUSTER_NAME}' does not exist."
@@ -103,10 +109,13 @@ echo "--------------------------------------------------------"
 
 if gcloud artifacts repositories describe "${REPO_NAME}" --location="${REGION}" --project="${PROJECT_ID}" >/dev/null 2>&1; then
     echo "Deleting Artifact Registry repository '${REPO_NAME}' and all container images..."
+# [START hypercomputer_gpu_infer_llama4scout_g4_delete_ar]
     gcloud artifacts repositories delete "${REPO_NAME}" \
         --location="${REGION}" \
         --project="${PROJECT_ID}" \
         --quiet
+# [END hypercomputer_gpu_infer_llama4scout_g4_delete_ar]
+
     echo "✓ Artifact Registry repository deleted."
 else
     echo "✓ Artifact Registry repository '${REPO_NAME}' does not exist."

@@ -55,12 +55,15 @@ fi
 echo "--------------------------------------------------------"
 echo "Step 2: Enabling Required Google Cloud APIs"
 echo "--------------------------------------------------------"
+
+# [START hypercomputer_gpu_infer_llama4scout_g4_enable_apis]
 gcloud services enable \
     artifactregistry.googleapis.com \
     container.googleapis.com \
     storage.googleapis.com \
     cloudbuild.googleapis.com \
     --project="${PROJECT_ID}"
+# [END hypercomputer_gpu_infer_llama4scout_g4_enable_apis]
 
 # 3. Create GCS bucket (if it doesn't exist)
 echo "--------------------------------------------------------"
@@ -71,16 +74,20 @@ if gcloud storage buckets describe "gs://${GCS_BUCKET}" > /dev/null 2>&1; then
     echo "✓ Bucket gs://${GCS_BUCKET} already exists."
 else
     echo "Creating bucket gs://${GCS_BUCKET}..."
+# [START hypercomputer_gpu_infer_llama4scout_g4_create_bucket]
     gcloud storage buckets create "gs://${GCS_BUCKET}" \
         --project="${PROJECT_ID}" \
         --location="${REGION}"
+# [END hypercomputer_gpu_infer_llama4scout_g4_create_bucket]
 fi
 
 # 4. Grant Workload Identity access to GCS bucket
+# [START hypercomputer_gpu_infer_llama4scout_g4_iam_policy]
 gcloud storage buckets add-iam-policy-binding "gs://${GCS_BUCKET}" \
     --member="serviceAccount:${PROJECT_ID}.svc.id.goog[default/default]" \
     --role="roles/storage.objectAdmin" \
     --quiet
+# [END hypercomputer_gpu_infer_llama4scout_g4_iam_policy]
 
 # 5. Create Artifact Registry repository
 REPO_NAME=$(basename "${ARTIFACT_REGISTRY}")
@@ -89,15 +96,19 @@ if gcloud artifacts repositories describe "${REPO_NAME}" --location="${REGION}" 
     echo "✓ Repository '${REPO_NAME}' already exists."
 else
     echo "Creating Artifact Registry repository '${REPO_NAME}'..."
+# [START hypercomputer_gpu_infer_llama4scout_g4_create_ar]
     gcloud artifacts repositories create "${REPO_NAME}" \
         --repository-format=docker \
         --location="${REGION}" \
         --project="${PROJECT_ID}" \
         --description="Docker repository for vLLM images"
+# [END hypercomputer_gpu_infer_llama4scout_g4_create_ar]
 fi
 
 # 6. Configure Docker authentication
+# [START hypercomputer_gpu_infer_llama4scout_g4_auth_docker]
 gcloud auth configure-docker "${REGION}-docker.pkg.dev" --quiet
+# [START hypercomputer_gpu_infer_llama4scout_g4_auth_docker]
 
 echo "--------------------------------------------------------"
 echo "Setup completed successfully! Environment is ready."

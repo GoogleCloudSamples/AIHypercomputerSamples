@@ -14,6 +14,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+# [START hypercomputer_gpu_infer_llama4scout_g4_env]
 export PROJECT_ID="YOUR_PROJECT_ID"
 export REGION="YOUR_REGION"
 export ZONE="YOUR_ZONE"
@@ -31,3 +32,4 @@ export HF_TOKEN="YOUR_HF_TOKEN"
 
 gcloud config set project "${PROJECT_ID}"
 gcloud config set billing/quota_project "${PROJECT_ID}"
+# [END hypercomputer_gpu_infer_llama4scout_g4_env]
