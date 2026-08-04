@@ -31,7 +31,8 @@ sed -i "s/zone:.*/zone: ${ZONE}/" gke-tpu-v6e-advanced.yaml
 sed -i "s/num_slices:.*/num_slices: 1/" gke-tpu-v6e-advanced.yaml
 sed -i "s/tpu_topology:.*/tpu_topology: 4x8/" gke-tpu-v6e-advanced.yaml
 sed -i "s|authorized_cidr:.*|authorized_cidr: 0.0.0.0/0|" gke-tpu-v6e-advanced.yaml
-sed -i "s/n2-standard-8/e2-standard-8/" gke-tpu-v6e-advanced.yaml
+# This line can be uncommented if you need to use e2-standard-8 instead of n2-standard-8 due to capacity issues
+# sed -i "s/n2-standard-8/e2-standard-8/" gke-tpu-v6e-advanced.yaml
 
 if [ -z "$RESERVATION" ]; then
     sed -i "s/reservation:.*/reservation: ''/" gke-tpu-v6e-advanced.yaml
