@@ -26,7 +26,7 @@ export TPU_TYPE="v6e-32"
 export RESERVATION="YOUR_RESERVATION_NAME"
 export MODEL_NAME="qwen3-14b"
 export HF_TOKEN="YOUR_HF_TOKEN"
-export GCS_BUCKET="YOUR_UNIQUE_BUCKET_NAME"
+export GCS_BUCKET="YOUR_GCS_BUCKET"
 # [END hypercomputer_tpu_tune_qwen3_sft_gcluster_env]
 
 echo "[$(date)] ==================== Installing Prerequisites ===================="
