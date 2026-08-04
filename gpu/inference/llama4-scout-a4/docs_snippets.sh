@@ -15,13 +15,21 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
+# Monitor GKE pod initialization and startup status in real time
+# [START hypercomputer_gpu_infer_llama4scout_a4_monitor_pods]
+kubectl get pods -w
+# [END hypercomputer_gpu_infer_llama4scout_a4_monitor_pods]
+
 # Start port forwarding in background
+# [START hypercomputer_gpu_infer_llama4scout_a4_port_forwarding]
 nohup kubectl port-forward "svc/${USER}-serving-llama-4-a4-svc" 8000:8000 > /dev/null 2>&1 &
+# [START hypercomputer_gpu_infer_llama4scout_a4_port_forwarding]
 
 # Run curl test
 curl http://localhost:8000/health
 
 # Test inference via OpenAI-compatible Chat API
+# [START hypercomputer_gpu_infer_llama4scout_a4_test_inference]
 curl http://localhost:8000/v1/chat/completions \
   -H "Content-Type: application/json" \
   -d '{
@@ -32,13 +40,17 @@ curl http://localhost:8000/v1/chat/completions \
     "max_tokens": 60,
     "temperature": 0.2
   }'
+# [END hypercomputer_gpu_infer_llama4scout_a4_test_inference]
 
 # Run stream_chat.sh test
+# [START hypercomputer_gpu_infer_llama4scout_a4_stream_chat]
 ./gpu-recipes/inference/a4/single-host-serving/vllm/stream_chat.sh \
   "What is the meaning of life?" \
   "meta-llama/Llama-4-Scout-17B-16E-Instruct"
+# [END hypercomputer_gpu_infer_llama4scout_a4_stream_chat]
 
 # Run benchmark
+# [START hypercomputer_gpu_infer_llama4scout_a4_run_benchmark]
 kubectl exec -it deployment/${USER}-serving-llama-4-a4 -c serving -- \
   vllm bench serve \
     --model meta-llama/Llama-4-Scout-17B-16E-Instruct \
@@ -50,3 +62,21 @@ kubectl exec -it deployment/${USER}-serving-llama-4-a4 -c serving -- \
     --port 8000 \
     --backend vllm \
     --max-concurrency 64
+# [END hypercomputer_gpu_infer_llama4scout_a4_run_benchmark]
+
+# Uninstall Helm release
+# [START hypercomputer_gpu_infer_llama4scout_a4_delete_helm]
+helm uninstall "${RELEASE_NAME}"
+kubectl delete configmap "${RELEASE_NAME}-launcher"
+kubectl delete secret hf-secret
+# [END hypercomputer_gpu_infer_llama4scout_a4_delete_helm]
+
+# Deleting Cloud Storage Bucket
+# [START hypercomputer_gpu_infer_llama4scout_a4_delete_gcs_bucket]
+gcloud storage rm -r "gs://${GCS_BUCKET}"
+# [END hypercomputer_gpu_infer_llama4scout_a4_delete_gcs_bucket]
+
+# Clean up local workspace and build artifacts
+# [START hypercomputer_gpu_infer_llama4scout_a4_delete_local_workspace]
+rm -rf "${SCRIPT_DIR}/build_b200"
+# [END hypercomputer_gpu_infer_llama4scout_a4_delete_local_workspace

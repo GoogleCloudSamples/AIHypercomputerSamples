@@ -17,8 +17,10 @@
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# [START hypercomputer_gpu_infer_llama4scout_a4_gpu_recipes_repo]
 export REPO_ROOT="${SCRIPT_DIR}/gpu-recipes"
 export RECIPE_ROOT="${REPO_ROOT}/inference/a4/single-host-serving"
+# [END hypercomputer_gpu_infer_llama4scout_a4_gpu_recipes_repo]
 
 # 1. Create GKE cluster (if not existing)
 echo "--------------------------------------------------------"
@@ -29,6 +31,7 @@ if gcloud container clusters describe "$CLUSTER_NAME" --region "$CLUSTER_REGION"
     echo "✓ Cluster '$CLUSTER_NAME' already exists."
 else
     echo "Creating GKE cluster..."
+# [START hypercomputer_gpu_infer_llama4scout_a4_gpu_cluster_create]
     gcloud container clusters create "${CLUSTER_NAME}" \
         --project="${PROJECT_ID}" \
         --region="${CLUSTER_REGION}" \
@@ -40,6 +43,7 @@ else
         --logging=SYSTEM,WORKLOAD \
         --monitoring=SYSTEM \
         --quiet
+# [END hypercomputer_gpu_infer_llama4scout_a4_gpu_cluster_create]
 fi
 
 # 2. Create A4 GPU node pool with 8x B200 GPUs
@@ -47,6 +51,7 @@ if gcloud container node-pools describe "$NODE_POOL_NAME" --cluster "$CLUSTER_NA
     echo "✓ Node pool '$NODE_POOL_NAME' already exists."
 else
     echo "Creating node pool with 8x B200 GPUs (A4)..."
+# [START hypercomputer_gpu_infer_llama4scout_a4_gpu_node_pool_create]
     gcloud container node-pools create "$NODE_POOL_NAME" \
         --cluster="${CLUSTER_NAME}" \
         --region="${CLUSTER_REGION}" \
@@ -59,11 +64,14 @@ else
         --reservation="${RESERVATION}" \
         --enable-gvnic \
         --quiet
+# [END hypercomputer_gpu_infer_llama4scout_a4_gpu_node_pool_create]
 fi
 
 # 3. Fetch cluster credentials for kubectl
 echo "Fetching cluster credentials..."
-gcloud container clusters get-credentials "$CLUSTER_NAME" --region "$CLUSTER_REGION" --project "${PROJECT_ID}"
+# [START hypercomputer_gpu_infer_llama4scout_a4_gpu_fetch_cred]
+gcloud container clusters get-credentials "${CLUSTER_NAME}" --region "${CLUSTER_REGION}" --project "${PROJECT_ID}"
+# [END hypercomputer_gpu_infer_llama4scout_a4_gpu_fetch_cred]
 
 echo "✓ Cluster setup completed."
 
@@ -72,6 +80,7 @@ echo "--------------------------------------------------------"
 echo "Step 2 & 3: Direct Docker Build for B200 (sm_100)"
 echo "--------------------------------------------------------"
 
+# [START hypercomputer_gpu_infer_llama4scout_a4_gpu_container_image_build]
 BUILD_DIR="${SCRIPT_DIR}/build_b200"
 mkdir -p "${BUILD_DIR}"
 
@@ -85,16 +94,21 @@ ENV HF_HUB_ENABLE_HF_TRANSFER=1
 RUN ln -sf /usr/bin/python3 /usr/bin/python || true
 RUN python3 -m pip install --no-cache-dir hf_transfer pyyaml
 EOF
+# [END hypercomputer_gpu_infer_llama4scout_a4_gpu_container_image_build]
 
+# [START hypercomputer_gpu_infer_llama4scout_a4_gpu_ar_image]
 FULL_IMAGE_NAME="${ARTIFACT_REGISTRY}/${VLLM_IMAGE}:${VLLM_VERSION}"
+# [END hypercomputer_gpu_infer_llama4scout_a4_gpu_ar_image]
 echo "Submitting direct Cloud Build (synchronous wait) for: ${FULL_IMAGE_NAME}..."
 
+# [START hypercomputer_gpu_infer_llama4scout_a4_gpu_gcloud_build]
 gcloud builds submit "${BUILD_DIR}" \
     --tag="${FULL_IMAGE_NAME}" \
     --region="${REGION}" \
     --timeout="2h" \
     --machine-type=e2-highcpu-32 \
     --disk-size=1000
+# [END hypercomputer_gpu_infer_llama4scout_a4_gpu_gcloud_build]
 
 echo "✓ Docker image successfully built and pushed to Artifact Registry:"
 echo "  ${FULL_IMAGE_NAME}"
@@ -109,9 +123,11 @@ if [ -z "${HF_TOKEN:-}" ]; then
     exit 1
 fi
 
+# [START hypercomputer_gpu_infer_llama4scout_a4_gpu_create_hf_token]
 kubectl create secret generic hf-secret \
     --from-literal=hf_api_token="${HF_TOKEN}" \
     --dry-run=client -o yaml | kubectl apply -f -
+# [END hypercomputer_gpu_infer_llama4scout_a4_gpu_create_hf_token]
 
 echo "✓ Secret 'hf-secret' applied."
 
@@ -120,15 +136,18 @@ echo "--------------------------------------------------------"
 echo "Step 5 & 6: Deploying Llama 4 on B200 (A4 Native Chart)"
 echo "--------------------------------------------------------"
 
+# [START hypercomputer_gpu_infer_llama4scout_a4_gpu_path_configuration]
 RELEASE_NAME="${USER}-serving-llama-4-a4"
 CHART_PATH="${REPO_ROOT}/src/helm-charts/a4/inference-templates/deployment"
 VALUES_FILE="${REPO_ROOT}/inference/a4/single-host-serving/vllm/values.yaml"
 TARGET_MODEL="${MODEL_ID}"
+# [END hypercomputer_gpu_infer_llama4scout_a4_gpu_path_configuration]
 
 echo "Installing Helm chart release: ${RELEASE_NAME}"
 echo "Model: ${TARGET_MODEL}"
 
 # 8. Install Helm release
+# [START hypercomputer_gpu_infer_llama4scout_a4_helm_installation]
 helm upgrade --install "${RELEASE_NAME}" "${CHART_PATH}" \
     -f "${VALUES_FILE}" \
     --set volumes.gcsMounts[0].bucketName="${GCS_BUCKET}" \
@@ -142,9 +161,11 @@ helm upgrade --install "${RELEASE_NAME}" "${CHART_PATH}" \
     --set service.type=ClusterIP \
     --set service.ports.http=8000 \
     --set network.gibVersion=""
+# [END hypercomputer_gpu_infer_llama4scout_a4_helm_installation]
 
 # 9. Apply customized B200 workload launcher ConfigMap
 echo "Applying B200 launcher ConfigMap..."
+# [START hypercomputer_gpu_infer_llama4scout_a4_launcher_configmap]
 SCRIPT_CONTENT='#!/bin/bash
 if [[ -n "${NCCL_INIT_SCRIPT}" ]]; then
   echo "Running NCCL init script: ${NCCL_INIT_SCRIPT}"
@@ -178,13 +199,16 @@ exec python3 -m vllm.entrypoints.openai.api_server \
   --enforce-eager \
   --trust-remote-code
 '
+# [END hypercomputer_gpu_infer_llama4scout_a4_launcher_configmap]
 
+# [START hypercomputer_gpu_infer_llama4scout_a4_create_configmap]
 kubectl create configmap "${RELEASE_NAME}-launcher" \
     --from-literal=launch-workload.sh="${SCRIPT_CONTENT}" \
     --dry-run=client -o yaml | \
 kubectl label --local -f - "app.kubernetes.io/managed-by=Helm" -o yaml | \
 kubectl annotate --local -f - "meta.helm.sh/release-name=${RELEASE_NAME}" "meta.helm.sh/release-namespace=default" -o yaml | \
 kubectl apply -f -
+# [END hypercomputer_gpu_infer_llama4scout_a4_create_configmap]
 
 echo "--------------------------------------------------------"
 echo "Deployment submitted! Check pods using:"
