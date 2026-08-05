@@ -1,3 +1,0 @@
-tensor-parallel-size: 8
-trust-remote-code: true
-disable-log-requests: true
