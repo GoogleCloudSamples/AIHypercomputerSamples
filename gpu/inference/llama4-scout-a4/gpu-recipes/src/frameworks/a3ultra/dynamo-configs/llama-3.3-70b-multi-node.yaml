@@ -1,2 +1,0 @@
-tensor-parallel-size: 8
-enforce-eager: true

@@ -1,2 +1,0 @@
-tensor-parallel-size: 4
-async-scheduling: true
