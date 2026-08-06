@@ -20,7 +20,7 @@ export PROJECT_NUMBER=$(gcloud projects describe ${PROJECT_ID} --format="value(p
 export CONTROL_PLANE_REGION="YOUR_REGION"
 export NODE_ZONE="YOUR_ZONE"
 export CLUSTER_NAME="YOUR_CLUSTER_NAME"
-export KSA_NAME="YOUR_KSA_NAME"
+export KSA_NAME="ksa-service-account"
 export GS_BUCKET="YOUR_GCS_BUCKET"
 export NAMESPACE="default"
 export GPU_TYPE="nvidia-b200"
