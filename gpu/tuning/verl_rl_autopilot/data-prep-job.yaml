@@ -62,6 +62,9 @@ spec:
           if [ ! -d "/data/verl" ]; then
             echo "Cloning verl to GCS..."
             git clone --branch v0.6.1 https://github.com/volcengine/verl.git /data/verl
+            
+            echo "Installing verl on GCS to generate metadata..."
+            pip3 install --no-deps -e /data/verl
           else
             echo "verl already exists in /data/verl"
           fi

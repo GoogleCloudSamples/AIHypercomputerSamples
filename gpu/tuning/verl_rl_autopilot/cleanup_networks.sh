@@ -20,14 +20,6 @@ set -euo pipefail
 USER_CLUSTER_NAME="${CLUSTER_NAME:-}"
 USER_REGION="${CONTROL_PLANE_REGION:-}"
 
-# Determine the directory where the script is located
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-
-# Source defaults if env file exists
-if [ -f "${SCRIPT_DIR}/0_env.sh" ]; then
-    source "${SCRIPT_DIR}/0_env.sh"
-fi
-
 # Restore user defined values if they were set (overriding defaults)
 if [ -n "${USER_CLUSTER_NAME}" ]; then
     CLUSTER_NAME="${USER_CLUSTER_NAME}"

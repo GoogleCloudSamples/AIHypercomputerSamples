@@ -47,6 +47,8 @@ if gcloud storage buckets describe gs://${GS_BUCKET} >/dev/null 2>&1; then
   # [END hypercomputer_gpu_train_ray_verl_auto_delete_bucket]
 fi
 
+./cleanup_networks.sh || true
+
 echo "Deleting GKE Cluster ${CLUSTER_NAME}..."
 # [START hypercomputer_gpu_train_ray_verl_auto_delete_cluster]
 gcloud container clusters delete ${CLUSTER_NAME} --location=${CONTROL_PLANE_REGION} --quiet || true
