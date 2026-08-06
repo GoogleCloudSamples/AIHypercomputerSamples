@@ -21,7 +21,10 @@ echo "Applying Ray Cluster..."
 envsubst < "ray-cluster-auto-dranet.yaml" | kubectl apply -f -
 # [END hypercomputer_gpu_train_ray_verl_auto_deploy_ray]
 
-echo "Workload deployment initiated."
+echo "Waiting for Ray GPU worker pods to be created..."
+until [ -n "$(kubectl get pods -l "ray.io/node-type=worker" -n "${NAMESPACE}" --no-headers 2>/dev/null)" ]; do
+  sleep 2
+done
 
 echo "Waiting for Ray GPU worker pods to become Ready..."
 kubectl wait --for=condition=ready pod \
