@@ -28,7 +28,6 @@ export MACHINE_TYPE="YOUR_MACHINE_TYPE"
 export RESERVATION="YOUR_RESERVATION_NAME"
 export HF_TOKEN="YOUR_HF_TOKEN"
 
-export GVNIC_NETWORK_PREFIX="GVNIC_NAME"
-export RDMA_NETWORK_PREFIX="RDMA_NAME"
+export GVNIC_NETWORK_PREFIX="gvnic-name"
+export RDMA_NETWORK_PREFIX="rdma-name"
 # [END hypercomputer_gpu_train_ray_verl_std_env]
-
