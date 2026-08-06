@@ -29,8 +29,8 @@ The AI Hypercomputer samples repository is organized as follows:
 ```
 
 The`./gpu` and `./tpu` directories contain complete, end-to-end code samples with instructions for running AI/ML workloads on Google Cloud accelerators. The directories are organized into `inference`, `training`, and `tuning` subdirectories.
-* `./inference`: This directory contains code samples and configurations that     demonstrate how to deploy models for serving predictions safely and             predictably on AI Hypercomputer infrastructure.
-* `./training`: This directory contains code samples and tutorials to guide you through pre-training large language models from scratch using supported frameworks on Google Cloud accelerators.
+* `./inference`: This directory contains code samples and configurations that demonstrate how to deploy models for serving predictions safely and predictably on AI Hypercomputer infrastructure.
+* `./training`: This directory contains code samples and tutorials to guide you through pre-training LLMs from scratch using supported frameworks on Google Cloud accelerators.
 * `./tuning`: This directory contains validated code samples and instructions for post-training and fine-tuning existing models to adapt them to your specific use cases.
 
 ## Sample structure
@@ -47,7 +47,7 @@ Each sample consists of the following files:
 To create a new sample, follow these steps:
 1. Prepare a step-by-step script that demonstrates your intended workflow.
 2. Divide the script into logical steps and save them in separate shell scripts.
-3. Add any necessary wait commands or wait loops so the scripts can be reliably executed without manual intervention.
+3. Add any necessary wait commands or wait loops so that the scripts can be reliably executed without manual intervention.
 4. Create a pull request, and include an example output log from your terminal that shows the scripts running successfully.
 
 ## Maintenance policy
@@ -69,4 +69,4 @@ If you have questions or encounter problems with this repository, report them th
 
 ## Contributor notes
 
-**Note:** This is not an officially supported Google product. This project is not eligible for the [Google Open Source Software Vulnerability Rewards Program](https://bughunters.google.com/open-source-security).
+**Note:** This isn't an officially supported Google product. This project is not eligible for the [Google Open Source Software Vulnerability Rewards Program](https://bughunters.google.com/open-source-security).
