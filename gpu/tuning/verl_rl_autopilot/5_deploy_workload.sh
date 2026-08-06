@@ -15,20 +15,27 @@
 # limitations under the License.
 
 set -euo pipefail
+set -x
 
 echo "Applying Ray Cluster..."
 # [START hypercomputer_gpu_train_ray_verl_auto_deploy_ray]
 envsubst < "ray-cluster-auto-dranet.yaml" | kubectl apply -f -
 # [END hypercomputer_gpu_train_ray_verl_auto_deploy_ray]
 
+echo "Debug: RayCluster resource status:"
+kubectl get raycluster -n "${NAMESPACE}" || true
+
 echo "Waiting for Ray GPU worker pods to be created..."
-until [ -n "$(kubectl get pods -l "ray.io/node-type=worker" -n "${NAMESPACE}" --no-headers 2>/dev/null)" ]; do
-  sleep 2
+until [ -n "$(kubectl get pods -l "ray.io/node-type=worker,ray.io/cluster=b200-ray-cluster-dranet" -n "${NAMESPACE}" --no-headers 2>/dev/null)" ]; do
+  echo "Debug: Current pods in namespace ${NAMESPACE}:"
+  kubectl get pods -n "${NAMESPACE}" || true
+  sleep 5
 done
 
 echo "Waiting for Ray GPU worker pods to become Ready..."
 kubectl wait --for=condition=ready pod \
-  -l "ray.io/node-type=worker" \
+  -l "ray.io/node-type=worker,ray.io/cluster=b200-ray-cluster-dranet" \
   -n "${NAMESPACE}" \
   --timeout=900s
+
 
