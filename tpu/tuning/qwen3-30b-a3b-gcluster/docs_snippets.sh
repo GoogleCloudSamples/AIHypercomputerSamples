@@ -25,7 +25,7 @@ kubectl logs -f POD_NAME
 # [END hypercomputer_tpu_tune_qwen3_30b_rl_monitor_logs]
 
 # [START hypercomputer_tpu_tune_qwen3_30b_rl_monitor_workload]
-gcluster job list --cluster ${CLUSTER_NAME} --project ${PROJECT} --location ${ZONE}
+gcluster job list --cluster ${CLUSTER_NAME} --project ${PROJECT} --location ${REGION}
 # [END hypercomputer_tpu_tune_qwen3_30b_rl_monitor_workload]
 
 # [START hypercomputer_tpu_tune_qwen3_30b_rl_monitor_train_logs]
@@ -33,9 +33,9 @@ kubectl logs -f qwen-training-pathways-head-0-0-HASH
 # [END hypercomputer_tpu_tune_qwen3_30b_rl_monitor_train_logs]
 
 # [START hypercomputer_tpu_tune_qwen3_30b_rl_cleanup]
-gcluster destroy $CLUSTER_NAME
-
-gcloud storage rm --recursive gs://$GCS_BUCKET
-
-gcloud artifacts repositories delete maxtext-images --location=$REGION --project=$PROJECT --quiet
+gcluster destroy ${CLUSTER_NAME} --auto-approve 
+gcloud storage rm -r gs://$GCS_BUCKET
+gcloud artifacts repositories delete ${REPOSITORY_NAME} --location=$REGION --project=$PROJECT --quiet
+rm -f cloudbuild.yaml gke-tpu-v6e-advanced.yaml kueue-configuration.yaml.tftpl
+rm -rf ${CLUSTER_NAME}
 # [END hypercomputer_tpu_tune_qwen3_30b_rl_cleanup]

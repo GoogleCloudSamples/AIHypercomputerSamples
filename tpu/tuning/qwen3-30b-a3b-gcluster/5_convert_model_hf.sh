@@ -22,7 +22,7 @@ gcluster job submit \
   --name="qwen-mt-to-hf" \
   --cluster=${CLUSTER_NAME} \
   --project=${PROJECT} \
-  --location=${ZONE} \
+  --location=${REGION} \
   --num-slices=1 \
   --image=$CLOUD_IMAGE_NAME \
   --compute-type=${COMPUTE_TYPE} \
@@ -43,44 +43,43 @@ gcluster job submit \
 echo "[$(date)] ==================== Hugging Face Conversion Workload submitted. ===================="
 
 echo "[$(date)] ==================== Waiting for Hugging Face Conversion to Complete... ===================="
-echo "Waiting for conversion pod to be created..."
+echo "Waiting for pod to be scheduled..."
 POD_NAME=""
-for i in {1..30}; do
-  POD_NAME=$(kubectl get pods --no-headers 2>/dev/null | grep qwen-mt-to-hf | awk '{print $1}' | head -n 1) || true
-  if [ -n "$POD_NAME" ]; then
-    break
-  fi
-  sleep 5
-done
-
-if [ -n "$POD_NAME" ]; then
-  echo "Found conversion pod: $POD_NAME"
-  echo "Waiting for pod to start running..."
-  while true; do
-    POD_STATUS=$(kubectl get pod $POD_NAME -o jsonpath='{.status.phase}' 2>/dev/null) || POD_STATUS="Unknown"
-    if [[ "$POD_STATUS" == "Running" || "$POD_STATUS" == "Succeeded" || "$POD_STATUS" == "Failed" ]]; then
-      break
-    fi
-    sleep 10
-  done
-
-  echo "Tailing logs... (this will block until conversion finishes)"
-  kubectl logs -f $POD_NAME || true
-
-  for i in {1..10}; do
-    POD_STATUS=$(kubectl get pod $POD_NAME -o jsonpath='{.status.phase}' 2>/dev/null) || POD_STATUS="Unknown"
-    if [[ "$POD_STATUS" == "Succeeded" || "$POD_STATUS" == "Failed" ]]; then
-      break
-    fi
-    sleep 3
-  done
-
-  if [ "$POD_STATUS" != "Succeeded" ]; then
-    echo "ERROR: HF conversion pod did not succeed (Status: $POD_STATUS)."
+ATTEMPTS=0
+while [ -z "$POD_NAME" ]; do
+  if [ $ATTEMPTS -ge 60 ]; then
+    echo "ERROR: Timeout (10 minutes) waiting for pod to be scheduled."
     exit 1
   fi
-  echo "[$(date)] ==================== Hugging Face conversion completed successfully. ===================="
-else
-  echo "ERROR: Could not find the HF conversion pod. It may have failed to schedule."
+  POD_NAME=$(kubectl get pods -l job-name=qwen-mt-to-hf-main-job-0 -o jsonpath="{.items[0].metadata.name}" 2>/dev/null || true)
+  if [ -z "$POD_NAME" ]; then
+    sleep 10
+    ATTEMPTS=$((ATTEMPTS+1))
+  fi
+done
+
+echo "Found conversion pod: $POD_NAME"
+echo "Waiting for pod to download image and start running..."
+while true; do
+  POD_STATUS=$(kubectl get pod $POD_NAME -o jsonpath='{.status.phase}' 2>/dev/null || echo "Pending")
+  if [ "$POD_STATUS" != "Pending" ]; then
+    break
+  fi
+  sleep 10
+done
+
+echo "Tailing logs for $POD_NAME..."
+kubectl logs -f $POD_NAME
+
+# Wait for Kubernetes to update the pod phase after logs finish
+POD_STATUS=$(kubectl get pod $POD_NAME -o jsonpath="{.status.phase}" 2>/dev/null || true)
+while [ "$POD_STATUS" == "Running" ] || [ "$POD_STATUS" == "Pending" ]; do
+  sleep 5
+  POD_STATUS=$(kubectl get pod $POD_NAME -o jsonpath="{.status.phase}" 2>/dev/null || true)
+done
+
+if [ "$POD_STATUS" != "Succeeded" ]; then
+  echo "ERROR: Conversion pod did not succeed (Status: $POD_STATUS)."
   exit 1
 fi
+echo "[$(date)] ==================== Converted back to HF format successfully. ===================="

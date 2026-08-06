@@ -17,7 +17,7 @@ steps:
         # 2. Setup Python environment and install MaxText runner
         uv venv --python 3.12 --seed maxtext_venv
         source maxtext_venv/bin/activate
-        uv pip install maxtext[runner]==0.2.1 --resolution=lowest
+        uv pip install maxtext[runner]==0.2.3 --resolution=lowest
         
         # 3. Build the Docker image (Cloud Build has Docker pre-configured)
         build_maxtext_docker_image WORKFLOW=post-training

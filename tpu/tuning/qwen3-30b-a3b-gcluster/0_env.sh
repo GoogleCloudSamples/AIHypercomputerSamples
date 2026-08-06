@@ -19,8 +19,9 @@ export PROJECT="YOUR_PROJECT_ID"
 export REGION="YOUR_REGION"
 export ZONE="YOUR_ZONE"
 export CLUSTER_NAME="YOUR_CLUSTER_NAME"
+export REPOSITORY_NAME="YOUR_REPOSITORY_NAME"
 export GCS_BUCKET="YOUR_UNIQUE_BUCKET_NAME"
-export CLOUD_IMAGE_NAME="$REGION-docker.pkg.dev/$PROJECT/maxtext-images/maxtext_base:latest"
+export CLOUD_IMAGE_NAME="$REGION-docker.pkg.dev/$PROJECT/${REPOSITORY_NAME}/maxtext_base:latest"
 export COMPUTE_TYPE="ct6e-standard-4t"
 export TPU_TYPE="v6e-64"
 export TOPOLOGY="8x8"
@@ -30,3 +31,15 @@ export RESERVATION="YOUR_RESERVATION_NAME"
 export MODEL_NAME="qwen3-30b-a3b"
 export HF_TOKEN="YOUR_HF_TOKEN"
 # [END hypercomputer_tpu_tune_qwen3_30b_rl_env]
+
+echo "[$(date)] ==================== Installing Prerequisites ===================="
+# [START hypercomputer_tpu_tune_qwen3_30b_rl_install_terraform]
+wget https://releases.hashicorp.com/terraform/1.12.2/terraform_1.12.2_linux_amd64.zip
+unzip terraform_1.12.2_linux_amd64.zip 
+sudo cp terraform /usr/bin/
+
+wget https://releases.hashicorp.com/packer/1.15.3/packer_1.15.3_linux_amd64.zip
+unzip packer_1.15.3_linux_amd64.zip
+sudo cp packer /usr/bin/
+# [END hypercomputer_tpu_tune_qwen3_30b_rl_install_terraform]
+echo "[$(date)] ==================== Prerequisites Installed ===================="

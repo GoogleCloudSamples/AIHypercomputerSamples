@@ -22,12 +22,19 @@ gcluster job submit \
   --name="qwen-training" \
   --cluster="${CLUSTER_NAME}" \
   --project="${PROJECT}" \
-  --location="${ZONE}" \
+  --location="${REGION}" \
   --num-slices=1 \
   --image="${CLOUD_IMAGE_NAME}" \
   --compute-type="${COMPUTE_TYPE}" \
   --topology="${TOPOLOGY}" \
-  --command="JAX_PLATFORMS=proxy,cpu JAX_BACKEND_TARGET=grpc://127.0.0.1:29000 ENABLE_PATHWAYS_PERSISTENCE=1 \
+  --pathways \
+  --pathways-gcs-location="gs://${GCS_BUCKET}/pathways/" \
+  --env="GRPC_DNS_RESOLVER=native" \
+  --pathways-proxy-env="GRPC_DNS_RESOLVER=native" \
+  --pathways-server-env="GRPC_DNS_RESOLVER=native" \
+  --pathways-worker-env="GRPC_DNS_RESOLVER=native" \
+  --command="export VLLM_HOST_IP=\$(hostname -I | awk '{print \$1}'); \
+      JAX_PLATFORMS=proxy,cpu ENABLE_PATHWAYS_PERSISTENCE=1 \
       python3 -m maxtext.trainers.post_train.rl.train_rl \
       run_name=rl \
       base_output_directory=gs://${GCS_BUCKET}/${MODEL_NAME}/trained/ \
@@ -45,6 +52,7 @@ gcluster job submit \
       ici_tensor_parallelism=4 \
       ici_expert_parallelism=4 \
       hbm_utilization_vllm=0.2 \
+      remat_policy=full \
       async_scheduling=False \
       allow_split_physical_axes=true \
       debug.rl=True \
@@ -54,44 +62,46 @@ gcluster job submit \
 echo "[$(date)] ==================== Training Workload submitted. ===================="
 
 echo "[$(date)] ==================== Waiting for Training Workload to Complete... ===================="
-echo "Waiting for training pod to be created..."
+echo "Waiting for pod to be scheduled..."
 POD_NAME=""
-for i in {1..30}; do
-  POD_NAME=$(kubectl get pods --no-headers 2>/dev/null | grep qwen-training | awk '{print $1}' | head -n 1) || true
-  if [ -n "$POD_NAME" ]; then
-    break
-  fi
-  sleep 5
-done
-
-if [ -n "$POD_NAME" ]; then
-  echo "Found training pod: $POD_NAME"
-  echo "Waiting for pod to start running..."
-  while true; do
-    POD_STATUS=$(kubectl get pod $POD_NAME -o jsonpath='{.status.phase}' 2>/dev/null) || POD_STATUS="Unknown"
-    if [[ "$POD_STATUS" == "Running" || "$POD_STATUS" == "Succeeded" || "$POD_STATUS" == "Failed" ]]; then
-      break
-    fi
-    sleep 10
-  done
-
-  echo "Tailing logs... (this will block until training finishes)"
-  kubectl logs -f $POD_NAME || true
-
-  for i in {1..10}; do
-    POD_STATUS=$(kubectl get pod $POD_NAME -o jsonpath='{.status.phase}' 2>/dev/null) || POD_STATUS="Unknown"
-    if [[ "$POD_STATUS" == "Succeeded" || "$POD_STATUS" == "Failed" ]]; then
-      break
-    fi
-    sleep 3
-  done
-
-  if [ "$POD_STATUS" != "Succeeded" ]; then
-    echo "ERROR: Training pod did not succeed (Status: $POD_STATUS)."
+ATTEMPTS=0
+while [ -z "$POD_NAME" ]; do
+  if [ $ATTEMPTS -ge 60 ]; then
+    echo "ERROR: Timeout (10 minutes) waiting for pod to be scheduled."
     exit 1
   fi
-  echo "[$(date)] ==================== Training completed successfully. ===================="
-else
-  echo "ERROR: Could not find the training pod. It may have failed to schedule."
+  POD_NAME=$(kubectl get pods -l job-name=qwen-training-pathways-head-0 -o jsonpath="{.items[0].metadata.name}" 2>/dev/null || true)
+  if [ -z "$POD_NAME" ]; then
+    POD_NAME=$(kubectl get pods -l jobset.sigs.k8s.io/replicatedjob-name=pathways-head,jobset.sigs.k8s.io/jobset-name=qwen-training -o jsonpath="{.items[0].metadata.name}" 2>/dev/null || true)
+  fi
+  if [ -z "$POD_NAME" ]; then
+    sleep 10
+    ATTEMPTS=$((ATTEMPTS+1))
+  fi
+done
+
+echo "Found training pod: $POD_NAME"
+echo "Waiting for pod to download image and start running..."
+while true; do
+  POD_STATUS=$(kubectl get pod $POD_NAME -o jsonpath='{.status.phase}' 2>/dev/null || echo "Pending")
+  if [ "$POD_STATUS" != "Pending" ]; then
+    break
+  fi
+  sleep 10
+done
+
+echo "Tailing logs for $POD_NAME..."
+kubectl logs -f $POD_NAME
+
+# Wait for Kubernetes to update the pod phase after logs finish
+POD_STATUS=$(kubectl get pod $POD_NAME -o jsonpath="{.status.phase}" 2>/dev/null || true)
+while [ "$POD_STATUS" == "Running" ] || [ "$POD_STATUS" == "Pending" ]; do
+  sleep 5
+  POD_STATUS=$(kubectl get pod $POD_NAME -o jsonpath="{.status.phase}" 2>/dev/null || true)
+done
+
+if [ "$POD_STATUS" != "Succeeded" ]; then
+  echo "ERROR: Training pod did not succeed (Status: $POD_STATUS)."
   exit 1
 fi
+echo "[$(date)] ==================== Training Workload completed successfully. ===================="

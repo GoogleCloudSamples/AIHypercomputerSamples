@@ -22,7 +22,7 @@ gcluster job submit \
   --name qwen-hf-to-mt \
   --cluster ${CLUSTER_NAME} \
   --project ${PROJECT} \
-  --location ${ZONE} \
+  --location ${REGION} \
   --num-slices 1 \
   --image $CLOUD_IMAGE_NAME \
   --compute-type ${COMPUTE_TYPE} \
@@ -42,45 +42,43 @@ gcluster job submit \
   --lazy_load_tensors=True"
 # [END hypercomputer_tpu_tune_qwen3_30b_rl_convert_model]
 echo "[$(date)] ==================== Waiting for Model Conversion to Complete... ===================="
-echo "Waiting for conversion pod to be created..."
+echo "Waiting for pod to be scheduled..."
 POD_NAME=""
-for i in {1..30}; do
-  POD_NAME=$(kubectl get pods --no-headers 2>/dev/null | grep qwen-hf-to-mt | awk '{print $1}' | head -n 1) || true
-  if [ -n "$POD_NAME" ]; then
-    break
-  fi
-  sleep 5
-done
-
-if [ -n "$POD_NAME" ]; then
-  echo "Found conversion pod: $POD_NAME"
-  echo "Waiting for pod to start running (this can take 5-10 minutes if autoscaler is provisioning nodes)..."
-  while true; do
-    POD_STATUS=$(kubectl get pod $POD_NAME -o jsonpath='{.status.phase}')
-    if [[ "$POD_STATUS" == "Running" || "$POD_STATUS" == "Succeeded" || "$POD_STATUS" == "Failed" ]]; then
-      break
-    fi
-    sleep 10
-  done
-
-  echo "Tailing logs... (this will block until the conversion finishes)"
-  kubectl logs -f $POD_NAME || true
-  
-  # Give Kubernetes a moment to update the pod's phase after logs stream finishes
-  for i in {1..10}; do
-    POD_STATUS=$(kubectl get pod $POD_NAME -o jsonpath='{.status.phase}')
-    if [[ "$POD_STATUS" == "Succeeded" || "$POD_STATUS" == "Failed" ]]; then
-      break
-    fi
-    sleep 3
-  done
-
-  if [ "$POD_STATUS" != "Succeeded" ]; then
-    echo "ERROR: Conversion pod did not succeed (Status: $POD_STATUS)."
+ATTEMPTS=0
+while [ -z "$POD_NAME" ]; do
+  if [ $ATTEMPTS -ge 60 ]; then
+    echo "ERROR: Timeout (10 minutes) waiting for pod to be scheduled."
     exit 1
   fi
-  echo "[$(date)] ==================== Model converted successfully. ===================="
-else
-  echo "ERROR: Could not find the conversion pod. It may have failed to schedule."
+  POD_NAME=$(kubectl get pods -l job-name=qwen-hf-to-mt-main-job-0 -o jsonpath="{.items[0].metadata.name}" 2>/dev/null || true)
+  if [ -z "$POD_NAME" ]; then
+    sleep 10
+    ATTEMPTS=$((ATTEMPTS+1))
+  fi
+done
+
+echo "Found conversion pod: $POD_NAME"
+echo "Waiting for pod to download image and start running..."
+while true; do
+  POD_STATUS=$(kubectl get pod $POD_NAME -o jsonpath='{.status.phase}' 2>/dev/null || echo "Pending")
+  if [ "$POD_STATUS" != "Pending" ]; then
+    break
+  fi
+  sleep 10
+done
+
+echo "Tailing logs for $POD_NAME..."
+kubectl logs -f $POD_NAME
+
+# Wait for Kubernetes to update the pod phase after logs finish
+POD_STATUS=$(kubectl get pod $POD_NAME -o jsonpath="{.status.phase}" 2>/dev/null || true)
+while [ "$POD_STATUS" == "Running" ] || [ "$POD_STATUS" == "Pending" ]; do
+  sleep 5
+  POD_STATUS=$(kubectl get pod $POD_NAME -o jsonpath="{.status.phase}" 2>/dev/null || true)
+done
+
+if [ "$POD_STATUS" != "Succeeded" ]; then
+  echo "ERROR: Conversion pod did not succeed (Status: $POD_STATUS)."
   exit 1
 fi
+echo "[$(date)] ==================== Model converted successfully. ===================="
