@@ -18,8 +18,8 @@ set -euo pipefail
 # DO NOT PUT ANY SECRET VALUES HERE!
 # [START hypercomputer_tpu_tune_gemma3_sft_env]
 export PROJECT="YOUR_PROJECT_ID"
-export ZONE="ZONE_NAME"
-export RESERVATION="RESERVATION_NAME"
-export NAME="TPU_MACHINE_NAME"
+export ZONE="YOUR_ZONE"
+export RESERVATION="YOUR_RESERVATION_NAME"
+export NAME="YOUR_TPU_NAME"
 # [END hypercomputer_tpu_tune_gemma3_sft_env]
 export HF_TOKEN="YOUR_HF_TOKEN"
