@@ -28,6 +28,6 @@ export MACHINE_TYPE="a4-highgpu-8g"
 export RESERVATION="YOUR_RESERVATION_NAME"
 export HF_TOKEN="YOUR_HF_TOKEN"
 
-export GVNIC_NETWORK_PREFIX="gvnic-name"
-export RDMA_NETWORK_PREFIX="rdma-name"
+export GVNIC_NETWORK_PREFIX="manikowski-gvnic-name"
+export RDMA_NETWORK_PREFIX="manikowski-rdma-name"
 # [END hypercomputer_gpu_train_ray_verl_std_env]
