@@ -18,10 +18,11 @@ set -euo pipefail
 
 # [START hypercomputer_gpu_train_ray_verl_auto_create_env]
 if [ ! -d "env" ]; then
-  virtualenv -p $(which python3) env
+  python3 -m venv env
 else
   echo "Found virtual environment env, not recreating"
 fi
+
 source env/bin/activate
 pip3 install ray[default]
 # [END hypercomputer_gpu_train_ray_verl_auto_create_env]  
