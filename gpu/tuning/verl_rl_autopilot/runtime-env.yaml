@@ -3,6 +3,11 @@ working_dir: "."
 excludes:
   - ".git"
   - "env"
+  - "__pycache__"
+  - "venv"
+  - ".venv"
+  - "*.pyc"
+  - ".cache"
 env_vars:
   PYTHONPATH: "/data/verl"
   LD_LIBRARY_PATH: "/usr/local/nvidia/lib64:/usr/local/gib/lib64"
