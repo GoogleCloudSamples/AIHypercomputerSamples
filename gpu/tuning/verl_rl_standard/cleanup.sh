@@ -30,8 +30,9 @@ if gcloud container clusters describe ${CLUSTER_NAME} --location=${CONTROL_PLANE
   gcloud container clusters get-credentials ${CLUSTER_NAME} --location=${CONTROL_PLANE_REGION} --project=${PROJECT_ID} --quiet || true
 
   if [ -f "${SCRIPT_DIR}/ray-cluster-standard.yaml" ]; then
-    # Timeout 30s for graceful deletion, then remove finalizers if stuck
+    # [START hypercomputer_gpu_train_ray_verl_std_delete_ray]
     envsubst < "${SCRIPT_DIR}/ray-cluster-standard.yaml" | kubectl delete --timeout=30s -f - --ignore-not-found=true || true
+    # [END hypercomputer_gpu_train_ray_verl_std_delete_ray]
   fi
 
   # Force remove finalizers on any remaining rayclusters to prevent hanging GKE deletion
@@ -42,7 +43,9 @@ fi
 echo "Deleting GCS FUSE Storage..."
 if [ -f "${SCRIPT_DIR}/gcsfuse-storage.yaml" ]; then
   if gcloud container clusters describe ${CLUSTER_NAME} --location=${CONTROL_PLANE_REGION} --project=${PROJECT_ID} >/dev/null 2>&1; then
+    # [START hypercomputer_gpu_train_ray_verl_std_delete_gcsfuse]
     envsubst < "${SCRIPT_DIR}/gcsfuse-storage.yaml" | kubectl delete --timeout=30s -f - --ignore-not-found=true || true
+    # [END hypercomputer_gpu_train_ray_verl_std_delete_gcsfuse]
   fi
 fi
 
@@ -56,13 +59,17 @@ fi
 # 4. Delete GCS Bucket
 echo "Deleting GCS Bucket gs://${GS_BUCKET}..."
 if gcloud storage buckets describe "gs://${GS_BUCKET}" --project="${PROJECT_ID}" >/dev/null 2>&1; then
+  # [START hypercomputer_gpu_train_ray_verl_std_delete_bucket]
   gcloud storage rm -r "gs://${GS_BUCKET}" --project="${PROJECT_ID}" || true
+  # [END hypercomputer_gpu_train_ray_verl_std_delete_bucket]
 fi
 
 # 5. Delete GKE Cluster and Wait for Managed Instance Groups to vanish
 echo "Deleting GKE Cluster ${CLUSTER_NAME}..."
 if gcloud container clusters describe ${CLUSTER_NAME} --location=${CONTROL_PLANE_REGION} --project=${PROJECT_ID} >/dev/null 2>&1; then
+  # [START hypercomputer_gpu_train_ray_verl_std_delete_cluster]
   gcloud container clusters delete ${CLUSTER_NAME} --location=${CONTROL_PLANE_REGION} --project=${PROJECT_ID} --quiet || true
+  # [END hypercomputer_gpu_train_ray_verl_std_delete_cluster]
 fi
 
 # Emergency fallback: Delete orphaned GKE Instance Groups if cluster delete missed any
@@ -83,6 +90,7 @@ done
 # 6. Delete VPC Networks and Subnets
 echo "Deleting VPC Networks and Subnets..."
 
+# [START hypercomputer_gpu_train_ray_verl_std_delete_networks]
 # Function to safely delete all firewall rules for a given network
 Delete_Network_Firewalls() {
   local NET_NAME=$1
@@ -132,5 +140,6 @@ Delete_VPC_Network_With_Retry() {
 # Delete Networks safely with retry
 Delete_VPC_Network_With_Retry "${RDMA_NETWORK_PREFIX}-net"
 Delete_VPC_Network_With_Retry "${GVNIC_NETWORK_PREFIX}-net"
+# [END hypercomputer_gpu_train_ray_verl_std_delete_networks]
 
 echo "=== Cleanup Complete ==="
