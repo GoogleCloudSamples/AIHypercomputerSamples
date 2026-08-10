@@ -22,11 +22,12 @@ cd "${SCRIPT_DIR}"
 
 if [ ! -d "env" ]; then
   echo "Creating local virtual environment for Ray client..."
-  virtualenv -p $(which python3) env
+  python3 -m venv env
 else
   echo "Found virtual environment env, not recreating"
 fi
 source env/bin/activate
+pip3 install --upgrade pip
 pip3 install ray[default]
 
 # Prepare runtime-env-local.yaml from our local runtime-env.yaml
