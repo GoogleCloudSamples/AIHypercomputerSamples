@@ -73,6 +73,13 @@ for mig in $(gcloud compute instance-groups managed list --project=${PROJECT_ID}
   gcloud compute instance-groups managed delete ${mig} --zone=${zone} --project=${PROJECT_ID} --quiet || true
 done
 
+# Wait for all Instance Groups associated with the cluster/test to fully terminate
+echo "Waiting for Managed Instance Groups to fully terminate..."
+while [ -n "$(gcloud compute instance-groups managed list --project=${PROJECT_ID} --filter="name ~ ${CLUSTER_NAME}" --format="value(name)" 2>/dev/null)" ]; do
+  echo "Instance groups still terminating in GCP, waiting 10s..."
+  sleep 10
+done
+
 # 6. Delete VPC Networks and Subnets
 echo "Deleting VPC Networks and Subnets..."
 
@@ -86,11 +93,11 @@ Delete_Network_Firewalls() {
   done
 }
 
-# Delete Firewalls for both networks first
+# Delete Firewalls for both networks
 Delete_Network_Firewalls "${RDMA_NETWORK_PREFIX}-net"
 Delete_Network_Firewalls "${GVNIC_NETWORK_PREFIX}-net"
 
-# Delete RDMA subnets synchronously with retries
+# Delete RDMA subnets
 echo "Deleting RDMA subnets..."
 for N in $(seq 0 7); do
   if gcloud compute networks subnets describe ${RDMA_NETWORK_PREFIX}-sub-$N --region=${CONTROL_PLANE_REGION} --project=${PROJECT_ID} >/dev/null 2>&1; then
@@ -105,15 +112,25 @@ if gcloud compute networks subnets describe ${GVNIC_NETWORK_PREFIX}-sub --region
   gcloud compute networks subnets delete ${GVNIC_NETWORK_PREFIX}-sub --region=${CONTROL_PLANE_REGION} --project=${PROJECT_ID} --quiet || true
 fi
 
-# Delete Networks
-if gcloud compute networks describe ${RDMA_NETWORK_PREFIX}-net --project=${PROJECT_ID} >/dev/null 2>&1; then
-  echo "Deleting RDMA network ${RDMA_NETWORK_PREFIX}-net..."
-  gcloud compute networks delete ${RDMA_NETWORK_PREFIX}-net --project=${PROJECT_ID} --quiet || true
-fi
+# Function to delete VPC Network with retry and firewall re-purge
+Delete_VPC_Network_With_Retry() {
+  local NET_NAME=$1
+  if gcloud compute networks describe ${NET_NAME} --project=${PROJECT_ID} >/dev/null 2>&1; then
+    echo "Deleting network ${NET_NAME}..."
+    for attempt in {1..6}; do
+      Delete_Network_Firewalls "${NET_NAME}"
+      if gcloud compute networks delete ${NET_NAME} --project=${PROJECT_ID} --quiet; then
+        echo "Successfully deleted network ${NET_NAME}"
+        break
+      fi
+      echo "Failed to delete network ${NET_NAME} on attempt ${attempt}. Retrying in 10s..."
+      sleep 10
+    done
+  fi
+}
 
-if gcloud compute networks describe ${GVNIC_NETWORK_PREFIX}-net --project=${PROJECT_ID} >/dev/null 2>&1; then
-  echo "Deleting GVNIC network ${GVNIC_NETWORK_PREFIX}-net..."
-  gcloud compute networks delete ${GVNIC_NETWORK_PREFIX}-net --project=${PROJECT_ID} --quiet || true
-fi
+# Delete Networks safely with retry
+Delete_VPC_Network_With_Retry "${RDMA_NETWORK_PREFIX}-net"
+Delete_VPC_Network_With_Retry "${GVNIC_NETWORK_PREFIX}-net"
 
 echo "=== Cleanup Complete ==="
