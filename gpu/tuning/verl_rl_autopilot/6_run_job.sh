@@ -24,6 +24,7 @@ else
 fi
 
 source env/bin/activate
+pip3 install --upgrade pip
 pip3 install ray[default]
 # [END hypercomputer_gpu_train_ray_verl_auto_create_env]  
 
@@ -102,12 +103,12 @@ SUBMIT_OUT=$(ray job submit \
       actor_rollout_ref.model.path=/data/Qwen2.5-32B-Instruct \
       actor_rollout_ref.actor.optim.lr=1e-5 \
       actor_rollout_ref.actor.ppo_mini_batch_size=256 \
-      actor_rollout_ref.actor.ppo_micro_batch_size_per_gpu=64 \
+      actor_rollout_ref.actor.ppo_micro_batch_size_per_gpu=8 \
       actor_rollout_ref.rollout.name=vllm \
       actor_rollout_ref.rollout.log_prob_micro_batch_size_per_gpu=8 \
       actor_rollout_ref.rollout.tensor_model_parallel_size=8 \
-      actor_rollout_ref.rollout.gpu_memory_utilization=0.6 \
-      actor_rollout_ref.ref.log_prob_micro_batch_size_per_gpu=4 \
+      actor_rollout_ref.rollout.gpu_memory_utilization=0.5 \
+      actor_rollout_ref.ref.log_prob_micro_batch_size_per_gpu=2 \
       actor_rollout_ref.actor.strategy=fsdp2 \
       algorithm.kl_ctrl.kl_coef=0.001 \
       trainer.logger=console \

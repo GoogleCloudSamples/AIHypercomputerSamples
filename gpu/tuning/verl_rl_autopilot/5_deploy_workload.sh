@@ -36,6 +36,4 @@ echo "Waiting for Ray GPU worker pods to become Ready..."
 kubectl wait --for=condition=ready pod \
   -l "ray.io/node-type=worker,ray.io/cluster=b200-ray-cluster-dranet" \
   -n "${NAMESPACE}" \
-  --timeout=900s
-
-
+  --timeout=1200s
