@@ -28,7 +28,7 @@ echo "Waiting for Ray GPU worker pods to be created by KubeRay Operator..."
 MAX_RETRIES=60
 RETRY_COUNT=0
 
-# Pętla czekająca, aż przynajmniej jeden pod typu worker pojawi się w K8s API
+# An implementation of a loop that waits until at least one worker pod appears in the K8s API
 until kubectl get pods -n ${NAMESPACE} -l ray.io/node-type=worker 2>/dev/null | grep -qE "b200|ray|Running|Pending"; do
   RETRY_COUNT=$((RETRY_COUNT+1))
   if [ $RETRY_COUNT -ge $MAX_RETRIES ]; then

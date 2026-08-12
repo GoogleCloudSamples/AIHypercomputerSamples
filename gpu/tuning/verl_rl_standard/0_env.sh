@@ -20,7 +20,7 @@ export PROJECT_NUMBER=$(gcloud projects describe ${PROJECT_ID} --format="value(p
 export CONTROL_PLANE_REGION="YOUR_REGION"
 export NODE_ZONE="YOUR_ZONE"
 export CLUSTER_NAME="YOUR_CLUSTER_NAME"
-export KSA_NAME="ksa-service-account"
+export KSA_NAME="YOUR_KSA_NAME"
 export GS_BUCKET="YOUR_GCS_BUCKET"
 export NAMESPACE="default"
 export GPU_TYPE="nvidia-b200"
@@ -28,6 +28,6 @@ export MACHINE_TYPE="a4-highgpu-8g"
 export RESERVATION="YOUR_RESERVATION_NAME"
 export HF_TOKEN="YOUR_HF_TOKEN"
 
-export GVNIC_NETWORK_PREFIX="manikowski-gvnic-name"
-export RDMA_NETWORK_PREFIX="manikowski-rdma-name"
+export GVNIC_NETWORK_PREFIX="GVNIC_NAME"
+export RDMA_NETWORK_PREFIX="RDMA_NAME"
 # [END hypercomputer_gpu_train_ray_verl_std_env]

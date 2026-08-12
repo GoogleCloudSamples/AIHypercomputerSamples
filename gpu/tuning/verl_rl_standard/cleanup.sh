@@ -92,7 +92,7 @@ echo "Deleting VPC Networks and Subnets..."
 
 # [START hypercomputer_gpu_train_ray_verl_std_delete_networks]
 # Function to safely delete all firewall rules for a given network
-Delete_Network_Firewalls() {
+delete_network_firewalls() {
   local NET_NAME=$1
   echo "Deleting all firewall rules associated with network ${NET_NAME}..."
   for rule in $(gcloud compute firewall-rules list --filter="network:${NET_NAME}" --format="value(name)" --project=${PROJECT_ID} 2>/dev/null); do
@@ -102,8 +102,8 @@ Delete_Network_Firewalls() {
 }
 
 # Delete Firewalls for both networks
-Delete_Network_Firewalls "${RDMA_NETWORK_PREFIX}-net"
-Delete_Network_Firewalls "${GVNIC_NETWORK_PREFIX}-net"
+delete_network_firewalls "${RDMA_NETWORK_PREFIX}-net"
+delete_network_firewalls "${GVNIC_NETWORK_PREFIX}-net"
 
 # Delete RDMA subnets
 echo "Deleting RDMA subnets..."
@@ -121,12 +121,12 @@ if gcloud compute networks subnets describe ${GVNIC_NETWORK_PREFIX}-sub --region
 fi
 
 # Function to delete VPC Network with retry and firewall re-purge
-Delete_VPC_Network_With_Retry() {
+delete_vpc_network_with_retry() {
   local NET_NAME=$1
   if gcloud compute networks describe ${NET_NAME} --project=${PROJECT_ID} >/dev/null 2>&1; then
     echo "Deleting network ${NET_NAME}..."
     for attempt in {1..6}; do
-      Delete_Network_Firewalls "${NET_NAME}"
+      delete_network_firewalls "${NET_NAME}"
       if gcloud compute networks delete ${NET_NAME} --project=${PROJECT_ID} --quiet; then
         echo "Successfully deleted network ${NET_NAME}"
         break
@@ -138,8 +138,8 @@ Delete_VPC_Network_With_Retry() {
 }
 
 # Delete Networks safely with retry
-Delete_VPC_Network_With_Retry "${RDMA_NETWORK_PREFIX}-net"
-Delete_VPC_Network_With_Retry "${GVNIC_NETWORK_PREFIX}-net"
+delete_vpc_network_with_retry "${RDMA_NETWORK_PREFIX}-net"
+delete_vpc_network_with_retry "${GVNIC_NETWORK_PREFIX}-net"
 # [END hypercomputer_gpu_train_ray_verl_std_delete_networks]
 
 echo "=== Cleanup Complete ==="
