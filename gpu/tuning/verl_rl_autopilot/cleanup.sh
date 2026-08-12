@@ -47,12 +47,22 @@ if gcloud storage buckets describe gs://${GS_BUCKET} >/dev/null 2>&1; then
   # [END hypercomputer_gpu_train_ray_verl_auto_delete_bucket]
 fi
 
-./cleanup_networks.sh || true
+# Retrieve cluster hash before deleting the cluster
+echo "Retrieving cluster hash before deletion..."
+if POD_RANGE=$(gcloud container clusters describe "${CLUSTER_NAME}" --location="${CONTROL_PLANE_REGION}" --format="value(ipAllocationPolicy.clusterSecondaryRangeName)" 2>/dev/null); then
+    export HASH=${POD_RANGE##*-}
+    echo "Saved cluster hash: ${HASH}"
+else
+    echo "Warning: Could not retrieve cluster hash. Network cleanup might fail if cluster is already deleted."
+fi
 
 echo "Deleting GKE Cluster ${CLUSTER_NAME}..."
 # [START hypercomputer_gpu_train_ray_verl_auto_delete_cluster]
 gcloud container clusters delete ${CLUSTER_NAME} --location=${CONTROL_PLANE_REGION} --quiet || true
 # [END hypercomputer_gpu_train_ray_verl_auto_delete_cluster]
+
+# Run network cleanup after GKE cluster is deleted (so subnets are not in use)
+./cleanup_networks.sh || true
 
 echo "Deleting local files and directories..."
 rm -rf "${SCRIPT_DIR}/env"

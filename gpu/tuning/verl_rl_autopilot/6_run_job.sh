@@ -132,7 +132,7 @@ echo "Job submitted successfully. Job ID: ${JOB_ID}"
 
 # Follow logs
 while true; do
-    STATUS=$(ray job status "${JOB_ID}" --address "http://localhost:8265" 2>/dev/null | grep "Status for job" | awk -F" " '{print $NF}')
+    STATUS=$(ray job status "${JOB_ID}" --address "http://localhost:8265" 2>/dev/null | grep "Status for job" | awk -F" " '{print $NF}' || true)
     
     if [ -z "$STATUS" ]; then
         echo "Unable to get job status. Retrying..."

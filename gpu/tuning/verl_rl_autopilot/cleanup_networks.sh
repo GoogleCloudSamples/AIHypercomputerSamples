@@ -43,23 +43,27 @@ fi
 echo "=== Starting Network Cleanup for Cluster: ${CLUSTER_NAME} in ${CONTROL_PLANE_REGION} ==="
 
 # 1. Get Cluster Hash
-echo "Retrieving cluster hash..."
-if ! POD_RANGE=$(gcloud container clusters describe "${CLUSTER_NAME}" --location="${CONTROL_PLANE_REGION}" --format="value(ipAllocationPolicy.clusterSecondaryRangeName)" 2>/dev/null); then
-    echo "Warning: Could not describe cluster ${CLUSTER_NAME}. It might already be deleted."
-    if [ -t 0 ]; then
-        echo "If you know the cluster hash (e.g. 4dbafcbf), enter it now, or press Enter to abort:"
-        read -r HASH
+if [ -z "${HASH:-}" ]; then
+    echo "Retrieving cluster hash..."
+    if ! POD_RANGE=$(gcloud container clusters describe "${CLUSTER_NAME}" --location="${CONTROL_PLANE_REGION}" --format="value(ipAllocationPolicy.clusterSecondaryRangeName)" 2>/dev/null); then
+        echo "Warning: Could not describe cluster ${CLUSTER_NAME}. It might already be deleted."
+        if [ -t 0 ]; then
+            echo "If you know the cluster hash (e.g. 4dbafcbf), enter it now, or press Enter to abort:"
+            read -r HASH
+        else
+            echo "Error: Non-interactive shell and cluster hash could not be retrieved automatically."
+            exit 1
+        fi
+        if [ -z "${HASH:-}" ]; then
+            echo "Aborting."
+            exit 1
+        fi
     else
-        echo "Error: Non-interactive shell and cluster hash could not be retrieved automatically."
-        exit 1
-    fi
-    if [ -z "${HASH:-}" ]; then
-        echo "Aborting."
-        exit 1
+        HASH=${POD_RANGE##*-}
+        echo "Found cluster hash: ${HASH}"
     fi
 else
-    HASH=${POD_RANGE##*-}
-    echo "Found cluster hash: ${HASH}"
+    echo "Using provided cluster hash: ${HASH}"
 fi
 
 # 2. Find Networks
