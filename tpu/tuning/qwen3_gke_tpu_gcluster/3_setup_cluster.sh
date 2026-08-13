@@ -16,27 +16,23 @@
 
 set -euo pipefail
 
-echo "[$(date)] ==================== Downloading gcluster blueprint... ===================="
-# [START hypercomputer_tpu_tune_qwen3_sft_gcluster_download_blueprint]
-wget https://raw.githubusercontent.com/GoogleCloudPlatform/cluster-toolkit/refs/heads/develop/examples/gke-tpu-v6e/gke-tpu-v6e-advanced.yaml -O gke-tpu-v6e-advanced.yaml
-wget https://raw.githubusercontent.com/GoogleCloudPlatform/cluster-toolkit/refs/heads/develop/examples/gke-tpu-v6e/kueue-configuration.yaml.tftpl -O kueue-configuration.yaml.tftpl
-# [END hypercomputer_tpu_tune_qwen3_sft_gcluster_download_blueprint]
-
 echo "[$(date)] ==================== Configuring blueprint... ===================="
 # This line can be uncommented if you need to use e2-standard-8 instead of n2-standard-8 due to capacity issues
-# sed -i "s/n2-standard-8/e2-standard-8/" gke-tpu-v6e-advanced.yaml
+sed -i "s/n2-standard-8/e2-standard-8/" examples/gke-tpu-v6e/gke-tpu-v6e-advanced.yaml
+
+# Grant the GKE Node Pool Service Account storage.admin access to resolve the GCS bucket not found error
+sed -i "s/- storage.objectViewer/- storage.admin/" examples/gke-tpu-v6e/gke-tpu-v6e-advanced.yaml
 
 echo "[$(date)] ==================== Deploying cluster with gcluster... ===================="
 # [START hypercomputer_tpu_tune_qwen3_sft_gcluster_create_cluster]
-gcluster deploy gke-tpu-v6e-advanced.yaml \
+./gcluster deploy examples/gke-tpu-v6e/gke-tpu-v6e-advanced.yaml \
     --vars "project_id=${PROJECT},deployment_name=${CLUSTER_NAME},region=${REGION},zone=${ZONE},num_slices=1,tpu_topology=4x8,authorized_cidr=0.0.0.0/0,reservation=${RESERVATION:-}" \
+    --download-dependencies \
     --auto-approve -w
 
-# Configure docker and IAM for the service accounts created by cluster-toolkit
+# Configure docker for pulling images
 gcloud auth configure-docker gcr.io --quiet
 gcloud auth configure-docker ${REGION}-docker.pkg.dev --quiet
-gcloud projects add-iam-policy-binding $PROJECT --member="serviceAccount:${CLUSTER_NAME}-gke-wl-sa@${PROJECT}.iam.gserviceaccount.com" --role="roles/storage.admin" --quiet
-gcloud projects add-iam-policy-binding $PROJECT --member="serviceAccount:${CLUSTER_NAME}-gke-np-sa@${PROJECT}.iam.gserviceaccount.com" --role="roles/storage.admin" --quiet
 # [END hypercomputer_tpu_tune_qwen3_sft_gcluster_create_cluster]
 
 echo "[$(date)] ==================== Cluster deployment completed. ===================="

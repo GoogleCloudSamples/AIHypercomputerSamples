@@ -18,11 +18,11 @@ set -euo pipefail
 
 echo "[$(date)] ==================== Destroying Cluster... ===================="
 # [START hypercomputer_tpu_tune_qwen3_sft_gcluster_destroy_cluster]
-gcluster destroy ${CLUSTER_NAME} --auto-approve --robust
+./gcluster destroy ${CLUSTER_NAME} --auto-approve --robust
 # [END hypercomputer_tpu_tune_qwen3_sft_gcluster_destroy_cluster]
 
 echo "[$(date)] ==================== Deleting storage and artifacts... ===================="
-gcloud storage rm -r gs://$GCS_BUCKET || echo "Warning: Failed to delete bucket"
-gcloud artifacts repositories delete ${REPOSITORY_NAME} --location=$REGION --project=$PROJECT --quiet || echo "Warning: Failed to delete repository"
-rm -rf gke-tpu-v6e-advanced.yaml kueue-configuration.yaml.tftpl .ghpc ${CLUSTER_NAME}
+gcloud storage rm -r gs://${GCS_BUCKET} || echo "Warning: Failed to delete bucket"
+gcloud artifacts repositories delete ${REPOSITORY_NAME} --location=${REGION} --project=${PROJECT} --quiet || echo "Warning: Failed to delete repository"
+rm -rf .ghpc ${CLUSTER_NAME} gcluster examples community gcluster_bundle_linux_amd64.tgz
 echo "[$(date)] ==================== Resources cleaned up. ===================="
