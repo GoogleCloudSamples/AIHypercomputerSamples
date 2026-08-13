@@ -22,5 +22,5 @@ echo "Deploying the model and tracking progress..."
 # [START hypercomputer_gpu_infer_gemma3_deploy_wait]
 kubectl wait \
     --for=condition=Available \
-    --timeout=5400s deployment/vllm-gemma-deployment
+    --timeout=1800s deployment/vllm-gemma-deployment
 # [END hypercomputer_gpu_infer_gemma3_deploy_wait]

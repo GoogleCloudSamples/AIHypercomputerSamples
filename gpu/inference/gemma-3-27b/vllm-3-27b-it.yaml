@@ -19,7 +19,7 @@ spec:
     spec:
       containers:
       - name: inference-server
-        image: us-docker.pkg.dev/vertex-ai/vertex-vision-model-garden-dockers/pytorch-vllm-serve:20250801_0916_RC01
+        image: us-docker.pkg.dev/vertex-ai/vertex-vision-model-garden-dockers/pytorch-vllm-serve:20250822_0916_RC01
         resources:
           requests:
             cpu: "10"
@@ -47,6 +47,16 @@ spec:
             secretKeyRef:
               name: hf-secret
               key: hf_api_token
+        - name: VLLM_USE_V1
+          value: "0"
+        - name: VLLM_DISABLE_CUSTOM_ALL_REDUCE
+          value: "1"
+        - name: NCCL_IB_DISABLE
+          value: "1"
+        - name: NCCL_NET_GDR_LEVEL
+          value: "0"
+        - name: NCCL_P2P_DISABLE
+          value: "0"
         volumeMounts:
         - mountPath: /dev/shm
           name: dshm
