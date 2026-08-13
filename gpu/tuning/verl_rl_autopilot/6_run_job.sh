@@ -132,7 +132,7 @@ echo "Job submitted successfully. Job ID: ${JOB_ID}"
 
 # Follow logs
 while true; do
-    STATUS=$(ray job status "${JOB_ID}" --address "http://localhost:8265" 2>/dev/null | grep "Status for job" | awk -F" " '{print $NF}' || true)
+    STATUS=$(python3 -c "from ray.job_submission import JobSubmissionClient; print(JobSubmissionClient('http://localhost:8265').get_job_status('${JOB_ID}').value)" 2>/dev/null || true)
     
     if [ -z "$STATUS" ]; then
         echo "Unable to get job status. Retrying..."
