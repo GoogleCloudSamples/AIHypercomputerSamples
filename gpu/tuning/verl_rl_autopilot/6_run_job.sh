@@ -128,17 +128,29 @@ SUBMIT_OUT=$(ray job submit \
 # [END hypercomputer_gpu_train_ray_verl_auto_job_submit]
 
 JOB_ID=$(echo "$SUBMIT_OUT" | grep "submitted successfully" | awk -F"'" '{print $2}')
+if [ -z "${JOB_ID}" ]; then
+    echo "Error: Failed to extract Job ID from submission output."
+    echo "Output was: ${SUBMIT_OUT}"
+    exit 1
+fi
 echo "Job submitted successfully. Job ID: ${JOB_ID}"
 
 # Follow logs
+FAIL_COUNT=0
 while true; do
-    STATUS=$(python3 -c "from ray.job_submission import JobSubmissionClient; print(JobSubmissionClient('http://localhost:8265').get_job_status('${JOB_ID}').value)" 2>/dev/null || true)
+    STATUS=$(ray job status "${JOB_ID}" --address "http://localhost:8265" 2>/dev/null | grep "Status for job" | awk -F" " '{print $NF}')
     
     if [ -z "$STATUS" ]; then
         echo "Unable to get job status. Retrying..."
+        ((FAIL_COUNT++))
+        if [ "$FAIL_COUNT" -ge 12 ]; then
+            echo "Error: Repeatedly failed to get job status. Exiting."
+            exit 1
+        fi
         sleep 5
         continue
     fi
+    FAIL_COUNT=0
 
     if [[ "$STATUS" == "SUCCEEDED" || "$STATUS" == "FAILED" || "$STATUS" == "STOPPED" ]]; then
         echo "Job finished with status: ${STATUS}"
