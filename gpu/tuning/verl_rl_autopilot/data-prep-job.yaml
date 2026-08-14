@@ -23,8 +23,8 @@ spec:
     metadata:
       annotations:
         gke-gcsfuse/volumes: "true"
-        gke-gcsfuse/cpu-limit: "2"
-        gke-gcsfuse/memory-limit: "4Gi"
+        gke-gcsfuse/cpu-limit: "4"
+        gke-gcsfuse/memory-limit: "8Gi"
         gke-gcsfuse/ephemeral-storage-limit: "50Gi"
     spec:
       serviceAccountName: ${KSA_NAME}
@@ -36,12 +36,12 @@ spec:
         image: verlai/verl:vllm011.latest
         resources:
           requests:
-            cpu: "4"
-            memory: "8Gi"
+            cpu: "8"
+            memory: "16Gi"
             ephemeral-storage: "50Gi"
           limits:
-            cpu: "4"
-            memory: "8Gi"
+            cpu: "8"
+            memory: "16Gi"
             ephemeral-storage: "50Gi"
         env:
         - name: HF_TOKEN
@@ -61,7 +61,7 @@ spec:
           # Clone verl to GCS (for worker pods)
           if [ ! -d "/data/verl" ]; then
             echo "Cloning verl to GCS..."
-            git clone --branch v0.6.1 https://github.com/volcengine/verl.git /data/verl
+            git clone --depth 1 --branch v0.6.1 https://github.com/volcengine/verl.git /data/verl
             
             echo "Installing verl on GCS to generate metadata..."
             pip3 install --no-deps -e /data/verl
@@ -71,7 +71,7 @@ spec:
           
           # Clone verl locally for fast installation
           echo "Cloning verl locally..."
-          git clone --branch v0.6.1 https://github.com/volcengine/verl.git /tmp/verl
+          git clone --depth 1 --branch v0.6.1 https://github.com/volcengine/verl.git /tmp/verl
           
           # Install verl package from local clone
           echo "Installing verl package..."
@@ -86,7 +86,7 @@ spec:
             echo "GSM8K data already exists in /data/gsm8k"
           fi
           
-          # Download model
+          # Download model sequentially to support GCS FUSE direct streaming writes
           if [ ! -d "/data/Qwen2.5-32B-Instruct" ]; then
             echo "Downloading Qwen2.5-32B-Instruct..."
             huggingface-cli download Qwen/Qwen2.5-32B-Instruct --local-dir /data/Qwen2.5-32B-Instruct --local-dir-use-symlinks False
@@ -103,4 +103,3 @@ spec:
         persistentVolumeClaim:
           claimName: training-bucket-pvc
 # [END hypercomputer_gpu_train_ray_verl_auto_data_prep_job]
-

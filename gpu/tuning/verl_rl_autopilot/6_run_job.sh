@@ -62,13 +62,15 @@ run_port_forward &
 PF_LOOP_PID=$!
 # [END hypercomputer_gpu_train_ray_verl_auto_ray_port_fwd]
 
-# Ensure we kill port forwarding on exit
+# Ensure we kill port forwarding on exit without overwriting exit status
 cleanup() {
+    local exit_code=$?
     echo "Cleaning up..."
     if [ -n "${PF_LOOP_PID:-}" ]; then
         kill "${PF_LOOP_PID}" 2>/dev/null || true
     fi
     fuser -k 8265/tcp >/dev/null 2>&1 || true
+    exit "${exit_code}"
 }
 trap cleanup EXIT
 
@@ -103,12 +105,12 @@ SUBMIT_OUT=$(ray job submit \
       actor_rollout_ref.model.path=/data/Qwen2.5-32B-Instruct \
       actor_rollout_ref.actor.optim.lr=1e-5 \
       actor_rollout_ref.actor.ppo_mini_batch_size=256 \
-      actor_rollout_ref.actor.ppo_micro_batch_size_per_gpu=8 \
+      actor_rollout_ref.actor.ppo_micro_batch_size_per_gpu=16 \
       actor_rollout_ref.rollout.name=vllm \
       actor_rollout_ref.rollout.log_prob_micro_batch_size_per_gpu=8 \
       actor_rollout_ref.rollout.tensor_model_parallel_size=8 \
-      actor_rollout_ref.rollout.gpu_memory_utilization=0.5 \
-      actor_rollout_ref.ref.log_prob_micro_batch_size_per_gpu=2 \
+      actor_rollout_ref.rollout.gpu_memory_utilization=0.6 \
+      actor_rollout_ref.ref.log_prob_micro_batch_size_per_gpu=4 \
       actor_rollout_ref.actor.strategy=fsdp2 \
       algorithm.kl_ctrl.kl_coef=0.001 \
       trainer.logger=console \
@@ -117,6 +119,7 @@ SUBMIT_OUT=$(ray job submit \
       trainer.nnodes=2 \
       trainer.save_freq=10 \
       trainer.test_freq=10 \
+      trainer.total_training_steps=10 \
       trainer.default_local_dir=/data/verl/checkpoints \
       algorithm.adv_estimator=grpo \
       actor_rollout_ref.rollout.n=8 \
@@ -124,7 +127,7 @@ SUBMIT_OUT=$(ray job submit \
       actor_rollout_ref.actor.fsdp_config.use_torch_compile=False \
       actor_rollout_ref.ref.use_torch_compile=False \
       actor_rollout_ref.ref.fsdp_config.use_torch_compile=False \
-      trainer.total_epochs=2")
+      trainer.total_epochs=1")
 # [END hypercomputer_gpu_train_ray_verl_auto_job_submit]
 
 JOB_ID=$(echo "$SUBMIT_OUT" | grep "submitted successfully" | awk -F"'" '{print $2}')
@@ -135,10 +138,18 @@ if [ -z "${JOB_ID}" ]; then
 fi
 echo "Job submitted successfully. Job ID: ${JOB_ID}"
 
-# Follow logs
+# Follow logs and monitor status
 FAIL_COUNT=0
 while true; do
-    STATUS=$(ray job status "${JOB_ID}" --address "http://localhost:8265" 2>/dev/null | grep "Status for job" | awk -F" " '{print $NF}')
+    # Fetch job status via Ray JobSubmissionClient for robustness
+    STATUS=$(python3 -c "
+from ray.job_submission import JobSubmissionClient
+try:
+    client = JobSubmissionClient('http://localhost:8265')
+    print(client.get_job_status('${JOB_ID}').value)
+except Exception:
+    pass
+" 2>/dev/null || true)
     
     if [ -z "$STATUS" ]; then
         echo "Unable to get job status. Retrying..."
@@ -155,10 +166,12 @@ while true; do
     if [[ "$STATUS" == "SUCCEEDED" || "$STATUS" == "FAILED" || "$STATUS" == "STOPPED" ]]; then
         echo "Job finished with status: ${STATUS}"
         ray job logs "${JOB_ID}" --address "http://localhost:8265" || true
-        if [[ "$STATUS" == "FAILED" ]]; then
+        if [[ "$STATUS" == "FAILED" || "$STATUS" == "STOPPED" ]]; then
+            echo "Job execution failed with status: ${STATUS}"
             exit 1
         fi
-        break
+        echo "Job execution completed successfully."
+        exit 0
     fi
     
     echo "Streaming logs (will restart if connection is lost)..."
@@ -166,5 +179,3 @@ while true; do
     
     sleep 5
 done
-
-echo "Job execution completed."
