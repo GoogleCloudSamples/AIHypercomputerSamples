@@ -24,6 +24,21 @@ envsubst < "ray-cluster-standard.yaml" | kubectl apply -f -
 
 echo "Workload deployment initiated."
 
-echo "Waiting for Ray GPU worker pods to become Ready..."
-kubectl wait --for=condition=ready pod -l "ray.io/node-type=worker" -n "${NAMESPACE}" --timeout=900s
+echo "Waiting for Ray GPU worker pods to be created by KubeRay Operator..."
+MAX_RETRIES=60
+RETRY_COUNT=0
 
+# An implementation of a loop that waits until at least one worker pod appears in the K8s API
+until kubectl get pods -n ${NAMESPACE} -l ray.io/node-type=worker 2>/dev/null | grep -qE "b200|ray|Running|Pending"; do
+  RETRY_COUNT=$((RETRY_COUNT+1))
+  if [ $RETRY_COUNT -ge $MAX_RETRIES ]; then
+    echo "ERROR: Timeout waiting for Ray GPU worker pods to be created by Operator."
+    kubectl get rayclusters -n ${NAMESPACE}
+    exit 1
+  fi
+  echo "Pods not created yet, waiting 5s ($RETRY_COUNT/$MAX_RETRIES)..."
+  sleep 5
+done
+
+echo "Ray GPU worker pods detected! Waiting for Ready status (up to 20m)..."
+kubectl wait --for=condition=ready pod -l ray.io/node-type=worker -n ${NAMESPACE} --timeout=1200s
