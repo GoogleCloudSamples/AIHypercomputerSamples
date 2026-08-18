@@ -80,8 +80,8 @@ if [ -n "$POD_NAME" ]; then
   echo "Tailing logs... (this will block until the conversion finishes)"
   kubectl logs -f $POD_NAME || true
 
-  echo "Waiting for pod to reach completion status (timeout: 20 minutes)..."
-  MAX_WAIT_FINISH=120
+  echo "Waiting for pod to reach completion status (timeout: 60 minutes)..."
+  MAX_WAIT_FINISH=360
   WAIT_FINISH_COUNT=0
   while true; do
     POD_STATUS=$(kubectl get pod $POD_NAME -o jsonpath='{.status.phase}' 2>/dev/null || echo "Unknown")
