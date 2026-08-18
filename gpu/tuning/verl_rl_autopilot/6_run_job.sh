@@ -18,11 +18,13 @@ set -euo pipefail
 
 # [START hypercomputer_gpu_train_ray_verl_auto_create_env]
 if [ ! -d "env" ]; then
-  virtualenv -p $(which python3) env
+  python3 -m venv env
 else
   echo "Found virtual environment env, not recreating"
 fi
+
 source env/bin/activate
+pip3 install --upgrade pip
 pip3 install ray[default]
 # [END hypercomputer_gpu_train_ray_verl_auto_create_env]  
 
@@ -47,19 +49,28 @@ if [ -z "${SVC_NAME}" ]; then
     exit 1
 fi
 
-# Start port forwarding in background
+# Start port forwarding in background with auto-restart
 # [START hypercomputer_gpu_train_ray_verl_auto_ray_port_fwd]
-echo "Starting port-forwarding to ${SVC_NAME} on port 8265..."
-kubectl port-forward svc/"${SVC_NAME}" 8265:8265 -n "${NAMESPACE}" &
+echo "Starting auto-restarting port-forwarding to ${SVC_NAME} on port 8265..."
+run_port_forward() {
+    while true; do
+        kubectl port-forward svc/"${SVC_NAME}" 8265:8265 -n "${NAMESPACE}" >/dev/null 2>&1 || true
+        sleep 1
+    done
+}
+run_port_forward &
+PF_LOOP_PID=$!
 # [END hypercomputer_gpu_train_ray_verl_auto_ray_port_fwd]
-PF_PID=$!
 
-# Ensure we kill port forwarding on exit
+# Ensure we kill port forwarding on exit without overwriting exit status
 cleanup() {
-    if [ -n "${PF_PID:-}" ]; then
-        echo "Stopping port forwarding (PID: ${PF_PID})..."
-        kill "${PF_PID}" || true
+    local exit_code=$?
+    echo "Cleaning up..."
+    if [ -n "${PF_LOOP_PID:-}" ]; then
+        kill "${PF_LOOP_PID}" 2>/dev/null || true
     fi
+    fuser -k 8265/tcp >/dev/null 2>&1 || true
+    exit "${exit_code}"
 }
 trap cleanup EXIT
 
@@ -77,40 +88,94 @@ done
 echo "Port 8265 is open. Port-forwarding is ready."
 
 # 3. Submit the job
-echo "Submitting Ray job..."
+echo "Submitting Ray job (async)..."
 # [START hypercomputer_gpu_train_ray_verl_auto_job_submit]
-ray job submit \
+SUBMIT_OUT=$(ray job submit \
   --address "http://localhost:8265" \
+  --no-wait \
   --runtime-env runtime-env.yaml \
-    -- \
-    bash -c "
-        cd /data/verl && PYTHONUNBUFFERED=1 python3 -m verl.trainer.main_ppo \
-        data.train_files=/data/gsm8k/train.parquet \
-        data.val_files=/data/gsm8k/test.parquet \
-        data.train_batch_size=256 \
-        data.max_prompt_length=512 \
-        data.max_response_length=512 \
-        actor_rollout_ref.model.path=/data/Qwen2.5-32B-Instruct \
-        actor_rollout_ref.actor.optim.lr=1e-5 \
-        actor_rollout_ref.actor.ppo_mini_batch_size=256 \
-        actor_rollout_ref.actor.ppo_micro_batch_size_per_gpu=64 \
-        actor_rollout_ref.rollout.name=vllm \
-        actor_rollout_ref.rollout.log_prob_micro_batch_size_per_gpu=8 \
-        actor_rollout_ref.rollout.tensor_model_parallel_size=8 \
-        actor_rollout_ref.rollout.gpu_memory_utilization=0.6 \
-        actor_rollout_ref.ref.log_prob_micro_batch_size_per_gpu=4 \
-        actor_rollout_ref.actor.strategy=fsdp2 \
-        algorithm.kl_ctrl.kl_coef=0.001 \
-        trainer.logger=console \
-        trainer.val_before_train=False \
-        trainer.n_gpus_per_node=8 \
-        trainer.nnodes=2 \
-        trainer.save_freq=10 \
-        trainer.test_freq=10 \
-        trainer.default_local_dir=/data/verl/checkpoints \
-        algorithm.adv_estimator=grpo \
-        actor_rollout_ref.rollout.n=8 \
-        trainer.total_epochs=2"
+  -- \
+  bash -c "
+      cd /data/verl && PYTHONUNBUFFERED=1 python3 -m verl.trainer.main_ppo \
+      data.train_files=/data/gsm8k/train.parquet \
+      data.val_files=/data/gsm8k/test.parquet \
+      data.train_batch_size=256 \
+      data.max_prompt_length=512 \
+      data.max_response_length=512 \
+      actor_rollout_ref.model.path=/data/Qwen2.5-32B-Instruct \
+      actor_rollout_ref.actor.optim.lr=1e-5 \
+      actor_rollout_ref.actor.ppo_mini_batch_size=256 \
+      actor_rollout_ref.actor.ppo_micro_batch_size_per_gpu=16 \
+      actor_rollout_ref.rollout.name=vllm \
+      actor_rollout_ref.rollout.log_prob_micro_batch_size_per_gpu=8 \
+      actor_rollout_ref.rollout.tensor_model_parallel_size=8 \
+      actor_rollout_ref.rollout.gpu_memory_utilization=0.6 \
+      actor_rollout_ref.ref.log_prob_micro_batch_size_per_gpu=4 \
+      actor_rollout_ref.actor.strategy=fsdp2 \
+      algorithm.kl_ctrl.kl_coef=0.001 \
+      trainer.logger=console \
+      trainer.val_before_train=False \
+      trainer.n_gpus_per_node=8 \
+      trainer.nnodes=2 \
+      trainer.save_freq=10 \
+      trainer.test_freq=10 \
+      trainer.total_training_steps=10 \
+      trainer.default_local_dir=/data/verl/checkpoints \
+      algorithm.adv_estimator=grpo \
+      actor_rollout_ref.rollout.n=8 \
+      actor_rollout_ref.actor.use_torch_compile=False \
+      actor_rollout_ref.actor.fsdp_config.use_torch_compile=False \
+      actor_rollout_ref.ref.use_torch_compile=False \
+      actor_rollout_ref.ref.fsdp_config.use_torch_compile=False \
+      trainer.total_epochs=1")
 # [END hypercomputer_gpu_train_ray_verl_auto_job_submit]
 
-echo "Job execution completed."
+JOB_ID=$(echo "$SUBMIT_OUT" | grep "submitted successfully" | awk -F"'" '{print $2}')
+if [ -z "${JOB_ID}" ]; then
+    echo "Error: Failed to extract Job ID from submission output."
+    echo "Output was: ${SUBMIT_OUT}"
+    exit 1
+fi
+echo "Job submitted successfully. Job ID: ${JOB_ID}"
+
+# Follow logs and monitor status
+FAIL_COUNT=0
+while true; do
+    # Fetch job status via Ray JobSubmissionClient for robustness
+    STATUS=$(python3 -c "
+from ray.job_submission import JobSubmissionClient
+try:
+    client = JobSubmissionClient('http://localhost:8265')
+    print(client.get_job_status('${JOB_ID}').value)
+except Exception:
+    pass
+" 2>/dev/null || true)
+    
+    if [ -z "$STATUS" ]; then
+        echo "Unable to get job status. Retrying..."
+        ((FAIL_COUNT++))
+        if [ "$FAIL_COUNT" -ge 12 ]; then
+            echo "Error: Repeatedly failed to get job status. Exiting."
+            exit 1
+        fi
+        sleep 5
+        continue
+    fi
+    FAIL_COUNT=0
+
+    if [[ "$STATUS" == "SUCCEEDED" || "$STATUS" == "FAILED" || "$STATUS" == "STOPPED" ]]; then
+        echo "Job finished with status: ${STATUS}"
+        ray job logs "${JOB_ID}" --address "http://localhost:8265" || true
+        if [[ "$STATUS" == "FAILED" || "$STATUS" == "STOPPED" ]]; then
+            echo "Job execution failed with status: ${STATUS}"
+            exit 1
+        fi
+        echo "Job execution completed successfully."
+        exit 0
+    fi
+    
+    echo "Streaming logs (will restart if connection is lost)..."
+    ray job logs "${JOB_ID}" --address "http://localhost:8265" --follow || true
+    
+    sleep 5
+done
