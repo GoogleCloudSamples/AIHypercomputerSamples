@@ -30,7 +30,6 @@ xpk workload create-pathways \
   --workload="qwen-training" \
   --tpu-type="${TPU_TYPE}" \
   --num-slices=1 \
-  --injection-failure-policy=false \
   --command="JAX_PLATFORMS=proxy,cpu JAX_BACKEND_TARGET=grpc://127.0.0.1:29000 ENABLE_PATHWAYS_PERSISTENCE=1 \
       python3 -m maxtext.trainers.post_train.rl.train_rl \
       run_name=rl \
