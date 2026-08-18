@@ -44,6 +44,7 @@ xpk workload create \
   hardware=cpu \
   --lazy_load_tensors=True"
 # [END hypercomputer_tpu_tune_qwen3_30b_rl_convert_model]
+
 echo "[$(date)] ==================== Waiting for Model Conversion to Complete... ===================="
 echo "Waiting for conversion pod to be created..."
 POD_NAME=""
@@ -57,29 +58,49 @@ done
 
 if [ -n "$POD_NAME" ]; then
   echo "Found conversion pod: $POD_NAME"
-  echo "Waiting for pod to start running (this can take 5-10 minutes if autoscaler is provisioning nodes)..."
+  echo "Waiting for pod to start running (timeout: 15 minutes)..."
+
+  MAX_WAIT_START=90
+  WAIT_COUNT=0
   while true; do
-    POD_STATUS=$(kubectl get pod $POD_NAME -o jsonpath='{.status.phase}')
+    POD_STATUS=$(kubectl get pod $POD_NAME -o jsonpath='{.status.phase}' 2>/dev/null || echo "Unknown")
     if [[ "$POD_STATUS" == "Running" || "$POD_STATUS" == "Succeeded" || "$POD_STATUS" == "Failed" ]]; then
       break
+    fi
+
+    WAIT_COUNT=$((WAIT_COUNT + 1))
+    if [ $WAIT_COUNT -ge $MAX_WAIT_START ]; then
+      echo "ERROR: Timed out waiting for pod $POD_NAME to start running. Current status: $POD_STATUS"
+      kubectl describe pod $POD_NAME || true
+      exit 1
     fi
     sleep 10
   done
 
   echo "Tailing logs... (this will block until the conversion finishes)"
   kubectl logs -f $POD_NAME || true
-  
-  # Give Kubernetes a moment to update the pod's phase after logs stream finishes
-  for i in {1..10}; do
-    POD_STATUS=$(kubectl get pod $POD_NAME -o jsonpath='{.status.phase}')
+
+  echo "Waiting for pod to reach completion status (timeout: 20 minutes)..."
+  MAX_WAIT_FINISH=120
+  WAIT_FINISH_COUNT=0
+  while true; do
+    POD_STATUS=$(kubectl get pod $POD_NAME -o jsonpath='{.status.phase}' 2>/dev/null || echo "Unknown")
     if [[ "$POD_STATUS" == "Succeeded" || "$POD_STATUS" == "Failed" ]]; then
       break
     fi
-    sleep 3
+
+    WAIT_FINISH_COUNT=$((WAIT_FINISH_COUNT + 1))
+    if [ $WAIT_FINISH_COUNT -ge $MAX_WAIT_FINISH ]; then
+      echo "ERROR: Timed out waiting for pod $POD_NAME to finish conversion."
+      kubectl describe pod $POD_NAME || true
+      exit 1
+    fi
+    sleep 10
   done
 
   if [ "$POD_STATUS" != "Succeeded" ]; then
     echo "ERROR: Conversion pod did not succeed (Status: $POD_STATUS)."
+    kubectl logs --tail=100 $POD_NAME || true
     exit 1
   fi
   echo "[$(date)] ==================== Model converted successfully. ===================="
