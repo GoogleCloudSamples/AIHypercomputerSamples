@@ -20,24 +20,62 @@ echo "[$(date)] ==================== Creating Cluster... ===================="
 # [START hypercomputer_tpu_tune_qwen3_30b_rl_create_cluster]
 # Start with creating a new virtual environment to install XPK in.
 VENV_DIR=venvp3
-python3 -m venv $VENV_DIR
-source $VENV_DIR/bin/activate
-pip install xpk==1.14.0
+if [ ! -d "$VENV_DIR" ]; then
+  python3 -m venv "$VENV_DIR"
+fi
+source "$VENV_DIR/bin/activate"
+pip install -q xpk==1.14.0
 
-xpk cluster create-pathways \
-  --num-slices=${CLUSTER_NODEPOOL_COUNT} \
-  --tpu-type=${TPU_TYPE} \
-  --pathways-gce-machine-type=${PW_CPU_MACHINE_TYPE} \
-  --project=${PROJECT} \
-  --zone=${ZONE} \
-  --cluster=${CLUSTER_NAME} \
-  --custom-cluster-arguments="--enable-ip-alias" \
-  --custom-nodepool-arguments="--disk-size=500" \
-  --reservation=$RESERVATION \
-  --default-pool-cpu-machine-type=n4-standard-16
+# Collision guard: append a random 4-character hex suffix if not present
+if [[ ! "${CLUSTER_NAME}" =~ -[a-f0-9]{4}$ ]]; then
+  RANDOM_SUFFIX=$(od -N 2 -t x1 /dev/urandom | head -1 | awk '{print $2$3}')
+  export CLUSTER_NAME="${CLUSTER_NAME}-${RANDOM_SUFFIX}"
+  echo "Using unique cluster name: ${CLUSTER_NAME}"
+fi
 
-gcloud container clusters get-credentials $CLUSTER_NAME \
-  --location=$REGION \
-  --project $PROJECT
+# Retry loop to handle Kueue webhook installation race conditions
+MAX_RETRIES=3
+attempt=1
+
+while [ $attempt -le $MAX_RETRIES ]; do
+  echo "Attempting cluster creation (attempt $attempt/$MAX_RETRIES)..."
+
+  if xpk cluster create-pathways \
+    --num-slices="${CLUSTER_NODEPOOL_COUNT}" \
+    --tpu-type="${TPU_TYPE}" \
+    --pathways-gce-machine-type="${PW_CPU_MACHINE_TYPE}" \
+    --project="${PROJECT}" \
+    --zone="${ZONE}" \
+    --cluster="${CLUSTER_NAME}" \
+    --custom-cluster-arguments="--enable-ip-alias" \
+    --custom-nodepool-arguments="--disk-size=500" \
+    --reservation="${RESERVATION}" \
+    --default-pool-cpu-machine-type=n4-standard-16; then
+      echo "Cluster created successfully."
+      break
+  else
+      echo "Warning: Attempt $attempt failed (likely due to a Kueue webhook timeout)."
+      if [ $attempt -eq $MAX_RETRIES ]; then
+        echo "ERROR: Maximum retry attempts reached. Exiting."
+        exit 1
+      fi
+
+      echo "Cleaning up resources from the failed attempt..."
+      gcloud container clusters delete "${CLUSTER_NAME}" --location="${REGION}" --project="${PROJECT}" --quiet --async 2>/dev/null || true
+
+      # Generate a new suffix for the next attempt to avoid API locks
+      NEW_SUFFIX=$(od -N 2 -t x1 /dev/urandom | head -1 | awk '{print $2$3}')
+      CLUSTER_NAME="${CLUSTER_NAME%-*}-${NEW_SUFFIX}"
+      echo "New cluster name for next attempt: ${CLUSTER_NAME}"
+
+      echo "Waiting 30 seconds before retrying..."
+      sleep 30
+      attempt=$((attempt + 1))
+  fi
+done
+
+gcloud container clusters get-credentials "$CLUSTER_NAME" \
+  --location="$REGION" \
+  --project "$PROJECT"
 # [END hypercomputer_tpu_tune_qwen3_30b_rl_create_cluster]
 echo "[$(date)] ==================== Cluster created. ===================="

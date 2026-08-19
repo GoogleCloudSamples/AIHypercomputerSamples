@@ -20,6 +20,10 @@ if [ -d "venvp3" ]; then
   source venvp3/bin/activate
 fi
 
+echo "Cleaning up any residual qwen-hf-to-mt workload..."
+xpk workload delete --workload "qwen-hf-to-mt" --cluster "${CLUSTER_NAME}" --project="${PROJECT}" --zone="${ZONE}" 2>/dev/null || true
+kubectl delete jobset qwen-hf-to-mt 2>/dev/null || true
+
 echo "[$(date)] ==================== Submitting Model Conversion Workload... ===================="
 # [START hypercomputer_tpu_tune_qwen3_30b_rl_convert_model]
 xpk workload create \
@@ -48,7 +52,7 @@ xpk workload create \
 echo "[$(date)] ==================== Waiting for Model Conversion to Complete... ===================="
 echo "Waiting for conversion pod to be created..."
 POD_NAME=""
-for i in {1..30}; do
+for i in {1..60}; do
   POD_NAME=$(kubectl get pods --no-headers 2>/dev/null | grep qwen-hf-to-mt | awk '{print $1}' | head -n 1) || true
   if [ -n "$POD_NAME" ]; then
     break
@@ -58,9 +62,9 @@ done
 
 if [ -n "$POD_NAME" ]; then
   echo "Found conversion pod: $POD_NAME"
-  echo "Waiting for pod to start running (timeout: 15 minutes)..."
+  echo "Waiting for pod to start running (timeout: 20 minutes)..."
 
-  MAX_WAIT_START=90
+  MAX_WAIT_START=120
   WAIT_COUNT=0
   while true; do
     POD_STATUS=$(kubectl get pod $POD_NAME -o jsonpath='{.status.phase}' 2>/dev/null || echo "Unknown")
@@ -80,8 +84,8 @@ if [ -n "$POD_NAME" ]; then
   echo "Tailing logs... (this will block until the conversion finishes)"
   kubectl logs -f $POD_NAME || true
 
-  echo "Waiting for pod to reach completion status (timeout: 60 minutes)..."
-  MAX_WAIT_FINISH=360
+  echo "Waiting for pod to reach completion status (timeout: 180 minutes)..."
+  MAX_WAIT_FINISH=1080
   WAIT_FINISH_COUNT=0
   while true; do
     POD_STATUS=$(kubectl get pod $POD_NAME -o jsonpath='{.status.phase}' 2>/dev/null || echo "Unknown")
