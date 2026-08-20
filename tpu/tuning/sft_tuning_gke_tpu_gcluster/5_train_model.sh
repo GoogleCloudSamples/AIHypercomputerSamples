@@ -17,7 +17,7 @@
 set -euo pipefail
 
 echo "[$(date)] ==================== Submitting Training Workload... ===================="
-# [START hypercomputer_tpu_tune_qwen3_sft_gcluster_train]
+# [START hypercomputer_tpu_sft_gcluster_train]
 ./gcluster job submit --name sft \
     --cluster ${CLUSTER_NAME} \
     --project ${PROJECT} \
@@ -40,6 +40,6 @@ echo "[$(date)] ==================== Submitting Training Workload... ===========
       checkpoint_storage_use_zarr3=0 \
       checkpoint_storage_use_ocdbt=0 \
       skip_jax_distributed_system=False"
-# [END hypercomputer_tpu_tune_qwen3_sft_gcluster_train]
+# [END hypercomputer_tpu_sft_gcluster_train]
 
 echo "[$(date)] ==================== Training Workload completed successfully. ===================="

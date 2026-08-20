@@ -17,9 +17,7 @@
 set -euo pipefail
 
 echo "[$(date)] ==================== Destroying Cluster... ===================="
-# [START hypercomputer_tpu_tune_qwen3_sft_gcluster_destroy_cluster]
 ./gcluster destroy ${CLUSTER_NAME} --auto-approve --robust
-# [END hypercomputer_tpu_tune_qwen3_sft_gcluster_destroy_cluster]
 
 echo "[$(date)] ==================== Deleting storage and artifacts... ===================="
 gcloud storage rm -r gs://${GCS_BUCKET} || echo "Warning: Failed to delete bucket"

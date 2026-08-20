@@ -24,7 +24,6 @@ sed -i "s/n2-standard-8/e2-standard-8/" examples/gke-tpu-v6e/gke-tpu-v6e-advance
 sed -i "s/- storage.objectViewer/- storage.admin/" examples/gke-tpu-v6e/gke-tpu-v6e-advanced.yaml
 
 echo "[$(date)] ==================== Deploying cluster with gcluster... ===================="
-# [START hypercomputer_tpu_tune_qwen3_sft_gcluster_create_cluster]
 ./gcluster deploy examples/gke-tpu-v6e/gke-tpu-v6e-advanced.yaml \
     --vars "project_id=${PROJECT},deployment_name=${CLUSTER_NAME},region=${REGION},zone=${ZONE},num_slices=1,tpu_topology=4x8,authorized_cidr=0.0.0.0/0,reservation=${RESERVATION:-}" \
     --download-dependencies \
@@ -33,6 +32,5 @@ echo "[$(date)] ==================== Deploying cluster with gcluster... ========
 # Configure docker for pulling images
 gcloud auth configure-docker gcr.io --quiet
 gcloud auth configure-docker ${REGION}-docker.pkg.dev --quiet
-# [END hypercomputer_tpu_tune_qwen3_sft_gcluster_create_cluster]
 
 echo "[$(date)] ==================== Cluster deployment completed. ===================="
