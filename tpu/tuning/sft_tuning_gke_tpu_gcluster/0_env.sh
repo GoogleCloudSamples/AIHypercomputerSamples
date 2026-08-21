@@ -24,7 +24,7 @@ export REPOSITORY_NAME="YOUR_REPOSITORY_NAME"
 export CLOUD_IMAGE_NAME="${REGION}-docker.pkg.dev/${PROJECT}/${REPOSITORY_NAME}/maxtext_base:latest"
 export TPU_TYPE="v6e-32"
 export RESERVATION="YOUR_RESERVATION_NAME"
-export MODEL_NAME="YOUR_MODEL_NAME"
+export MODEL_NAME="gemma4-31b"
 export HF_TOKEN="YOUR_HF_TOKEN"
 export GCS_BUCKET="YOUR_GCS_BUCKET"
 # [END hypercomputer_tpu_sft_gcluster_env]
