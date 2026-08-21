@@ -20,7 +20,6 @@ gcloud alpha compute tpus tpu-vm create $NAME \
     --project=$PROJECT \
     --accelerator-type=v6e-8 \
     --version=v2-alpha-tpuv6e \
-    --provisioning-model=reservation-bound \
     --reservation=$RESERVATION
 # [END hypercomputer_tpu_tune_gemma3_sft_create]
 
