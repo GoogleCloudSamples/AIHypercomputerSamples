@@ -17,11 +17,9 @@ set -euo pipefail
 # Set your environment variables here.
 # DO NOT PUT ANY SECRET VALUES HERE!
 # [START hypercomputer_tpu_tune_gemma3_sft_env]
-export PROJECT="dx-supercomputer-testing"
-export ZONE="asia-northeast1-b"
-export RESERVATION="kawaii-tpus"
+export PROJECT="YOUR_PROJECT_ID"
+export ZONE="YOUR_ZONE"
+export RESERVATION="YOUR_RESERVATION_NAME"
 export NAME="YOUR_TPU_NAME"
-export NETWORK="YOUR_NETWORK_NAME"
-export SUBNETWORK="YOUR_SUBNETWORK_NAME"
 # [END hypercomputer_tpu_tune_gemma3_sft_env]
 export HF_TOKEN="YOUR_HF_TOKEN"
