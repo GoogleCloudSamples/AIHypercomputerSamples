@@ -1,3 +1,4 @@
+#!/bin/bash
 #  Copyright 2026 Google LLC
 #
 #  Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,7 +13,8 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
-set -euo pipefail
+set -eu
+[ -n "${BASH_VERSION:-}" ] && set -o pipefail
 
 # Set your environment variables here.
 # DO NOT PUT ANY SECRET VALUES HERE!
