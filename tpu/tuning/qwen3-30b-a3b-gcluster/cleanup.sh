@@ -23,7 +23,7 @@ while gcloud container operations list --project=$PROJECT --location=$REGION --f
 done
 
 echo "[$(date)] ==================== Destroying Cluster... ===================="
-gcluster destroy ${CLUSTER_NAME} --auto-approve || echo "Warning: gcluster destroy failed (likely due to gcee_giraffe firewall daemon). Falling back to aggressive cleanup!"
+gcluster destroy ${CLUSTER_NAME} --auto-approve --robust || echo "Warning: gcluster destroy failed. Falling back to aggressive cleanup!"
 
 echo "[$(date)] ==================== Bypassing gcee_giraffe daemon to delete VPCs... ===================="
 echo "Forcefully ensuring GKE cluster is deleted first..."

@@ -42,7 +42,6 @@ gcluster job submit \
       load_parameters_path=gs://${GCS_BUCKET}/${MODEL_NAME}/max-text-format/0/items/ \
       hf_access_token=${HF_TOKEN} \
       num_batches=50 \
-      per_device_batch_size=1 \
       batch_size=4 \
       rollout_tensor_parallelism=4 \
       rollout_expert_parallelism=4 \
@@ -55,7 +54,6 @@ gcluster job submit \
       remat_policy=full \
       async_scheduling=False \
       allow_split_physical_axes=true \
-      debug.rl=True \
       vllm_hf_overrides='{architectures: [\"MaxTextForCausalLM\"]}' \
       vllm_additional_config=\"{'maxtext_config': {'model_name': '${MODEL_NAME}', 'allow_split_physical_axes': 'true', weight_dtype: bfloat16}}\""
 # [END hypercomputer_tpu_tune_qwen3_30b_rl_train]

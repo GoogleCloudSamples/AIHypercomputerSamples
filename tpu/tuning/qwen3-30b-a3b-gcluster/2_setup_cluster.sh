@@ -160,21 +160,21 @@ spec:
       - operator: Exists
       containers:
       - name: disable-ipv6
-        image: gcr.io/google-containers/busybox:latest
+        image: alpine:latest
         securityContext:
           privileged: true
         command:
         - /bin/sh
         - -c
         - |
-          for dev in \$(ls /sys/class/net); do
-            sysctl -w net.ipv6.conf.\$dev.disable_ipv6=1 2>/dev/null || true
-            ip -6 addr flush dev \$dev 2>/dev/null || true
+          for dev in $(ls /sys/class/net); do
+            sysctl -w net.ipv6.conf.$dev.disable_ipv6=1 2>/dev/null || true
+            ip -6 addr flush dev $dev 2>/dev/null || true
           done
           sysctl -w net.ipv6.conf.all.disable_ipv6=1
           sysctl -w net.ipv6.conf.default.disable_ipv6=1
           sysctl -w net.ipv6.conf.lo.disable_ipv6=1
-          echo "Disabled and flushed IPv6 on \$(hostname)"
+          echo "Disabled and flushed IPv6 on $(hostname)"
           sleep infinity
 EOF
 # [END hypercomputer_tpu_tune_qwen3_30b_rl_create_cluster]
