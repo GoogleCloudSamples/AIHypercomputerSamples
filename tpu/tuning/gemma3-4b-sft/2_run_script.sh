@@ -15,6 +15,13 @@
 
 set -euo pipefail
 
-gcloud compute tpus tpu-vm scp run_on_vm.sh "${NAME}":~/ --zone $ZONE --project $PROJECT
+gcloud compute tpus tpu-vm scp run_on_vm.sh "${NAME}":~/ \
+    --zone="$ZONE" \
+    --project="$PROJECT" \
+    --tunnel-through-iap
 
-gcloud compute tpus tpu-vm ssh $NAME --zone $ZONE --project $PROJECT --command="UV_HTTP_TIMEOUT=300 UV_CONCURRENT_DOWNLOADS=1 YOUR_HF_TOKEN=$HF_TOKEN bash ~/run_on_vm.sh"
+gcloud compute tpus tpu-vm ssh "$NAME" \
+    --zone="$ZONE" \
+    --project="$PROJECT" \
+    --tunnel-through-iap \
+    --command="UV_HTTP_TIMEOUT=300 UV_CONCURRENT_DOWNLOADS=1 YOUR_HF_TOKEN=$HF_TOKEN bash ~/run_on_vm.sh"
