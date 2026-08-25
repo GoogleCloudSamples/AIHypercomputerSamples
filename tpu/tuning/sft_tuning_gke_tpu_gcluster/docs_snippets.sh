@@ -53,6 +53,13 @@ gcloud auth configure-docker gcr.io --quiet
 gcloud auth configure-docker ${REGION}-docker.pkg.dev --quiet
 # [END hypercomputer_tpu_sft_gcluster_configure_docker]
 
+# [START hypercomputer_tpu_sft_gcluster_configure_defaults]
+# Configure gcluster Defaults
+./gcluster job config set project ${PROJECT}
+./gcluster job config set cluster ${CLUSTER_NAME}
+./gcluster job config set location ${REGION}
+# [END hypercomputer_tpu_sft_gcluster_configure_defaults]
+
 # [START hypercomputer_tpu_sft_gcluster_convert_model_logs]
 # Use the list command to check status
 ./gcluster job list \
