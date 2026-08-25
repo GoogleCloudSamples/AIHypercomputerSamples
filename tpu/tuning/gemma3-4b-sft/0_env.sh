@@ -13,8 +13,7 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
-set -eu
-[ -n "${BASH_VERSION:-}" ] && set -o pipefail
+set -euo pipefail
 
 # Set your environment variables here.
 # DO NOT PUT ANY SECRET VALUES HERE!
