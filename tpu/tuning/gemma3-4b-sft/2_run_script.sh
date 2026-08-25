@@ -15,12 +15,12 @@
 
 set -euo pipefail
 
-gcloud compute tpus tpu-vm scp run_on_vm.sh "${NAME}":~/ \
+gcloud alpha compute tpus tpu-vm scp run_on_vm.sh "${NAME}":~/ \
     --zone="$ZONE" \
     --project="$PROJECT" \
     --tunnel-through-iap
 
-gcloud compute tpus tpu-vm ssh "$NAME" \
+gcloud alpha compute tpus tpu-vm ssh "$NAME" \
     --zone="$ZONE" \
     --project="$PROJECT" \
     --tunnel-through-iap \
