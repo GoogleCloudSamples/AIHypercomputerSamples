@@ -39,12 +39,12 @@ else
 fi
 
 gcloud alpha compute tpus tpu-vm scp run_on_vm.sh "${NAME}":~/ \
-    --zone="$ZONE" \
-    --project="$PROJECT" \
+    --zone="${ZONE}" \
+    --project="${PROJECT}" \
     --tunnel-through-iap
 
-gcloud alpha compute tpus tpu-vm ssh "$NAME" \
-    --zone="$ZONE" \
-    --project="$PROJECT" \
+gcloud alpha compute tpus tpu-vm ssh "${NAME}" \
+    --zone="${ZONE}" \
+    --project="${PROJECT}" \
     --tunnel-through-iap \
     --command="UV_HTTP_TIMEOUT=300 UV_CONCURRENT_DOWNLOADS=1 YOUR_HF_TOKEN=$HF_TOKEN bash ~/run_on_vm.sh"
