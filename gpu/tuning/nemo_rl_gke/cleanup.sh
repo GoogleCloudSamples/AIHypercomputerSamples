@@ -62,6 +62,12 @@ NETWORKS=(
 
 for NW in "${NETWORKS[@]}"; do
 
+  # Skip if empty, named 'default', or not starting with a lowercase letter (invalid GCP resource name)
+  if [[ "${NW}" == "default" || ! "${NW}" =~ ^[a-z] ]]; then
+    echo "Skipping protected/invalid network: '${NW}'"
+    continue
+  fi
+
   echo "========== Deleting firewall rules for ${NW} =========="
   while true; do
       rules=$(gcloud compute firewall-rules list \

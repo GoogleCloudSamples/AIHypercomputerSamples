@@ -32,7 +32,8 @@ export PROJECT_NUMBER=$(gcloud projects describe "${PROJECT_ID}" --format="value
 # [END hypercomputer_gpu_tune_gemma3_27b_nemo_rl_env]
 
 # [START hypercomputer_gpu_tune_gemma3_27b_nemo_rl_network_env]
-export NETWORK="YOUR_NETWORK_NAME"
+export NETWORK_PREFIX="YOUR_NETWORK_NAME"
+export NETWORK="${NETWORK_PREFIX}-nemo-rl"
 export GVNIC_NETWORK_PREFIX="GVNIC_NAME"
 export RDMA_NETWORK_PREFIX="RDMA_NAME"
 # [END hypercomputer_gpu_tune_gemma3_27b_nemo_rl_network_env]
