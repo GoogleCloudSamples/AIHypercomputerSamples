@@ -15,6 +15,29 @@
 
 set -euo pipefail
 
+NETWORK_NAME="${NETWORK:-default}"
+FIREWALL_RULE_NAME="allow-ssh-from-iap-${NETWORK_NAME}"
+
+FIREWALL_EXISTS=$(gcloud compute firewall-rules list \
+  --project="${PROJECT}" \
+  --filter="name=${FIREWALL_RULE_NAME} AND network=${NETWORK_NAME}" \
+  --format="value(name)" 2>/dev/null || echo "")
+
+if [ -z "${FIREWALL_EXISTS}" ]; then
+  echo "Creating missing firewall rule '${FIREWALL_RULE_NAME}' for network ${NETWORK_NAME}..."
+  gcloud compute firewall-rules create "${FIREWALL_RULE_NAME}" \
+    --project="${PROJECT}" \
+    --network="${NETWORK_NAME}" \
+    --direction=INGRESS \
+    --action=allow \
+    --rules=tcp:22 \
+    --source-ranges=35.235.240.0/20 \
+    --description="Allow SSH ingress from Google Cloud Identity-Aware Proxy (IAP) for ${NETWORK_NAME}"
+  echo "Firewall rule created successfully."
+else
+  echo "Firewall rule '${FIREWALL_RULE_NAME}' already exists for this network. Skipping creation."
+fi
+
 gcloud alpha compute tpus tpu-vm scp run_on_vm.sh "${NAME}":~/ \
     --zone="$ZONE" \
     --project="$PROJECT" \
