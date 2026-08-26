@@ -18,8 +18,7 @@
 export PROJECT="YOUR_PROJECT_ID"
 export REGION="YOUR_REGION"
 export ZONE="YOUR_ZONE"
-# Cluster name is currently hardcoded (need to modify deployment file)
-export CLUSTER_NAME=gke-tpu-v6e
+export CLUSTER_NAME="gke-tpu-v6e"
 export REPOSITORY_NAME="YOUR_REPOSITORY_NAME"
 export CLOUD_IMAGE_NAME="${REGION}-docker.pkg.dev/${PROJECT}/${REPOSITORY_NAME}/maxtext_base:latest"
 export TPU_TYPE="v6e-32"
