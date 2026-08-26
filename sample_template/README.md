@@ -1,4 +1,4 @@
-_# [Sample title]_
+# _[Sample title]_
 # Example: Fine-tune Gemma 3 on an A4 Slurm cluster
 
 _[Provide 1-2 sentences stating the purpose of the sample and the intended audience. If applicable, explicitly state what is not covered by this sample (for example, dataset preparation, serving the model in a production environment, or configuring VPC networks from scratch) to help users quickly determine if it meets their needs. The next sentence is an example of an introductory sentence. Delete the instructions provided in brackets and the examples after you add your own content.]_
