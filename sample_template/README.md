@@ -44,8 +44,10 @@ To execute this sample, follow these steps:
 1. _[Add the first step, for example, setting up environment variables by editing and sourcing the environment script.]_
    
    Example: Open `0_env.sh` and update the `PROJECT_ID`, `ZONE`, and `HF_TOKEN` variables.
+   
    ```bash
    source 0_env.sh
+   ```
 
 ## Verify the results
 
@@ -59,8 +61,9 @@ To verify that the workload ran successfully:
 
    ```bash
    ./3_validation.sh
+   ```
 
-3. _[Describe the expected output or success criteria the user should see in the logs.]_
+2. _[Describe the expected output or success criteria the user should see in the logs.]_
 
    Example: You should see an output indicating `Validation passed` and the training loss.
 
@@ -76,6 +79,7 @@ To clean up the resources created by this sample:
 
    ```bash
    ./cleanup.sh
+   ```
   
 ## Additional resources
   
