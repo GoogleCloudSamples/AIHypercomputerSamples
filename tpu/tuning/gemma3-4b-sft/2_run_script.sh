@@ -33,8 +33,8 @@ if [ -z "${FIREWALL_EXISTS}" ]; then
     --rules=tcp:22 \
     --source-ranges=35.235.240.0/20 \
     --description="Allow SSH ingress from Google Cloud Identity-Aware Proxy (IAP) for ${NETWORK_NAME}"
-  echo "Firewall rule created. Waiting 10s for VPC propagation..."
-  sleep 10
+  echo "Firewall rule created. Waiting 20s for VPC propagation..."
+  sleep 20
 else
   echo "Firewall rule '${FIREWALL_RULE_NAME}' already exists for this network. Skipping creation."
 fi
