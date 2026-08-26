@@ -19,6 +19,7 @@ set -euo pipefail
 gcloud alpha compute tpus tpu-vm create "${NAME}" \
     --zone="${ZONE}" \
     --project="${PROJECT}" \
+    --network="${NETWORK}" \
     --accelerator-type=v6e-8 \
     --version=v2-alpha-tpuv6e \
     --provisioning-model=reservation-bound \
