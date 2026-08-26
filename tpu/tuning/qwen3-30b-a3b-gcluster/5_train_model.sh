@@ -60,44 +60,21 @@ gcluster job submit \
 echo "[$(date)] ==================== Training Workload submitted. ===================="
 
 echo "[$(date)] ==================== Waiting for Training Workload to Complete... ===================="
-echo "Waiting for pod to be scheduled..."
-POD_NAME=""
-ATTEMPTS=0
-while [ -z "$POD_NAME" ]; do
-  if [ $ATTEMPTS -ge 60 ]; then
-    echo "ERROR: Timeout (10 minutes) waiting for pod to be scheduled."
-    exit 1
-  fi
-  POD_NAME=$(kubectl get pods -l job-name=qwen-training-pathways-head-0 -o jsonpath="{.items[0].metadata.name}" 2>/dev/null || true)
-  if [ -z "$POD_NAME" ]; then
-    POD_NAME=$(kubectl get pods -l jobset.sigs.k8s.io/replicatedjob-name=pathways-head,jobset.sigs.k8s.io/jobset-name=qwen-training -o jsonpath="{.items[0].metadata.name}" 2>/dev/null || true)
-  fi
-  if [ -z "$POD_NAME" ]; then
-    sleep 10
-    ATTEMPTS=$((ATTEMPTS+1))
-  fi
-done
+# Sleep slightly to allow the job to be created before fetching logs
+sleep 10
+./gcluster job logs qwen-training --main-only -f \
+    --cluster ${CLUSTER_NAME} \
+    --project ${PROJECT} \
+    --location ${REGION} || true
 
-echo "Found training pod: $POD_NAME"
-echo "Waiting for pod to download image and start running..."
-while true; do
-  POD_STATUS=$(kubectl get pod $POD_NAME -o jsonpath='{.status.phase}' 2>/dev/null || echo "Pending")
-  if [ "$POD_STATUS" != "Pending" ]; then
-    break
-  fi
-  sleep 10
-done
+echo "Checking final job status..."
+# Use kubectl to check if the job actually succeeded since gcluster doesn't return failure codes yet
+POD_NAME=$(kubectl get pods -l job-name=qwen-training-pathways-head-0 -o jsonpath="{.items[0].metadata.name}" 2>/dev/null || true)
+if [ -z "$POD_NAME" ]; then
+  POD_NAME=$(kubectl get pods -l jobset.sigs.k8s.io/replicatedjob-name=pathways-head,jobset.sigs.k8s.io/jobset-name=qwen-training -o jsonpath="{.items[0].metadata.name}" 2>/dev/null || true)
+fi
 
-echo "Tailing logs for $POD_NAME..."
-kubectl logs -f $POD_NAME
-
-# Wait for Kubernetes to update the pod phase after logs finish
 POD_STATUS=$(kubectl get pod $POD_NAME -o jsonpath="{.status.phase}" 2>/dev/null || true)
-while [ "$POD_STATUS" == "Running" ] || [ "$POD_STATUS" == "Pending" ]; do
-  sleep 5
-  POD_STATUS=$(kubectl get pod $POD_NAME -o jsonpath="{.status.phase}" 2>/dev/null || true)
-done
-
 if [ "$POD_STATUS" != "Succeeded" ]; then
   echo "ERROR: Training pod did not succeed (Status: $POD_STATUS)."
   exit 1
