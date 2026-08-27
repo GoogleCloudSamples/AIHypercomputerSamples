@@ -15,8 +15,8 @@
 
 set -euo pipefail
 
-NETWORK_NAME="${NETWORK:-default}"
-FIREWALL_RULE_NAME="allow-ssh-from-iap-${NETWORK_NAME}"
+NETWORK_NAME="${NETWORK}"
+FIREWALL_RULE_NAME="allow-ssh-from-iap-${NAME}"
 
 # Remove all resources created by your sample.
 # [START hypercomputer_tpu_tune_gemma3_sft_cleanup]
@@ -32,14 +32,4 @@ echo "Deleting firewall rule: ${FIREWALL_RULE_NAME}..."
 gcloud compute firewall-rules delete "${FIREWALL_RULE_NAME}" \
     --project="${PROJECT}" \
     --quiet || true
-
-# 3. Delete custom VPC network (skip if using default network)
-if [ "${NETWORK_NAME}" != "default" ]; then
-  echo "Deleting custom VPC network: ${NETWORK_NAME}..."
-  gcloud compute networks delete "${NETWORK_NAME}" \
-      --project="${PROJECT}" \
-      --quiet || true
-else
-  echo "Skipping VPC network deletion for '${NETWORK_NAME}' network."
-fi
 # [END hypercomputer_tpu_tune_gemma3_sft_cleanup]

@@ -15,8 +15,8 @@
 
 set -euo pipefail
 
-NETWORK_NAME="${NETWORK:-default}"
-FIREWALL_RULE_NAME="allow-ssh-from-iap-${NETWORK_NAME}"
+NETWORK_NAME="${NETWORK}"
+FIREWALL_RULE_NAME="allow-ssh-from-iap-${NAME}"
 
 FIREWALL_EXISTS=$(gcloud compute firewall-rules list \
   --project="${PROJECT}" \
@@ -32,6 +32,7 @@ if [ -z "${FIREWALL_EXISTS}" ]; then
     --action=allow \
     --rules=tcp:22 \
     --source-ranges=35.235.240.0/20 \
+    --target-tags="${NAME}" \
     --description="Allow SSH ingress from Google Cloud Identity-Aware Proxy (IAP) for ${NETWORK_NAME}"
   echo "Firewall rule created. Waiting 20s for VPC propagation..."
   sleep 20
