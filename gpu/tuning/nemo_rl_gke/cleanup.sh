@@ -62,7 +62,7 @@ NETWORKS=(
 
 for NW in "${NETWORKS[@]}"; do
 
-  # Skip if empty, named 'default', or not starting with a lowercase letter (invalid GCP resource name)
+  # Skip if empty, named 'default', or not starting with a lowercase letter (invalid resource name)
   if [[ "${NW}" == "default" || ! "${NW}" =~ ^[a-z] ]]; then
     echo "Skipping protected/invalid network: '${NW}'"
     continue
