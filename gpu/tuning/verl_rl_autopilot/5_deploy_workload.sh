@@ -44,7 +44,7 @@ echo "Waiting for Ray GPU worker pods to become Ready..."
 if ! kubectl wait --for=condition=ready pod \
   -l "${WORKER_LABELS}" \
   -n "${NAMESPACE}" \
-  --timeout=1200s; then
+  --timeout="${WORKER_TIMEOUT}"; then
   echo "Error: Ray GPU worker pods failed to become ready within timeout."
   echo "Describing Ray GPU worker pods:"
   kubectl describe pods \
