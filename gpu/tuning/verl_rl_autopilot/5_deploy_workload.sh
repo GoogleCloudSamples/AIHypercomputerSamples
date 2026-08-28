@@ -40,7 +40,6 @@ until [ -n "$(kubectl get pods -l "${WORKER_LABELS}" -n "${NAMESPACE}" --no-head
   ELAPSED=$((ELAPSED + 5))
 done
 
-WORKER_TIMEOUT="${WORKER_TIMEOUT:-1320s}"
 echo "Waiting up to ${WORKER_TIMEOUT} for Ray GPU worker pods to become Ready..."
 if ! kubectl wait --for=condition=ready pod \
   -l "${WORKER_LABELS}" \
