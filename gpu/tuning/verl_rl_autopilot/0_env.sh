@@ -35,4 +35,7 @@ export HF_TOKEN="YOUR_HF_TOKEN"
 # GPU node provisioning delays.
 # Can be parameterized by setting --tpu_sample_var=WORKER_TIMEOUT=1200s
 # for example.
-export WORKER_TIMEOUT="${WORKER_TIMEOUT:-1320s}"
+export WORKER_TIMEOUT="YOUR_WORKER_TIMEOUT"
+if [[ "${WORKER_TIMEOUT}" == "YOUR_WORKER_TIMEOUT" ]]; then
+  export WORKER_TIMEOUT="1320s"
+fi
