@@ -28,4 +28,3 @@ export MACHINE_TYPE="YOUR_MACHINE_TYPE"
 export RESERVATION="YOUR_RESERVATION_NAME"
 export HF_TOKEN="YOUR_HF_TOKEN"
 # [END hypercomputer_gpu_train_ray_verl_auto_env]
-export WORKER_TIMEOUT="${WORKER_TIMEOUT:-1320s}"
