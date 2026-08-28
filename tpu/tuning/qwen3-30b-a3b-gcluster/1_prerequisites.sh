@@ -18,6 +18,6 @@ set -euo pipefail
 
 echo "[$(date)] ==================== Installing Prerequisites ===================="
 # [START hypercomputer_tpu_tune_qwen3_30b_rl_install_dependencies]
-wget -qO- https://github.com/GoogleCloudPlatform/cluster-toolkit/releases/latest/download/gcluster_bundle_linux_amd64.tgz | tar -xz
+wget -qO- https://github.com/GoogleCloudPlatform/cluster-toolkit/releases/download/v1.102.0/gcluster_bundle_linux_amd64.tgz | tar -xz
 # [END hypercomputer_tpu_tune_qwen3_30b_rl_install_dependencies]
 echo "[$(date)] ==================== Prerequisites Installed ===================="

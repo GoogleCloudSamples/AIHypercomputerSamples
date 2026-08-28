@@ -39,7 +39,7 @@ gcloud iam roles create gke.gcsfuse.profileUser \
 # [END hypercomputer_tpu_tune_qwen3_30b_rl_create_role]
 
 # [START hypercomputer_tpu_tune_qwen3_30b_rl_create_cluster]
-gcluster deploy examples/gke-tpu-v6e/gke-tpu-v6e-advanced.yaml \
+./gcluster deploy examples/gke-tpu-v6e/gke-tpu-v6e-advanced.yaml \
     --vars "project_id=${PROJECT},deployment_name=${CLUSTER_NAME},region=${REGION},zone=${ZONE},num_slices=${CLUSTER_NODEPOOL_COUNT},tpu_topology=${TOPOLOGY},authorized_cidr=0.0.0.0/0,reservation=${RESERVATION:-}" \
     -l IGNORE --auto-approve -w
 # [END hypercomputer_tpu_tune_qwen3_30b_rl_create_cluster]
@@ -102,7 +102,7 @@ gcloud auth configure-docker ${REGION}-docker.pkg.dev --quiet
 # [END hypercomputer_tpu_tune_qwen3_30b_rl_convert_hf_logs]
 
 # [START hypercomputer_tpu_tune_qwen3_30b_rl_cleanup_storage]
-gcluster destroy ${CLUSTER_NAME} --robust
+./gcluster destroy ${CLUSTER_NAME} --robust
 gcloud storage rm -r gs://${GCS_BUCKET}
 gcloud artifacts repositories delete ${REPOSITORY_NAME} --location=${REGION} --project=${PROJECT} --quiet
 

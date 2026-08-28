@@ -26,7 +26,7 @@ sed -i '/id: gke-tpu-v6e-cluster/!b; :a; /settings:/!{n;ba}; a\      enable_priv
 sed -i "s/n2-standard-8/e2-standard-8/" examples/gke-tpu-v6e/gke-tpu-v6e-advanced.yaml
 
 echo "[$(date)] ==================== Deploying cluster with gcluster... ===================="
-gcluster deploy examples/gke-tpu-v6e/gke-tpu-v6e-advanced.yaml \
+./gcluster deploy examples/gke-tpu-v6e/gke-tpu-v6e-advanced.yaml \
     --vars "project_id=${PROJECT},deployment_name=${CLUSTER_NAME},region=${REGION},zone=${ZONE},num_slices=${CLUSTER_NODEPOOL_COUNT},tpu_topology=${TOPOLOGY},authorized_cidr=0.0.0.0/0,reservation=${RESERVATION:-}" \
     -l IGNORE --auto-approve -w
 

@@ -18,7 +18,7 @@ set -euo pipefail
 
 echo "[$(date)] ==================== Submitting Model Conversion Workload... ===================="
 # [START hypercomputer_tpu_tune_qwen3_30b_rl_convert_model]
-gcluster job submit \
+./gcluster job submit \
   --name qwen-hf-to-mt \
   --cluster ${CLUSTER_NAME} \
   --project ${PROJECT} \

@@ -18,7 +18,7 @@ set -euo pipefail
 
 echo "[$(date)] ==================== Submitting Training Workload... ===================="
 # [START hypercomputer_tpu_tune_qwen3_30b_rl_train]
-gcluster job submit \
+./gcluster job submit \
   --name="qwen-training" \
   --cluster="${CLUSTER_NAME}" \
   --project="${PROJECT}" \
@@ -55,7 +55,7 @@ gcluster job submit \
       async_scheduling=False \
       allow_split_physical_axes=true \
       vllm_hf_overrides='{architectures: [\"MaxTextForCausalLM\"]}' \
-      vllm_additional_config=\"{'maxtext_config': {'model_name': '${MODEL_NAME}', 'allow_split_physical_axes': 'true', weight_dtype: bfloat16}}\""
+      vllm_additional_config=\"{'maxtext_config': {'model_name': '${MODEL_NAME}', 'allow_split_physical_axes': 'true', 'weight_dtype': 'bfloat16'}}\""
 # [END hypercomputer_tpu_tune_qwen3_30b_rl_train]
 echo "[$(date)] ==================== Training Workload submitted. ===================="
 

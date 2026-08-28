@@ -18,7 +18,7 @@ set -euo pipefail
 
 echo "[$(date)] ==================== Submitting Hugging Face Conversion Workload... ===================="
 # [START hypercomputer_tpu_tune_qwen3_30b_rl_convert_hf]
-gcluster job submit \
+./gcluster job submit \
   --name="qwen-mt-to-hf" \
   --cluster=${CLUSTER_NAME} \
   --project=${PROJECT} \
