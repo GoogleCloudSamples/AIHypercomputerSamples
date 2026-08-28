@@ -25,6 +25,6 @@ export TPU_TYPE="v6e-32"
 export RESERVATION="YOUR_RESERVATION_NAME"
 export MODEL_NAME="gemma4-31b"
 export HF_TOKEN="YOUR_HF_TOKEN"
-export GCS_BUCKET="YOUR_GCS_BUCKET"
+export GCS_BUCKET="YOUR_BUCKET_NAME"
 # [END hypercomputer_tpu_sft_gcluster_env]
 
