@@ -1,3 +1,4 @@
+#!/bin/bash
 #  Copyright 2026 Google LLC
 #
 #  Licensed under the Apache License, Version 2.0 (the "License");
@@ -14,8 +15,21 @@
 
 set -euo pipefail
 
+NETWORK_NAME="${NETWORK}"
+FIREWALL_RULE_NAME="allow-ssh-from-iap-${NAME}"
 
 # Remove all resources created by your sample.
 # [START hypercomputer_tpu_tune_gemma3_sft_cleanup]
-gcloud alpha compute tpus tpu-vm delete $NAME --zone=$ZONE --project=$PROJECT --quiet
+# 1. Delete TPU VM instance
+echo "Deleting TPU VM instance: ${NAME}..."
+gcloud alpha compute tpus tpu-vm delete "${NAME}" \
+    --zone="${ZONE}" \
+    --project="${PROJECT}" \
+    --quiet || true
+
+# 2. Delete IAP firewall rule
+echo "Deleting firewall rule: ${FIREWALL_RULE_NAME}..."
+gcloud compute firewall-rules delete "${FIREWALL_RULE_NAME}" \
+    --project="${PROJECT}" \
+    --quiet || true
 # [END hypercomputer_tpu_tune_gemma3_sft_cleanup]
