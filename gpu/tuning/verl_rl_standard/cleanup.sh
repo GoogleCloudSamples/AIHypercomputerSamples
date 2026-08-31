@@ -16,12 +16,6 @@
 
 set -euo pipefail
 
-# Determine the directory where the script is located
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-cd "${SCRIPT_DIR}"
-
-source 0_env.sh
-
 echo "=== Starting Cleanup ==="
 
 # 1. Delete Ray Cluster & Force remove finalizers if stuck
@@ -29,9 +23,9 @@ echo "Deleting Ray Cluster (if exists)..."
 if gcloud container clusters describe ${CLUSTER_NAME} --location=${CONTROL_PLANE_REGION} --project=${PROJECT_ID} >/dev/null 2>&1; then
   gcloud container clusters get-credentials ${CLUSTER_NAME} --location=${CONTROL_PLANE_REGION} --project=${PROJECT_ID} --quiet || true
 
-  if [ -f "${SCRIPT_DIR}/ray-cluster-standard.yaml" ]; then
+  if [ -f "ray-cluster-standard.yaml" ]; then
     # [START hypercomputer_gpu_train_ray_verl_std_delete_ray]
-    envsubst < "${SCRIPT_DIR}/ray-cluster-standard.yaml" | kubectl delete --timeout=30s -f - --ignore-not-found=true || true
+    envsubst < "ray-cluster-standard.yaml" | kubectl delete --timeout=30s -f - --ignore-not-found=true || true
     # [END hypercomputer_gpu_train_ray_verl_std_delete_ray]
   fi
 
@@ -41,10 +35,10 @@ fi
 
 # 2. Delete GCS FUSE Storage
 echo "Deleting GCS FUSE Storage..."
-if [ -f "${SCRIPT_DIR}/gcsfuse-storage.yaml" ]; then
+if [ -f "gcsfuse-storage.yaml" ]; then
   if gcloud container clusters describe ${CLUSTER_NAME} --location=${CONTROL_PLANE_REGION} --project=${PROJECT_ID} >/dev/null 2>&1; then
     # [START hypercomputer_gpu_train_ray_verl_std_delete_gcsfuse]
-    envsubst < "${SCRIPT_DIR}/gcsfuse-storage.yaml" | kubectl delete --timeout=30s -f - --ignore-not-found=true || true
+    envsubst < "gcsfuse-storage.yaml" | kubectl delete --timeout=30s -f - --ignore-not-found=true || true
     # [END hypercomputer_gpu_train_ray_verl_std_delete_gcsfuse]
   fi
 fi
