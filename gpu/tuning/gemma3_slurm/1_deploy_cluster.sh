@@ -16,23 +16,46 @@
 
 set -euo pipefail
 
-if [[ -z "${WORK_DIR:-}" ]]; then
-  echo "Error: WORK_DIR is not set. Please source 0_env.sh" >&2
-  exit 1
+# Define versions
+export TERRAFORM_VERSION="1.12.2"
+export PACKER_VERSION="1.15.3"
+export INSTALL_TEMP_DIR="/tmp/bin_dependencies"
+mkdir -p "${INSTALL_TEMP_DIR}"
+
+# Install Terraform
+if ! command -v terraform &> /dev/null; then
+  echo "[$(date)] Installing Terraform..."
+  curl -f -s -L \
+    -o "${INSTALL_TEMP_DIR}/terraform.zip" \
+    "https://releases.hashicorp.com/terraform/${TERRAFORM_VERSION}/terraform_${TERRAFORM_VERSION}_linux_amd64.zip"
+  python3 -m zipfile -e "${INSTALL_TEMP_DIR}/terraform.zip" "${INSTALL_TEMP_DIR}"
+  sudo mv "${INSTALL_TEMP_DIR}/terraform" /usr/local/bin/
+  sudo chmod +x /usr/local/bin/terraform
+  rm -f "${INSTALL_TEMP_DIR}/terraform.zip"
 fi
+
+# Install Packer
+if ! command -v packer &> /dev/null; then
+  echo "[$(date)] Installing Packer..."
+  curl -f -s -L \
+    -o "${INSTALL_TEMP_DIR}/packer.zip" \
+    "https://releases.hashicorp.com/packer/${PACKER_VERSION}/packer_${PACKER_VERSION}_linux_amd64.zip"
+  python3 -m zipfile -e "${INSTALL_TEMP_DIR}/packer.zip" "${INSTALL_TEMP_DIR}"
+  sudo mv "${INSTALL_TEMP_DIR}/packer" /usr/local/bin/
+  sudo chmod +x /usr/local/bin/packer
+  rm -f "${INSTALL_TEMP_DIR}/packer.zip"
+fi
+
+# Verify installation
+echo "[$(date)] Terraform version: $(terraform --version)"
+echo "[$(date)] Packer version: $(packer --version)"
+
+declare -r SCRIPT_PATH="$(realpath "${BASH_SOURCE[0]}")"
+declare -r BASEDIR="$(dirname "${SCRIPT_PATH}")"
 
 declare -r CLUSTER_TOOLKIT_VERSION="v1.97.0"
 declare -r CLUSTER_TOOLKIT_URL="https://github.com/GoogleCloudPlatform/cluster-toolkit/releases/download/${CLUSTER_TOOLKIT_VERSION}/gcluster_bundle_linux_amd64.tgz"
-declare -r CLUSTER_TOOLKIT_PATH="${WORK_DIR}/cluster_toolkit"
-
-# Debug environment
-echo "[$(date)] DEBUG: PATH is: ${PATH}"
-echo "[$(date)] DEBUG: which packer: $(which packer || echo 'NOT FOUND')"
-if which packer &>/dev/null; then
-  echo "[$(date)] DEBUG: packer version: $(packer --version)"
-else
-  echo "[$(date)] DEBUG: packer is NOT in PATH"
-fi
+declare -r CLUSTER_TOOLKIT_PATH="${BASEDIR}/cluster_toolkit"
 
 echo "[$(date)] ==================== Starting Cluster Deployment ===================="
 
@@ -50,10 +73,10 @@ fi
 # 2. Download cluster-toolkit release
 if [[ ! -f "${CLUSTER_TOOLKIT_PATH}/gcluster" ]]; then
   echo "[$(date)] Downloading cluster-toolkit release..."
-  curl -L -s -o "${WORK_DIR}/cluster_toolkit.tgz" "${CLUSTER_TOOLKIT_URL}" \
+  curl -L -s -o "${BASEDIR}/cluster_toolkit.tgz" "${CLUSTER_TOOLKIT_URL}" \
     && mkdir -p "${CLUSTER_TOOLKIT_PATH}"  \
-    && tar -xf "${WORK_DIR}/cluster_toolkit.tgz" -C "${CLUSTER_TOOLKIT_PATH}" \
-    && rm -f "${WORK_DIR}/cluster_toolkit.tgz"
+    && tar -xf "${BASEDIR}/cluster_toolkit.tgz" -C "${CLUSTER_TOOLKIT_PATH}" \
+    && rm -f "${BASEDIR}/cluster_toolkit.tgz"
 else
   echo "[$(date)] gcluster already present. Skipping download..."
 fi
@@ -86,18 +109,17 @@ echo "[$(date)] Creating deployment directory ${CLUSTER_NAME}..."
 # [START hypercomputer_gpu_tune_gemma3_slurm_create_tf]
 gcluster create \
   -d "${MANIFEST_PATH}/a4high-slurm-deployment.yaml" \
-  "${MANIFEST_PATH}/a4high-slurm-blueprint.yaml" \
-  -o "${WORK_DIR}"
+  "${MANIFEST_PATH}/a4high-slurm-blueprint.yaml"
 # [END hypercomputer_gpu_tune_gemma3_slurm_create_tf]
 
 # [START hypercomputer_gpu_tune_gemma3_slurm_patch_tf]
 echo "[$(date)] Patching Filestore deletion protection in ${CLUSTER_NAME}..."
-sed -i '/deletion_protection = {/,/}/ { s/enabled = true/enabled = false/; /reason  = "Avoid data loss"/d; }' "${WORK_DIR}/${CLUSTER_NAME}/cluster-env/main.tf"
+sed -i '/deletion_protection = {/,/}/ { s/enabled = true/enabled = false/; /reason  = "Avoid data loss"/d; }' "${CLUSTER_NAME}/cluster-env/main.tf"
 # [END hypercomputer_gpu_tune_gemma3_slurm_patch_tf]
 
 echo "[$(date)] Deploying Slurm cluster from patched directory (this can take up to 35-45 minutes)..."
 # [START hypercomputer_gpu_tune_gemma3_slurm_deploy_cluster]
-gcluster deploy "${WORK_DIR}/${CLUSTER_NAME}" --auto-approve
+gcluster deploy "${CLUSTER_NAME}" --auto-approve
 # [END hypercomputer_gpu_tune_gemma3_slurm_deploy_cluster]
 
 echo "[$(date)] ==================== Cluster Deployment Complete. ===================="
