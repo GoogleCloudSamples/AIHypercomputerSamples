@@ -31,3 +31,14 @@ export HF_TOKEN="YOUR_HF_TOKEN"
 export GVNIC_NETWORK_PREFIX="YOUR_GVNIC_NAME"
 export RDMA_NETWORK_PREFIX="YOUR_RDMA_NAME"
 # [END hypercomputer_gpu_train_ray_verl_std_env]
+
+# Timeout for waiting for Ray GPU worker pods to become Ready.
+# Used in 5_deploy_workload.sh.
+# Default value is 1320s (22 minutes) to account for potential
+# GPU node provisioning delays.
+# Can be parameterized by setting --tpu_sample_var=NODEPOOL_TIMEOUT=3600
+# for example.
+export NODEPOOL_TIMEOUT="YOUR_NODEPOOL_TIMEOUT"
+if [[ "${NODEPOOL_TIMEOUT}" == "YOUR_NODEPOOL_TIMEOUT" ]]; then
+  export NODEPOOL_TIMEOUT="3600"
+fi
