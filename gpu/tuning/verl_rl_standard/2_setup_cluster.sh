@@ -82,23 +82,24 @@ if ! gcloud container node-pools describe gpu-pool --cluster=${CLUSTER_NAME} --l
     CMD+=("--reservation-affinity=none")
   fi
 
-  # Create the GPU nodepool
-  OPERATION_ID="$("${CMD[@]}")"
+  if ! OPERATION_ID="$("${CMD[@]}")" || [[ -z "${OPERATION_ID}" ]]; then
+    echo "Error: Failed to initiate nodepool creation."
+    exit 1
+  fi
 
   # Wait for nodepool creation to complete
-  if [[ -n "${OPERATION_ID}" ]]; then
-    echo "Waiting for nodepool ${OPERATION_ID} to be created..."
-    if ! timeout "${NODEPOOL_TIMEOUT}" gcloud container operations wait "${OPERATION_ID}" --location="${CONTROL_PLANE_REGION}" --project="${PROJECT_ID}"; then
-      echo "Error: Nodepool creation timed out or failed after ${NODEPOOL_TIMEOUT} seconds."
+  NODEPOOL_TIMEOUT="3600"
+  echo "Waiting for nodepool ${OPERATION_ID} to be created..."
+  if ! timeout "${NODEPOOL_TIMEOUT}" gcloud container operations wait "${OPERATION_ID}" --location="${CONTROL_PLANE_REGION}" --project="${PROJECT_ID}"; then
+    echo "Error: Nodepool creation timed out or failed after ${NODEPOOL_TIMEOUT} seconds."
 
-      # Describe the operation to get more details
-      gcloud container operations describe "${OPERATION_ID}" \
-        --location="${CONTROL_PLANE_REGION}" \
-        --project="${PROJECT_ID}"
-      exit 1
-    fi
-    echo "Nodepool creation completed successfully."
+    # Describe the operation to get more details
+    gcloud container operations describe "${OPERATION_ID}" \
+      --location="${CONTROL_PLANE_REGION}" \
+      --project="${PROJECT_ID}"
+    exit 1
   fi
+  echo "Nodepool creation completed successfully."
   # [END hypercomputer_gpu_train_ray_verl_std_create_nodepool]
 else
   echo "Node pool gpu-pool already exists."
