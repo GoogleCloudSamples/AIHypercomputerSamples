@@ -26,9 +26,10 @@ echo "Debug: RayCluster resource status:"
 kubectl get raycluster -n "${NAMESPACE}" || true
 
 echo "Waiting for Ray GPU worker pods to be created..."
+WORKER_LABELS="ray.io/node-type=worker,ray.io/cluster=b200-ray-cluster-dranet"
 TIMEOUT=300
 ELAPSED=0
-until [ -n "$(kubectl get pods -l "ray.io/node-type=worker,ray.io/cluster=b200-ray-cluster-dranet" -n "${NAMESPACE}" --no-headers 2>/dev/null)" ]; do
+until [ -n "$(kubectl get pods -l "${WORKER_LABELS}" -n "${NAMESPACE}" --no-headers 2>/dev/null)" ]; do
   if [ $ELAPSED -ge $TIMEOUT ]; then
     echo "Error: Timeout waiting for Ray GPU worker pods to be created."
     exit 1
@@ -39,8 +40,18 @@ until [ -n "$(kubectl get pods -l "ray.io/node-type=worker,ray.io/cluster=b200-r
   ELAPSED=$((ELAPSED + 5))
 done
 
-echo "Waiting for Ray GPU worker pods to become Ready..."
-kubectl wait --for=condition=ready pod \
-  -l "ray.io/node-type=worker,ray.io/cluster=b200-ray-cluster-dranet" \
+echo "Waiting up to ${WORKER_TIMEOUT} for Ray GPU worker pods to become Ready..."
+if ! kubectl wait --for=condition=ready pod \
+  -l "${WORKER_LABELS}" \
   -n "${NAMESPACE}" \
-  --timeout=1200s
+  --timeout="${WORKER_TIMEOUT}"; then
+  echo "Error: Ray GPU worker pods failed to become ready within timeout."
+  echo "Describing Ray GPU worker pods:"
+  kubectl describe pods \
+    -l "${WORKER_LABELS}" \
+    -n "${NAMESPACE}" || true
+  echo "Fetching events sorted by creation timestamp:"
+  kubectl get events -n "${NAMESPACE}" --sort-by='.metadata.creationTimestamp' || true
+  exit 1
+fi
+

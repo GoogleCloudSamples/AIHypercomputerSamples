@@ -29,3 +29,13 @@ export RESERVATION="YOUR_RESERVATION_NAME"
 export HF_TOKEN="YOUR_HF_TOKEN"
 # [END hypercomputer_gpu_train_ray_verl_auto_env]
 
+# Timeout for waiting for Ray GPU worker pods to become Ready.
+# Used in 5_deploy_workload.sh.
+# Default value is 1320s (22 minutes) to account for potential
+# GPU node provisioning delays.
+# Can be parameterized by setting --tpu_sample_var=WORKER_TIMEOUT=1200s
+# for example.
+export WORKER_TIMEOUT="YOUR_WORKER_TIMEOUT"
+if [[ "${WORKER_TIMEOUT}" == "YOUR_WORKER_TIMEOUT" ]]; then
+  export WORKER_TIMEOUT="1320s"
+fi
