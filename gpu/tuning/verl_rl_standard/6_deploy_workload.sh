@@ -40,5 +40,19 @@ until kubectl get pods -n ${NAMESPACE} -l ray.io/node-type=worker 2>/dev/null | 
   sleep 5
 done
 
-echo "Ray GPU worker pods detected! Waiting for Ready status (up to 20m)..."
-kubectl wait --for=condition=ready pod -l ray.io/node-type=worker -n ${NAMESPACE} --timeout=1200s
+WORKER_TIMEOUT="${WORKER_TIMEOUT:-1200s}"
+WORKER_LABELS="ray.io/node-type=worker"
+echo "Ray GPU worker pods detected! Waiting up to ${WORKER_TIMEOUT} for Ready status..."
+if ! kubectl wait --for=condition=ready pod \
+  -l "${WORKER_LABELS}" \
+  -n "${NAMESPACE}" \
+  --timeout="${WORKER_TIMEOUT}"; then
+  echo "Error: Ray GPU worker pods failed to become ready within timeout."
+  echo "Describing Ray GPU worker pods:"
+  kubectl describe pods \
+    -l "${WORKER_LABELS}" \
+    -n "${NAMESPACE}" || true
+  echo "Fetching events sorted by creation timestamp:"
+  kubectl get events -n "${NAMESPACE}" --sort-by='.metadata.creationTimestamp' || true
+  exit 1
+fi
