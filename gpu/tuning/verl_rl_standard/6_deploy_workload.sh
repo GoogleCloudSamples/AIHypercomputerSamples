@@ -53,6 +53,6 @@ if ! kubectl wait --for=condition=ready pod \
     -l "${WORKER_LABELS}" \
     -n "${NAMESPACE}" || true
   echo "Fetching events sorted by creation timestamp:"
-  kubectl get events -n "${NAMESPACE}" --sort-by='.metadata.creationTimestamp' || true
+  kubectl get events -n "${NAMESPACE}" --sort-by='.metadata.creationTimestamp' | tail -n 50 || true
   exit 1
 fi
