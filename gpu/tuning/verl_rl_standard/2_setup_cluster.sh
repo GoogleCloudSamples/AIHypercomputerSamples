@@ -88,7 +88,7 @@ if ! gcloud container node-pools describe gpu-pool --cluster=${CLUSTER_NAME} --l
   fi
 
   # Wait for nodepool creation to complete
-  NODEPOOL_TIMEOUT="3600"
+  NODEPOOL_TIMEOUT="${NODEPOOL_TIMEOUT:-3600}"
   echo "Waiting for nodepool ${OPERATION_ID} to be created..."
   if ! timeout "${NODEPOOL_TIMEOUT}" gcloud container operations wait "${OPERATION_ID}" --location="${CONTROL_PLANE_REGION}" --project="${PROJECT_ID}"; then
     echo "Error: Nodepool creation timed out or failed after ${NODEPOOL_TIMEOUT} seconds."
