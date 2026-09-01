@@ -23,7 +23,7 @@ export MACHINE_TYPE="YOUR_MACHINE_TYPE"
 export KSA_NAME="generic-ksa"
 export NAMESPACE="default"
 export RESERVATION="YOUR_RESERVATION_NAME"
-export LUSTRE_NAME="CHOSEN_LUSTRE_NAME"
+export LUSTRE_NAME="YOUR_LUSTRE_NAME"
 export HF_TOKEN="YOUR_HF_TOKEN"
 export WANDB_API_KEY="YOUR_WANDB_API_KEY"
 
@@ -34,6 +34,6 @@ export PROJECT_NUMBER=$(gcloud projects describe "${PROJECT_ID}" --format="value
 # [START hypercomputer_gpu_tune_gemma3_27b_nemo_rl_network_env]
 export NETWORK_PREFIX="YOUR_NETWORK_NAME"
 export NETWORK="${NETWORK_PREFIX}-nemo-rl"
-export GVNIC_NETWORK_PREFIX="GVNIC_NAME"
-export RDMA_NETWORK_PREFIX="RDMA_NAME"
+export GVNIC_NETWORK_PREFIX="YOUR_GVNIC_NETWORK_PREFIX"
+export RDMA_NETWORK_PREFIX="YOUR_RDMA_NETWORK_PREFIX"
 # [END hypercomputer_gpu_tune_gemma3_27b_nemo_rl_network_env]
