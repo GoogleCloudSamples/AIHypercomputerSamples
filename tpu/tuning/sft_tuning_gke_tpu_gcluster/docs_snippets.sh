@@ -101,7 +101,7 @@ gcloud auth configure-docker ${REGION}-docker.pkg.dev --quiet
     --project ${PROJECT} \
     --location ${REGION}
 
-# The trained model is now available in gs://${GCS_BUCKET}/${MODEL_NAME}/hf-trained/ - though again, it's ~2x the size of the original...
+# The trained model is now available in gs://${GCS_BUCKET}/${MODEL_NAME}/hf-trained/ 
 # [END hypercomputer_tpu_sft_gcluster_convert_hf_logs]
 
 # [START hypercomputer_tpu_sft_gcluster_cleanup_storage]
