@@ -61,7 +61,11 @@ while [ $attempt -le $MAX_RETRIES ]; do
       fi
 
       echo "Cleaning up resources from the failed attempt..."
-      gcloud container clusters delete "${CLUSTER_NAME}" --location="${REGION}" --project="${PROJECT}" --quiet --async 2>/dev/null || true
+      xpk cluster delete --cluster "${CLUSTER_NAME}" --project "${PROJECT}" --zone "${ZONE}" --force 2>/dev/null || \
+        gcloud container clusters delete "${CLUSTER_NAME}" --location="${REGION}" --project="${PROJECT}" --quiet 2>/dev/null || true
+
+      echo "Waiting 60 seconds for TPU reservation release..."
+      sleep 60
 
       # Generate a new suffix for the next attempt to avoid API locks
       NEW_SUFFIX=$(od -N 2 -t x1 /dev/urandom | head -1 | awk '{print $2$3}')
