@@ -58,12 +58,12 @@ else
   echo "No active GKE clusters found matching ${BASE_CLUSTER_NAME}."
 fi
 
-# 2. Terminate any residual orphan TPU/CPU VM instances
+# 2. Terminate residual orphan VM instances strictly bound to this run
 echo "Terminating residual VM instances attached to ${BASE_CLUSTER_NAME}..."
 gcloud compute instances list \
   --project="${PROJECT}" \
   --zones="${ZONE}" \
-  --filter="labels.goog-k8s-cluster-name~'^${BASE_CLUSTER_NAME}' OR name~'^gke-${BASE_CLUSTER_NAME}' OR machineType~'ct6e'" \
+  --filter="(labels.goog-k8s-cluster-name~'^${BASE_CLUSTER_NAME}' OR name~'^gke-${BASE_CLUSTER_NAME}') AND zone:${ZONE}" \
   --format="value(name,zone)" 2>/dev/null | while read -r name zone; do
     if [ -n "$name" ]; then
       echo " -> Deleting orphan instance: $name ($zone)"
