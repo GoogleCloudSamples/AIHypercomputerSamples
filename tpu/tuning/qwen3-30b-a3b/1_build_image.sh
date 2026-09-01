@@ -56,7 +56,7 @@ WORKDIR /workspace
 RUN git clone https://github.com/google/maxtext.git /workspace/maxtext
 WORKDIR /workspace/maxtext
 RUN pip install --no-cache-dir --upgrade pip setuptools wheel
-RUN pip install --no-cache-dir absl-py transformers torch sentencepiece tiktoken accelerate
+RUN pip install --no-cache-dir absl-py transformers torch sentencepiece tiktoken accelerate ml_dtypes safetensors orbax-checkpoint flax optax jax jaxlib
 RUN pip install --no-cache-dir ".[all]" || pip install --no-cache-dir .
 
 ENV PYTHONPATH=/workspace/maxtext
