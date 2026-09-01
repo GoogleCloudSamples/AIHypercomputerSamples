@@ -121,10 +121,10 @@ if [ -n "${RESERVATION:-}" ]; then
   done
 fi
 
-# 5. Delete Cloud Storage bucket and Artifact Registry repository
-echo "Cleaning up Cloud Storage bucket and Artifact Registry repository..."
+# 5. Delete Cloud Storage bucket and specific Docker image tag
+echo "Cleaning up Cloud Storage bucket and test image tag..."
 gcloud storage rm --recursive "gs://${GCS_BUCKET}" 2>/dev/null || echo "Warning: Failed to delete bucket gs://${GCS_BUCKET}"
-gcloud artifacts repositories delete maxtext-images --location="${REGION}" --project="${PROJECT}" --quiet 2>/dev/null || echo "Warning: Failed to delete repository maxtext-images"
+gcloud artifacts docker images delete "${CLOUD_IMAGE_NAME}" --delete-tags --quiet 2>/dev/null || true
 
 # [END hypercomputer_tpu_tune_qwen3_30b_rl_cleanup]
 echo "[$(date)] ==================== Resources cleaned up. ===================="
