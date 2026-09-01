@@ -33,8 +33,8 @@ export RDMA_NETWORK_PREFIX="YOUR_RDMA_NAME"
 # [END hypercomputer_gpu_train_ray_verl_std_env]
 
 # Timeout for waiting for Ray GPU worker pods to become Ready.
-# Used in 5_deploy_workload.sh.
-# Default value is 1320s (22 minutes) to account for potential
+# Used in 2_setup_cluster.sh.
+# Default value is 3600s (60 minutes) to account for potential
 # GPU node provisioning delays.
 # Can be parameterized by setting --tpu_sample_var=NODEPOOL_TIMEOUT=3600
 # for example.
