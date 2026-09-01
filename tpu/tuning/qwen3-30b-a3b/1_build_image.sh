@@ -35,11 +35,32 @@ gcloud artifacts repositories create maxtext-images \
 echo "[$(date)] ==================== Artifact Registry repository created. ===================="
 
 echo "[$(date)] ==================== Submitting Cloud Build job... ===================="
+
+cat << 'EOF' > Dockerfile
+FROM python:3.12-slim-bullseye
+
+# Fix: Instalacja curl, gnupg i poprawnego pakietu google-cloud-cli
+RUN apt-get update && apt-get install -y curl gnupg git && \
+    echo "deb [signed-by=/usr/share/keyrings/cloud.google.gpg] https://packages.cloud.google.com/apt cloud-sdk main" | tee -a /etc/apt/sources.list.d/google-cloud-sdk.list && \
+    curl https://packages.cloud.google.com/apt/doc/apt-key.gpg | gpg --dearmor -o /usr/share/keyrings/cloud.google.gpg && \
+    apt-get update && apt-get install -y google-cloud-cli && \
+    apt-get clean && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /workspace
+
+RUN git clone https://github.com/google/maxtext.git /workspace/maxtext
+WORKDIR /workspace/maxtext
+RUN pip install --no-cache-dir -r requirements.txt
+RUN pip install --no-cache-dir .
+
+ENV PYTHONPATH=/workspace/maxtext
+EOF
+
 # [START hypercomputer_tpu_tune_qwen3_30b_rl_build_image_cb]
 gcloud builds submit . \
     --project=$PROJECT \
     --region=$REGION \
-    --substitutions=_CLOUD_IMAGE_NAME="${CLOUD_IMAGE_NAME}"
+    --tag="${CLOUD_IMAGE_NAME}"
 # [END hypercomputer_tpu_tune_qwen3_30b_rl_build_image_cb]
 echo "[$(date)] ==================== Cloud Build job completed. ===================="
 
