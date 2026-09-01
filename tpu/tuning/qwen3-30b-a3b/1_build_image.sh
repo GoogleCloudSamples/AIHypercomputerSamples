@@ -39,17 +39,24 @@ echo "[$(date)] ==================== Submitting Cloud Build job... =============
 cat << 'EOF' > Dockerfile
 FROM python:3.12-slim-bullseye
 
-# Fix: Instalacja curl, gnupg i poprawnego pakietu google-cloud-cli
-RUN apt-get update && apt-get install -y curl gnupg git && \
-    echo "deb [signed-by=/usr/share/keyrings/cloud.google.gpg] https://packages.cloud.google.com/apt cloud-sdk main" | tee -a /etc/apt/sources.list.d/google-cloud-sdk.list && \
-    curl https://packages.cloud.google.com/apt/doc/apt-key.gpg | gpg --dearmor -o /usr/share/keyrings/cloud.google.gpg && \
-    apt-get update && apt-get install -y google-cloud-cli && \
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    curl \
+    gnupg \
+    git \
+    build-essential \
+    ca-certificates && \
+    mkdir -p /usr/share/keyrings && \
+    curl -fsSL https://packages.cloud.google.com/apt/doc/apt-key.gpg | gpg --dearmor -o /usr/share/keyrings/cloud.google.gpg && \
+    echo "deb [signed-by=/usr/share/keyrings/cloud.google.gpg] https://packages.cloud.google.com/apt cloud-sdk main" > /etc/apt/sources.list.d/google-cloud-sdk.list && \
+    apt-get update && apt-get install -y --no-install-recommends google-cloud-cli && \
     apt-get clean && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /workspace
 
+# 2. Pobranie MaxText i instalacja zależności
 RUN git clone https://github.com/google/maxtext.git /workspace/maxtext
 WORKDIR /workspace/maxtext
+RUN pip install --no-cache-dir --upgrade pip setuptools wheel
 RUN pip install --no-cache-dir -r requirements.txt
 RUN pip install --no-cache-dir .
 
