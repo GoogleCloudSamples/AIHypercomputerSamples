@@ -20,6 +20,13 @@ if [ -d "venvp3" ]; then
   source venvp3/bin/activate
 fi
 
+# Resolve dynamic cluster name matching the prefix created by setup_cluster.sh
+REAL_CLUSTER=$(gcloud container clusters list --project="${PROJECT}" --location="${REGION}" --filter="name~'^${CLUSTER_NAME}'" --format="value(name)" 2>/dev/null | head -n 1 || true)
+if [ -n "$REAL_CLUSTER" ]; then
+  export CLUSTER_NAME="$REAL_CLUSTER"
+  echo "Resolved active target cluster: ${CLUSTER_NAME}"
+fi
+
 echo "Cleaning up any residual qwen-hf-to-mt workload..."
 xpk workload delete --workload "qwen-hf-to-mt" --cluster "${CLUSTER_NAME}" --project="${PROJECT}" --zone="${ZONE}" 2>/dev/null || true
 kubectl delete jobset qwen-hf-to-mt 2>/dev/null || true

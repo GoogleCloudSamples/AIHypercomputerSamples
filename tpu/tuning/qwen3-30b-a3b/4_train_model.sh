@@ -20,6 +20,13 @@ if [ -d "venvp3" ]; then
   source venvp3/bin/activate
 fi
 
+# Resolve dynamic cluster name matching the prefix created by setup_cluster.sh
+REAL_CLUSTER=$(gcloud container clusters list --project="${PROJECT}" --location="${REGION}" --filter="name~'^${CLUSTER_NAME}'" --format="value(name)" 2>/dev/null | head -n 1 || true)
+if [ -n "$REAL_CLUSTER" ]; then
+  export CLUSTER_NAME="$REAL_CLUSTER"
+  echo "Resolved active target cluster: ${CLUSTER_NAME}"
+fi
+
 echo "[$(date)] ==================== Submitting Training Workload... ===================="
 # [START hypercomputer_tpu_tune_qwen3_30b_rl_train]
 xpk workload create-pathways \
