@@ -56,10 +56,43 @@ WORKDIR /workspace
 RUN git clone https://github.com/google/maxtext.git /workspace/maxtext
 WORKDIR /workspace/maxtext
 RUN pip install --no-cache-dir --upgrade pip setuptools wheel
-RUN pip install --no-cache-dir absl-py transformers torch sentencepiece tiktoken accelerate ml_dtypes safetensors orbax-checkpoint flax optax jax jaxlib
-RUN pip install --no-cache-dir ".[all]" || pip install --no-cache-dir .
+RUN if [ -f requirements.txt ]; then pip install --no-cache-dir -r requirements.txt || true; fi
+RUN pip install --no-cache-dir \
+    absl-py \
+    accelerate \
+    blobfile \
+    datasets \
+    einops \
+    evaluate \
+    flax \
+    google-cloud-storage \
+    hydra-core \
+    jax \
+    jaxlib \
+    ml_dtypes \
+    msgpack \
+    numpy \
+    omegaconf \
+    optax \
+    orbax-checkpoint \
+    pandas \
+    protobuf \
+    pyyaml \
+    safetensors \
+    scipy \
+    sentencepiece \
+    tensorboardX \
+    tensorstore \
+    tiktoken \
+    timm \
+    tokenizers \
+    torch \
+    transformers \
+    zstandard
+RUN pip install --no-cache-dir -e .
 
 ENV PYTHONPATH=/workspace/maxtext
+RUN python3 -c "import absl; import ml_dtypes; import omegaconf; import hydra; import safetensors; import transformers; import torch; import jax; import flax; import orbax.checkpoint; import maxtext.checkpoint_conversion.to_maxtext; print('=== Verification SUCCESS: All MaxText dependencies imported properly! ===')"
 EOF
 
 # [START hypercomputer_tpu_tune_qwen3_30b_rl_build_image_cb]
