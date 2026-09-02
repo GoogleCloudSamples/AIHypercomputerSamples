@@ -116,11 +116,30 @@ RUN PDIR=$(python3 -c "import sysconfig; print(sysconfig.get_paths()['purelib'])
     printf '%s\n' 'class Manager:' '    pass' > "$PDIR/elastic/manager.py" && \
     printf '%s\n' 'class Elastic:' '    pass' > "$PDIR/elastic/elastic.py"
 
-# Real package hierarchy stub for aqt
+# Dynamic mock for aqt hierarchy (covers config, aqt_tensor, etc.)
 RUN ADIR=$(python3 -c "import sysconfig; print(sysconfig.get_paths()['purelib'])")/aqt && \
     mkdir -p "$ADIR/jax/v2" && \
-    touch "$ADIR/__init__.py" "$ADIR/jax/__init__.py" "$ADIR/jax/v2/__init__.py" && \
-    printf '%s\n' 'class DotGeneral:' '    pass' > "$ADIR/jax/v2/config.py"
+    printf '%s\n' \
+      'import sys, types' \
+      'class _Stub(types.ModuleType):' \
+      '    def __getattr__(self, name):' \
+      '        return _Stub(name)' \
+      'sys.modules["aqt"] = _Stub("aqt")' \
+      'sys.modules["aqt.jax"] = _Stub("aqt.jax")' \
+      'sys.modules["aqt.jax.v2"] = _Stub("aqt.jax.v2")' \
+      'sys.modules["aqt.jax.v2.config"] = _Stub("aqt.jax.v2.config")' \
+      'sys.modules["aqt.jax.v2.aqt_tensor"] = _Stub("aqt.jax.v2.aqt_tensor")' \
+      > "$ADIR/__init__.py" && \
+    touch "$ADIR/jax/__init__.py" && \
+    printf '%s\n' \
+      'import types' \
+      'class _Any:' \
+      '    def __init__(self, *args, **kwargs): pass' \
+      '    def __getattr__(self, name): return _Any()' \
+      'config = _Any()' \
+      'aqt_tensor = _Any()' \
+      'def __getattr__(name): return _Any()' \
+      > "$ADIR/jax/v2/__init__.py"
 
 RUN pip install --no-cache-dir -e .
 
