@@ -31,3 +31,10 @@ export PROJECT_NUMBER=$(gcloud projects describe "${PROJECT_ID}" --format="value
 gcloud config set project "${PROJECT_ID}"
 gcloud config set billing/quota_project "${PROJECT_ID}"
 # [END hypercomputer_gpu_infer_gptoss120b_env]
+
+# Timeout for waiting for the model download job to complete.
+# Used in 2_download_model.sh.
+# Default value is 7200s (2 hours) to account for downloading large model weights.
+# Can be parameterized by setting --tpu_sample_var=DOWNLOAD_TIMEOUT=3600s
+# for example.
+export DOWNLOAD_TIMEOUT="YOUR_DOWNLOAD_TIMEOUT"
