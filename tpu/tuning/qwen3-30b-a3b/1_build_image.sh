@@ -104,6 +104,7 @@ RUN pip install --no-cache-dir \
     tiktoken \
     timm \
     tokenizers \
+    tokamax \
     torch \
     transformers \
     typeguard \
