@@ -91,20 +91,17 @@ RUN pip install --no-cache-dir \
     transformers \
     zstandard
 
-# Mock pathwaysutils package to satisfy MaxText CPU imports
-# Universal dynamic mock for pathwaysutils and any submodule (elastic, manager, etc.)
-RUN python3 -c "import os, sysconfig; \
-p = os.path.join(sysconfig.get_paths()['purelib'], 'pathwaysutils'); \
-os.makedirs(p, exist_ok=True); \
-with open(os.path.join(p, '__init__.py'), 'w') as f: \
-    f.write('import sys, types\n' \
-            'class _Mock(types.ModuleType):\n' \
-            '    def __getattr__(self, name):\n' \
-            '        m = _Mock(name)\n' \
-            '        sys.modules[self.__name__ + \".\" + name] = m\n' \
-            '        return m\n' \
-            'sys.modules[__name__] = _Mock(__name__)\n' \
-            'sys.modules[__name__ + \".elastic\"] = _Mock(__name__ + \".elastic\")\n')"
+# Universal dynamic mock for pathwaysutils
+RUN PDIR=$(python3 -c "import sysconfig; print(sysconfig.get_paths()['purelib'])")/pathwaysutils && \
+    mkdir -p "$PDIR" && \
+    echo "import sys, types" > "$PDIR/__init__.py" && \
+    echo "class _Mock(types.ModuleType):" >> "$PDIR/__init__.py" && \
+    echo "    def __getattr__(self, name):" >> "$PDIR/__init__.py" && \
+    echo "        m = _Mock(name)" >> "$PDIR/__init__.py" && \
+    echo "        sys.modules[self.__name__ + '.' + name] = m" >> "$PDIR/__init__.py" && \
+    echo "        return m" >> "$PDIR/__init__.py" && \
+    echo "sys.modules[__name__] = _Mock(__name__)" >> "$PDIR/__init__.py" && \
+    echo "sys.modules[__name__ + '.elastic'] = _Mock(__name__ + '.elastic')" >> "$PDIR/__init__.py"
 
 RUN pip install --no-cache-dir -e .
 
