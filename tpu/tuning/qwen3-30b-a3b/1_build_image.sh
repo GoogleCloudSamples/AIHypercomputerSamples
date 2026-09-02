@@ -92,19 +92,26 @@ RUN pip install --no-cache-dir \
     zstandard
 
 # Mock pathwaysutils package to satisfy MaxText CPU imports
+# Universal dynamic mock for pathwaysutils and any submodule (elastic, manager, etc.)
 RUN python3 -c "import os, sysconfig; \
-p = os.path.join(sysconfig.get_paths()['purelib'], 'pathwaysutils', 'elastic'); \
+p = os.path.join(sysconfig.get_paths()['purelib'], 'pathwaysutils'); \
 os.makedirs(p, exist_ok=True); \
-open(os.path.join(sysconfig.get_paths()['purelib'], 'pathwaysutils', '__init__.py'), 'w').close(); \
-open(os.path.join(p, '__init__.py'), 'w').close(); \
-open(os.path.join(p, 'elastic.py'), 'w').close()"
+with open(os.path.join(p, '__init__.py'), 'w') as f: \
+    f.write('import sys, types\n' \
+            'class _Mock(types.ModuleType):\n' \
+            '    def __getattr__(self, name):\n' \
+            '        m = _Mock(name)\n' \
+            '        sys.modules[self.__name__ + \".\" + name] = m\n' \
+            '        return m\n' \
+            'sys.modules[__name__] = _Mock(__name__)\n' \
+            'sys.modules[__name__ + \".elastic\"] = _Mock(__name__ + \".elastic\")\n')"
 
 RUN pip install --no-cache-dir -e .
 
 ENV PYTHONPATH=/workspace/maxtext
 
 # Verification sanity check: fails fast if any required dependency is missing
-RUN python3 -c "import absl; import ml_dtypes; import omegaconf; import hydra; import safetensors; import transformers; import torch; import jax; import flax; import orbax.checkpoint; import pathwaysutils; import maxtext.checkpoint_conversion.to_maxtext; print('=== Verification SUCCESS: All MaxText dependencies imported properly! ===')"
+RUN python3 -c "import absl; import ml_dtypes; import omegaconf; import hydra; import safetensors; import transformers; import torch; import jax; import flax; import orbax.checkpoint; import pathwaysutils; from pathwaysutils.elastic import elastic, manager; import maxtext.checkpoint_conversion.to_maxtext; print('=== Verification SUCCESS: All MaxText dependencies imported properly! ===')"
 EOF
 
 # [START hypercomputer_tpu_tune_qwen3_30b_rl_build_image_cb]
