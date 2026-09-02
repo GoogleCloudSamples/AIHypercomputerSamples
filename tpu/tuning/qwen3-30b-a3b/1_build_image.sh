@@ -78,6 +78,9 @@ RUN pip install --no-cache-dir \
     orbax-checkpoint \
     pandas \
     protobuf \
+    pydantic \
+    pydantic-core \
+    pydantic-settings \
     pyyaml \
     safetensors \
     scipy \
