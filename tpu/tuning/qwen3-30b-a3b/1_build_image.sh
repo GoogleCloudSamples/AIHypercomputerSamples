@@ -70,6 +70,7 @@ RUN pip install --no-cache-dir \
     hydra-core \
     jax \
     jaxlib \
+    jaxtyping \
     ml_dtypes \
     msgpack \
     numpy \
@@ -92,6 +93,7 @@ RUN pip install --no-cache-dir \
     tokenizers \
     torch \
     transformers \
+    typeguard \
     zstandard
 
 # Real package hierarchy for pathwaysutils.elastic
