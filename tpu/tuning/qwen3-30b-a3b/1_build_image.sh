@@ -62,11 +62,14 @@ RUN pip install --no-cache-dir \
     absl-py \
     accelerate \
     blobfile \
+    cloudpathlib \
+    crcmod \
     datasets \
     einops \
     evaluate \
     flax \
     google-cloud-storage \
+    grain \
     hydra-core \
     jax \
     jaxlib \
