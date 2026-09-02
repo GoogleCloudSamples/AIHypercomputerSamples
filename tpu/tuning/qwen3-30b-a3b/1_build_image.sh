@@ -94,48 +94,20 @@ RUN pip install --no-cache-dir \
     transformers \
     zstandard
 
-# Universal dynamic mock for pathwaysutils supporting PEP 604 type unions (|)
-# Universal dynamic mock for pathwaysutils supporting PEP 604 unions and inspect.__file__
+# Real lightweight package stub for pathwaysutils.elastic
 RUN PDIR=$(python3 -c "import sysconfig; print(sysconfig.get_paths()['purelib'])")/pathwaysutils && \
-    mkdir -p "$PDIR/elastic" && \
+    mkdir -p "$PDIR" && \
     printf '%s\n' \
-    'import sys, types' \
-    'class _Mock(type):' \
-    '    __file__ = ""' \
-    '    __path__ = []' \
-    '    __all__ = []' \
-    '    def __getattr__(cls, name):' \
-    '        if name in ("__file__", "__path__", "__all__"):' \
-    '            return "" if name == "__file__" else []' \
-    '        sub = _Mock(name, (), {})' \
-    '        setattr(cls, name, sub)' \
-    '        return sub' \
-    '    def __or__(cls, other): return cls' \
-    '    def __ror__(cls, other): return cls' \
-    '    def __getitem__(cls, item): return cls' \
-    '    def endswith(cls, *args, **kwargs): return False' \
-    'class _Module(types.ModuleType):' \
-    '    __file__ = ""' \
-    '    __path__ = []' \
-    '    __all__ = []' \
-    '    def __getattr__(self, name):' \
-    '        if name in ("__file__", "__path__", "__all__"):' \
-    '            return "" if name == "__file__" else []' \
-    '        m = _Mock(name, (), {})' \
-    '        setattr(self, name, m)' \
-    '        return m' \
-    '    def endswith(self, *args, **kwargs): return False' \
-    'mock_pw = _Module("pathwaysutils")' \
-    'mock_el = _Module("pathwaysutils.elastic")' \
-    'mock_pw.elastic = mock_el' \
-    'mock_pw.__file__ = ""' \
-    'mock_el.__file__ = ""' \
-    'sys.modules["pathwaysutils"] = mock_pw' \
-    'sys.modules["pathwaysutils.elastic"] = mock_el' \
-    'sys.modules["pathwaysutils.elastic.manager"] = mock_el' \
-    'sys.modules["pathwaysutils.elastic.elastic"] = mock_el' \
-    > "$PDIR/__init__.py" && \
-    touch "$PDIR/elastic/__init__.py"
+    'class Manager:' \
+    '    pass' \
+    'class Elastic:' \
+    '    pass' \
+    'manager = Manager' \
+    'elastic = Elastic' \
+    > "$PDIR/elastic.py" && \
+    printf '%s\n' \
+    'from . import elastic' \
+    > "$PDIR/__init__.py"
 
 RUN pip install --no-cache-dir -e .
 
