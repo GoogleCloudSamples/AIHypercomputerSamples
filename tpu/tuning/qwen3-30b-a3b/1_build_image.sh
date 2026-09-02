@@ -94,20 +94,13 @@ RUN pip install --no-cache-dir \
     transformers \
     zstandard
 
-# Real lightweight package stub for pathwaysutils.elastic
+# Real package hierarchy for pathwaysutils.elastic
 RUN PDIR=$(python3 -c "import sysconfig; print(sysconfig.get_paths()['purelib'])")/pathwaysutils && \
-    mkdir -p "$PDIR" && \
-    printf '%s\n' \
-    'class Manager:' \
-    '    pass' \
-    'class Elastic:' \
-    '    pass' \
-    'manager = Manager' \
-    'elastic = Elastic' \
-    > "$PDIR/elastic.py" && \
-    printf '%s\n' \
-    'from . import elastic' \
-    > "$PDIR/__init__.py"
+    mkdir -p "$PDIR/elastic" && \
+    touch "$PDIR/__init__.py" && \
+    printf '%s\n' 'from . import elastic, manager' > "$PDIR/elastic/__init__.py" && \
+    printf '%s\n' 'class Manager:' '    pass' > "$PDIR/elastic/manager.py" && \
+    printf '%s\n' 'class Elastic:' '    pass' > "$PDIR/elastic/elastic.py"
 
 RUN pip install --no-cache-dir -e .
 
