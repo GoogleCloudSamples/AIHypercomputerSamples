@@ -16,91 +16,14 @@
 
 set -euo pipefail
 
-echo "[$(date)] ==================== Build started. ===================="
+echo "[$(date)] ==================== Build stage started ===================="
 
 echo "[$(date)] ==================== Creating Cloud Storage bucket... ===================="
 # [START hypercomputer_tpu_tune_qwen3_30b_rl_create_bucket]
-gcloud storage buckets create gs://$GCS_BUCKET --project=$PROJECT --location=$REGION || true
+gcloud storage buckets create "gs://${GCS_BUCKET}" --project="${PROJECT}" --location="${REGION}" 2>/dev/null || true
 # [END hypercomputer_tpu_tune_qwen3_30b_rl_create_bucket]
-echo "[$(date)] ==================== Cloud Storage bucket created. ===================="
+echo "[$(date)] ==================== Cloud Storage bucket ready. ===================="
 
-echo "[$(date)] ==================== Creating Artifact Registry repository... ===================="
-# [START hypercomputer_tpu_tune_qwen3_30b_rl_create_repo]
-gcloud artifacts repositories create maxtext-images \
-    --repository-format=docker \
-    --location=$REGION \
-    --project=$PROJECT \
-    --description="Docker repository for MaxText images in $REGION" || true
-# [END hypercomputer_tpu_tune_qwen3_30b_rl_create_repo]
-echo "[$(date)] ==================== Artifact Registry repository created. ===================="
+echo "[$(date)] Using pre-built official MaxText image: ${CLOUD_IMAGE_NAME}"
 
-echo "[$(date)] ==================== Submitting Cloud Build job... ===================="
-
-cat << 'EOF' > Dockerfile
-FROM python:3.12-slim-bullseye
-
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    curl \
-    gnupg \
-    git \
-    build-essential \
-    ca-certificates && \
-    mkdir -p /usr/share/keyrings && \
-    curl -fsSL https://packages.cloud.google.com/apt/doc/apt-key.gpg | gpg --dearmor -o /usr/share/keyrings/cloud.google.gpg && \
-    echo "deb [signed-by=/usr/share/keyrings/cloud.google.gpg] https://packages.cloud.google.com/apt cloud-sdk main" > /etc/apt/sources.list.d/google-cloud-sdk.list && \
-    apt-get update && apt-get install -y --no-install-recommends google-cloud-cli && \
-    apt-get clean && rm -rf /var/lib/apt/lists/*
-
-WORKDIR /workspace
-
-RUN git clone https://github.com/google/maxtext.git /workspace/maxtext
-WORKDIR /workspace/maxtext
-RUN pip install --no-cache-dir --upgrade pip setuptools wheel
-RUN if [ -f requirements.txt ]; then pip install --no-cache-dir -r requirements.txt || true; fi
-RUN pip install --no-cache-dir \
-    absl-py \
-    accelerate \
-    blobfile \
-    datasets \
-    einops \
-    evaluate \
-    flax \
-    google-cloud-storage \
-    hydra-core \
-    jax \
-    jaxlib \
-    ml_dtypes \
-    msgpack \
-    numpy \
-    omegaconf \
-    optax \
-    orbax-checkpoint \
-    pandas \
-    protobuf \
-    pyyaml \
-    safetensors \
-    scipy \
-    sentencepiece \
-    tensorboardX \
-    tensorstore \
-    tiktoken \
-    timm \
-    tokenizers \
-    torch \
-    transformers \
-    zstandard
-RUN pip install --no-cache-dir -e .
-
-ENV PYTHONPATH=/workspace/maxtext
-RUN python3 -c "import absl; import ml_dtypes; import omegaconf; import hydra; import safetensors; import transformers; import torch; import jax; import flax; import orbax.checkpoint; import maxtext.checkpoint_conversion.to_maxtext; print('=== Verification SUCCESS: All MaxText dependencies imported properly! ===')"
-EOF
-
-# [START hypercomputer_tpu_tune_qwen3_30b_rl_build_image_cb]
-gcloud builds submit . \
-    --project=$PROJECT \
-    --region=$REGION \
-    --tag="${CLOUD_IMAGE_NAME}"
-# [END hypercomputer_tpu_tune_qwen3_30b_rl_build_image_cb]
-echo "[$(date)] ==================== Cloud Build job completed. ===================="
-
-echo "[$(date)] ==================== Build finished. ===================="
+echo "[$(date)] ==================== Build stage finished. ===================="
