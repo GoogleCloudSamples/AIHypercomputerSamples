@@ -116,6 +116,12 @@ RUN PDIR=$(python3 -c "import sysconfig; print(sysconfig.get_paths()['purelib'])
     printf '%s\n' 'class Manager:' '    pass' > "$PDIR/elastic/manager.py" && \
     printf '%s\n' 'class Elastic:' '    pass' > "$PDIR/elastic/elastic.py"
 
+# Real package hierarchy stub for aqt
+RUN ADIR=$(python3 -c "import sysconfig; print(sysconfig.get_paths()['purelib'])")/aqt && \
+    mkdir -p "$ADIR/jax/v2" && \
+    touch "$ADIR/__init__.py" "$ADIR/jax/__init__.py" "$ADIR/jax/v2/__init__.py" && \
+    printf '%s\n' 'class DotGeneral:' '    pass' > "$ADIR/jax/v2/config.py"
+
 RUN pip install --no-cache-dir -e .
 
 ENV PYTHONPATH=/workspace/maxtext
