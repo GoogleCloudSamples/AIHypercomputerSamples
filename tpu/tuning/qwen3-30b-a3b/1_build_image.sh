@@ -91,17 +91,36 @@ RUN pip install --no-cache-dir \
     transformers \
     zstandard
 
-# Universal dynamic mock for pathwaysutils
+# Universal dynamic mock for pathwaysutils supporting PEP 604 type unions (|)
 RUN PDIR=$(python3 -c "import sysconfig; print(sysconfig.get_paths()['purelib'])")/pathwaysutils && \
-    mkdir -p "$PDIR" && \
-    echo "import sys, types" > "$PDIR/__init__.py" && \
-    echo "class _Mock(types.ModuleType):" >> "$PDIR/__init__.py" && \
-    echo "    def __getattr__(self, name):" >> "$PDIR/__init__.py" && \
-    echo "        m = _Mock(name)" >> "$PDIR/__init__.py" && \
-    echo "        sys.modules[self.__name__ + '.' + name] = m" >> "$PDIR/__init__.py" && \
-    echo "        return m" >> "$PDIR/__init__.py" && \
-    echo "sys.modules[__name__] = _Mock(__name__)" >> "$PDIR/__init__.py" && \
-    echo "sys.modules[__name__ + '.elastic'] = _Mock(__name__ + '.elastic')" >> "$PDIR/__init__.py"
+    mkdir -p "$PDIR/elastic" && \
+    printf '%s\n' \
+    'import sys, types' \
+    'class _Mock(type):' \
+    '    def __getattr__(cls, name):' \
+    '        sub = _Mock(name, (), {})' \
+    '        setattr(cls, name, sub)' \
+    '        return sub' \
+    '    def __or__(cls, other):' \
+    '        return cls' \
+    '    def __ror__(cls, other):' \
+    '        return cls' \
+    '    def __getitem__(cls, item):' \
+    '        return cls' \
+    'class _Module(types.ModuleType):' \
+    '    def __getattr__(self, name):' \
+    '        m = _Mock(name, (), {})' \
+    '        setattr(self, name, m)' \
+    '        return m' \
+    'mock_pw = _Module("pathwaysutils")' \
+    'mock_el = _Module("pathwaysutils.elastic")' \
+    'mock_pw.elastic = mock_el' \
+    'sys.modules["pathwaysutils"] = mock_pw' \
+    'sys.modules["pathwaysutils.elastic"] = mock_el' \
+    'sys.modules["pathwaysutils.elastic.manager"] = mock_el' \
+    'sys.modules["pathwaysutils.elastic.elastic"] = mock_el' \
+    > "$PDIR/__init__.py" && \
+    touch "$PDIR/elastic/__init__.py"
 
 RUN pip install --no-cache-dir -e .
 
@@ -115,6 +134,7 @@ EOF
 gcloud builds submit . \
     --project=$PROJECT \
     --region=$REGION \
+    --machine-type=e2-highcpu-32 \
     --tag="${CLOUD_IMAGE_NAME}"
 # [END hypercomputer_tpu_tune_qwen3_30b_rl_build_image_cb]
 echo "[$(date)] ==================== Cloud Build job completed. ===================="
