@@ -92,7 +92,12 @@ RUN pip install --no-cache-dir \
     zstandard
 
 # Mock pathwaysutils package to satisfy MaxText CPU imports
-RUN python3 -c "import os, sysconfig; p = os.path.join(sysconfig.get_paths()['purelib'], 'pathwaysutils'); os.makedirs(p, exist_ok=True); open(os.path.join(p, '__init__.py'), 'w').close()"
+RUN python3 -c "import os, sysconfig; \
+p = os.path.join(sysconfig.get_paths()['purelib'], 'pathwaysutils', 'elastic'); \
+os.makedirs(p, exist_ok=True); \
+open(os.path.join(sysconfig.get_paths()['purelib'], 'pathwaysutils', '__init__.py'), 'w').close(); \
+open(os.path.join(p, '__init__.py'), 'w').close(); \
+open(os.path.join(p, 'elastic.py'), 'w').close()"
 
 RUN pip install --no-cache-dir -e .
 
