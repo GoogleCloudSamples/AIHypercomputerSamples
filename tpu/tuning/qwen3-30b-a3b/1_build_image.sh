@@ -61,6 +61,7 @@ RUN if [ -f requirements.txt ]; then pip install --no-cache-dir -r requirements.
 RUN pip install --no-cache-dir \
     absl-py \
     accelerate \
+    aqt \
     blobfile \
     chex \
     cloudpathlib \
@@ -71,6 +72,7 @@ RUN pip install --no-cache-dir \
     evaluate \
     flax \
     google-cloud-storage \
+    google-qwix \
     grain \
     hydra-core \
     jax \
