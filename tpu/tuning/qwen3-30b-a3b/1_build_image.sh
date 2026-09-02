@@ -62,9 +62,11 @@ RUN pip install --no-cache-dir \
     absl-py \
     accelerate \
     blobfile \
+    chex \
     cloudpathlib \
     crcmod \
     datasets \
+    drjax \
     einops \
     evaluate \
     flax \
@@ -81,16 +83,22 @@ RUN pip install --no-cache-dir \
     optax \
     orbax-checkpoint \
     pandas \
+    peft \
     protobuf \
     pydantic \
     pydantic-core \
     pydantic-settings \
     pyyaml \
     safetensors \
+    scikit-learn \
     scipy \
     sentencepiece \
+    seqio \
     tensorboardX \
+    tensorflow-cpu \
+    tensorflow-datasets \
     tensorstore \
+    tf-keras \
     tiktoken \
     timm \
     tokenizers \
