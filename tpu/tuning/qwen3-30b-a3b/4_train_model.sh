@@ -43,7 +43,6 @@ xpk workload create-pathways \
       base_output_directory=gs://${GCS_BUCKET}/${MODEL_NAME}/trained/ \
       model_name=${MODEL_NAME} \
       load_parameters_path=gs://${GCS_BUCKET}/${MODEL_NAME}/max-text-format/0/items/ \
-      hf_access_token=${HF_TOKEN} \
       num_batches=50 \
       per_device_batch_size=1 \
       batch_size=4 \
