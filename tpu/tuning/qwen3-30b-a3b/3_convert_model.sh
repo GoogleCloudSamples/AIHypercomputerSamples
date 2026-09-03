@@ -31,6 +31,9 @@ echo "Cleaning up any residual qwen-hf-to-mt workload..."
 xpk workload delete --workload "qwen-hf-to-mt" --cluster "${CLUSTER_NAME}" --project="${PROJECT}" --zone="${ZONE}" 2>/dev/null || true
 kubectl delete jobset qwen-hf-to-mt 2>/dev/null || true
 
+echo "Cleaning up any existing checkpoint files in GCS..."
+gcloud storage rm -r "gs://${GCS_BUCKET}/${MODEL_NAME}/max-text-format/*" 2>/dev/null || true
+
 echo "[$(date)] ==================== Submitting Model Conversion Workload... ===================="
 # [START hypercomputer_tpu_tune_qwen3_30b_rl_convert_model]
 xpk workload create \
@@ -42,12 +45,12 @@ xpk workload create \
   --project=${PROJECT} \
   --zone=${ZONE} \
   --command "[ \"\$JOB_COMPLETION_INDEX\" != \"0\" ] || \
+  HF_TOKEN=${HF_TOKEN} \
   python3 -m maxtext.checkpoint_conversion.to_maxtext \
   model_name=${MODEL_NAME} \
-  hf_access_token=${HF_TOKEN} \
   --hf_model_path='Qwen/Qwen3-30B-A3B-Instruct-2507' \
   base_output_directory=gs://${GCS_BUCKET}/${MODEL_NAME}/max-text-format/ \
-  scan_layers=True \
+  scan_layers=False \
   use_multimodal=False \
   skip_jax_distributed_system=true \
   checkpoint_storage_use_zarr3=0 \
