@@ -62,7 +62,7 @@ while [ $attempt -le $MAX_RETRIES ]; do
 
       echo "Cleaning up resources from the failed attempt..."
       xpk cluster delete --cluster "${CLUSTER_NAME}" --project "${PROJECT}" --zone "${ZONE}" --force 2>/dev/null || \
-        gcloud container clusters delete "${CLUSTER_NAME}" --location="${ZONE}" --project="${PROJECT}" --quiet 2>/dev/null || true
+        gcloud container clusters delete "${CLUSTER_NAME}" --location="${REGION}" --project="${PROJECT}" --quiet 2>/dev/null || true
 
       echo "Waiting 60 seconds for TPU reservation release..."
       sleep 60
@@ -79,7 +79,7 @@ while [ $attempt -le $MAX_RETRIES ]; do
 done
 
 gcloud container clusters get-credentials "$CLUSTER_NAME" \
-  --location="$ZONE" \
+  --location="$REGION" \
   --project "$PROJECT"
 # [END hypercomputer_tpu_tune_qwen3_30b_rl_create_cluster]
 echo "[$(date)] ==================== Cluster created. ===================="
