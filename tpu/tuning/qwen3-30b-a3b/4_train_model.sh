@@ -57,7 +57,7 @@ xpk workload create-pathways \
       hbm_utilization_vllm=0.2 \
       async_scheduling=False \
       allow_split_physical_axes=true \
-      debug.rl=True \
+      debug=True \
       vllm_hf_overrides='{architectures: [\"MaxTextForCausalLM\"]}' \
       vllm_additional_config=\"{'maxtext_config': {'model_name': '${MODEL_NAME}', 'allow_split_physical_axes': 'true', weight_dtype: bfloat16}}\""
 # [END hypercomputer_tpu_tune_qwen3_30b_rl_train]
