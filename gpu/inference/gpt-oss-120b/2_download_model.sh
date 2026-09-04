@@ -31,12 +31,36 @@ echo "[$(date)] ==================== Submitting the model download job... ======
 envsubst '$GCS_BUCKET' < gpt-download-job.yaml | kubectl apply -f -
 # [END hypercomputer_gpu_infer_gptoss120b_download_job]
 
-echo "[$(date)] ==================== Waiting for the model download to complete... ==================="
-# [START hypercomputer_gpu_infer_gptoss120b_wait_job_completion]
-kubectl wait \
+if [[ -z "${DOWNLOAD_TIMEOUT}" || "${DOWNLOAD_TIMEOUT}" == "YOUR_DOWNLOAD_TIMEOUT" ]]; then
+  DOWNLOAD_TIMEOUT="7200s"
+fi
+
+echo "[$(date)] ==================== Waiting for the model download to complete (up to ${DOWNLOAD_TIMEOUT})... ==================="
+if ! kubectl wait \
     --for=condition=Complete \
-    --timeout=7200s job/gpt-download-job
-# [END hypercomputer_gpu_infer_gptoss120b_wait_job_completion]
+    --timeout="${DOWNLOAD_TIMEOUT}" job/gpt-download-job; then
+    echo "Error: Model download job failed or timed out after ${DOWNLOAD_TIMEOUT}."
+    
+    echo "================= [DIAGNOSTICS] Job Status ================="
+    kubectl get jobs gpt-download-job -o yaml || true
+
+    echo "================= [DIAGNOSTICS] Job Logs ================="
+    kubectl logs -l job-name=gpt-download-job --tail=50 || true
+
+    echo "================= [DIAGNOSTICS] Pod Status ================="
+    kubectl get pods -l job-name=gpt-download-job -o wide || true
+    POD_NAMES=$(kubectl get pods -l job-name=gpt-download-job -o jsonpath='{.items[*].metadata.name}' || true)
+    for pod in $POD_NAMES; do
+        echo "============= [DIAGNOSTICS] Describe pod $pod ============="
+        kubectl describe pod "$pod" || true
+        echo "============= [DIAGNOSTICS] Logs for pod $pod (Tail 100) ============="
+        kubectl logs "$pod" --tail=100 || true
+        echo "[DIAGNOSTICS] Previous Container Logs for pod $pod (if restarted) ============="
+        kubectl logs "$pod" --previous --tail=100 2>/dev/null || true
+    done
+    exit 1
+fi
+echo "Job gpt-download-job finished successfully."
 
 echo "[$(date)] ==================== Deleting the model download job... ==================="
 # [START hypercomputer_gpu_infer_gptoss120b_delete_job]
