@@ -50,7 +50,7 @@ while [ $attempt -le $MAX_RETRIES ]; do
     --custom-cluster-arguments="--enable-ip-alias" \
     --custom-nodepool-arguments="--disk-size=500" \
     --reservation="${RESERVATION}" \
-    --default-pool-cpu-machine-type=n2-standard-16; then
+    --default-pool-cpu-machine-type=e2-standard-16; then
       echo "Cluster created successfully."
       break
   else
