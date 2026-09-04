@@ -32,7 +32,7 @@ xpk workload delete --workload "qwen-hf-to-mt" --cluster "${CLUSTER_NAME}" --pro
 kubectl delete jobset qwen-hf-to-mt 2>/dev/null || true
 
 echo "Cleaning up any existing checkpoint files in GCS..."
-gcloud storage rm -r "gs://${GCS_BUCKET}/${MODEL_NAME}/max-text-format/*" 2>/dev/null || true
+gcloud storage rm -r "gs://${GCS_BUCKET}/${MODEL_NAME}/max-text-format/" 2>/dev/null || true
 
 echo "[$(date)] ==================== Submitting Model Conversion Workload... ===================="
 # [START hypercomputer_tpu_tune_qwen3_30b_rl_convert_model]
