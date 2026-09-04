@@ -44,7 +44,11 @@ xpk workload create-pathways \
       model_name=${MODEL_NAME} \
       load_parameters_path=gs://${GCS_BUCKET}/${MODEL_NAME}/max-text-format/0/items/ \
       scan_layers=False \
+      dtype='bfloat16' \
+      weight_dtype='bfloat16' \
       use_chat_template=True \
+      remat_policy='minimal' \
+      train_micro_batch_size=1 \
       num_batches=50 \
       per_device_batch_size=1 \
       batch_size=4 \
@@ -55,12 +59,12 @@ xpk workload create-pathways \
       tokenizer_path='Qwen/Qwen3-30B-A3B-Instruct-2507' \
       ici_tensor_parallelism=4 \
       ici_expert_parallelism=4 \
-      hbm_utilization_vllm=0.2 \
+      hbm_utilization_vllm=0.15 \
       async_scheduling=False \
       allow_split_physical_axes=true \
       debug=True \
       vllm_hf_overrides='{architectures: [\"MaxTextForCausalLM\"]}' \
-      vllm_additional_config=\"{'maxtext_config': {'model_name': '${MODEL_NAME}', 'allow_split_physical_axes': 'true', weight_dtype: bfloat16}, 'trust_remote_code': true}\""
+      vllm_additional_config=\"{'maxtext_config': {'model_name': '${MODEL_NAME}', 'allow_split_physical_axes': 'true', 'weight_dtype': 'bfloat16'}, 'trust_remote_code': true}\""
 # [END hypercomputer_tpu_tune_qwen3_30b_rl_train]
 echo "[$(date)] ==================== Training Workload submitted. ===================="
 
