@@ -44,7 +44,7 @@ xpk workload create-pathways \
       model_name=${MODEL_NAME} \
       load_parameters_path=gs://${GCS_BUCKET}/${MODEL_NAME}/max-text-format/0/items/ \
       scan_layers=False \
-      apply_chat_template=True \
+      use_chat_template=True \
       num_batches=50 \
       per_device_batch_size=1 \
       batch_size=4 \
