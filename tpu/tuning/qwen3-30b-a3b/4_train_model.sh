@@ -59,7 +59,7 @@ xpk workload create-pathways \
       tokenizer_path='Qwen/Qwen3-30B-A3B-Instruct-2507' \
       ici_tensor_parallelism=4 \
       ici_expert_parallelism=4 \
-      hbm_utilization_vllm=0.15 \
+      hbm_utilization_vllm=0.25 \
       async_scheduling=False \
       allow_split_physical_axes=true \
       debug=True \
