@@ -16,31 +16,11 @@
 
 set -euo pipefail
 
-echo "[$(date)] ==================== Build started. ===================="
-
-echo "[$(date)] ==================== Creating Cloud Storage bucket... ===================="
+echo "[$(date)] ==================== Preparing Storage Bucket... ===================="
 # [START hypercomputer_tpu_tune_qwen3_30b_rl_create_bucket]
 gcloud storage buckets create gs://$GCS_BUCKET --project=$PROJECT --location=$REGION || true
 # [END hypercomputer_tpu_tune_qwen3_30b_rl_create_bucket]
-echo "[$(date)] ==================== Cloud Storage bucket created. ===================="
+echo "[$(date)] ==================== Cloud Storage bucket ready. ===================="
 
-echo "[$(date)] ==================== Creating Artifact Registry repository... ===================="
-# [START hypercomputer_tpu_tune_qwen3_30b_rl_create_repo]
-gcloud artifacts repositories create maxtext-images \
-    --repository-format=docker \
-    --location=$REGION \
-    --project=$PROJECT \
-    --description="Docker repository for MaxText images in $REGION" || true
-# [END hypercomputer_tpu_tune_qwen3_30b_rl_create_repo]
-echo "[$(date)] ==================== Artifact Registry repository created. ===================="
-
-echo "[$(date)] ==================== Submitting Cloud Build job... ===================="
-# [START hypercomputer_tpu_tune_qwen3_30b_rl_build_image_cb]
-gcloud builds submit . \
-    --project=$PROJECT \
-    --region=$REGION \
-    --substitutions=_CLOUD_IMAGE_NAME="${CLOUD_IMAGE_NAME}"
-# [END hypercomputer_tpu_tune_qwen3_30b_rl_build_image_cb]
-echo "[$(date)] ==================== Cloud Build job completed. ===================="
-
-echo "[$(date)] ==================== Build finished. ===================="
+echo "[$(date)] Using official pre-built MaxText image: ${CLOUD_IMAGE_NAME}"
+echo "[$(date)] ==================== Build stage finished. ===================="
