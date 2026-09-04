@@ -51,6 +51,7 @@ xpk workload create \
   --hf_model_path='Qwen/Qwen3-30B-A3B-Instruct-2507' \
   base_output_directory=gs://${GCS_BUCKET}/${MODEL_NAME}/max-text-format/ \
   scan_layers=False \
+  weight_dtype=bfloat16 \
   use_multimodal=False \
   skip_jax_distributed_system=true \
   checkpoint_storage_use_zarr3=0 \

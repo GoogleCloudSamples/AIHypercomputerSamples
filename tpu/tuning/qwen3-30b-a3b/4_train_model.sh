@@ -44,8 +44,8 @@ xpk workload create-pathways \
       model_name=${MODEL_NAME} \
       load_parameters_path=gs://${GCS_BUCKET}/${MODEL_NAME}/max-text-format/0/items/ \
       scan_layers=False \
-      dtype='bfloat16' \
-      weight_dtype='bfloat16' \
+      dtype=bfloat16 \
+      weight_dtype=bfloat16 \
       use_chat_template=True \
       remat_policy='minimal' \
       train_micro_batch_size=1 \
