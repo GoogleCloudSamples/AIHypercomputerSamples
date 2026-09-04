@@ -40,7 +40,7 @@ until [ -n "$(kubectl get pods -l "${WORKER_LABELS}" -n "${NAMESPACE}" --no-head
   ELAPSED=$((ELAPSED + 5))
 done
 
-if [[ -z "${WORKER_TIMEOUT}" ]] || [[ "${WORKER_TIMEOUT}" == "YOUR_WORKER_TIMEOUT" ]]; then
+if [[ -z "${WORKER_TIMEOUT:-}" ]] || [[ "${WORKER_TIMEOUT:-}" == "YOUR_WORKER_TIMEOUT" ]]; then
   WORKER_TIMEOUT="1320s"
   echo "Debug: WORKER_TIMEOUT is not set, using default value: ${WORKER_TIMEOUT}"
 fi
