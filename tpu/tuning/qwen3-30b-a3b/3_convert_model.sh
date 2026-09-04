@@ -48,7 +48,7 @@ xpk workload create \
   HF_TOKEN=${HF_TOKEN} \
   python3 -m maxtext.checkpoint_conversion.to_maxtext \
   model_name=${MODEL_NAME} \
-  --hf_model_path='Qwen/Qwen3-30B-A3B-Instruct-2507' \
+  --hf_model_path=Qwen/Qwen3-30B-A3B-Instruct-2507 \
   base_output_directory=gs://${GCS_BUCKET}/${MODEL_NAME}/max-text-format/ \
   scan_layers=False \
   weight_dtype=bfloat16 \
