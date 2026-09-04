@@ -92,7 +92,7 @@ if [ -n "$POD_NAME" ]; then
   echo "Checking execution result of main training container (jax-tpu)..."
   CONTAINER_EXIT_CODE=""
   for i in {1..30}; do
-    # Sprawdź stan terminated w bieżącym stanie lub poprzednim (jeśli K8s zrestartował kontener)
+    # Check terminated status in current state or previous state (if K8s restarted container)
     CONTAINER_EXIT_CODE=$(kubectl get pod "$POD_NAME" -o jsonpath='{.status.containerStatuses[?(@.name=="jax-tpu")].state.terminated.exitCode}' 2>/dev/null || echo "")
     if [ -z "$CONTAINER_EXIT_CODE" ]; then
       CONTAINER_EXIT_CODE=$(kubectl get pod "$POD_NAME" -o jsonpath='{.status.containerStatuses[?(@.name=="jax-tpu")].lastState.terminated.exitCode}' 2>/dev/null || echo "")

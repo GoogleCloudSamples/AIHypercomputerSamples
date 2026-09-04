@@ -81,5 +81,14 @@ done
 gcloud container clusters get-credentials "$CLUSTER_NAME" \
   --location="$REGION" \
   --project "$PROJECT"
+
+# Error protection before "failed calling webhook mjobset.kb.io: No agent available"
+echo "Waiting for JobSet controller and webhook service to become ready..."
+kubectl wait --namespace jobset-system \
+  --for=condition=ready pod \
+  --selector=control-plane=jobset-controller-manager \
+  --timeout=180s 2>/dev/null || true
+
+sleep 20
 # [END hypercomputer_tpu_tune_qwen3_30b_rl_create_cluster]
 echo "[$(date)] ==================== Cluster created. ===================="
