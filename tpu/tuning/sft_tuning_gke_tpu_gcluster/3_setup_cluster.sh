@@ -23,14 +23,32 @@ echo "[$(date)] ==================== Configuring blueprint... ==================
 # Grant the GKE Node Pool Service Account storage.admin access to resolve the GCS bucket not found error
 sed -i "s/- storage.objectViewer/- storage.admin/" examples/gke-tpu-v6e/gke-tpu-v6e-advanced.yaml
 
+# Ensure custom IAM role gke.gcsfuse.profileUser exists for GCS Fuse Storage Profiles
+if ! gcloud iam roles describe gke.gcsfuse.profileUser --project="${PROJECT}" >/dev/null 2>&1; then
+  echo "Creating custom IAM role gke.gcsfuse.profileUser in project ${PROJECT}..."
+  gcloud iam roles create gke.gcsfuse.profileUser \
+    --project="${PROJECT}" \
+    --title="GKE GCSFuse Profile User" \
+    --description="Allows scanning GCS buckets for objects, retrieving bucket metadata, and creating Anywhere Caches." \
+    --permissions="storage.objects.list,storage.buckets.get,storage.anywhereCaches.create,storage.anywhereCaches.get,storage.anywhereCaches.list,storage.anywhereCaches.update"
+fi
+
 echo "[$(date)] ==================== Deploying cluster with gcluster... ===================="
 ./gcluster deploy examples/gke-tpu-v6e/gke-tpu-v6e-advanced.yaml \
     --vars "project_id=${PROJECT},deployment_name=${CLUSTER_NAME},region=${REGION},zone=${ZONE},num_slices=1,tpu_topology=4x8,authorized_cidr=0.0.0.0/0,reservation=${RESERVATION:-}" \
     --download-dependencies \
+    -l IGNORE \
     --auto-approve -w
+
+# Fetch GKE cluster credentials for kubectl
+gcloud container clusters get-credentials ${CLUSTER_NAME} --location=${REGION} --project=${PROJECT}
 
 # Configure docker for pulling images
 gcloud auth configure-docker gcr.io --quiet
 gcloud auth configure-docker ${REGION}-docker.pkg.dev --quiet
+
+# Grant storage.admin to GKE service accounts
+gcloud projects add-iam-policy-binding "${PROJECT}" --member="serviceAccount:${CLUSTER_NAME}-gke-wl-sa@${PROJECT}.iam.gserviceaccount.com" --role="roles/storage.admin" --quiet || true
+gcloud projects add-iam-policy-binding "${PROJECT}" --member="serviceAccount:${CLUSTER_NAME}-gke-np-sa@${PROJECT}.iam.gserviceaccount.com" --role="roles/storage.admin" --quiet || true
 
 echo "[$(date)] ==================== Cluster deployment completed. ===================="

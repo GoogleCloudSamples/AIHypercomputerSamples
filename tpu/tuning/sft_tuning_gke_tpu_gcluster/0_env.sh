@@ -14,17 +14,18 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# [START hypercomputer_tpu_sft_gcluster_env]
+# [START hypercomputer_tpu_sft_gcluster_env_v2]
 export PROJECT="YOUR_PROJECT_ID"
 export REGION="YOUR_REGION"
 export ZONE="YOUR_ZONE"
 export CLUSTER_NAME="gke-tpu-v6e"
 export REPOSITORY_NAME="YOUR_REPOSITORY_NAME"
-export CLOUD_IMAGE_NAME="${REGION}-docker.pkg.dev/${PROJECT}/${REPOSITORY_NAME}/maxtext_base:latest"
+export GCS_BUCKET="YOUR_BUCKET_NAME"
+export MAXTEXT_IMAGE="us-docker.pkg.dev/cloud-tpu-images/maxtext-images/tpu_post_training:0.2.4"
+export CLOUD_IMAGE_NAME="${MAXTEXT_IMAGE}"  # Backward compatibility alias
 export TPU_TYPE="v6e-32"
 export RESERVATION="YOUR_RESERVATION_NAME"
 export MODEL_NAME="gemma4-31b"
 export HF_TOKEN="YOUR_HF_TOKEN"
-export GCS_BUCKET="YOUR_BUCKET_NAME"
-# [END hypercomputer_tpu_sft_gcluster_env]
+# [END hypercomputer_tpu_sft_gcluster_env_v2]
 
