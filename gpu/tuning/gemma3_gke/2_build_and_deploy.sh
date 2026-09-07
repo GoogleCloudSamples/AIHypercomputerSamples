@@ -24,7 +24,7 @@ echo "[$(date)] ==================== Build finished. ===================="
 
 # 2. Set image name for the job template
 # [START hypercomputer_gpu_tune_gemma3_gke_set_image_url]
-export IMAGE_URL="${ARTIFACT_REPO_LOCATION}-docker.pkg.dev/${PROJECT_ID}/gemma/finetune-gemma-gpu:1.0.0"
+export IMAGE_URL="${ARTIFACT_REPO_LOCATION}-docker.pkg.dev/${PROJECT_ID}/gemma/finetune-gemma-gpu:2.0.0"
 # [END hypercomputer_gpu_tune_gemma3_gke_set_image_url]
 
 # 3. Deploy Job
@@ -32,4 +32,3 @@ export IMAGE_URL="${ARTIFACT_REPO_LOCATION}-docker.pkg.dev/${PROJECT_ID}/gemma/f
 envsubst < finetune.yaml | kubectl apply -f -
 # [END hypercomputer_gpu_tune_gemma3_gke_deploy_job]
 echo "[$(date)] ==================== Job deployed. ===================="
-
