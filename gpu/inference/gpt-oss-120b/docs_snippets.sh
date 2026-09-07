@@ -12,6 +12,12 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
+# [START hypercomputer_gpu_infer_gptoss120b_wait_job_completion]
+kubectl wait \
+    --for=condition=Complete \
+    --timeout=7200s job/gpt-download-job
+# [END hypercomputer_gpu_infer_gptoss120b_wait_job_completion]
+
 # [START hypercomputer_gpu_infer_gptoss120b_port_forward]
 kubectl port-forward service/oss-service 8000:8000
 # [END hypercomputer_gpu_infer_gptoss120b_port_forward]
