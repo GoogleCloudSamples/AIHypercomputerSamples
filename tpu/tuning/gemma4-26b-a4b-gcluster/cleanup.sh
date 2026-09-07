@@ -68,24 +68,24 @@ if [ -n "${CLUSTER_HASH}" ]; then
 fi
 
 # Fallback: clean up dangling router, NAT, subnet, and VPC network if left behind
-if gcloud compute routers describe "${CLUSTER_NAME}-net-0-router" --region=${REGION} --project=${PROJECT} &>/dev/null; then
+if gcloud compute routers describe "${CLUSTER_NAME}-net-0-router" --region="${REGION}" --project="${PROJECT}" &>/dev/null; then
   echo "Cleaning up dangling router and NAT..."
-  gcloud compute routers nats delete "cloud-nat-${REGION}" --router="${CLUSTER_NAME}-net-0-router" --region=${REGION} --project=${PROJECT} --quiet 2>/dev/null || true
-  gcloud compute routers delete "${CLUSTER_NAME}-net-0-router" --region=${REGION} --project=${PROJECT} --quiet 2>/dev/null || true
+  gcloud compute routers nats delete "cloud-nat-${REGION}" --router="${CLUSTER_NAME}-net-0-router" --region="${REGION}" --project="${PROJECT}" --quiet 2>/dev/null || true
+  gcloud compute routers delete "${CLUSTER_NAME}-net-0-router" --region="${REGION}" --project="${PROJECT}" --quiet 2>/dev/null || true
 fi
 
-if gcloud compute networks subnets describe "${CLUSTER_NAME}-sub-0" --region=${REGION} --project=${PROJECT} &>/dev/null; then
+if gcloud compute networks subnets describe "${CLUSTER_NAME}-sub-0" --region="${REGION}" --project="${PROJECT}" &>/dev/null; then
   echo "Cleaning up dangling subnet..."
-  gcloud compute networks subnets delete "${CLUSTER_NAME}-sub-0" --region=${REGION} --project=${PROJECT} --quiet 2>/dev/null || true
+  gcloud compute networks subnets delete "${CLUSTER_NAME}-sub-0" --region="${REGION}" --project="${PROJECT}" --quiet 2>/dev/null || true
 fi
 
-if gcloud compute networks describe "${CLUSTER_NAME}-net-0" --project=${PROJECT} &>/dev/null; then
+if gcloud compute networks describe "${CLUSTER_NAME}-net-0" --project="${PROJECT}" &>/dev/null; then
   echo "Cleaning up dangling firewall rules and VPC network..."
-  fw_rules=$(gcloud compute firewall-rules list --project=${PROJECT} --filter="network:${CLUSTER_NAME}-net-0" --format="value(name)" 2>/dev/null || true)
+  fw_rules=$(gcloud compute firewall-rules list --project="${PROJECT}" --filter="network:${CLUSTER_NAME}-net-0" --format="value(name)" 2>/dev/null || true)
   if [ -n "$fw_rules" ]; then
-    echo "$fw_rules" | xargs -r gcloud compute firewall-rules delete --project=${PROJECT} --quiet 2>/dev/null || true
+    echo "$fw_rules" | xargs -r gcloud compute firewall-rules delete --project="${PROJECT}" --quiet 2>/dev/null || true
   fi
-  gcloud compute networks delete "${CLUSTER_NAME}-net-0" --project=${PROJECT} --quiet 2>/dev/null || true
+  gcloud compute networks delete "${CLUSTER_NAME}-net-0" --project="${PROJECT}" --quiet 2>/dev/null || true
 fi
 
 echo "[$(date)] ==================== Deleting storage and artifacts... ===================="
