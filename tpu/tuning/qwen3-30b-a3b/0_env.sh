@@ -24,7 +24,7 @@ export CLOUD_IMAGE_NAME="us-docker.pkg.dev/cloud-tpu-images/maxtext-images/tpu_p
 export TPU_TYPE="v6e-64"
 export CLUSTER_NODEPOOL_COUNT=1
 export PW_CPU_MACHINE_TYPE="n2-standard-64"
-export RESERVATION="YOUR_RESERVATION_NAME"
+export RESERVATION=""
 export MODEL_NAME="qwen3-30b-a3b"
 export HF_TOKEN="YOUR_HF_TOKEN"
 # [END hypercomputer_tpu_tune_qwen3_30b_rl_env]
