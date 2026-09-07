@@ -36,23 +36,46 @@ if [ ${#CLUSTERS_TO_DELETE[@]} -gt 0 ]; then
   for TARGET_CLUSTER in "${CLUSTERS_TO_DELETE[@]}"; do
     echo "Processing teardown for cluster: ${TARGET_CLUSTER}..."
 
-    # 1a. Delete active workloads and JobSets
+    # 1a. Delete active workloads and JobSets if cluster endpoint is responsive
     xpk workload delete --workload "qwen-hf-to-mt" --cluster "${TARGET_CLUSTER}" --project="${PROJECT}" --zone="${ZONE}" 2>/dev/null || true
     xpk workload delete --workload "qwen-training" --cluster "${TARGET_CLUSTER}" --project="${PROJECT}" --zone="${ZONE}" 2>/dev/null || true
     xpk workload delete --workload "qwen-mt-to-hf" --cluster "${TARGET_CLUSTER}" --project="${PROJECT}" --zone="${ZONE}" 2>/dev/null || true
 
-    # 1b. Delete nodepools explicitly first to unblock TPU VMs
-    gcloud container node-pools list --cluster="${TARGET_CLUSTER}" --location="${REGION}" --project="${PROJECT}" --format="value(name)" 2>/dev/null | while read -r np; do
-      if [ -n "$np" ]; then
-        echo "  -> Deleting nodepool: ${np}..."
-        gcloud container node-pools delete "${np}" --cluster="${TARGET_CLUSTER}" --location="${REGION}" --project="${PROJECT}" --quiet 2>/dev/null || true
+    # 1b. Wait for any running cluster operations to finish (prevents error 400/RESOURCE_IN_USE)
+    echo "Checking for in-flight operations on ${TARGET_CLUSTER}..."
+    RUNNING_OPS=$(gcloud container operations list --project="${PROJECT}" --location="${REGION}" --filter="targetLink~'${TARGET_CLUSTER}' AND status=RUNNING" --format="value(name)" 2>/dev/null || true)
+    for op in $RUNNING_OPS; do
+      if [ -n "$op" ]; then
+        echo "Waiting for operation $op to finish before deletion..."
+        gcloud container operations wait "$op" --project="${PROJECT}" --location="${REGION}" --timeout=120 2>/dev/null || true
       fi
     done
 
-    # 1c. Synchronous deletion of GKE cluster (NO --async)
-    echo "Deleting GKE cluster ${TARGET_CLUSTER} synchronously..."
-    xpk cluster delete --cluster "${TARGET_CLUSTER}" --project "${PROJECT}" --zone "${ZONE}" --force 2>/dev/null || \
-      gcloud container clusters delete "${TARGET_CLUSTER}" --location="${REGION}" --project="${PROJECT}" --quiet 2>/dev/null || true
+    # 1c. Robust deletion with retry loop (tries xpk, falls back to direct gcloud cluster delete)
+    echo "Deleting GKE cluster ${TARGET_CLUSTER}..."
+    DELETE_SUCCESS=false
+    for attempt in {1..5}; do
+      echo "Deletion attempt $attempt/5 for ${TARGET_CLUSTER}..."
+
+      # Xpk cluster delete
+      if xpk cluster delete --cluster "${TARGET_CLUSTER}" --project "${PROJECT}" --zone "${ZONE}" --force 2>/dev/null; then
+        DELETE_SUCCESS=true
+        break
+      fi
+
+      # Fallback to direct synchronous gcloud delete
+      if gcloud container clusters delete "${TARGET_CLUSTER}" --location="${REGION}" --project="${PROJECT}" --quiet 2>/dev/null; then
+        DELETE_SUCCESS=true
+        break
+      fi
+
+      echo "Cluster delete rejected (likely pending reconciliation). Waiting 20s before retry..."
+      sleep 20
+    done
+
+    if [ "$DELETE_SUCCESS" = false ]; then
+      echo "Warning: Direct cluster deletion timed out; continuing with resource sweep..."
+    fi
   done
 else
   echo "No active GKE clusters found matching ${BASE_CLUSTER_NAME}."
@@ -63,11 +86,22 @@ echo "Terminating residual VM instances attached to ${BASE_CLUSTER_NAME}..."
 gcloud compute instances list \
   --project="${PROJECT}" \
   --zones="${ZONE}" \
-  --filter="(labels.goog-k8s-cluster-name~'^${BASE_CLUSTER_NAME}' OR name~'^gke-${BASE_CLUSTER_NAME}') AND zone:${ZONE}" \
-  --format="value(name,zone)" 2>/dev/null | while read -r name zone; do
-    if [ -n "$name" ]; then
+  --filter="(labels.goog-k8s-cluster-name~'^${BASE_CLUSTER_NAME}' OR name~'^gke-${BASE_CLUSTER_NAME}')" \
+  --format="value(name,zone.basename())" 2>/dev/null | while read -r name zone; do
+    if [ -n "$name" ] && [ -n "$zone" ]; then
       echo " -> Deleting orphan instance: $name ($zone)"
       gcloud compute instances delete "$name" --zone="$zone" --project="${PROJECT}" --quiet 2>/dev/null || true
+    fi
+done
+
+# 2b. Clean up any residual managed instance groups left behind by failed node-pools
+gcloud compute instance-groups managed list \
+  --project="${PROJECT}" \
+  --filter="name~'${BASE_CLUSTER_NAME}'" \
+  --format="value(name,zone.basename())" 2>/dev/null | while read -r igm_name igm_zone; do
+    if [ -n "$igm_name" ] && [ -n "$igm_zone" ]; then
+      echo " -> Deleting residual IGM: $igm_name in $igm_zone"
+      gcloud compute instance-groups managed delete "$igm_name" --zone="$igm_zone" --project="${PROJECT}" --quiet 2>/dev/null || true
     fi
 done
 
@@ -88,10 +122,11 @@ if [ -n "$RUN_HASH" ]; then
   # 3b. Delete subnetworks
   gcloud compute networks subnets list \
     --project="${PROJECT}" \
-    --regions="${REGION}" \
     --filter="name~'gke-anp.*${RUN_HASH}'" \
-    --format="value(name)" 2>/dev/null | while read -r subnet; do
-      [ -n "$subnet" ] && gcloud compute networks subnets delete "$subnet" --region="${REGION}" --project="${PROJECT}" --quiet 2>/dev/null || true
+    --format="value(name,region.basename())" 2>/dev/null | while read -r subnet sub_region; do
+      if [ -n "$subnet" ]; then
+        gcloud compute networks subnets delete "$subnet" --region="${sub_region:-$REGION}" --project="${PROJECT}" --quiet 2>/dev/null || true
+      fi
   done
 
   # 3c. Delete VPC networks
@@ -106,7 +141,7 @@ fi
 # 4. Wait until TPU reservation is confirmed 100% free
 if [ -n "${RESERVATION:-}" ]; then
   echo "Verifying TPU reservation ${RESERVATION} release..."
-  for i in {1..12}; do
+  for i in {1..18}; do
     IN_USE=$(gcloud beta compute reservations describe "${RESERVATION}" \
       --project="${PROJECT}" \
       --zone="${ZONE}" \
@@ -116,15 +151,16 @@ if [ -n "${RESERVATION:-}" ]; then
       echo "TPU reservation ${RESERVATION} is completely free (0 chips in use)."
       break
     fi
-    echo "TPU chips still in use: ${IN_USE}. Waiting 10s ($i/12)..."
+    echo "TPU chips still in use: ${IN_USE}. Waiting 10s ($i/18)..."
     sleep 10
   done
 fi
 
-# 5. Delete Cloud Storage bucket and specific Docker image tag
-echo "Cleaning up Cloud Storage bucket and test image tag..."
-gcloud storage rm --recursive "gs://${GCS_BUCKET}" 2>/dev/null || echo "Warning: Failed to delete bucket gs://${GCS_BUCKET}"
-gcloud artifacts docker images delete "${CLOUD_IMAGE_NAME}" --delete-tags --quiet 2>/dev/null || true
+# 5. Clean up only run-specific model artifacts from Cloud Storage (keeps bucket & shared container image intact)
+echo "Cleaning up run artifacts from Cloud Storage..."
+if [ -n "${GCS_BUCKET:-}" ] && [ -n "${MODEL_NAME:-}" ]; then
+  gcloud storage rm --recursive "gs://${GCS_BUCKET}/${MODEL_NAME}/" 2>/dev/null || echo "Info: No artifacts found under gs://${GCS_BUCKET}/${MODEL_NAME}/"
+fi
 
 # [END hypercomputer_tpu_tune_qwen3_30b_rl_cleanup]
 echo "[$(date)] ==================== Resources cleaned up. ===================="
