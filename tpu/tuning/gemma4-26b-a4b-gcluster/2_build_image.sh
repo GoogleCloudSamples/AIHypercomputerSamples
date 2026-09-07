@@ -19,27 +19,33 @@ set -euo pipefail
 echo "[$(date)] ==================== Build started. ===================="
 
 echo "[$(date)] ==================== Creating Cloud Storage bucket... ===================="
+# [START hypercomputer_tpu_tune_gemma4_26b_rl_create_bucket_v2]
 # [START hypercomputer_tpu_tune_gemma4_26b_rl_create_bucket]
 gcloud storage buckets create gs://$GCS_BUCKET --project=$PROJECT --location=$REGION || true
 # [END hypercomputer_tpu_tune_gemma4_26b_rl_create_bucket]
+# [END hypercomputer_tpu_tune_gemma4_26b_rl_create_bucket_v2]
 echo "[$(date)] ==================== Cloud Storage bucket created. ===================="
 
 echo "[$(date)] ==================== Creating Artifact Registry repository... ===================="
 # [START hypercomputer_tpu_tune_gemma4_26b_rl_create_repo]
-gcloud artifacts repositories create ${REPOSITORY_NAME} \
-    --repository-format=docker \
-    --location=$REGION \
-    --project=$PROJECT \
-    --description="Docker repository for MaxText images in $REGION" || true
+if false; then
+  gcloud artifacts repositories create ${REPOSITORY_NAME} \
+      --repository-format=docker \
+      --location=$REGION \
+      --project=$PROJECT \
+      --description="Docker repository for MaxText images in $REGION" || true
+fi
 # [END hypercomputer_tpu_tune_gemma4_26b_rl_create_repo]
 echo "[$(date)] ==================== Artifact Registry repository created. ===================="
 
 echo "[$(date)] ==================== Submitting Cloud Build job... ===================="
 # [START hypercomputer_tpu_tune_gemma4_26b_rl_build_image_cb]
-gcloud builds submit . \
-    --project=$PROJECT \
-    --region=$REGION \
-    --substitutions=_CLOUD_IMAGE_NAME="${CLOUD_IMAGE_NAME}"
+if false; then
+  gcloud builds submit . \
+      --project=$PROJECT \
+      --region=$REGION \
+      --substitutions=_CLOUD_IMAGE_NAME="${CLOUD_IMAGE_NAME}"
+fi
 # [END hypercomputer_tpu_tune_gemma4_26b_rl_build_image_cb]
 echo "[$(date)] ==================== Cloud Build job completed. ===================="
 

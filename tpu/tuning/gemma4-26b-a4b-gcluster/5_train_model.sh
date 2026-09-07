@@ -62,24 +62,43 @@ echo "[$(date)] ==================== Submitting Training Workload... ===========
 # [END hypercomputer_tpu_tune_gemma4_26b_rl_train]
 echo "[$(date)] ==================== Training Workload submitted. ===================="
 
-echo "[$(date)] ==================== Waiting for Training Workload to Complete... ===================="
-# Sleep slightly to allow the job to be created before fetching logs
-sleep 10
-./gcluster job logs gemma4-training --main-only -f \
-    --cluster ${CLUSTER_NAME} \
-    --project ${PROJECT} \
-    --location ${REGION} || true
+echo "[$(date)] ==================== Waiting for Training Workload to Start... ===================="
+POD_NAME=""
+for i in {1..120}; do
+  POD_NAME=$(kubectl get pods -l job-name=gemma4-training-pathways-head-0 -o jsonpath="{.items[0].metadata.name}" 2>/dev/null || true)
+  if [ -z "$POD_NAME" ]; then
+    POD_NAME=$(kubectl get pods -l jobset.sigs.k8s.io/replicatedjob-name=pathways-head,jobset.sigs.k8s.io/jobset-name=gemma4-training -o jsonpath="{.items[0].metadata.name}" 2>/dev/null || true)
+  fi
+  if [ -n "$POD_NAME" ]; then
+    echo "Found training pod: ${POD_NAME}"
+    break
+  fi
+  sleep 5
+done
 
-echo "Checking final job status..."
-# Use kubectl to check if the job actually succeeded since gcluster doesn't return failure codes yet
-POD_NAME=$(kubectl get pods -l job-name=gemma4-training-pathways-head-0 -o jsonpath="{.items[0].metadata.name}" 2>/dev/null || true)
 if [ -z "$POD_NAME" ]; then
-  POD_NAME=$(kubectl get pods -l jobset.sigs.k8s.io/replicatedjob-name=pathways-head,jobset.sigs.k8s.io/jobset-name=gemma4-training -o jsonpath="{.items[0].metadata.name}" 2>/dev/null || true)
+  echo "ERROR: Training pod was not created within timeout."
+  exit 1
 fi
 
-POD_STATUS=$(kubectl get pod $POD_NAME -o jsonpath="{.status.phase}" 2>/dev/null || true)
-if [ "$POD_STATUS" != "Succeeded" ]; then
-  echo "ERROR: Training pod did not succeed (Status: $POD_STATUS)."
+echo "[$(date)] ==================== Streaming Training Logs... ===================="
+# Wait until pod is Ready before tailing logs
+kubectl wait --for=condition=Ready pod/${POD_NAME} --timeout=600s 2>/dev/null || true
+
+kubectl logs -f "${POD_NAME}" -c workload-container || true
+
+echo "Checking final job status..."
+EXIT_CODE=""
+for i in {1..30}; do
+  EXIT_CODE=$(kubectl get pod "${POD_NAME}" -o jsonpath='{.status.containerStatuses[?(@.name=="workload-container")].state.terminated.exitCode}' 2>/dev/null || true)
+  if [ -n "$EXIT_CODE" ]; then
+    break
+  fi
+  sleep 1
+done
+
+if [ "$EXIT_CODE" != "0" ]; then
+  echo "ERROR: Training container did not succeed (Exit Code: ${EXIT_CODE:-unknown})."
   exit 1
 fi
 echo "[$(date)] ==================== Training Workload completed successfully. ===================="
