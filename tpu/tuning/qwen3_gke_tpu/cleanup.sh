@@ -28,5 +28,7 @@ done
 
 xpk cluster delete --cluster $CLUSTER_NAME --project $PROJECT --zone $ZONE --force  || echo "Warning: Failed to delete cluster"
 gcloud storage rm --recursive gs://$GCS_BUCKET || echo "Warning: Failed to delete bucket"
-gcloud artifacts repositories delete maxtext-images --location=$REGION --project=$PROJECT --quiet || echo "Warning: Failed to delete repository"
+if gcloud artifacts repositories describe maxtext-images --location=$REGION --project=$PROJECT &>/dev/null; then
+  gcloud artifacts repositories delete maxtext-images --location=$REGION --project=$PROJECT --quiet || echo "Warning: Failed to delete repository"
+fi
 echo "[$(date)] ==================== Resources cleaned up. ===================="

@@ -45,3 +45,47 @@ xpk workload create-pathways \
   enable_single_controller=True"
 # [END hypercomputer_tpu_tune_qwen3_sft_train]
 echo "[$(date)] ==================== Training Workload submitted. ===================="
+
+echo "[$(date)] ==================== Waiting for Training Workload to Complete... ===================="
+echo "Waiting for training pod to be created..."
+POD_NAME=""
+for i in {1..30}; do
+  POD_NAME=$(kubectl get pods --no-headers 2>/dev/null | grep qwen-training | awk '{print $1}' | head -n 1) || true
+  if [ -n "$POD_NAME" ]; then
+    break
+  fi
+  sleep 5
+done
+
+if [ -n "$POD_NAME" ]; then
+  echo "Found training pod: $POD_NAME"
+  echo "Waiting for pod to start running..."
+  while true; do
+    POD_STATUS=$(kubectl get pod $POD_NAME -o jsonpath='{.status.phase}' 2>/dev/null) || POD_STATUS="Unknown"
+    if [[ "$POD_STATUS" == "Running" || "$POD_STATUS" == "Succeeded" || "$POD_STATUS" == "Failed" ]]; then
+      break
+    fi
+    sleep 10
+  done
+
+  echo "Tailing logs... (this will block until training finishes)"
+  kubectl logs -f $POD_NAME || true
+
+  echo "Waiting for training pod to reach terminal state..."
+  for i in {1..60}; do
+    POD_STATUS=$(kubectl get pod $POD_NAME -o jsonpath='{.status.phase}' 2>/dev/null) || POD_STATUS="Unknown"
+    if [[ "$POD_STATUS" == "Succeeded" || "$POD_STATUS" == "Failed" ]]; then
+      break
+    fi
+    sleep 5
+  done
+
+  if [ "$POD_STATUS" != "Succeeded" ]; then
+    echo "ERROR: Training pod did not succeed (Status: $POD_STATUS)."
+    exit 1
+  fi
+  echo "[$(date)] ==================== Training completed successfully. ===================="
+else
+  echo "ERROR: Could not find the training pod. It may have failed to schedule."
+  exit 1
+fi
