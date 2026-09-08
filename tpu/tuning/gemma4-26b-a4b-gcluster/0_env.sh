@@ -14,7 +14,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# [START hypercomputer_tpu_tune_gemma4_26b_rl_env_v2]
+# [START hypercomputer_tpu_tune_gemma4_26b_rl_env]
 export PROJECT="YOUR_PROJECT_ID"
 export REGION="YOUR_REGION"
 export ZONE="YOUR_ZONE"
@@ -31,4 +31,4 @@ export PW_CPU_MACHINE_TYPE="c4d-standard-96"
 export RESERVATION="YOUR_RESERVATION_NAME"
 export MODEL_NAME="gemma4-26b"
 export HF_TOKEN="YOUR_HF_TOKEN"
-# [END hypercomputer_tpu_tune_gemma4_26b_rl_env_v2]
+# [END hypercomputer_tpu_tune_gemma4_26b_rl_env]
