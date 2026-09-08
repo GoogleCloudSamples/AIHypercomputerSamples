@@ -21,27 +21,5 @@ echo "[$(date)] ==================== Installing Prerequisites ==================
 wget -qO- https://github.com/GoogleCloudPlatform/cluster-toolkit/releases/latest/download/gcluster_bundle_linux_amd64.tgz | tar -xz
 # [END hypercomputer_tpu_sft_gcluster_install_dependencies]
 
-if [[ -n "${PROJECT:-}" ]]; then
-  echo "[$(date)] ==================== Preparing Project IAM Roles ===================="
-  # The GKE TPU v6e blueprint uses GCS Fuse CSI Storage Profiles which requires custom IAM role gke.gcsfuse.profileUser
-  if ! gcloud iam roles describe gke.gcsfuse.profileUser --project="${PROJECT}" >/dev/null 2>&1; then
-    echo "Creating custom IAM role gke.gcsfuse.profileUser in project ${PROJECT}..."
-    gcloud iam roles create gke.gcsfuse.profileUser \
-      --project="${PROJECT}" \
-      --title="GKE GCSFuse Profile User" \
-      --description="Allows scanning GCS buckets for objects, retrieving bucket metadata, and creating Anywhere Caches." \
-      --permissions="storage.objects.list,storage.buckets.get,storage.anywhereCaches.create,storage.anywhereCaches.get,storage.anywhereCaches.list,storage.anywhereCaches.update"
-  else
-    echo "Custom IAM role gke.gcsfuse.profileUser already exists in project ${PROJECT}."
-  fi
-
-  PROJECT_NUMBER=$(gcloud projects describe "${PROJECT}" --format="value(projectNumber)" 2>/dev/null || true)
-  if [[ -n "${PROJECT_NUMBER}" ]]; then
-    echo "Binding gke.gcsfuse.profileUser role to GKE service agent in project ${PROJECT}..."
-    gcloud projects add-iam-policy-binding "${PROJECT}" \
-      --member="serviceAccount:service-${PROJECT_NUMBER}@container-engine-robot.iam.gserviceaccount.com" \
-      --role="projects/${PROJECT}/roles/gke.gcsfuse.profileUser" --quiet || true
-  fi
-fi
-
 echo "[$(date)] ==================== Prerequisites Installed ===================="
+

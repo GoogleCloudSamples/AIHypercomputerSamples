@@ -23,16 +23,6 @@ echo "[$(date)] ==================== Configuring blueprint... ==================
 # Grant the GKE Node Pool Service Account storage.admin access to resolve the GCS bucket not found error
 sed -i "s/- storage.objectViewer/- storage.admin/" examples/gke-tpu-v6e/gke-tpu-v6e-advanced.yaml
 
-# Ensure custom IAM role gke.gcsfuse.profileUser exists for GCS Fuse Storage Profiles
-if ! gcloud iam roles describe gke.gcsfuse.profileUser --project="${PROJECT}" >/dev/null 2>&1; then
-  echo "Creating custom IAM role gke.gcsfuse.profileUser in project ${PROJECT}..."
-  gcloud iam roles create gke.gcsfuse.profileUser \
-    --project="${PROJECT}" \
-    --title="GKE GCSFuse Profile User" \
-    --description="Allows scanning GCS buckets for objects, retrieving bucket metadata, and creating Anywhere Caches." \
-    --permissions="storage.objects.list,storage.buckets.get,storage.anywhereCaches.create,storage.anywhereCaches.get,storage.anywhereCaches.list,storage.anywhereCaches.update"
-fi
-
 echo "[$(date)] ==================== Deploying cluster with gcluster... ===================="
 ./gcluster deploy examples/gke-tpu-v6e/gke-tpu-v6e-advanced.yaml \
     --vars "project_id=${PROJECT},deployment_name=${CLUSTER_NAME},region=${REGION},zone=${ZONE},num_slices=1,tpu_topology=4x8,authorized_cidr=0.0.0.0/0,reservation=${RESERVATION:-}" \

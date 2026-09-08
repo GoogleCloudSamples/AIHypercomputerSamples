@@ -36,7 +36,8 @@ echo "[$(date)] ==================== Submitting Model Conversion Workload... ===
         hardware=cpu \
         scan_layers=True \
         use_multimodal=False \
-        weight_dtype=bfloat16"
+        weight_dtype=bfloat16 \
+        --override_model_architecture"
 # [END hypercomputer_tpu_sft_gcluster_convert_model_hf]
 
 echo "[$(date)] ==================== Model converted successfully. ===================="
