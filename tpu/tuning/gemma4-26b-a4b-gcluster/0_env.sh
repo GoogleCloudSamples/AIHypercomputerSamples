@@ -21,7 +21,7 @@ export ZONE="YOUR_ZONE"
 export CLUSTER_NAME="YOUR_CLUSTER_NAME"
 export REPOSITORY_NAME="YOUR_REPOSITORY_NAME"
 export GCS_BUCKET="YOUR_BUCKET_NAME"
-export CLOUD_IMAGE_NAME="us-docker.pkg.dev/cloud-tpu-images/maxtext-images/tpu_post_training:0.2.4"
+export CLOUD_IMAGE_NAME="${REGION}-docker.pkg.dev/${PROJECT}/${REPOSITORY_NAME}/maxtext_base:latest"
 export COMPUTE_TYPE="ct6e-standard-4t"
 export TPU_TYPE="v6e-64"
 export TOPOLOGY="8x8"
@@ -31,3 +31,22 @@ export RESERVATION="YOUR_RESERVATION_NAME"
 export MODEL_NAME="gemma4-26b"
 export HF_TOKEN="YOUR_HF_TOKEN"
 # [END hypercomputer_tpu_tune_gemma4_26b_rl_env]
+# Out of the snippet section for sample compatibility
+export CLOUD_IMAGE_NAME="us-docker.pkg.dev/cloud-tpu-images/maxtext-images/tpu_post_training:0.2.4"
+
+# [START hypercomputer_tpu_tune_gemma4_26b_rl_env_v2]
+export PROJECT="YOUR_PROJECT_ID"
+export REGION="YOUR_REGION"
+export ZONE="YOUR_ZONE"
+export CLUSTER_NAME="YOUR_CLUSTER_NAME"
+export GCS_BUCKET="YOUR_BUCKET_NAME"
+export CLOUD_IMAGE_NAME="us-docker.pkg.dev/cloud-tpu-images/maxtext-images/tpu_post_training:0.2.4"
+export COMPUTE_TYPE="ct6e-standard-4t"
+export TPU_TYPE="v6e-64"
+export TOPOLOGY="8x8"
+export CLUSTER_NODEPOOL_COUNT=1
+export PW_CPU_MACHINE_TYPE="c4d-standard-96"
+export RESERVATION="YOUR_RESERVATION_NAME"
+export MODEL_NAME="gemma4-26b"
+export HF_TOKEN="YOUR_HF_TOKEN"
+# [END hypercomputer_tpu_tune_gemma4_26b_rl_env_v2]
