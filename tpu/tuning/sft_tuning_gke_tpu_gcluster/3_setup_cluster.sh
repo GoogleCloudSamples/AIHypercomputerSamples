@@ -41,7 +41,7 @@ echo "[$(date)] ==================== Deploying cluster with gcluster... ========
     --auto-approve -w
 
 # Fetch GKE cluster credentials for kubectl
-gcloud container clusters get-credentials ${CLUSTER_NAME} --location=${REGION} --project=${PROJECT}
+gcloud container clusters get-credentials "${CLUSTER_NAME}" --location="${REGION}" --project="${PROJECT}"
 
 # Configure docker for pulling images
 gcloud auth configure-docker gcr.io --quiet
