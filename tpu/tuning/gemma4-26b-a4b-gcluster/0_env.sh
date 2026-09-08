@@ -31,7 +31,8 @@ export RESERVATION="YOUR_RESERVATION_NAME"
 export MODEL_NAME="gemma4-26b"
 export HF_TOKEN="YOUR_HF_TOKEN"
 # [END hypercomputer_tpu_tune_gemma4_26b_rl_env]
-# Out of the snippet section for sample compatibility
+
+# Override for sample automation using prebuilt image
 export CLOUD_IMAGE_NAME="us-docker.pkg.dev/cloud-tpu-images/maxtext-images/tpu_post_training:0.2.4"
 
 # [START hypercomputer_tpu_tune_gemma4_26b_rl_env_v2]
