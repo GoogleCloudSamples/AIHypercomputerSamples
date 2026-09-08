@@ -37,12 +37,6 @@ fi
 MAX_RETRIES=3
 attempt=1
 
-# Prepare reservation argument only if a valid name is provided
-RESERVATION_ARG=()
-if [ -n "${RESERVATION:-}" ] && [ "${RESERVATION}" != "YOUR_RESERVATION_NAME" ]; then
-  RESERVATION_ARG=(--reservation="${RESERVATION}")
-fi
-
 while [ $attempt -le $MAX_RETRIES ]; do
   echo "Attempting cluster creation (attempt $attempt/$MAX_RETRIES)..."
 
@@ -55,8 +49,7 @@ while [ $attempt -le $MAX_RETRIES ]; do
     --cluster="${CLUSTER_NAME}" \
     --custom-cluster-arguments="--enable-ip-alias" \
     --custom-nodepool-arguments="--disk-size=500" \
-    --spot \
-    "${RESERVATION_ARG[@]}" \
+    --reservation="${RESERVATION}" \
     --default-pool-cpu-machine-type=n4-standard-16; then
       echo "Cluster created successfully."
       break
