@@ -39,6 +39,3 @@ export RDMA_NETWORK_PREFIX="YOUR_RDMA_NAME"
 # Can be parameterized by setting --tpu_sample_var=NODEPOOL_TIMEOUT=3600
 # for example.
 export NODEPOOL_TIMEOUT="YOUR_NODEPOOL_TIMEOUT"
-if [[ "${NODEPOOL_TIMEOUT}" == "YOUR_NODEPOOL_TIMEOUT" ]]; then
-  export NODEPOOL_TIMEOUT="3600"
-fi
