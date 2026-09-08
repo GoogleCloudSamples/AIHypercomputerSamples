@@ -45,7 +45,7 @@ gcloud container clusters get-credentials "${CLUSTER_NAME}" --location="${REGION
 
 # Configure docker for pulling images
 gcloud auth configure-docker gcr.io --quiet
-gcloud auth configure-docker ${REGION}-docker.pkg.dev --quiet
+gcloud auth configure-docker "${REGION}-docker.pkg.dev" --quiet
 
 # Grant storage.admin to GKE service accounts
 gcloud projects add-iam-policy-binding "${PROJECT}" --member="serviceAccount:${CLUSTER_NAME}-gke-wl-sa@${PROJECT}.iam.gserviceaccount.com" --role="roles/storage.admin" --quiet || true
