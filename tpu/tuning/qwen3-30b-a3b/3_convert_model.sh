@@ -56,7 +56,6 @@ xpk workload create \
   use_mrope=False \
   mrope_section=[] \
   rope_interleave=False \
-  --trust_remote_code=True \
   skip_jax_distributed_system=true \
   checkpoint_storage_use_zarr3=0 \
   checkpoint_storage_use_ocdbt=0 \
