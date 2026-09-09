@@ -30,7 +30,7 @@ xpk workload create \
   --num-slices=1 \
   --project=${PROJECT} \
   --zone=${ZONE} \
-  --command "[ \"\$JOB_COMPLETION_INDEX\" != \"0\" ] || \
+  --command="[ \"\$JOB_COMPLETION_INDEX\" != \"0\" ] || \
   python3 -m maxtext.checkpoint_conversion.to_maxtext \
   model_name=${MODEL_NAME} \
   hf_access_token=${HF_TOKEN} \
@@ -38,6 +38,8 @@ xpk workload create \
   scan_layers=True \
   use_multimodal=False \
   skip_jax_distributed_system=true \
+  checkpoint_storage_use_zarr3=0 \
+  checkpoint_storage_use_ocdbt=0 \
   hardware=cpu \
   --lazy_load_tensors=True"
 # [END hypercomputer_tpu_tune_qwen3_sft_convert_model]
