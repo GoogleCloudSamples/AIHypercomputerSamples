@@ -79,15 +79,12 @@ else
   echo "No active GKE clusters found matching ${BASE_CLUSTER_NAME}."
 fi
 
-# ------------------------------------------------------------------------------
-# 2b. NAJPIERW USUŃ GRUPY IGM (Zatrzymanie auto-tworzenia maszyn TPU!)
-# Poprawka: Dodano warunek 'OR name~gke-tpu', aby złapać bezimienne IGM-y TPU
-# ------------------------------------------------------------------------------
+# Deletion IGM
+
 echo "Cleaning up residual managed instance groups..."
 gcloud compute instance-groups managed list \
   --project="${PROJECT}" \
-  --zones="${ZONE}" \
-  --filter="name~'${BASE_CLUSTER_NAME}' OR name~'gke-tpu'" \
+  --filter="zone:'${ZONE}' AND (name~'${BASE_CLUSTER_NAME}' OR name~'gke-tpu')" \
   --format="value(name,zone.basename())" 2>/dev/null | while read -r igm_name igm_zone; do
     if [ -n "$igm_name" ] && [ -n "$igm_zone" ]; then
       echo " -> Deleting residual IGM: $igm_name in $igm_zone"
@@ -95,10 +92,8 @@ gcloud compute instance-groups managed list \
     fi
 done
 
-# ------------------------------------------------------------------------------
-# 2. DOPERO TERAZ: Terminate residual orphan VM instances
-# Poprawka: Dodano 'OR name~gke-tpu OR machineType:ct6e-standard-4t'
-# ------------------------------------------------------------------------------
+# Terminate residual orphan VM instances
+
 echo "Terminating residual VM instances attached to ${BASE_CLUSTER_NAME} or TPU nodes..."
 gcloud compute instances list \
   --project="${PROJECT}" \
