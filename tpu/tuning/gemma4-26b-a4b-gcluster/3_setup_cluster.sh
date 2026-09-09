@@ -19,8 +19,6 @@ set -euo pipefail
 echo "[$(date)] ==================== Preparing gcluster blueprint... ===================="
 # [START hypercomputer_tpu_tune_gemma4_26b_rl_create_cluster]
 echo "[$(date)] ==================== Configuring blueprint... ===================="
-# Add enable_private_ipv6_google_access: false to the gke-cluster module settings
-sed -i '/id: gke-tpu-v6e-cluster/!b; :a; /settings:/!{n;ba}; a\      enable_private_ipv6_google_access: false' examples/gke-tpu-v6e/gke-tpu-v6e-advanced.yaml
 
 # Change n2-standard-8 to e2-standard-8
 sed -i "s/n2-standard-8/e2-standard-8/" examples/gke-tpu-v6e/gke-tpu-v6e-advanced.yaml
