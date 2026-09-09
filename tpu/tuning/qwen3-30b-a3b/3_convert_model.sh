@@ -47,7 +47,7 @@ xpk workload create \
   --command "[ \"\$JOB_COMPLETION_INDEX\" != \"0\" ] || \
   HF_TOKEN=${HF_TOKEN} \
   python3 -m maxtext.checkpoint_conversion.to_maxtext \
-  model_name=qwen3-30b \
+  model_name=qwen3-30b-a3b \
   --hf_model_path=Qwen/Qwen3-30B-A3B-Instruct-2507 \
   base_output_directory=gs://${GCS_BUCKET}/${MODEL_NAME}/max-text-format/ \
   scan_layers=False \
