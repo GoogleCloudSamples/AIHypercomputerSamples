@@ -101,6 +101,7 @@ gcloud auth configure-docker "${REGION}-docker.pkg.dev" --quiet
 # The trained model is now available in gs://${GCS_BUCKET}/${MODEL_NAME}/hf-trained/
 # [END hypercomputer_tpu_tune_gemma4_26b_rl_convert_hf_logs]
 
+if false; then
 # [START hypercomputer_tpu_tune_gemma4_26b_rl_cleanup_storage]
 ./gcluster destroy "${CLUSTER_NAME}" --robust
 gcloud storage rm -r "gs://${GCS_BUCKET}"
@@ -109,6 +110,15 @@ gcloud artifacts repositories delete "${REPOSITORY_NAME}" --location="${REGION}"
 # To delete the local deployment folder
 rm -rf .ghpc "${CLUSTER_NAME}"
 # [END hypercomputer_tpu_tune_gemma4_26b_rl_cleanup_storage]
+fi
+
+# [START hypercomputer_tpu_tune_gemma4_26b_rl_cleanup_storage_v2]
+./gcluster destroy "${CLUSTER_NAME}" --robust
+gcloud storage rm -r "gs://${GCS_BUCKET}"
+
+# To delete the local deployment folder
+rm -rf .ghpc "${CLUSTER_NAME}"
+# [END hypercomputer_tpu_tune_gemma4_26b_rl_cleanup_storage_v2]
 
 # [START hypercomputer_tpu_tune_gemma4_26b_rl_yaml_service_account]
   - id: node_pool_service_account
