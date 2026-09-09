@@ -60,7 +60,7 @@ xpk workload create \
   checkpoint_storage_use_zarr3=0 \
   checkpoint_storage_use_ocdbt=0 \
   hardware=cpu \
-  --lazy_load_tensors=True
+  --lazy_load_tensors=True"
 # [END hypercomputer_tpu_tune_qwen3_30b_rl_convert_model]
 
 echo "[$(date)] ==================== Waiting for Model Conversion to Complete... ===================="
