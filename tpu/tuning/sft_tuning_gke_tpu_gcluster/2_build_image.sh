@@ -25,26 +25,26 @@ gcloud storage buckets create "gs://${GCS_BUCKET}" --project="${PROJECT}" --loca
 echo "[$(date)] ==================== Cloud Storage bucket created. ===================="
 
 echo "[$(date)] ==================== Creating Artifact Registry repository... ===================="
-# [START hypercomputer_tpu_sft_gcluster_create_repo]
 if false; then
+  # [START hypercomputer_tpu_sft_gcluster_create_repo]
   gcloud artifacts repositories create ${REPOSITORY_NAME} \
       --repository-format=docker \
       --location=${REGION} \
       --project=${PROJECT} \
       --description="Docker repository for MaxText images in ${REGION}" || true
+  # [END hypercomputer_tpu_sft_gcluster_create_repo]
 fi
-# [END hypercomputer_tpu_sft_gcluster_create_repo]
 echo "[$(date)] ==================== Artifact Registry repository created. ===================="
 
 echo "[$(date)] ==================== Submitting Cloud Build job... ===================="
-# [START hypercomputer_tpu_sft_gcluster_build_image_cb]
 if false; then
+  # [START hypercomputer_tpu_sft_gcluster_build_image_cb]
   gcloud builds submit . \
       --project=${PROJECT} \
       --region=${REGION} \
       --substitutions=_CLOUD_IMAGE_NAME="${CLOUD_IMAGE_NAME}"
+  # [END hypercomputer_tpu_sft_gcluster_build_image_cb]
 fi
-# [END hypercomputer_tpu_sft_gcluster_build_image_cb]
 echo "[$(date)] ==================== Cloud Build job completed. ===================="
 
 echo "[$(date)] ==================== Build finished. ===================="
