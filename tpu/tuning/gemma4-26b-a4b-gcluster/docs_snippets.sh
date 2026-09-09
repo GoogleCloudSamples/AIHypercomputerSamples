@@ -120,7 +120,7 @@ rm -rf .ghpc ${CLUSTER_NAME}
       - monitoring.metricWriter
       - monitoring.viewer
       - stackdriver.resourceMetadata.writer
-      - storage.admin            # Change from storage.objectViewer
+      - storage.admin
       - artifactregistry.reader
 # [END hypercomputer_tpu_tune_gemma4_26b_rl_yaml_service_account]
 
