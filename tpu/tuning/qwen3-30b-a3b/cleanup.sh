@@ -26,7 +26,15 @@ while gcloud container operations list --project=$PROJECT --location=$REGION --f
   sleep 30
 done
 
-xpk cluster delete --cluster $CLUSTER_NAME --project $PROJECT --zone $ZONE --force  || echo "Warning: Failed to delete cluster"
-gcloud storage rm --recursive gs://$GCS_BUCKET || echo "Warning: Failed to delete bucket"
-gcloud artifacts repositories delete maxtext-images --location=$REGION --project=$PROJECT --quiet || echo "Warning: Failed to delete repository"
+if gcloud container clusters describe "$CLUSTER_NAME" --location="$REGION" --project="$PROJECT" &>/dev/null; then
+  xpk cluster delete --cluster $CLUSTER_NAME --project $PROJECT --zone $ZONE --force || echo "Warning: Failed to delete cluster"
+fi
+
+if gcloud storage buckets describe "gs://$GCS_BUCKET" --project="$PROJECT" &>/dev/null; then
+  gcloud storage rm --recursive "gs://$GCS_BUCKET" || echo "Warning: Failed to delete bucket"
+fi
+
+if gcloud artifacts repositories describe maxtext-images --location=$REGION --project=$PROJECT &>/dev/null; then
+  gcloud artifacts repositories delete maxtext-images --location=$REGION --project=$PROJECT --quiet || echo "Warning: Failed to delete repository"
+fi
 echo "[$(date)] ==================== Resources cleaned up. ===================="
