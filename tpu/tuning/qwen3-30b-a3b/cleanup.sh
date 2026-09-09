@@ -41,36 +41,36 @@ if [ ${#CLUSTERS_TO_DELETE[@]} -gt 0 ]; then
     xpk workload delete --workload "qwen-training" --cluster "${TARGET_CLUSTER}" --project="${PROJECT}" --zone="${ZONE}" 2>/dev/null || true
     xpk workload delete --workload "qwen-mt-to-hf" --cluster "${TARGET_CLUSTER}" --project="${PROJECT}" --zone="${ZONE}" 2>/dev/null || true
 
-    # 1b. Wait for any running cluster operations to finish (prevents error 400/RESOURCE_IN_USE)
+    # 1b. Wait for any in-flight cluster operations to finish (prevents error 400/RESOURCE_IN_USE)
     echo "Checking for in-flight operations on ${TARGET_CLUSTER}..."
     RUNNING_OPS=$(gcloud container operations list --project="${PROJECT}" --location="${REGION}" --filter="targetLink~'${TARGET_CLUSTER}' AND status=RUNNING" --format="value(name)" 2>/dev/null || true)
-    for op in $RUNNING_OPS; do
-      if [ -n "$op" ]; then
+    if [ -n "$RUNNING_OPS" ]; then
+      for op in $RUNNING_OPS; do
         echo "Waiting for operation $op to finish before deletion..."
-        gcloud container operations wait "$op" --project="${PROJECT}" --location="${REGION}" --timeout=120 2>/dev/null || true
-      fi
-    done
+        gcloud container operations wait "$op" --project="${PROJECT}" --location="${REGION}" --timeout=300 2>/dev/null || true
+      done
+    fi
 
-    # 1c. Robust deletion with retry loop (tries xpk, falls back to direct gcloud cluster delete)
+    # 1c. Robust deletion with retry loop (direct regional gcloud delete first, then xpk fallback)
     echo "Deleting GKE cluster ${TARGET_CLUSTER}..."
     DELETE_SUCCESS=false
     for attempt in {1..5}; do
       echo "Deletion attempt $attempt/5 for ${TARGET_CLUSTER}..."
 
-      # Xpk cluster delete
-      if xpk cluster delete --cluster "${TARGET_CLUSTER}" --project "${PROJECT}" --zone "${ZONE}" --force 2>/dev/null; then
-        DELETE_SUCCESS=true
-        break
-      fi
-
-      # Fallback to direct synchronous gcloud delete
+      # Direct synchronous gcloud delete targeting the regional cluster
       if gcloud container clusters delete "${TARGET_CLUSTER}" --location="${REGION}" --project="${PROJECT}" --quiet 2>/dev/null; then
         DELETE_SUCCESS=true
         break
       fi
 
-      echo "Cluster delete rejected (likely pending reconciliation). Waiting 20s before retry..."
-      sleep 20
+      # Fallback to XPK cluster delete
+      if xpk cluster delete --cluster "${TARGET_CLUSTER}" --project "${PROJECT}" --zone "${ZONE}" --force 2>/dev/null; then
+        DELETE_SUCCESS=true
+        break
+      fi
+
+      echo "Cluster delete rejected (likely pending reconciliation). Waiting 45s before retry..."
+      sleep 45
     done
 
     if [ "$DELETE_SUCCESS" = false ]; then
@@ -81,7 +81,7 @@ else
   echo "No active GKE clusters found matching ${BASE_CLUSTER_NAME}."
 fi
 
-# 2. Terminate residual orphan VM instances strictly bound to this run
+# 2. Terminate residual orphan VM instances strictly bound to this run / cluster
 echo "Terminating residual VM instances attached to ${BASE_CLUSTER_NAME}..."
 gcloud compute instances list \
   --project="${PROJECT}" \
@@ -94,9 +94,24 @@ gcloud compute instances list \
     fi
 done
 
-# 2b. Clean up any residual managed instance groups left behind by failed node-pools
+# 2a. Delete TPU worker VMs consuming reservation
+if [ -n "${RESERVATION:-}" ]; then
+  echo "Checking for lingering TPU instances specifically consuming reservation ${RESERVATION}..."
+  gcloud compute instances list \
+    --project="${PROJECT}" \
+    --zones="${ZONE}" \
+    --format="value(name,zone.basename(),reservationAffinity.values[0])" 2>/dev/null | while read -r tpu_vm tpu_zone res_name; do
+      if [[ "$res_name" == *"${RESERVATION}"* ]]; then
+        echo " -> Deleting orphan TPU VM consuming our reservation: $tpu_vm ($tpu_zone)"
+        gcloud compute instances delete "$tpu_vm" --zone="$tpu_zone" --project="${PROJECT}" --quiet 2>/dev/null || true
+      fi
+  done
+fi
+
+# 2b. Clean up residual managed instance groups strictly matching this cluster name
 gcloud compute instance-groups managed list \
   --project="${PROJECT}" \
+  --zones="${ZONE}" \
   --filter="name~'${BASE_CLUSTER_NAME}'" \
   --format="value(name,zone.basename())" 2>/dev/null | while read -r igm_name igm_zone; do
     if [ -n "$igm_name" ] && [ -n "$igm_zone" ]; then
