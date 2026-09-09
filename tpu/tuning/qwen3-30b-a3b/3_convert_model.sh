@@ -53,11 +53,14 @@ xpk workload create \
   scan_layers=False \
   weight_dtype=bfloat16 \
   use_multimodal=False \
+  use_mrope=False \
+  mrope_section=None \
+  rope_interleave=False \
   skip_jax_distributed_system=true \
   checkpoint_storage_use_zarr3=0 \
   checkpoint_storage_use_ocdbt=0 \
   hardware=cpu \
-  --lazy_load_tensors=True"
+  --lazy_load_tensors=True
 # [END hypercomputer_tpu_tune_qwen3_30b_rl_convert_model]
 
 echo "[$(date)] ==================== Waiting for Model Conversion to Complete... ===================="

@@ -46,11 +46,17 @@ xpk workload create-pathways \
       scan_layers=False \
       dtype=bfloat16 \
       weight_dtype=bfloat16 \
+      use_multimodal=False \
+      use_mrope=False \
+      mrope_section=None \
+      rope_interleave=False \
+      rope_max_timescale=1000000 \
+      rope_factor=1.0 \
       use_chat_template=True \
       tokenizer_type=huggingface \
       tokenizer_path=Qwen/Qwen3-30B-A3B-Instruct-2507 \
-      remat_policy=minimal \
-      train_micro_batch_size=8 \
+      remat_policy=full \
+      train_micro_batch_size=2 \
       num_batches=50 \
       per_device_batch_size=1 \
       batch_size=8 \
@@ -65,7 +71,7 @@ xpk workload create-pathways \
       allow_split_physical_axes=true \
       debug=True \
       vllm_hf_overrides='{\"architectures\": [\"MaxTextForCausalLM\"]}' \
-      vllm_additional_config=\"{\\\"maxtext_config\\\": {\\\"model_name\\\": \\\"${MODEL_NAME}\\\", \\\"allow_split_physical_axes\\\": true, \\\"weight_dtype\\\": \\\"bfloat16\\\"}, \\\"trust_remote_code\\\": true}\""
+      vllm_additional_config=\"{\\\"maxtext_config\\\": {\\\"model_name\\\": \\\"${MODEL_NAME}\\\", \\\"allow_split_physical_axes\\\": true, \\\"weight_dtype\\\": \\\"bfloat16\\\", \\\"use_mrope\\\": false, \\\"rope_interleave\\\": false, \\\"rope_max_timescale\\\": 1000000, \\\"rope_factor\\\": 1.0}, \\\"trust_remote_code\\\": true}\""
 # [END hypercomputer_tpu_tune_qwen3_30b_rl_train]
 echo "[$(date)] ==================== Training Workload submitted. ===================="
 
