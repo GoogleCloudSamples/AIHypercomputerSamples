@@ -28,6 +28,7 @@ sed -i "s/n2-standard-8/e2-standard-8/" examples/gke-tpu-v6e/gke-tpu-v6e-advance
 echo "[$(date)] ==================== Deploying cluster with gcluster... ===================="
 ./gcluster deploy examples/gke-tpu-v6e/gke-tpu-v6e-advanced.yaml \
     --vars "project_id=${PROJECT},deployment_name=${CLUSTER_NAME},region=${REGION},zone=${ZONE},num_slices=${CLUSTER_NODEPOOL_COUNT},tpu_topology=${TOPOLOGY},authorized_cidr=0.0.0.0/0,reservation=${RESERVATION:-}" \
+    --download-dependencies \
     -l IGNORE --auto-approve -w
 
 # Fetch GKE cluster credentials for kubectl
