@@ -41,7 +41,7 @@ if [ ${#CLUSTERS_TO_DELETE[@]} -gt 0 ]; then
     xpk workload delete --workload "qwen-training" --cluster "${TARGET_CLUSTER}" --project="${PROJECT}" --zone="${ZONE}" 2>/dev/null || true
     xpk workload delete --workload "qwen-mt-to-hf" --cluster "${TARGET_CLUSTER}" --project="${PROJECT}" --zone="${ZONE}" 2>/dev/null || true
 
-    # 1b. Wait for any in-flight cluster operations to finish (prevents error 400/RESOURCE_IN_USE)
+    # 1b. Wait for any in-flight cluster operations to finish
     echo "Checking for in-flight operations on ${TARGET_CLUSTER}..."
     RUNNING_OPS=$(gcloud container operations list --project="${PROJECT}" --location="${REGION}" --filter="targetLink~'${TARGET_CLUSTER}' AND status=RUNNING" --format="value(name)" 2>/dev/null || true)
     if [ -n "$RUNNING_OPS" ]; then
@@ -51,19 +51,17 @@ if [ ${#CLUSTERS_TO_DELETE[@]} -gt 0 ]; then
       done
     fi
 
-    # 1c. Robust deletion with retry loop (direct regional gcloud delete first, then xpk fallback)
+    # 1c. Robust deletion with retry loop
     echo "Deleting GKE cluster ${TARGET_CLUSTER}..."
     DELETE_SUCCESS=false
     for attempt in {1..5}; do
       echo "Deletion attempt $attempt/5 for ${TARGET_CLUSTER}..."
 
-      # Direct synchronous gcloud delete targeting the regional cluster
       if gcloud container clusters delete "${TARGET_CLUSTER}" --location="${REGION}" --project="${PROJECT}" --quiet 2>/dev/null; then
         DELETE_SUCCESS=true
         break
       fi
 
-      # Fallback to XPK cluster delete
       if xpk cluster delete --cluster "${TARGET_CLUSTER}" --project "${PROJECT}" --zone "${ZONE}" --force 2>/dev/null; then
         DELETE_SUCCESS=true
         break
@@ -81,12 +79,31 @@ else
   echo "No active GKE clusters found matching ${BASE_CLUSTER_NAME}."
 fi
 
-# 2. Terminate residual orphan VM instances strictly bound to this run / cluster
-echo "Terminating residual VM instances attached to ${BASE_CLUSTER_NAME}..."
+# ------------------------------------------------------------------------------
+# 2b. NAJPIERW USUŃ GRUPY IGM (Zatrzymanie auto-tworzenia maszyn TPU!)
+# Poprawka: Dodano warunek 'OR name~gke-tpu', aby złapać bezimienne IGM-y TPU
+# ------------------------------------------------------------------------------
+echo "Cleaning up residual managed instance groups..."
+gcloud compute instance-groups managed list \
+  --project="${PROJECT}" \
+  --zones="${ZONE}" \
+  --filter="name~'${BASE_CLUSTER_NAME}' OR name~'gke-tpu'" \
+  --format="value(name,zone.basename())" 2>/dev/null | while read -r igm_name igm_zone; do
+    if [ -n "$igm_name" ] && [ -n "$igm_zone" ]; then
+      echo " -> Deleting residual IGM: $igm_name in $igm_zone"
+      gcloud compute instance-groups managed delete "$igm_name" --zone="$igm_zone" --project="${PROJECT}" --quiet 2>/dev/null || true
+    fi
+done
+
+# ------------------------------------------------------------------------------
+# 2. DOPERO TERAZ: Terminate residual orphan VM instances
+# Poprawka: Dodano 'OR name~gke-tpu OR machineType:ct6e-standard-4t'
+# ------------------------------------------------------------------------------
+echo "Terminating residual VM instances attached to ${BASE_CLUSTER_NAME} or TPU nodes..."
 gcloud compute instances list \
   --project="${PROJECT}" \
   --zones="${ZONE}" \
-  --filter="(labels.goog-k8s-cluster-name~'^${BASE_CLUSTER_NAME}' OR name~'^gke-${BASE_CLUSTER_NAME}')" \
+  --filter="(labels.goog-k8s-cluster-name~'^${BASE_CLUSTER_NAME}' OR name~'^gke-${BASE_CLUSTER_NAME}' OR name~'^gke-tpu' OR machineType:ct6e-standard-4t)" \
   --format="value(name,zone.basename())" 2>/dev/null | while read -r name zone; do
     if [ -n "$name" ] && [ -n "$zone" ]; then
       echo " -> Deleting orphan instance: $name ($zone)"
@@ -94,7 +111,7 @@ gcloud compute instances list \
     fi
 done
 
-# 2a. Delete TPU worker VMs consuming reservation
+# 2a. Delete TPU worker VMs consuming reservation directly
 if [ -n "${RESERVATION:-}" ]; then
   echo "Checking for lingering TPU instances specifically consuming reservation ${RESERVATION}..."
   gcloud compute instances list \
@@ -108,33 +125,19 @@ if [ -n "${RESERVATION:-}" ]; then
   done
 fi
 
-# 2b. Clean up residual managed instance groups strictly matching this cluster name
-gcloud compute instance-groups managed list \
-  --project="${PROJECT}" \
-  --zones="${ZONE}" \
-  --filter="name~'${BASE_CLUSTER_NAME}'" \
-  --format="value(name,zone.basename())" 2>/dev/null | while read -r igm_name igm_zone; do
-    if [ -n "$igm_name" ] && [ -n "$igm_zone" ]; then
-      echo " -> Deleting residual IGM: $igm_name in $igm_zone"
-      gcloud compute instance-groups managed delete "$igm_name" --zone="$igm_zone" --project="${PROJECT}" --quiet 2>/dev/null || true
-    fi
-done
-
 # 3. Clean up Pathways ANP networking stack (Firewalls -> Subnets -> VPCs)
 RUN_HASH=$(echo "${BASE_CLUSTER_NAME}" | sed -E 's/pkb-//; s/-cluster//')
 
 if [ -n "$RUN_HASH" ]; then
   echo "Cleaning up ANP networking stack for run hash: ${RUN_HASH}..."
 
-  # 3a. Delete firewall rules
   gcloud compute firewall-rules list \
     --project="${PROJECT}" \
     --filter="network~'gke-anp.*${RUN_HASH}'" \
     --format="value(name)" 2>/dev/null | while read -r fw; do
       [ -n "$fw" ] && gcloud compute firewall-rules delete "$fw" --project="${PROJECT}" --quiet 2>/dev/null || true
-  done
+    done
 
-  # 3b. Delete subnetworks
   gcloud compute networks subnets list \
     --project="${PROJECT}" \
     --filter="name~'gke-anp.*${RUN_HASH}'" \
@@ -144,7 +147,6 @@ if [ -n "$RUN_HASH" ]; then
       fi
   done
 
-  # 3c. Delete VPC networks
   gcloud compute networks list \
     --project="${PROJECT}" \
     --filter="name~'gke-anp.*${RUN_HASH}'" \
@@ -171,7 +173,7 @@ if [ -n "${RESERVATION:-}" ]; then
   done
 fi
 
-# 5. Clean up only run-specific model artifacts from Cloud Storage (keeps bucket & shared container image intact)
+# 5. Clean up only run-specific model artifacts from Cloud Storage
 echo "Cleaning up run artifacts from Cloud Storage..."
 if [ -n "${GCS_BUCKET:-}" ] && [ -n "${MODEL_NAME:-}" ]; then
   gcloud storage rm --recursive "gs://${GCS_BUCKET}/${MODEL_NAME}/" 2>/dev/null || echo "Info: No artifacts found under gs://${GCS_BUCKET}/${MODEL_NAME}/"
