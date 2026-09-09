@@ -48,10 +48,8 @@ xpk workload create-pathways \
       weight_dtype=bfloat16 \
       use_multimodal=False \
       use_mrope=False \
-      mrope_section=None \
+      mrope_section=[] \
       rope_interleave=False \
-      rope_max_timescale=1000000 \
-      rope_factor=1.0 \
       use_chat_template=True \
       tokenizer_type=huggingface \
       tokenizer_path=Qwen/Qwen3-30B-A3B-Instruct-2507 \
@@ -71,7 +69,7 @@ xpk workload create-pathways \
       allow_split_physical_axes=true \
       debug=True \
       vllm_hf_overrides='{\"architectures\": [\"MaxTextForCausalLM\"]}' \
-      vllm_additional_config=\"{\\\"maxtext_config\\\": {\\\"model_name\\\": \\\"${MODEL_NAME}\\\", \\\"allow_split_physical_axes\\\": true, \\\"weight_dtype\\\": \\\"bfloat16\\\", \\\"use_mrope\\\": false, \\\"rope_interleave\\\": false, \\\"rope_max_timescale\\\": 1000000, \\\"rope_factor\\\": 1.0}, \\\"trust_remote_code\\\": true}\""
+      vllm_additional_config=\"{\\\"maxtext_config\\\": {\\\"model_name\\\": \\\"${MODEL_NAME}\\\", \\\"allow_split_physical_axes\\\": true, \\\"weight_dtype\\\": \\\"bfloat16\\\", \\\"use_mrope\\\": false, \\\"mrope_section\\\": [], \\\"rope_interleave\\\": false}, \\\"trust_remote_code\\\": true}\""
 # [END hypercomputer_tpu_tune_qwen3_30b_rl_train]
 echo "[$(date)] ==================== Training Workload submitted. ===================="
 
@@ -103,7 +101,6 @@ if [ -n "$POD_NAME" ]; then
   echo "Checking execution result of main training container (jax-tpu)..."
   CONTAINER_EXIT_CODE=""
   for i in {1..30}; do
-    # Check terminated status in current state or previous state (if K8s restarted container)
     CONTAINER_EXIT_CODE=$(kubectl get pod "$POD_NAME" -o jsonpath='{.status.containerStatuses[?(@.name=="jax-tpu")].state.terminated.exitCode}' 2>/dev/null || echo "")
     if [ -z "$CONTAINER_EXIT_CODE" ]; then
       CONTAINER_EXIT_CODE=$(kubectl get pod "$POD_NAME" -o jsonpath='{.status.containerStatuses[?(@.name=="jax-tpu")].lastState.terminated.exitCode}' 2>/dev/null || echo "")

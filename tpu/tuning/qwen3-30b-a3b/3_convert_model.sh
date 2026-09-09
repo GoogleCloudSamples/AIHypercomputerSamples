@@ -54,7 +54,7 @@ xpk workload create \
   weight_dtype=bfloat16 \
   use_multimodal=False \
   use_mrope=False \
-  mrope_section=None \
+  mrope_section=[] \
   rope_interleave=False \
   skip_jax_distributed_system=true \
   checkpoint_storage_use_zarr3=0 \
