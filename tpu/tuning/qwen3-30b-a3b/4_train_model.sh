@@ -41,7 +41,7 @@ xpk workload create-pathways \
       python3 -m maxtext.trainers.post_train.rl.train_rl \
       run_name=rl \
       base_output_directory=gs://${GCS_BUCKET}/${MODEL_NAME}/trained/ \
-      model_name=${MODEL_NAME} \
+      model_name=qwen3-30b \
       load_parameters_path=gs://${GCS_BUCKET}/${MODEL_NAME}/max-text-format/0/items/ \
       scan_layers=False \
       dtype=bfloat16 \
@@ -54,10 +54,12 @@ xpk workload create-pathways \
       tokenizer_type=huggingface \
       tokenizer_path=Qwen/Qwen3-30B-A3B-Instruct-2507 \
       remat_policy=full \
-      train_micro_batch_size=2 \
+      train_micro_batch_size=4 \
+      batch_size=16 \
+      rollout_micro_batch_size=8 \
+      compute_logps_micro_batch_size=8 \
       num_batches=50 \
       per_device_batch_size=1 \
-      batch_size=8 \
       rollout_tensor_parallelism=4 \
       rollout_expert_parallelism=4 \
       trainer_devices_fraction=0.5 \
@@ -69,7 +71,7 @@ xpk workload create-pathways \
       allow_split_physical_axes=true \
       debug=True \
       vllm_hf_overrides='{\"architectures\": [\"MaxTextForCausalLM\"]}' \
-      vllm_additional_config=\"{\\\"maxtext_config\\\": {\\\"model_name\\\": \\\"${MODEL_NAME}\\\", \\\"allow_split_physical_axes\\\": true, \\\"weight_dtype\\\": \\\"bfloat16\\\", \\\"use_mrope\\\": false, \\\"mrope_section\\\": [], \\\"rope_interleave\\\": false}, \\\"trust_remote_code\\\": true}\""
+      vllm_additional_config=\"{\\\"maxtext_config\\\": {\\\"model_name\\\": \\\"qwen3-30b\\\", \\\"allow_split_physical_axes\\\": true, \\\"weight_dtype\\\": \\\"bfloat16\\\", \\\"use_mrope\\\": false, \\\"mrope_section\\\": [], \\\"rope_interleave\\\": false}, \\\"trust_remote_code\\\": true}\""
 # [END hypercomputer_tpu_tune_qwen3_30b_rl_train]
 echo "[$(date)] ==================== Training Workload submitted. ===================="
 
