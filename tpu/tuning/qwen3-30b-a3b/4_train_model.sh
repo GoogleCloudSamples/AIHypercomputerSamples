@@ -37,18 +37,18 @@ xpk workload create-pathways \
   --workload="qwen-training" \
   --tpu-type="${TPU_TYPE}" \
   --num-slices=1 \
-  --command="JAX_PLATFORMS=proxy,cpu JAX_BACKEND_TARGET=grpc://127.0.0.1:29000 ENABLE_PATHWAYS_PERSISTENCE=1 HF_TOKEN=${HF_TOKEN} \
+  --command='JAX_PLATFORMS=proxy,cpu JAX_BACKEND_TARGET=grpc://127.0.0.1:29000 ENABLE_PATHWAYS_PERSISTENCE=1 HF_TOKEN='"${HF_TOKEN}"' \
       python3 -m maxtext.trainers.post_train.rl.train_rl \
       run_name=rl \
-      base_output_directory=gs://${GCS_BUCKET}/${MODEL_NAME}/trained/ \
-      model_name=qwen3-30b-a3b
-      load_parameters_path=gs://${GCS_BUCKET}/${MODEL_NAME}/max-text-format/0/items/ \
+      base_output_directory=gs://'"${GCS_BUCKET}"'/'"${MODEL_NAME}"'/trained/ \
+      model_name=qwen3-30b-a3b \
+      load_parameters_path=gs://'"${GCS_BUCKET}"'/'"${MODEL_NAME}"'/max-text-format/0/items/ \
       scan_layers=False \
       dtype=bfloat16 \
       weight_dtype=bfloat16 \
       use_multimodal=False \
       use_mrope=False \
-      mrope_section='[]' \
+      mrope_section=[] \
       rope_interleave=False \
       use_chat_template=True \
       tokenizer_type=huggingface \
@@ -70,8 +70,8 @@ xpk workload create-pathways \
       async_scheduling=False \
       allow_split_physical_axes=true \
       debug=True \
-      vllm_hf_overrides='{\"architectures\": [\"MaxTextForCausalLM\"]}' \
-      vllm_additional_config=\"{\\\"maxtext_config\\\": {\\\"model_name\\\": \\\"qwen3-30b-a3b\\\", \\\"allow_split_physical_axes\\\": true, \\\"weight_dtype\\\": \\\"bfloat16\\\", \\\"use_mrope\\\": false, \\\"mrope_section\\\": [], \\\"rope_interleave\\\": false}, \\\"trust_remote_code\\\": true}\""
+      vllm_hf_overrides="{\"architectures\":[\"MaxTextForCausalLM\"]}" \
+      vllm_additional_config="{\"maxtext_config\":{\"model_name\":\"qwen3-30b-a3b\",\"allow_split_physical_axes\":true,\"weight_dtype\":\"bfloat16\",\"use_mrope\":false,\"mrope_section\":[],\"rope_interleave\":false},\"trust_remote_code\":true}"'
 # [END hypercomputer_tpu_tune_qwen3_30b_rl_train]
 echo "[$(date)] ==================== Training Workload submitted. ===================="
 
