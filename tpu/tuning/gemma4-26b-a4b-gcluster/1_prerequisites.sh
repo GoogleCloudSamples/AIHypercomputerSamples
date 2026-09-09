@@ -17,7 +17,14 @@
 set -euo pipefail
 
 echo "[$(date)] ==================== Installing Prerequisites ===================="
+
+if false; then
 # [START hypercomputer_tpu_tune_gemma4_26b_rl_install_dependencies]
-wget -qO- https://github.com/GoogleCloudPlatform/cluster-toolkit/releases/download/v1.103.0/gcluster_bundle_linux_amd64.tgz | tar -xz
+wget -qO- https://github.com/GoogleCloudPlatform/cluster-toolkit/releases/download/v1.102.0/gcluster_bundle_linux_amd64.tgz | tar -xz
 # [END hypercomputer_tpu_tune_gemma4_26b_rl_install_dependencies]
+fi
+
+# [START hypercomputer_tpu_tune_gemma4_26b_rl_install_dependencies_v2]
+wget -qO- https://github.com/GoogleCloudPlatform/cluster-toolkit/releases/download/v1.103.0/gcluster_bundle_linux_amd64.tgz | tar -xz
+# [END hypercomputer_tpu_tune_gemma4_26b_rl_install_dependencies_v2]
 echo "[$(date)] ==================== Prerequisites Installed ===================="
