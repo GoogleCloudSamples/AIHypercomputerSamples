@@ -89,14 +89,17 @@ if gcloud compute networks describe "${CLUSTER_NAME}-net-0" --project="${PROJECT
 fi
 
 echo "[$(date)] ==================== Deleting storage and artifacts... ===================="
-if gcloud storage buckets describe "gs://${GCS_BUCKET}" &>/dev/null; then
+if [ -n "${GCS_BUCKET:-}" ] && [ "${GCS_BUCKET}" != "YOUR_BUCKET_NAME" ] && gcloud storage buckets describe "gs://${GCS_BUCKET}" &>/dev/null; then
   echo "Deleting Cloud Storage bucket gs://${GCS_BUCKET}..."
   gcloud storage rm -r "gs://${GCS_BUCKET}" || echo "Warning: Failed to delete bucket"
 fi
 
-if gcloud artifacts repositories describe "${REPOSITORY_NAME}" --location="${REGION}" --project="${PROJECT}" &>/dev/null; then
-  echo "Deleting Artifact Registry repository ${REPOSITORY_NAME}..."
-  gcloud artifacts repositories delete "${REPOSITORY_NAME}" --location="${REGION}" --project="${PROJECT}" --quiet || echo "Warning: Failed to delete repository"
+# Artifact Registry creation is disabled in 2_build_image.sh when using prebuilt image
+if false; then
+  if gcloud artifacts repositories describe "${REPOSITORY_NAME}" --location="${REGION}" --project="${PROJECT}" &>/dev/null; then
+    echo "Deleting Artifact Registry repository ${REPOSITORY_NAME}..."
+    gcloud artifacts repositories delete "${REPOSITORY_NAME}" --location="${REGION}" --project="${PROJECT}" --quiet || echo "Warning: Failed to delete repository"
+  fi
 fi
 
 rm -rf .ghpc "${CLUSTER_NAME}" gcluster examples community gcluster_bundle_linux_amd64.tgz
