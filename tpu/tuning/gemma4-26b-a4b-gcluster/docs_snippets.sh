@@ -85,6 +85,19 @@ gcloud auth configure-docker "${REGION}-docker.pkg.dev" --quiet
     --location "${REGION}"
 # [END hypercomputer_tpu_tune_gemma4_26b_rl_train_logs]
 
+# [START hypercomputer_tpu_tune_gemma4_26b_rl_train_logs_v2]
+# Use the list command to check status
+./gcluster job list \
+    --cluster "${CLUSTER_NAME}" \
+    --project "${PROJECT}" \
+    --location "${REGION}"
+
+# Check progress of the job
+kubectl logs -f \
+    -l job-name=gemma4-training-pathways-head-0 \
+    -c workload-container
+# [END hypercomputer_tpu_tune_gemma4_26b_rl_train_logs_v2]
+
 # [START hypercomputer_tpu_tune_gemma4_26b_rl_convert_hf_logs]
 # Use the list command to check status
 ./gcluster job list \
