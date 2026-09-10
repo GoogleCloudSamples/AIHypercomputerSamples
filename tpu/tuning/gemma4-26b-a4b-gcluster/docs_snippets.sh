@@ -92,6 +92,11 @@ gcloud auth configure-docker "${REGION}-docker.pkg.dev" --quiet
     --project "${PROJECT}" \
     --location "${REGION}"
 
+# Ensure kubectl is configured
+gcloud container clusters get-credentials "${CLUSTER_NAME}" \
+  --location="${REGION}" \
+  --project="${PROJECT}"
+
 # Check progress of the job
 kubectl logs -f \
     -l job-name=gemma4-training-pathways-head-0 \
