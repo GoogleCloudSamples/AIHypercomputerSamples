@@ -26,35 +26,31 @@ echo "[$(date)] ==================== Cleaning up resources... ==================
 # Extract the unique benchmark run prefix (e.g., pkb-ecc4ef8c-0)
 RUN_PREFIX=$(echo "${CLUSTER_NAME:-pkb-}" | grep -oE '^pkb-[a-f0-9]+-[0-9]+' || echo "${CLUSTER_NAME:-pkb-}")
 
-echo "1. Fast-path: Triggering immediate deletion for all matching GKE clusters..."
+echo "1. Fast-path: Triggering deletion for all matching GKE clusters..."
 # Retrieve names and locations of all clusters matching the prefix (both regional and zonal)
 while read -r c_name c_loc; do
   if [ -n "$c_name" ] && [ -n "$c_loc" ]; then
-    echo " -> Triggering async deletion of cluster: ${c_name} in ${c_loc}..."
+    echo " -> Triggering deletion of cluster: ${c_name} in ${c_loc}..."
     # Delete workloads if K8s API is still responsive
     xpk workload delete --workload "qwen-hf-to-mt" --cluster "${c_name}" --project="${PROJECT}" --zone="${ZONE}" 2>/dev/null || true
     xpk workload delete --workload "qwen-training" --cluster "${c_name}" --project="${PROJECT}" --zone="${ZONE}" 2>/dev/null || true
     xpk workload delete --workload "qwen-mt-to-hf" --cluster "${c_name}" --project="${PROJECT}" --zone="${ZONE}" 2>/dev/null || true
 
-    # Request cluster deletion in GCP - cascades to remove all node pools and TPU nodes
-    gcloud container clusters delete "${c_name}" --location="${c_loc}" --project="${PROJECT}" --quiet --async 2>/dev/null || true
+    # Retry cluster deletion up to 3 times without suppressing errors
+    for attempt in 1 2 3; do
+      if gcloud container clusters delete "${c_name}" --location="${c_loc}" --project="${PROJECT}" --quiet --async; then
+        echo "Successfully queued deletion of ${c_name}"
+        break
+      else
+        echo "Retrying cluster deletion in 10s (attempt $attempt/3)..."
+        sleep 10
+      fi
+    done
   fi
 done < <(gcloud container clusters list --project="${PROJECT}" --filter="name~'^${RUN_PREFIX}'" --format="value(name,location)" 2>/dev/null || true)
 
-# 2. Cleanup Managed Instance Groups (IGMs) across the target zone
-echo "2. Cleaning up residual managed instance groups (IGMs)..."
-gcloud compute instance-groups managed list \
-  --project="${PROJECT}" \
-  --filter="zone:'${ZONE}' AND (name~'${RUN_PREFIX}' OR name~'gke' OR name~'tpu' OR name~'pkb')" \
-  --format="value(name,zone.basename())" 2>/dev/null | while read -r igm_name igm_zone; do
-    if [ -n "$igm_name" ] && [ -n "$igm_zone" ]; then
-      echo " -> Deleting residual IGM: $igm_name in $igm_zone"
-      gcloud compute instance-groups managed delete "$igm_name" --zone="$igm_zone" --project="${PROJECT}" --quiet 2>/dev/null || true
-    fi
-done
-
-# 3. Terminate all residual VM instances (TPU + CPU nodes)
-echo "3. Terminating residual VM instances..."
+# 2. Terminate all residual VM instances (TPU + CPU nodes)
+echo "2. Terminating residual VM instances..."
 gcloud compute instances list \
   --project="${PROJECT}" \
   --zones="${ZONE}" \
@@ -66,7 +62,7 @@ gcloud compute instances list \
     fi
 done
 
-# 3b. Force cleanup of any lingering TPU VMs bound to the specific reservation
+# 2b. Force cleanup of any lingering TPU VMs bound to the specific reservation
 if [ -n "${RESERVATION:-}" ]; then
   echo "Checking for lingering TPU instances specifically bound to reservation ${RESERVATION}..."
   gcloud compute instances list \
@@ -81,11 +77,11 @@ if [ -n "${RESERVATION:-}" ]; then
   done
 fi
 
-# 4. Clean up Pathways ANP networking stack (Firewalls -> Subnets -> VPCs)
+# 3. Clean up Pathways ANP networking stack (Firewalls -> Subnets -> VPCs)
 RUN_HASH=$(echo "${RUN_PREFIX}" | sed -E 's/pkb-//; s/-cluster//')
 
 if [ -n "$RUN_HASH" ]; then
-  echo "4. Cleaning up ANP networking stack for run hash: ${RUN_HASH}..."
+  echo "3. Cleaning up ANP networking stack for run hash: ${RUN_HASH}..."
 
   gcloud compute firewall-rules list \
     --project="${PROJECT}" \
@@ -111,9 +107,9 @@ if [ -n "$RUN_HASH" ]; then
   done
 fi
 
-# 5. Verify TPU reservation release with active sweep
+# 4. Verify TPU reservation release with active sweep
 if [ -n "${RESERVATION:-}" ]; then
-  echo "5. Verifying TPU reservation ${RESERVATION} release..."
+  echo "4. Verifying TPU reservation ${RESERVATION} release..."
   for i in {1..10}; do
     IN_USE=$(gcloud compute reservations describe "${RESERVATION}" \
       --project="${PROJECT}" \
@@ -135,8 +131,8 @@ if [ -n "${RESERVATION:-}" ]; then
   done
 fi
 
-# 6. Clean up run artifacts from Cloud Storage
-echo "6. Cleaning up run artifacts from Cloud Storage..."
+# 5. Clean up run artifacts from Cloud Storage
+echo "5. Cleaning up run artifacts from Cloud Storage..."
 if [ -n "${GCS_BUCKET:-}" ] && [ -n "${MODEL_NAME:-}" ]; then
   gcloud storage rm --recursive "gs://${GCS_BUCKET}/${MODEL_NAME}/" 2>/dev/null || echo "Info: No artifacts found under gs://${GCS_BUCKET}/${MODEL_NAME}/"
 fi
