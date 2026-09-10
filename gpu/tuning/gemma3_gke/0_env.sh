@@ -12,7 +12,7 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
-# [START hypercomputer_gpu_tune_gemma3_gke_env]
+# [START hypercomputer_gpu_tune_gemma4_gke_env]
 export PROJECT_ID="YOUR_PROJECT_ID"
 export CLUSTER_NAME="YOUR_CLUSTER_NAME"
 export CLUSTER_REGION="YOUR_REGION"
@@ -23,4 +23,4 @@ export NETWORK="default"
 
 gcloud config set project "${PROJECT_ID}"
 gcloud config set billing/quota_project "${PROJECT_ID}"
-# [END hypercomputer_gpu_tune_gemma3_gke_env]
+# [END hypercomputer_gpu_tune_gemma4_gke_env]

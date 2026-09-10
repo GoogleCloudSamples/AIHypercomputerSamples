@@ -12,28 +12,28 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 # 
-# [START hypercomputer_gpu_tune_gemma3_gke_setup_manifest_dir]
+# [START hypercomputer_gpu_tune_gemma4_gke_setup_manifest_dir]
 mkdir llm-finetuning-gemma
 cd llm-finetuning-gemma
-# [END hypercomputer_gpu_tune_gemma3_gke_setup_manifest_dir]
+# [END hypercomputer_gpu_tune_gemma4_gke_setup_manifest_dir]
 
-# [START hypercomputer_gpu_tune_gemma3_gke_monitor_pods]
+# [START hypercomputer_gpu_tune_gemma4_gke_monitor_pods]
 watch kubectl get pods
-# [END hypercomputer_gpu_tune_gemma3_gke_monitor_pods]
+# [END hypercomputer_gpu_tune_gemma4_gke_monitor_pods]
 
-# [START hypercomputer_gpu_tune_gemma3_gke_monitor_logs]
+# [START hypercomputer_gpu_tune_gemma4_gke_monitor_logs]
 kubectl logs job.batch/finetune-job -f
-# [END hypercomputer_gpu_tune_gemma3_gke_monitor_logs]
+# [END hypercomputer_gpu_tune_gemma4_gke_monitor_logs]
 
-# [START hypercomputer_gpu_tune_gemma3_gke_view_metrics]
+# [START hypercomputer_gpu_tune_gemma4_gke_view_metrics]
 echo "https://console.cloud.google.com/kubernetes/clusters/details/${CLUSTER_REGION}/${CLUSTER_NAME}/observability?mods=monitoring_api_prod&project=${PROJECT_ID}&pageState=("timeRange":("duration":"PT1H"),"nav":("section":"gpu"),"groupBy":("groupByType":"namespacesTop5"))"
-# [END hypercomputer_gpu_tune_gemma3_gke_view_metrics]
+# [END hypercomputer_gpu_tune_gemma4_gke_view_metrics]
 
-# [START hypercomputer_gpu_tune_gemma3_gke_delete_job]
+# [START hypercomputer_gpu_tune_gemma4_gke_delete_job]
 kubectl delete job finetune-job
-# [END hypercomputer_gpu_tune_gemma3_gke_delete_job]
+# [END hypercomputer_gpu_tune_gemma4_gke_delete_job]
 
-# [START hypercomputer_gpu_tune_gemma3_gke_delete_cluster]
+# [START hypercomputer_gpu_tune_gemma4_gke_delete_cluster]
 gcloud container clusters delete "${CLUSTER_NAME}" \
     --region="${CLUSTER_REGION}"
-# [END hypercomputer_gpu_tune_gemma3_gke_delete_cluster]
+# [END hypercomputer_gpu_tune_gemma4_gke_delete_cluster]
