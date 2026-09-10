@@ -34,15 +34,51 @@ VLLM_CONFIG='{\"maxtext_config\":{\"model_name\":\"qwen3-30b-a3b\",\"allow_split
 
 TRAIN_CMD="JAX_PLATFORMS=proxy,cpu JAX_BACKEND_TARGET=grpc://127.0.0.1:29000 ENABLE_PATHWAYS_PERSISTENCE=1 HF_TOKEN=${HF_TOKEN} python3 -m maxtext.trainers.post_train.rl.train_rl run_name=rl base_output_directory=gs://${GCS_BUCKET}/${MODEL_NAME}/trained/ model_name=qwen3-30b-a3b load_parameters_path=gs://${GCS_BUCKET}/${MODEL_NAME}/max-text-format/0/items/ scan_layers=False dtype=bfloat16 weight_dtype=bfloat16 use_multimodal=False use_chat_template=True tokenizer_type=huggingface tokenizer_path=Qwen/Qwen3-30B-A3B-Instruct-2507 remat_policy=full train_micro_batch_size=4 batch_size=16 rollout_micro_batch_size=8 num_batches=50 per_device_batch_size=1 rollout_tensor_parallelism=4 rollout_expert_parallelism=4 trainer_devices_fraction=0.5 sampler_devices_fraction=0.5 ici_tensor_parallelism=4 ici_expert_parallelism=4 hbm_utilization_vllm=0.2 use_weight_converter=True async_scheduling=False allow_split_physical_axes=true debug=True vllm_hf_overrides=\"${VLLM_OVERRIDES}\" vllm_additional_config=\"${VLLM_CONFIG}\""
 
-xpk workload create-pathways \
-  --cluster="${CLUSTER_NAME}" \
-  --project="${PROJECT}" \
-  --zone="${ZONE}" \
-  --docker-image="${CLOUD_IMAGE_NAME}" \
-  --workload="qwen-training" \
-  --tpu-type="${TPU_TYPE}" \
-  --num-slices=1 \
-  --command="${TRAIN_CMD}"
+# Wait for JobSet controller and mutating webhook service to be ready
+echo "Checking JobSet controller and webhook readiness..."
+kubectl wait --for=condition=Available deployment/jobset-controller-manager -n jobset-system --timeout=180s 2>/dev/null || true
+kubectl wait --for=condition=Ready pod -l app.kubernetes.io/name=jobset -n jobset-system --timeout=120s 2>/dev/null || true
+
+# Retry loop for workload creation (protects against transient 'No agent available' webhook errors)
+MAX_RETRIES=5
+RETRY_DELAY=15
+SUCCESS=false
+
+for attempt in $(seq 1 $MAX_RETRIES); do
+  echo "Attempt ${attempt}/${MAX_RETRIES}: Submitting workload via xpk..."
+
+  # Clean up any leftover or half-registered workload before retrying
+  xpk workload delete \
+    --cluster="${CLUSTER_NAME}" \
+    --project="${PROJECT}" \
+    --zone="${ZONE}" \
+    --workload="qwen-training" 2>/dev/null || true
+
+  if xpk workload create-pathways \
+    --cluster="${CLUSTER_NAME}" \
+    --project="${PROJECT}" \
+    --zone="${ZONE}" \
+    --docker-image="${CLOUD_IMAGE_NAME}" \
+    --workload="qwen-training" \
+    --tpu-type="${TPU_TYPE}" \
+    --num-slices=1 \
+    --command="${TRAIN_CMD}"; then
+      echo "Workload successfully created on attempt ${attempt}."
+      SUCCESS=true
+      break
+  else
+    echo "WARNING: xpk workload create failed on attempt ${attempt}. Waiting ${RETRY_DELAY}s before retrying..."
+    sleep $RETRY_DELAY
+    RETRY_DELAY=$((RETRY_DELAY + 10))
+  fi
+done
+
+if [ "$SUCCESS" != "true" ]; then
+  echo "ERROR: Failed to create xpk workload after ${MAX_RETRIES} attempts."
+  kubectl get pods -n jobset-system || true
+  kubectl get endpoints -n jobset-system || true
+  exit 1
+fi
 # [END hypercomputer_tpu_tune_qwen3_30b_rl_train]
 echo "[$(date)] ==================== Training Workload submitted. ===================="
 
