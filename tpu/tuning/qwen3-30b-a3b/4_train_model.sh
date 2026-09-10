@@ -29,7 +29,13 @@ fi
 
 echo "[$(date)] ==================== Submitting Training Workload... ===================="
 # [START hypercomputer_tpu_tune_qwen3_30b_rl_train]
-TRAIN_CMD="JAX_PLATFORMS=proxy,cpu JAX_BACKEND_TARGET=grpc://127.0.0.1:29000 ENABLE_PATHWAYS_PERSISTENCE=1 HF_TOKEN=${HF_TOKEN} python3 -m maxtext.trainers.post_train.rl.train_rl run_name=rl base_output_directory=gs://${GCS_BUCKET}/${MODEL_NAME}/trained/ model_name=qwen3-30b-a3b load_parameters_path=gs://${GCS_BUCKET}/${MODEL_NAME}/max-text-format/0/items/ scan_layers=False dtype=bfloat16 weight_dtype=bfloat16 use_multimodal=False use_mrope=False mrope_section=[] rope_interleave=False use_chat_template=True tokenizer_type=huggingface tokenizer_path=Qwen/Qwen3-30B-A3B-Instruct-2507 remat_policy=full train_micro_batch_size=4 batch_size=16 rollout_micro_batch_size=8 num_batches=50 per_device_batch_size=1 rollout_tensor_parallelism=4 rollout_expert_parallelism=4 trainer_devices_fraction=0.5 sampler_devices_fraction=0.5 ici_tensor_parallelism=4 ici_expert_parallelism=4 hbm_utilization_vllm=0.25 async_scheduling=False allow_split_physical_axes=true debug=True vllm_hf_overrides={\"architectures\":[\"MaxTextForCausalLM\"]} vllm_additional_config={\"maxtext_config\":{\"model_name\":\"qwen3-30b-a3b\",\"allow_split_physical_axes\":true,\"weight_dtype\":\"bfloat16\",\"use_mrope\":false,\"mrope_section\":[],\"rope_interleave\":false},\"trust_remote_code\":true}"
+
+# 1. Define JSON payloads with explicit escaped quotes so inner /bin/sh inside container preserves them for Python Pydantic
+VLLM_OVERRIDES='{\"architectures\":[\"MaxTextForCausalLM\"]}'
+VLLM_CONFIG='{\"maxtext_config\":{\"model_name\":\"qwen3-30b-a3b\",\"allow_split_physical_axes\":true,\"weight_dtype\":\"bfloat16\",\"use_mrope\":false,\"mrope_section\":[],\"rope_interleave\":false},\"trust_remote_code\":true}'
+
+TRAIN_CMD="JAX_PLATFORMS=proxy,cpu JAX_BACKEND_TARGET=grpc://127.0.0.1:29000 ENABLE_PATHWAYS_PERSISTENCE=1 HF_TOKEN=${HF_TOKEN} python3 -m maxtext.trainers.post_train.rl.train_rl run_name=rl base_output_directory=gs://${GCS_BUCKET}/${MODEL_NAME}/trained/ model_name=qwen3-30b-a3b load_parameters_path=gs://${GCS_BUCKET}/${MODEL_NAME}/max-text-format/0/items/ scan_layers=False dtype=bfloat16 weight_dtype=bfloat16 use_multimodal=False use_mrope=False mrope_section=[] rope_interleave=False use_chat_template=True tokenizer_type=huggingface tokenizer_path=Qwen/Qwen3-30B-A3B-Instruct-2507 remat_policy=full train_micro_batch_size=4 batch_size=16 rollout_micro_batch_size=8 num_batches=50 per_device_batch_size=1 rollout_tensor_parallelism=4 rollout_expert_parallelism=4 trainer_devices_fraction=0.5 sampler_devices_fraction=0.5 ici_tensor_parallelism=4 ici_expert_parallelism=4 hbm_utilization_vllm=0.25 async_scheduling=False allow_split_physical_axes=true debug=True vllm_hf_overrides=\"${VLLM_OVERRIDES}\" vllm_additional_config=\"${VLLM_CONFIG}\""
+
 xpk workload create-pathways \
   --cluster="${CLUSTER_NAME}" \
   --project="${PROJECT}" \
@@ -43,9 +49,11 @@ xpk workload create-pathways \
 echo "[$(date)] ==================== Training Workload submitted. ===================="
 
 echo "[$(date)] ==================== Waiting for Training Workload to Complete... ===================="
+
+# 2. Wait up to 10 minutes (120 * 5s) for the head pod to be created by Kueue/JobSet
 echo "Waiting for training pod to be created..."
 POD_NAME=""
-for i in {1..30}; do
+for i in {1..120}; do
   POD_NAME=$(kubectl get pods --no-headers 2>/dev/null | grep qwen-training-pathways-head | awk '{print $1}' | head -n 1 || true)
   if [ -n "$POD_NAME" ]; then
     break
@@ -53,48 +61,69 @@ for i in {1..30}; do
   sleep 5
 done
 
-if [ -n "$POD_NAME" ]; then
-  echo "Found training pod: $POD_NAME"
-  echo "Waiting for pod to start running..."
-  while true; do
-    POD_STATUS=$(kubectl get pod "$POD_NAME" -o jsonpath='{.status.phase}' 2>/dev/null || echo "Unknown")
-    if [[ "$POD_STATUS" == "Running" || "$POD_STATUS" == "Succeeded" || "$POD_STATUS" == "Failed" ]]; then
-      break
-    fi
-    sleep 10
-  done
+if [ -z "$POD_NAME" ]; then
+  echo "ERROR: Could not find the training pod within 10 minutes. Workload admission or scheduling failed."
+  kubectl get workloads -A || true
+  kubectl get jobsets -A || true
+  exit 1
+fi
 
-  echo "Tailing logs... (this will block until training finishes)"
-  kubectl logs -f "$POD_NAME" -c jax-tpu || true
-
-  echo "Checking execution result of main training container (jax-tpu)..."
-  CONTAINER_EXIT_CODE=""
-  for i in {1..30}; do
-    CONTAINER_EXIT_CODE=$(kubectl get pod "$POD_NAME" -o jsonpath='{.status.containerStatuses[?(@.name=="jax-tpu")].state.terminated.exitCode}' 2>/dev/null || echo "")
-    if [ -z "$CONTAINER_EXIT_CODE" ]; then
-      CONTAINER_EXIT_CODE=$(kubectl get pod "$POD_NAME" -o jsonpath='{.status.containerStatuses[?(@.name=="jax-tpu")].lastState.terminated.exitCode}' 2>/dev/null || echo "")
-    fi
-
-    POD_STATUS=$(kubectl get pod "$POD_NAME" -o jsonpath='{.status.phase}' 2>/dev/null || echo "Unknown")
-
-    if [ -n "$CONTAINER_EXIT_CODE" ]; then
-      break
-    fi
-    if [ "$POD_STATUS" == "Succeeded" ]; then
-      CONTAINER_EXIT_CODE="0"
-      break
-    fi
-    sleep 5
-  done
-
-  if [ "$CONTAINER_EXIT_CODE" == "0" ] || [ "$POD_STATUS" == "Succeeded" ]; then
-    echo "[$(date)] ==================== Training completed successfully. ===================="
-  else
-    echo "ERROR: Training failed. Pod phase: ${POD_STATUS}, Container jax-tpu exit code: ${CONTAINER_EXIT_CODE:-None}."
-    kubectl get pod "$POD_NAME" -o yaml | grep -A 10 containerStatuses || true
-    exit 1
+echo "Found training pod: $POD_NAME"
+echo "Waiting for pod to enter Running or terminal phase..."
+while true; do
+  POD_STATUS=$(kubectl get pod "$POD_NAME" -o jsonpath='{.status.phase}' 2>/dev/null || echo "Unknown")
+  if [[ "$POD_STATUS" == "Running" || "$POD_STATUS" == "Succeeded" || "$POD_STATUS" == "Failed" ]]; then
+    break
   fi
+  sleep 10
+done
+
+# 3. Stream logs in a resilient loop so XLA compilation silent periods don't prematurely exit the script
+echo "Streaming logs... (resilient to connection drops during long XLA compilation)"
+while true; do
+  POD_STATUS=$(kubectl get pod "$POD_NAME" -o jsonpath='{.status.phase}' 2>/dev/null || echo "Unknown")
+
+  if [[ "$POD_STATUS" == "Succeeded" || "$POD_STATUS" == "Failed" ]]; then
+    break
+  fi
+
+  # Stream logs; if timeout/disconnect occurs, check status and reconnect with --tail
+  kubectl logs -f "$POD_NAME" -c jax-tpu --tail=100 2>/dev/null || true
+
+  # Check if container actually terminated before sleeping
+  CONTAINER_STATE=$(kubectl get pod "$POD_NAME" -o jsonpath='{.status.containerStatuses[?(@.name=="jax-tpu")].state.terminated.reason}' 2>/dev/null || echo "")
+  if [ -n "$CONTAINER_STATE" ]; then
+    break
+  fi
+
+  sleep 10
+done
+
+# 4. Final status determination
+echo "Checking execution result of main training container (jax-tpu)..."
+CONTAINER_EXIT_CODE=""
+for i in {1..30}; do
+  CONTAINER_EXIT_CODE=$(kubectl get pod "$POD_NAME" -o jsonpath='{.status.containerStatuses[?(@.name=="jax-tpu")].state.terminated.exitCode}' 2>/dev/null || echo "")
+  if [ -z "$CONTAINER_EXIT_CODE" ]; then
+    CONTAINER_EXIT_CODE=$(kubectl get pod "$POD_NAME" -o jsonpath='{.status.containerStatuses[?(@.name=="jax-tpu")].lastState.terminated.exitCode}' 2>/dev/null || echo "")
+  fi
+
+  POD_STATUS=$(kubectl get pod "$POD_NAME" -o jsonpath='{.status.phase}' 2>/dev/null || echo "Unknown")
+
+  if [ -n "$CONTAINER_EXIT_CODE" ]; then
+    break
+  fi
+  if [ "$POD_STATUS" == "Succeeded" ]; then
+    CONTAINER_EXIT_CODE="0"
+    break
+  fi
+  sleep 5
+done
+
+if [ "$CONTAINER_EXIT_CODE" == "0" ] || [ "$POD_STATUS" == "Succeeded" ]; then
+  echo "[$(date)] ==================== Training completed successfully. ===================="
 else
-  echo "ERROR: Could not find the training pod. It may have failed to schedule."
+  echo "ERROR: Training failed. Pod phase: ${POD_STATUS}, Container jax-tpu exit code: ${CONTAINER_EXIT_CODE:-None}."
+  kubectl get pod "$POD_NAME" -o yaml | grep -A 15 containerStatuses || true
   exit 1
 fi
