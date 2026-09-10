@@ -1,4 +1,4 @@
-# [START hypercomputer_gpu_tune_gemma3_gke_finetune]
+# [START hypercomputer_gpu_tune_gemma4_gke_finetune]
 import torch
 import argparse
 import subprocess
@@ -10,22 +10,22 @@ from huggingface_hub import login
 
 def get_args():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--model_id", type=str, default="google/gemma-3-12b-pt", help="Hugging Face model ID")
+    parser.add_argument("--model_id", type=str, default="google/gemma-4-31b-it", help="Hugging Face model ID")
     parser.add_argument("--hf_token", type=str, default=None, help="Hugging Face token for private models")
     parser.add_argument("--trust_remote", type=bool, default="False", help="Trust remote code when loading tokenizer")
     parser.add_argument("--use_fast", type=bool, default="True", help="Determines if a fast Rust-based tokenizer should be used")
     parser.add_argument("--dataset_name", type=str, default="philschmid/gretel-synthetic-text-to-sql", help="Hugging Face dataset name")
-    parser.add_argument("--output_dir", type=str, default="gemma-12b-text-to-sql", help="Directory to save model checkpoints")
+    parser.add_argument("--output_dir", type=str, default="gemma-31b-text-to-sql", help="Directory to save model checkpoints")
 
     # LoRA arguments
     parser.add_argument("--lora_r", type=int, default=16, help="LoRA attention dimension")
-    parser.add_argument("--lora_alpha", type=int, default=16, help="LoRA alpha scaling factor")
+    parser.add_argument("--lora_alpha", type=int, default=32, help="LoRA alpha scaling factor")
     parser.add_argument("--lora_dropout", type=float, default=0.05, help="LoRA dropout probability")
     # SFTConfig arguments
-    parser.add_argument("--max_seq_length", type=int, default=512, help="Maximum sequence length")
+    parser.add_argument("--max_length", type=int, default=1024, help="Maximum sequence length")
     parser.add_argument("--num_train_epochs", type=int, default=3, help="Number of training epochs")
-    parser.add_argument("--per_device_train_batch_size", type=int, default=8, help="Batch size per device during training")
-    parser.add_argument("--gradient_accumulation_steps", type=int, default=1, help="Gradient accumulation steps")
+    parser.add_argument("--per_device_train_batch_size", type=int, default=2, help="Batch size per device during training")
+    parser.add_argument("--gradient_accumulation_steps", type=int, default=32, help="Gradient accumulation steps")
     parser.add_argument("--learning_rate", type=float, default=1e-5, help="Learning rate")
     parser.add_argument("--logging_steps", type=int, default=10, help="Log every X steps")
     parser.add_argument("--save_strategy", type=str, default="steps", help="Checkpoint save strategy")
@@ -51,23 +51,17 @@ def main():
         torch_dtype_obj = torch.float16
         torch_dtype_str = "float16"
     tokenizer = AutoTokenizer.from_pretrained(args.model_id, trust_remote_code=args.trust_remote, use_fast=args.use_fast)
-    tokenizer.pad_token = tokenizer.eos_token
-    gemma_chat_template = (
-        "{{ bos_token }}"
-        "{% if messages[0]['role'] == 'system' %}{{ messages[0]['content'] }}{% endif %}"
-        "{% for message in messages %}"
-        "{% if message['role'] == 'user' %}<start_of_turn>user\n{{ message['content'] }}<end_of_turn>\n{% elif message['role'] == 'assistant' %}<start_of_turn>model\n{{ message['content'] }}<end_of_turn>\n{% endif %}"
-        "{% endfor %}"
-    )
-    tokenizer.chat_template = gemma_chat_template
+    if tokenizer.pad_token is None:
+        tokenizer.pad_token = tokenizer.eos_token
     # --- 4. Define the Formatting Function ---
     def formatting_func(example):
         system_message = "You are a text to SQL query translator. Users will ask you questions in English and you will generate a SQL query based on the provided SCHEMA."
         user_prompt = "Given the <USER_QUERY> and the <SCHEMA>, generate the corresponding SQL command to retrieve the desired data, considering the query's syntax, semantics, and schema constraints.\n\n<SCHEMA>\n{context}\n</SCHEMA>\n\n<USER_QUERY>\n{question}\n</USER_QUERY>\n"
 
         messages = [
-            {"role": "user", "content": user_prompt.format(question=example["sql_prompt"][0], context=example["sql_context"][0])},
-            {"role": "assistant", "content": example["sql"][0]}
+            {"role": "system", "content": system_message},
+            {"role": "user", "content": user_prompt.format(question=example["sql_prompt"], context=example["sql_context"])},
+            {"role": "assistant", "content": example["sql"]}
         ]
         return tokenizer.apply_chat_template(messages, tokenize=False)
     # --- 5. Load Model and Apply PEFT ---
@@ -77,7 +71,7 @@ def main():
     model = AutoModelForCausalLM.from_pretrained(
         args.model_id,
         config=config,
-        attn_implementation="eager",
+        attn_implementation="sdpa",
         torch_dtype=torch_dtype_obj,
     )
 
@@ -87,7 +81,7 @@ def main():
         lora_dropout=args.lora_dropout,
         r=args.lora_r,
         bias="none",
-        target_modules=["q_proj", "k_proj", "v_proj", "o_proj", "gate_proj", "up_proj", "down_proj"],
+        target_modules="all-linear",
         task_type="CAUSAL_LM",
     )
     print("Applying PEFT configuration...")
@@ -96,7 +90,7 @@ def main():
     # --- 6. Configure Training Arguments ---
     training_args = SFTConfig(
         output_dir=args.output_dir,
-        max_seq_length=args.max_seq_length,
+        max_length=args.max_length,
         num_train_epochs=args.num_train_epochs,
         per_device_train_batch_size=args.per_device_train_batch_size,
         gradient_accumulation_steps=args.gradient_accumulation_steps,
@@ -112,14 +106,10 @@ def main():
         fp16=True if torch_dtype_obj == torch.float16 else False,
         bf16=True if torch_dtype_obj == torch.bfloat16 else False,
         max_grad_norm=0.3,
-        warmup_ratio=0.03,
+        warmup_steps=0.03,
         lr_scheduler_type="constant",
-        push_to_hub=True,
+        push_to_hub=args.push_to_hub,
         report_to="tensorboard",
-        dataset_kwargs={
-            "add_special_tokens": False,
-            "append_concat_token": True,
-        }
     )
     # --- 7. Create Trainer and Start Training ---
     trainer = SFTTrainer(
@@ -127,6 +117,7 @@ def main():
         args=training_args,
         train_dataset=dataset["train"],
         eval_dataset=dataset["test"],
+        processing_class=tokenizer,
         formatting_func=formatting_func,
     )
     print("Starting training...")
@@ -134,10 +125,10 @@ def main():
     print("Training finished.")
     # --- 8. Save the final model ---
     print(f"Saving final model to {args.output_dir}")
-    model.cpu()
     trainer.save_model(args.output_dir)
-    torch.distributed.destroy_process_group()
+    if torch.distributed.is_initialized():
+        torch.distributed.destroy_process_group()
 
 if __name__ == "__main__":
     main()
-# [END hypercomputer_gpu_tune_gemma3_gke_finetune]
+# [END hypercomputer_gpu_tune_gemma4_gke_finetune]

@@ -19,9 +19,18 @@ set -e
 kubectl delete job finetune-job --ignore-not-found=true || true
 echo "[$(date)] ==================== Job deleted. ===================="
 
-gcloud container clusters delete "${CLUSTER_NAME}" \
-    --region="${CLUSTER_REGION}" --quiet || true
-echo "[$(date)] ==================== Cluster deleted. ===================="
+if gcloud container clusters describe "${CLUSTER_NAME}" --region="${CLUSTER_REGION}" >/dev/null 2>&1; then
+    gcloud container clusters delete "${CLUSTER_NAME}" \
+        --region="${CLUSTER_REGION}" --quiet || true
+
+    if gcloud container clusters describe "${CLUSTER_NAME}" --region="${CLUSTER_REGION}" >/dev/null 2>&1; then
+        echo "[$(date)] ==================== Cluster was not deleted. ===================="
+    else
+        echo "[$(date)] ==================== Cluster deleted. ===================="
+    fi
+else
+    echo "[$(date)] ==================== Cluster ${CLUSTER_NAME} does not exist. ===================="
+fi
 
 gcloud artifacts repositories delete gemma \
     --location="${ARTIFACT_REPO_LOCATION}" \

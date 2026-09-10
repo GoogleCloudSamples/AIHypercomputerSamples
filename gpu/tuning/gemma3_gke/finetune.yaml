@@ -1,4 +1,4 @@
-# [START hypercomputer_gpu_tune_gemma3_gke_job_yaml]
+# [START hypercomputer_gpu_tune_gemma4_gke_job_yaml]
 apiVersion: batch/v1
 kind: Job
 metadata:
@@ -18,16 +18,16 @@ spec:
         command: ["accelerate","launch"]
         args:
         - "--config_file"
-        - "accel_fsdp_gemma3_config.yaml"
+        - "accel_fsdp_gemma4_config.yaml"
         - "finetune.py"
         - "--model_id"
-        - "google/gemma-3-12b-pt"
+        - "google/gemma-4-31B-it"
         - "--output_dir"
-        - "gemma-12b-text-to-sql"
+        - "gemma-31b-text-to-sql"
         - "--per_device_train_batch_size"
-        - "8"
+        - "2"
         - "--gradient_accumulation_steps"
-        - "8"
+        - "32"
         - "--num_train_epochs"
         - "3"
         - "--learning_rate"
@@ -39,6 +39,12 @@ spec:
         resources:
           limits:
             nvidia.com/gpu: "8"
+            memory: "1000Gi"
+            ephemeral-storage: "350Gi"
+          requests:
+            nvidia.com/gpu: "8"
+            memory: "1000Gi"
+            ephemeral-storage: "350Gi"
         env:
         - name: HF_TOKEN
           valueFrom:
@@ -52,10 +58,11 @@ spec:
       - name: dshm
         emptyDir:
           medium: Memory
+          sizeLimit: 64Gi
       nodeSelector:
         cloud.google.com/gke-accelerator: nvidia-b200
         cloud.google.com/reservation-name: $RESERVATION
         cloud.google.com/reservation-affinity: "specific"
         cloud.google.com/gke-gpu-driver-version: latest
       restartPolicy: OnFailure
-# [END hypercomputer_gpu_tune_gemma3_gke_job_yaml]
+# [END hypercomputer_gpu_tune_gemma4_gke_job_yaml]

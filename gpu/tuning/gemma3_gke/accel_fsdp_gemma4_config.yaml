@@ -1,4 +1,4 @@
-# [START hypercomputer_gpu_tune_gemma3_gke_fsdp_config]
+# [START hypercomputer_gpu_tune_gemma4_gke_fsdp_config]
 compute_environment: LOCAL_MACHINE
 debug: false
 distributed_type: FSDP
@@ -7,12 +7,16 @@ enable_cpu_affinity: false
 fsdp_config:
   fsdp_activation_checkpointing: false
   fsdp_auto_wrap_policy: TRANSFORMER_BASED_WRAP
+  fsdp_backward_prefetch: BACKWARD_PRE
   fsdp_cpu_ram_efficient_loading: true
+  fsdp_forward_prefetch: true
   fsdp_offload_params: false
   fsdp_reshard_after_forward: true
+  fsdp_sharding_strategy: FULL_SHARD
   fsdp_state_dict_type: FULL_STATE_DICT
-  fsdp_transformer_layer_cls_to_wrap: Gemma3DecoderLayer
-  fsdp_version: 2
+  fsdp_sync_module_states: true
+  fsdp_transformer_layer_cls_to_wrap: Gemma4TextDecoderLayer
+  fsdp_version: 1
 machine_rank: 0
 main_training_function: main
 mixed_precision: bf16
@@ -24,4 +28,4 @@ tpu_env: []
 tpu_use_cluster: false
 tpu_use_sudo: false
 use_cpu: false
-# [END hypercomputer_gpu_tune_gemma3_gke_fsdp_config]
+# [END hypercomputer_gpu_tune_gemma4_gke_fsdp_config]
