@@ -52,7 +52,6 @@ xpk workload create \
   base_output_directory=gs://${GCS_BUCKET}/${MODEL_NAME}/max-text-format/ \
   scan_layers=False \
   weight_dtype=bfloat16 \
-  qkv_bias=True \
   use_multimodal=False \
   use_mrope=False \
   mrope_section=[] \
