@@ -31,3 +31,30 @@ export RESERVATION="YOUR_RESERVATION_NAME"
 export MODEL_NAME="gemma4-26b"
 export HF_TOKEN="YOUR_HF_TOKEN"
 # [END hypercomputer_tpu_tune_gemma4_26b_rl_env]
+
+# Override for sample automation using prebuilt image
+export CLOUD_IMAGE_NAME="us-docker.pkg.dev/cloud-tpu-images/maxtext-images/tpu_post_training:0.2.4"
+
+# [START hypercomputer_tpu_tune_gemma4_26b_rl_env_v2]
+export PROJECT="YOUR_PROJECT_ID"
+export REGION="YOUR_REGION"
+export ZONE="YOUR_ZONE"
+export CLUSTER_NAME="YOUR_CLUSTER_NAME"
+export GCS_BUCKET="YOUR_BUCKET_NAME"
+export CLOUD_IMAGE_NAME="us-docker.pkg.dev/cloud-tpu-images/maxtext-images/tpu_post_training:0.2.4"
+export COMPUTE_TYPE="ct6e-standard-4t"
+export TPU_TYPE="v6e-64"
+export TOPOLOGY="8x8"
+export CLUSTER_NODEPOOL_COUNT=1
+export PW_CPU_MACHINE_TYPE="c4d-standard-96"
+export RESERVATION="YOUR_RESERVATION_NAME"
+export MODEL_NAME="gemma4-26b"
+export HF_TOKEN="YOUR_HF_TOKEN"
+# [END hypercomputer_tpu_tune_gemma4_26b_rl_env_v2]
+
+# Ensure CLUSTER_NAME is <= 20 chars so service account IDs (${CLUSTER_NAME}-gke-np-sa) stay <= 30 chars
+if [[ "$CLUSTER_NAME" == pkb-*-cluster ]]; then
+  export CLUSTER_NAME="${CLUSTER_NAME%-cluster}"
+elif [ ${#CLUSTER_NAME} -gt 20 ]; then
+  export CLUSTER_NAME="${CLUSTER_NAME:0:20}"
+fi
