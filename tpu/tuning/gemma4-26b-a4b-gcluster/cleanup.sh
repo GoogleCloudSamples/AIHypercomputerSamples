@@ -79,6 +79,13 @@ if gcloud compute networks subnets describe "${CLUSTER_NAME}-sub-0" --region="${
   gcloud compute networks subnets delete "${CLUSTER_NAME}-sub-0" --region="${REGION}" --project="${PROJECT}" --quiet 2>/dev/null || true
 fi
 
+# Fallback: clean up dangling NAT static IP addresses
+ips=$(gcloud compute addresses list --project="${PROJECT}" --filter="name ~ ${CLUSTER_NAME}-net-0-nat-ips" --format="value(name)" --regions="${REGION}" 2>/dev/null || true)
+if [ -n "$ips" ]; then
+  echo "Deleting dangling NAT IP addresses..."
+  echo "$ips" | xargs -r gcloud compute addresses delete --region="${REGION}" --project="${PROJECT}" --quiet 2>/dev/null || true
+fi
+
 if gcloud compute networks describe "${CLUSTER_NAME}-net-0" --project="${PROJECT}" &>/dev/null; then
   echo "Cleaning up dangling firewall rules and VPC network..."
   fw_rules=$(gcloud compute firewall-rules list --project="${PROJECT}" --filter="network:${CLUSTER_NAME}-net-0" --format="value(name)" 2>/dev/null || true)
