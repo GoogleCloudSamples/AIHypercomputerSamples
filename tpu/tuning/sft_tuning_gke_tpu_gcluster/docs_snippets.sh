@@ -44,6 +44,7 @@ gcloud iam roles create gke.gcsfuse.profileUser \
 ./gcluster deploy examples/gke-tpu-v6e/gke-tpu-v6e-advanced.yaml \
     --vars "project_id=${PROJECT},deployment_name=${CLUSTER_NAME},region=${REGION},zone=${ZONE},num_slices=1,tpu_topology=4x8,authorized_cidr=0.0.0.0/0,reservation=${RESERVATION:-}" \
     --download-dependencies \
+    -l IGNORE \
     -w
 # [END hypercomputer_tpu_sft_gcluster_create_cluster]
 
