@@ -70,7 +70,10 @@ echo "[$(date)] ==================== Waiting for Model Conversion to Complete...
 echo "Waiting for conversion pod to be created..."
 POD_NAME=""
 for i in {1..60}; do
-  POD_NAME=$(kubectl get pods --no-headers 2>/dev/null | grep qwen-hf-to-mt | awk '{print $1}' | head -n 1) || true
+  POD_NAME=$(kubectl get pods -l jobset.sigs.k8s.io/jobset-name=qwen-hf-to-mt -o jsonpath='{.items[0].metadata.name}' 2>/dev/null || true)
+  if [ -z "$POD_NAME" ]; then
+    POD_NAME=$(kubectl get pods --no-headers 2>/dev/null | grep qwen-hf-to-mt | awk '{print $1}' | tr -d '"' | head -n 1 || true)
+  fi
   if [ -n "$POD_NAME" ]; then
     break
   fi
@@ -84,7 +87,7 @@ if [ -n "$POD_NAME" ]; then
   MAX_WAIT_START=120
   WAIT_COUNT=0
   while true; do
-    POD_STATUS=$(kubectl get pod $POD_NAME -o jsonpath='{.status.phase}' 2>/dev/null || echo "Unknown")
+    POD_STATUS=$(kubectl get pod "$POD_NAME" -o jsonpath='{.status.phase}' 2>/dev/null || echo "Unknown")
     if [[ "$POD_STATUS" == "Running" || "$POD_STATUS" == "Succeeded" || "$POD_STATUS" == "Failed" ]]; then
       break
     fi
@@ -92,36 +95,32 @@ if [ -n "$POD_NAME" ]; then
     WAIT_COUNT=$((WAIT_COUNT + 1))
     if [ $WAIT_COUNT -ge $MAX_WAIT_START ]; then
       echo "ERROR: Timed out waiting for pod $POD_NAME to start running. Current status: $POD_STATUS"
-      kubectl describe pod $POD_NAME || true
+      kubectl describe pod "$POD_NAME" || true
       exit 1
     fi
     sleep 10
   done
 
-  echo "Tailing logs... (this will block until the conversion finishes)"
-  kubectl logs -f $POD_NAME || true
-
-  echo "Waiting for pod to reach completion status (timeout: 180 minutes)..."
-  MAX_WAIT_FINISH=1080
-  WAIT_FINISH_COUNT=0
+  echo "Streaming conversion logs..."
   while true; do
-    POD_STATUS=$(kubectl get pod $POD_NAME -o jsonpath='{.status.phase}' 2>/dev/null || echo "Unknown")
+    POD_STATUS=$(kubectl get pod "$POD_NAME" -o jsonpath='{.status.phase}' 2>/dev/null || echo "Unknown")
     if [[ "$POD_STATUS" == "Succeeded" || "$POD_STATUS" == "Failed" ]]; then
       break
     fi
 
-    WAIT_FINISH_COUNT=$((WAIT_FINISH_COUNT + 1))
-    if [ $WAIT_FINISH_COUNT -ge $MAX_WAIT_FINISH ]; then
-      echo "ERROR: Timed out waiting for pod $POD_NAME to finish conversion."
-      kubectl describe pod $POD_NAME || true
-      exit 1
-    fi
-    sleep 10
+    # Stream logs; reconnect gracefully if network/tail drops
+    kubectl logs -f "$POD_NAME" --tail=100 2>/dev/null || true
+    sleep 5
   done
 
+  # Verify final pod phase
+  POD_STATUS=$(kubectl get pod "$POD_NAME" -o jsonpath='{.status.phase}' 2>/dev/null || echo "Unknown")
   if [ "$POD_STATUS" != "Succeeded" ]; then
     echo "ERROR: Conversion pod did not succeed (Status: $POD_STATUS)."
-    kubectl logs --tail=100 $POD_NAME || true
+    echo "--- Last 50 lines of pod log ---"
+    kubectl logs --tail=50 "$POD_NAME" 2>/dev/null || true
+    echo "--- Pod Description ---"
+    kubectl describe pod "$POD_NAME" 2>/dev/null || true
     exit 1
   fi
   echo "[$(date)] ==================== Model converted successfully. ===================="
