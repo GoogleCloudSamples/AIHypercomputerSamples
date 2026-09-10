@@ -51,3 +51,10 @@ export RESERVATION="YOUR_RESERVATION_NAME"
 export MODEL_NAME="gemma4-26b"
 export HF_TOKEN="YOUR_HF_TOKEN"
 # [END hypercomputer_tpu_tune_gemma4_26b_rl_env_v2]
+
+# Ensure CLUSTER_NAME is <= 20 chars so service account IDs (${CLUSTER_NAME}-gke-np-sa) stay <= 30 chars
+if [[ "$CLUSTER_NAME" == pkb-*-cluster ]]; then
+  export CLUSTER_NAME="${CLUSTER_NAME%-cluster}"
+elif [ ${#CLUSTER_NAME} -gt 20 ]; then
+  export CLUSTER_NAME="${CLUSTER_NAME:0:20}"
+fi
