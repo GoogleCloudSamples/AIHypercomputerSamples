@@ -30,7 +30,6 @@ xpk workload create-pathways \
   --workload="qwen-training" \
   --tpu-type="${TPU_TYPE}" \
   --num-slices=1 \
-  --injection-failure-policy=false \
   --command="JAX_PLATFORMS=proxy,cpu JAX_BACKEND_TARGET=grpc://127.0.0.1:29000 ENABLE_PATHWAYS_PERSISTENCE=1 \
       python3 -m maxtext.trainers.post_train.rl.train_rl \
       run_name=rl \
@@ -51,7 +50,7 @@ xpk workload create-pathways \
       hbm_utilization_vllm=0.2 \
       async_scheduling=False \
       allow_split_physical_axes=true \
-      debug.rl=True \
+      debug=True \
       vllm_hf_overrides='{architectures: [\"MaxTextForCausalLM\"]}' \
       vllm_additional_config=\"{'maxtext_config': {'model_name': '${MODEL_NAME}', 'allow_split_physical_axes': 'true', weight_dtype: bfloat16}}\""
 # [END hypercomputer_tpu_tune_qwen3_30b_rl_train]
@@ -79,19 +78,59 @@ if [ -n "$POD_NAME" ]; then
     sleep 10
   done
 
-  echo "Tailing logs... (this will block until training finishes)"
-  kubectl logs -f $POD_NAME || true
-
-  for i in {1..10}; do
+  echo "Tailing logs and monitoring workload until completion..."
+  INITIAL_ATTACH=true
+  UNKNOWN_COUNT=0
+  while true; do
     POD_STATUS=$(kubectl get pod $POD_NAME -o jsonpath='{.status.phase}' 2>/dev/null) || POD_STATUS="Unknown"
+    POD_STATUS="${POD_STATUS:-Unknown}"
     if [[ "$POD_STATUS" == "Succeeded" || "$POD_STATUS" == "Failed" ]]; then
       break
     fi
-    sleep 3
+    if [[ "$POD_STATUS" == "Unknown" ]]; then
+      UNKNOWN_COUNT=$((UNKNOWN_COUNT + 1))
+      if [ $UNKNOWN_COUNT -ge 12 ]; then
+        echo "ERROR: Pod $POD_NAME status unknown or not found for 2 minutes."
+        exit 1
+      fi
+    else
+      UNKNOWN_COUNT=0
+    fi
+
+    if [ "$INITIAL_ATTACH" = true ]; then
+      echo "Streaming logs (pod phase: $POD_STATUS)..."
+      kubectl logs -f $POD_NAME || true
+      INITIAL_ATTACH=false
+    else
+      echo "Streaming logs (pod phase: $POD_STATUS)..."
+      kubectl logs -f $POD_NAME --tail=50 || true
+    fi
+
+    POD_STATUS=$(kubectl get pod $POD_NAME -o jsonpath='{.status.phase}' 2>/dev/null) || POD_STATUS="Unknown"
+    POD_STATUS="${POD_STATUS:-Unknown}"
+    if [[ "$POD_STATUS" == "Succeeded" || "$POD_STATUS" == "Failed" ]]; then
+      break
+    fi
+    echo "Log stream disconnected; pod is still $POD_STATUS. Reconnecting in 10s..."
+    sleep 10
   done
+
+  # Give Kubernetes a brief moment to update the pod's phase after container finishes
+  if [[ "$POD_STATUS" != "Succeeded" && "$POD_STATUS" != "Failed" ]]; then
+    for i in {1..6}; do
+      POD_STATUS=$(kubectl get pod $POD_NAME -o jsonpath='{.status.phase}' 2>/dev/null) || POD_STATUS="Unknown"
+      POD_STATUS="${POD_STATUS:-Unknown}"
+      if [[ "$POD_STATUS" == "Succeeded" || "$POD_STATUS" == "Failed" ]]; then
+        break
+      fi
+      sleep 5
+    done
+  fi
 
   if [ "$POD_STATUS" != "Succeeded" ]; then
     echo "ERROR: Training pod did not succeed (Status: $POD_STATUS)."
+    echo "Recent pod logs:"
+    kubectl logs $POD_NAME --tail=100 || true
     exit 1
   fi
   echo "[$(date)] ==================== Training completed successfully. ===================="

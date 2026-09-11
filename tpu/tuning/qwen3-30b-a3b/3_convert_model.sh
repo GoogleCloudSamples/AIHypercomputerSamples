@@ -66,20 +66,59 @@ if [ -n "$POD_NAME" ]; then
     sleep 10
   done
 
-  echo "Tailing logs... (this will block until the conversion finishes)"
-  kubectl logs -f $POD_NAME || true
-  
-  # Give Kubernetes a moment to update the pod's phase after logs stream finishes
-  for i in {1..10}; do
-    POD_STATUS=$(kubectl get pod $POD_NAME -o jsonpath='{.status.phase}')
+  echo "Tailing logs and monitoring workload until completion..."
+  INITIAL_ATTACH=true
+  UNKNOWN_COUNT=0
+  while true; do
+    POD_STATUS=$(kubectl get pod $POD_NAME -o jsonpath='{.status.phase}' 2>/dev/null) || POD_STATUS="Unknown"
+    POD_STATUS="${POD_STATUS:-Unknown}"
     if [[ "$POD_STATUS" == "Succeeded" || "$POD_STATUS" == "Failed" ]]; then
       break
     fi
-    sleep 3
+    if [[ "$POD_STATUS" == "Unknown" ]]; then
+      UNKNOWN_COUNT=$((UNKNOWN_COUNT + 1))
+      if [ $UNKNOWN_COUNT -ge 12 ]; then
+        echo "ERROR: Pod $POD_NAME status unknown or not found for 2 minutes."
+        exit 1
+      fi
+    else
+      UNKNOWN_COUNT=0
+    fi
+
+    if [ "$INITIAL_ATTACH" = true ]; then
+      echo "Streaming logs (pod phase: $POD_STATUS)..."
+      kubectl logs -f $POD_NAME || true
+      INITIAL_ATTACH=false
+    else
+      echo "Streaming logs (pod phase: $POD_STATUS)..."
+      kubectl logs -f $POD_NAME --tail=50 || true
+    fi
+
+    POD_STATUS=$(kubectl get pod $POD_NAME -o jsonpath='{.status.phase}' 2>/dev/null) || POD_STATUS="Unknown"
+    POD_STATUS="${POD_STATUS:-Unknown}"
+    if [[ "$POD_STATUS" == "Succeeded" || "$POD_STATUS" == "Failed" ]]; then
+      break
+    fi
+    echo "Log stream disconnected; pod is still $POD_STATUS. Reconnecting in 10s..."
+    sleep 10
   done
+
+  # Give Kubernetes a brief moment to update the pod's phase after container finishes
+  if [[ "$POD_STATUS" != "Succeeded" && "$POD_STATUS" != "Failed" ]]; then
+    for i in {1..6}; do
+      POD_STATUS=$(kubectl get pod $POD_NAME -o jsonpath='{.status.phase}' 2>/dev/null) || POD_STATUS="Unknown"
+      POD_STATUS="${POD_STATUS:-Unknown}"
+      if [[ "$POD_STATUS" == "Succeeded" || "$POD_STATUS" == "Failed" ]]; then
+        break
+      fi
+      sleep 5
+    done
+  fi
 
   if [ "$POD_STATUS" != "Succeeded" ]; then
     echo "ERROR: Conversion pod did not succeed (Status: $POD_STATUS)."
+    echo "Recent pod logs:"
+    kubectl logs $POD_NAME --tail=100 || true
     exit 1
   fi
   echo "[$(date)] ==================== Model converted successfully. ===================="
