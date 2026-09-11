@@ -112,8 +112,8 @@ while true; do
   sleep 10
 done
 
-# 3. Stream logs using pathways-head container
-echo "Streaming logs from pathways-head..."
+# 3. Stream logs using jax-tpu container
+echo "Streaming logs from jax-tpu..."
 while true; do
   POD_STATUS=$(kubectl get pod "$POD_NAME" -o jsonpath='{.status.phase}' 2>/dev/null || echo "Unknown")
 
@@ -121,11 +121,11 @@ while true; do
     break
   fi
 
-  # Stream logs from pathways-head
-  kubectl logs -f "$POD_NAME" -c pathways-head --tail=100 2>/dev/null || true
+  # Stream logs from jax-tpu
+  kubectl logs -f "$POD_NAME" -c jax-tpu --tail=100 2>/dev/null || true
 
-  # Check if pathways-head container actually terminated before sleeping
-  CONTAINER_STATE=$(kubectl get pod "$POD_NAME" -o jsonpath='{.status.containerStatuses[?(@.name=="pathways-head")].state.terminated.reason}' 2>/dev/null || echo "")
+  # Check if jax-tpu container actually terminated before sleeping
+  CONTAINER_STATE=$(kubectl get pod "$POD_NAME" -o jsonpath='{.status.containerStatuses[?(@.name=="jax-tpu")].state.terminated.reason}' 2>/dev/null || echo "")
   if [ -n "$CONTAINER_STATE" ]; then
     break
   fi
@@ -133,13 +133,13 @@ while true; do
   sleep 10
 done
 
-# 4. Final status determination for pathways-head container
-echo "Checking execution result of main training container (pathways-head)..."
+# 4. Final status determination for jax-tpu container
+echo "Checking execution result of main training container (jax-tpu)..."
 CONTAINER_EXIT_CODE=""
 for i in {1..30}; do
-  CONTAINER_EXIT_CODE=$(kubectl get pod "$POD_NAME" -o jsonpath='{.status.containerStatuses[?(@.name=="pathways-head")].state.terminated.exitCode}' 2>/dev/null || echo "")
+  CONTAINER_EXIT_CODE=$(kubectl get pod "$POD_NAME" -o jsonpath='{.status.containerStatuses[?(@.name=="jax-tpu")].state.terminated.exitCode}' 2>/dev/null || echo "")
   if [ -z "$CONTAINER_EXIT_CODE" ]; then
-    CONTAINER_EXIT_CODE=$(kubectl get pod "$POD_NAME" -o jsonpath='{.status.containerStatuses[?(@.name=="pathways-head")].lastState.terminated.exitCode}' 2>/dev/null || echo "")
+    CONTAINER_EXIT_CODE=$(kubectl get pod "$POD_NAME" -o jsonpath='{.status.containerStatuses[?(@.name=="jax-tpu")].lastState.terminated.exitCode}' 2>/dev/null || echo "")
   fi
 
   POD_STATUS=$(kubectl get pod "$POD_NAME" -o jsonpath='{.status.phase}' 2>/dev/null || echo "Unknown")
@@ -157,7 +157,7 @@ done
 if [ "$CONTAINER_EXIT_CODE" == "0" ] || [ "$POD_STATUS" == "Succeeded" ]; then
   echo "[$(date)] ==================== Training completed successfully. ===================="
 else
-  echo "ERROR: Training failed. Pod phase: ${POD_STATUS}, Container pathways-head exit code: ${CONTAINER_EXIT_CODE:-None}."
+  echo "ERROR: Training failed. Pod phase: ${POD_STATUS}, Container jax-tpu exit code: ${CONTAINER_EXIT_CODE:-None}."
   kubectl get pod "$POD_NAME" -o yaml | grep -A 15 containerStatuses || true
   exit 1
 fi
