@@ -101,13 +101,5 @@ if [ -n "${GCS_BUCKET:-}" ] && [ "${GCS_BUCKET}" != "YOUR_BUCKET_NAME" ] && gclo
   gcloud storage rm -r "gs://${GCS_BUCKET}" || echo "Warning: Failed to delete bucket"
 fi
 
-# Artifact Registry creation is disabled in 2_build_image.sh when using prebuilt image
-if false; then
-  if gcloud artifacts repositories describe "${REPOSITORY_NAME}" --location="${REGION}" --project="${PROJECT}" &>/dev/null; then
-    echo "Deleting Artifact Registry repository ${REPOSITORY_NAME}..."
-    gcloud artifacts repositories delete "${REPOSITORY_NAME}" --location="${REGION}" --project="${PROJECT}" --quiet || echo "Warning: Failed to delete repository"
-  fi
-fi
-
 rm -rf .ghpc "${CLUSTER_NAME}" gcluster examples community gcluster_bundle_linux_amd64.tgz
 echo "[$(date)] ==================== Resources cleaned up. ===================="
