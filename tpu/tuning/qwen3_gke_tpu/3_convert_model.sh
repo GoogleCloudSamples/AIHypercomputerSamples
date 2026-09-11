@@ -38,6 +38,8 @@ xpk workload create \
   scan_layers=True \
   use_multimodal=False \
   skip_jax_distributed_system=true \
+  checkpoint_storage_use_zarr3=0 \
+  checkpoint_storage_use_ocdbt=0 \
   hardware=cpu \
   --lazy_load_tensors=True"
 # [END hypercomputer_tpu_tune_qwen3_sft_convert_model]
