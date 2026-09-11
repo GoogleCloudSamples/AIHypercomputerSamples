@@ -23,8 +23,12 @@ fi
 echo "[$(date)] ==================== Cleaning up resources... ===================="
 # [START hypercomputer_tpu_tune_qwen3_30b_rl_cleanup]
 
-# Extract the unique benchmark run prefix (e.g., pkb-303e58c9-0)
-RUN_PREFIX=$(echo "${CLUSTER_NAME:-pkb-}" | grep -oE '^pkb-[a-f0-9]+-[0-9]+' || echo "${CLUSTER_NAME:-pkb-}")
+# Extract the unique benchmark run prefix (e.g., pkb-303e58c9-0 -> pkb-303e58c9)
+RUN_PREFIX=$(echo "${CLUSTER_NAME:-pkb-}" | grep -oE '^pkb-[a-f0-9]+' || echo "${CLUSTER_NAME:-pkb-}")
+CURRENT_HOST=$(hostname 2>/dev/null || echo "")
+
+echo "Runner host detected as: '${CURRENT_HOST}' (Protected from self-deletion)"
+echo "Target cleanup prefix: '${RUN_PREFIX}'"
 
 echo "1. Freeing TPU reservation immediately by scaling TPU instance groups to 0..."
 # Resizing prevents IGM from ever spawning new VM instances back into STAGING/RUNNING
@@ -70,9 +74,10 @@ for i in $(seq 1 30); do
 done
 
 echo "4. Hard-deleting any residual Managed Instance Groups (IGMs)..."
+# Targeted strictly at GKE node pool groups to prevent hitting any standalone benchmark groups
 gcloud compute instance-groups managed list \
   --project="${PROJECT}" \
-  --filter="zone:'${ZONE}' AND (name~'${RUN_PREFIX}' OR name~'gke-${RUN_PREFIX}')" \
+  --filter="zone:'${ZONE}' AND name~'gke-${RUN_PREFIX}'" \
   --format="value(name,zone.basename())" 2>/dev/null | while read -r igm_name igm_zone; do
     if [ -n "$igm_name" ] && [ -n "$igm_zone" ]; then
       echo " -> Force deleting residual IGM: $igm_name in $igm_zone"
@@ -80,13 +85,18 @@ gcloud compute instance-groups managed list \
     fi
 done
 
-echo "5. Terminating any residual VM instances (TPU and CPU)..."
+echo "5. Terminating residual VM instances (TPU and GKE nodes, safely ignoring runner VM)..."
 gcloud compute instances list \
   --project="${PROJECT}" \
   --zones="${ZONE}" \
-  --filter="(labels.goog-k8s-cluster-name~'^${RUN_PREFIX}' OR name~'^${RUN_PREFIX}' OR name~'^gke-${RUN_PREFIX}' OR name~'^gke-tpu')" \
+  --filter="(labels.goog-k8s-cluster-name~'^${RUN_PREFIX}' OR name~'^gke-${RUN_PREFIX}' OR name~'^gke-tpu' OR machineType:ct6e-standard-4t)" \
   --format="value(name,zone.basename())" 2>/dev/null | while read -r name zone; do
     if [ -n "$name" ] && [ -n "$zone" ]; then
+      # Absolute safety check: Never delete current host or external PKB driver VM
+      if [[ "$name" == "$CURRENT_HOST" || ("$name" =~ -0$ && ! "$name" =~ ^gke-) ]]; then
+        echo " -> Safely skipping active runner VM: $name"
+        continue
+      fi
       echo " -> Force deleting instance: $name ($zone)"
       gcloud compute instances delete "$name" --zone="$zone" --project="${PROJECT}" --quiet 2>/dev/null || true
     fi
