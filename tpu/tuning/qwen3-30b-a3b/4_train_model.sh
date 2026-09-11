@@ -30,13 +30,19 @@ fi
 echo "[$(date)] ==================== Submitting Training Workload... ===================="
 # [START hypercomputer_tpu_tune_qwen3_30b_rl_train]
 
-# Definiujemy czyste JSON-y
+# Create a sed patch and encode it in Base64.
+# This prevents xpk/bash from stripping quotes and failing to apply the patch during workload submission.
+# The patch forces vllm_sampler to stop appending stop strings, which prevents RL reward formatting failures.
+PATCH_SCRIPT="sed -i 's/sampling_params.include_stop_str_in_output = True/sampling_params.include_stop_str_in_output = False/g' /usr/local/lib/python3.12/site-packages/tunix/generate/vllm_sampler.py"
+PATCH_B64=$(echo -n "${PATCH_SCRIPT}" | base64 -w 0)
+
+# Define clean JSON configurations
 VLLM_OVERRIDES='{"architectures":["MaxTextForCausalLM"]}'
 VLLM_CONFIG='{"maxtext_config":{"model_name":"qwen3-30b-a3b","allow_split_physical_axes":true,"weight_dtype":"bfloat16"},"stop":["<|im_end|>","<|endoftext|>"],"include_stop_str_in_output":false,"max_tokens":1024}'
 
-# 1. Dodajemy automatyczny patch (sed) na samym początku.
-# 2. Używamy wbudowanego mechanizmu Basha ${VAR//\"/\\\"} do bezpiecznego przekazania JSON-a przez xpk do kontenera.
-TRAIN_CMD="sed -i 's/sampling_params.include_stop_str_in_output = True/sampling_params.include_stop_str_in_output = False/g' /usr/local/lib/python3.12/site-packages/tunix/generate/vllm_sampler.py 2>/dev/null || true; JAX_PLATFORMS=proxy,cpu JAX_BACKEND_TARGET=grpc://127.0.0.1:29000 ENABLE_PATHWAYS_PERSISTENCE=1 HF_TOKEN=${HF_TOKEN} python3 -m maxtext.trainers.post_train.rl.train_rl run_name=rl base_output_directory=gs://${GCS_BUCKET}/${MODEL_NAME}/trained/ model_name=qwen3-30b-a3b load_parameters_path=gs://${GCS_BUCKET}/${MODEL_NAME}/max-text-format/0/items/ scan_layers=False dtype=bfloat16 weight_dtype=bfloat16 use_multimodal=False use_chat_template=True tokenizer_type=huggingface tokenizer_path=Qwen/Qwen3-30B-A3B-Instruct-2507 remat_policy=full train_micro_batch_size=4 batch_size=16 rollout_micro_batch_size=8 num_batches=50 per_device_batch_size=1 rollout_tensor_parallelism=4 rollout_expert_parallelism=4 trainer_devices_fraction=0.5 sampler_devices_fraction=0.5 ici_tensor_parallelism=4 ici_expert_parallelism=4 hbm_utilization_vllm=0.2 use_weight_converter=True async_scheduling=False allow_split_physical_axes=true stop_strings=['<|im_end|>','<|endoftext|>'] vllm_hf_overrides=\"${VLLM_OVERRIDES//\"/\\\"}\" vllm_additional_config=\"${VLLM_CONFIG//\"/\\\"}\""
+# Decode and execute the patch at the very beginning of TRAIN_CMD, then start the RL training.
+# JSONs are safely escaped using bash parameter expansion to ensure xpk passes them correctly to the container.
+TRAIN_CMD="echo ${PATCH_B64} | base64 -d | bash; JAX_PLATFORMS=proxy,cpu JAX_BACKEND_TARGET=grpc://127.0.0.1:29000 ENABLE_PATHWAYS_PERSISTENCE=1 HF_TOKEN=${HF_TOKEN} python3 -m maxtext.trainers.post_train.rl.train_rl run_name=rl base_output_directory=gs://${GCS_BUCKET}/${MODEL_NAME}/trained/ model_name=qwen3-30b-a3b load_parameters_path=gs://${GCS_BUCKET}/${MODEL_NAME}/max-text-format/0/items/ scan_layers=False dtype=bfloat16 weight_dtype=bfloat16 use_multimodal=False use_chat_template=True tokenizer_type=huggingface tokenizer_path=Qwen/Qwen3-30B-A3B-Instruct-2507 remat_policy=full train_micro_batch_size=4 batch_size=16 rollout_micro_batch_size=8 num_batches=50 per_device_batch_size=1 rollout_tensor_parallelism=4 rollout_expert_parallelism=4 trainer_devices_fraction=0.5 sampler_devices_fraction=0.5 ici_tensor_parallelism=4 ici_expert_parallelism=4 hbm_utilization_vllm=0.2 use_weight_converter=True async_scheduling=False allow_split_physical_axes=true stop_strings=['<|im_end|>','<|endoftext|>'] vllm_hf_overrides=\"${VLLM_OVERRIDES//\"/\\\"}\" vllm_additional_config=\"${VLLM_CONFIG//\"/\\\"}\""
 
 # Wait for JobSet controller and mutating webhook service to be ready
 echo "Checking JobSet controller and webhook readiness..."
@@ -88,7 +94,7 @@ echo "[$(date)] ==================== Training Workload submitted. ==============
 
 echo "[$(date)] ==================== Waiting for Training Workload to Complete... ===================="
 
-# 2. Wait up to 10 minutes (120 * 5s) for the head pod to be created by Kueue/JobSet
+# Wait up to 10 minutes (120 * 5s) for the head pod to be created by Kueue/JobSet
 echo "Waiting for training pod to be created..."
 POD_NAME=""
 for i in {1..120}; do
@@ -116,7 +122,7 @@ while true; do
   sleep 10
 done
 
-# 3. Stream logs using jax-tpu container
+# Stream logs using jax-tpu container
 echo "Streaming logs from jax-tpu..."
 while true; do
   POD_STATUS=$(kubectl get pod "$POD_NAME" -o jsonpath='{.status.phase}' 2>/dev/null || echo "Unknown")
@@ -137,7 +143,7 @@ while true; do
   sleep 10
 done
 
-# 4. Final status determination for jax-tpu container
+# Final status determination for jax-tpu container
 echo "Checking execution result of main training container (jax-tpu)..."
 CONTAINER_EXIT_CODE=""
 for i in {1..30}; do
