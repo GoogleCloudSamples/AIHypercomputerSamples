@@ -52,10 +52,5 @@ if gcloud storage buckets describe "gs://${GCS_BUCKET}" --project="${PROJECT}" >
   gcloud storage rm -r "gs://${GCS_BUCKET}" || echo "Warning: Failed to delete bucket"
 fi
 
-if gcloud artifacts repositories describe "${REPOSITORY_NAME}" --location="${REGION}" --project="${PROJECT}" >/dev/null 2>&1; then
-  echo "Deleting Artifact Registry repository ${REPOSITORY_NAME}..."
-  gcloud artifacts repositories delete "${REPOSITORY_NAME}" --location="${REGION}" --project="${PROJECT}" --quiet || echo "Warning: Failed to delete repository"
-fi
-
 rm -rf .ghpc "${CLUSTER_NAME}" gcluster examples community gcluster_bundle_linux_amd64.tgz
 echo "[$(date)] ==================== Resources cleaned up. ===================="
