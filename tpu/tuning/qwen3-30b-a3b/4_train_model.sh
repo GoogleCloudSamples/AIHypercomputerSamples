@@ -30,9 +30,9 @@ fi
 echo "[$(date)] ==================== Submitting Training Workload... ===================="
 # [START hypercomputer_tpu_tune_qwen3_30b_rl_train]
 VLLM_OVERRIDES='{\"architectures\":[\"MaxTextForCausalLM\"]}'
-VLLM_CONFIG='{\"maxtext_config\":{\"model_name\":\"qwen3-30b-a3b\",\"allow_split_physical_axes\":true,\"weight_dtype\":\"bfloat16\"}}'
+VLLM_CONFIG='{\"maxtext_config\":{\"model_name\":\"qwen3-30b-a3b\",\"allow_split_physical_axes\":true,\"weight_dtype\":\"bfloat16\"},\"stop\":[\"<|im_end|>\",\"<|endoftext|>\"]}'
 
-TRAIN_CMD="JAX_PLATFORMS=proxy,cpu JAX_BACKEND_TARGET=grpc://127.0.0.1:29000 ENABLE_PATHWAYS_PERSISTENCE=1 HF_TOKEN=${HF_TOKEN} python3 -m maxtext.trainers.post_train.rl.train_rl run_name=rl base_output_directory=gs://${GCS_BUCKET}/${MODEL_NAME}/trained/ model_name=qwen3-30b-a3b load_parameters_path=gs://${GCS_BUCKET}/${MODEL_NAME}/max-text-format/0/items/ scan_layers=False dtype=bfloat16 weight_dtype=bfloat16 use_multimodal=False use_chat_template=True tokenizer_type=huggingface tokenizer_path=Qwen/Qwen3-30B-A3B-Instruct-2507 remat_policy=full train_micro_batch_size=4 batch_size=16 rollout_micro_batch_size=8 num_batches=50 per_device_batch_size=1 rollout_tensor_parallelism=4 rollout_expert_parallelism=4 trainer_devices_fraction=0.5 sampler_devices_fraction=0.5 ici_tensor_parallelism=4 ici_expert_parallelism=4 hbm_utilization_vllm=0.2 use_weight_converter=True async_scheduling=False allow_split_physical_axes=true vllm_hf_overrides=\"${VLLM_OVERRIDES}\" vllm_additional_config=\"${VLLM_CONFIG}\""
+TRAIN_CMD="JAX_PLATFORMS=proxy,cpu JAX_BACKEND_TARGET=grpc://127.0.0.1:29000 ENABLE_PATHWAYS_PERSISTENCE=1 HF_TOKEN=${HF_TOKEN} python3 -m maxtext.trainers.post_train.rl.train_rl run_name=rl base_output_directory=gs://${GCS_BUCKET}/${MODEL_NAME}/trained/ model_name=qwen3-30b-a3b load_parameters_path=gs://${GCS_BUCKET}/${MODEL_NAME}/max-text-format/0/items/ scan_layers=False dtype=bfloat16 weight_dtype=bfloat16 use_multimodal=False use_chat_template=True tokenizer_type=huggingface tokenizer_path=Qwen/Qwen3-30B-A3B-Instruct-2507 remat_policy=full train_micro_batch_size=4 batch_size=16 rollout_micro_batch_size=8 num_batches=50 per_device_batch_size=1 rollout_tensor_parallelism=4 rollout_expert_parallelism=4 trainer_devices_fraction=0.5 sampler_devices_fraction=0.5 ici_tensor_parallelism=4 ici_expert_parallelism=4 hbm_utilization_vllm=0.2 use_weight_converter=True async_scheduling=False allow_split_physical_axes=true stop_strings=['<|im_end|>','<|endoftext|>'] vllm_hf_overrides=\"${VLLM_OVERRIDES}\" vllm_additional_config=\"${VLLM_CONFIG}\""
 
 # Wait for JobSet controller and mutating webhook service to be ready
 echo "Checking JobSet controller and webhook readiness..."
@@ -112,8 +112,8 @@ while true; do
   sleep 10
 done
 
-# 3. Stream logs in a resilient loop so XLA compilation silent periods don't prematurely exit the script
-echo "Streaming logs... (resilient to connection drops during long XLA compilation)"
+# 3. Stream logs using pathways-head container
+echo "Streaming logs from pathways-head..."
 while true; do
   POD_STATUS=$(kubectl get pod "$POD_NAME" -o jsonpath='{.status.phase}' 2>/dev/null || echo "Unknown")
 
@@ -121,11 +121,11 @@ while true; do
     break
   fi
 
-  # Stream logs; if timeout/disconnect occurs, check status and reconnect with --tail
-  kubectl logs -f "$POD_NAME" -c jax-tpu --tail=100 2>/dev/null || true
+  # Stream logs from pathways-head
+  kubectl logs -f "$POD_NAME" -c pathways-head --tail=100 2>/dev/null || true
 
-  # Check if container actually terminated before sleeping
-  CONTAINER_STATE=$(kubectl get pod "$POD_NAME" -o jsonpath='{.status.containerStatuses[?(@.name=="jax-tpu")].state.terminated.reason}' 2>/dev/null || echo "")
+  # Check if pathways-head container actually terminated before sleeping
+  CONTAINER_STATE=$(kubectl get pod "$POD_NAME" -o jsonpath='{.status.containerStatuses[?(@.name=="pathways-head")].state.terminated.reason}' 2>/dev/null || echo "")
   if [ -n "$CONTAINER_STATE" ]; then
     break
   fi
@@ -133,13 +133,13 @@ while true; do
   sleep 10
 done
 
-# 4. Final status determination
-echo "Checking execution result of main training container (jax-tpu)..."
+# 4. Final status determination for pathways-head container
+echo "Checking execution result of main training container (pathways-head)..."
 CONTAINER_EXIT_CODE=""
 for i in {1..30}; do
-  CONTAINER_EXIT_CODE=$(kubectl get pod "$POD_NAME" -o jsonpath='{.status.containerStatuses[?(@.name=="jax-tpu")].state.terminated.exitCode}' 2>/dev/null || echo "")
+  CONTAINER_EXIT_CODE=$(kubectl get pod "$POD_NAME" -o jsonpath='{.status.containerStatuses[?(@.name=="pathways-head")].state.terminated.exitCode}' 2>/dev/null || echo "")
   if [ -z "$CONTAINER_EXIT_CODE" ]; then
-    CONTAINER_EXIT_CODE=$(kubectl get pod "$POD_NAME" -o jsonpath='{.status.containerStatuses[?(@.name=="jax-tpu")].lastState.terminated.exitCode}' 2>/dev/null || echo "")
+    CONTAINER_EXIT_CODE=$(kubectl get pod "$POD_NAME" -o jsonpath='{.status.containerStatuses[?(@.name=="pathways-head")].lastState.terminated.exitCode}' 2>/dev/null || echo "")
   fi
 
   POD_STATUS=$(kubectl get pod "$POD_NAME" -o jsonpath='{.status.phase}' 2>/dev/null || echo "Unknown")
@@ -157,7 +157,7 @@ done
 if [ "$CONTAINER_EXIT_CODE" == "0" ] || [ "$POD_STATUS" == "Succeeded" ]; then
   echo "[$(date)] ==================== Training completed successfully. ===================="
 else
-  echo "ERROR: Training failed. Pod phase: ${POD_STATUS}, Container jax-tpu exit code: ${CONTAINER_EXIT_CODE:-None}."
+  echo "ERROR: Training failed. Pod phase: ${POD_STATUS}, Container pathways-head exit code: ${CONTAINER_EXIT_CODE:-None}."
   kubectl get pod "$POD_NAME" -o yaml | grep -A 15 containerStatuses || true
   exit 1
 fi
