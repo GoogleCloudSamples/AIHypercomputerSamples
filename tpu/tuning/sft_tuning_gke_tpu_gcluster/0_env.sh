@@ -20,11 +20,26 @@ export REGION="YOUR_REGION"
 export ZONE="YOUR_ZONE"
 export CLUSTER_NAME="gke-tpu-v6e"
 export REPOSITORY_NAME="YOUR_REPOSITORY_NAME"
+export GCS_BUCKET="YOUR_BUCKET_NAME"
 export CLOUD_IMAGE_NAME="${REGION}-docker.pkg.dev/${PROJECT}/${REPOSITORY_NAME}/maxtext_base:latest"
 export TPU_TYPE="v6e-32"
 export RESERVATION="YOUR_RESERVATION_NAME"
 export MODEL_NAME="gemma4-31b"
 export HF_TOKEN="YOUR_HF_TOKEN"
-export GCS_BUCKET="YOUR_BUCKET_NAME"
 # [END hypercomputer_tpu_sft_gcluster_env]
 
+# Override for sample automation using prebuilt image
+export CLOUD_IMAGE_NAME="us-docker.pkg.dev/cloud-tpu-images/maxtext-images/tpu_post_training:0.2.4"
+
+# [START hypercomputer_tpu_sft_gcluster_env_v2]
+export PROJECT="YOUR_PROJECT_ID"
+export REGION="YOUR_REGION"
+export ZONE="YOUR_ZONE"
+export CLUSTER_NAME="gke-tpu-v6e"
+export GCS_BUCKET="YOUR_BUCKET_NAME"
+export CLOUD_IMAGE_NAME="us-docker.pkg.dev/cloud-tpu-images/maxtext-images/tpu_post_training:0.2.4"
+export TPU_TYPE="v6e-32"
+export RESERVATION="YOUR_RESERVATION_NAME"
+export MODEL_NAME="gemma4-31b"
+export HF_TOKEN="YOUR_HF_TOKEN"
+# [END hypercomputer_tpu_sft_gcluster_env_v2]
