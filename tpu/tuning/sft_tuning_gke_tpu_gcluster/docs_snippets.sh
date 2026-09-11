@@ -17,28 +17,6 @@
 # This file contains the exact documentation snippets for checking logs,
 # containing placeholders like <pod suffix> that shouldn't be executed in CI.
 
-# [START hypercomputer_tpu_sft_gcluster_cb_env]
-export PROJECT="YOUR_PROJECT_ID"
-export REGION="YOUR_REGION"
-export REPOSITORY_NAME="YOUR_REPOSITORY_NAME"
-export CLOUD_IMAGE_NAME="${REGION}-docker.pkg.dev/${PROJECT}/${REPOSITORY_NAME}/maxtext_base:latest"
-# [END hypercomputer_tpu_sft_gcluster_cb_env]
-
-# [START hypercomputer_tpu_sft_gcluster_cb_kubectl_install]
-gcloud components install kubectl gke-gcloud-auth-plugin --quiet
-# [END hypercomputer_tpu_sft_gcluster_cb_kubectl_install]
-
-# [START hypercomputer_tpu_sft_gcluster_create_role]
-# The GKE TPU v6e blueprint uses GCS Fuse CSI Storage Profiles which requires a custom IAM role.
-# If this role is not already created in your project, you must create it before deploying.
-gcloud iam roles create gke.gcsfuse.profileUser \
-  --project="${PROJECT}" \
-  --title="GKE GCSFuse Profile User" \
-  --description="Allows scanning GCS buckets for objects, retrieving bucket metadata, and creating Anywhere Caches." \
-  --permissions="storage.objects.list,storage.buckets.get,storage.anywhereCaches.create,storage.anywhereCaches.get,storage.anywhereCaches.list,storage.anywhereCaches.update"
-
-
-# [END hypercomputer_tpu_sft_gcluster_create_role]
 
 # [START hypercomputer_tpu_sft_gcluster_create_cluster]
 ./gcluster deploy examples/gke-tpu-v6e/gke-tpu-v6e-advanced.yaml \
@@ -47,12 +25,6 @@ gcloud iam roles create gke.gcsfuse.profileUser \
     -l IGNORE \
     -w
 # [END hypercomputer_tpu_sft_gcluster_create_cluster]
-
-# [START hypercomputer_tpu_sft_gcluster_configure_docker]
-# Configure docker for pulling images
-gcloud auth configure-docker gcr.io --quiet
-gcloud auth configure-docker "${REGION}-docker.pkg.dev" --quiet
-# [END hypercomputer_tpu_sft_gcluster_configure_docker]
 
 # [START hypercomputer_tpu_sft_gcluster_configure_defaults]
 # Configure gcluster Defaults
@@ -104,17 +76,6 @@ gcloud auth configure-docker "${REGION}-docker.pkg.dev" --quiet
 
 # The trained model is now available in gs://${GCS_BUCKET}/${MODEL_NAME}/hf-trained/ 
 # [END hypercomputer_tpu_sft_gcluster_convert_hf_logs]
-
-if false; then
-# [START hypercomputer_tpu_sft_gcluster_cleanup_storage]
-./gcluster destroy "${CLUSTER_NAME}" --robust
-gcloud storage rm -r "gs://${GCS_BUCKET}"
-gcloud artifacts repositories delete "${REPOSITORY_NAME}" --location="${REGION}" --project="${PROJECT}" --quiet
-
-# To delete the local deployment folder
-rm -rf .ghpc "${CLUSTER_NAME}"
-# [END hypercomputer_tpu_sft_gcluster_cleanup_storage]
-fi
 
 # [START hypercomputer_tpu_sft_gcluster_cleanup_storage_v2]
 ./gcluster destroy "${CLUSTER_NAME}" --robust
