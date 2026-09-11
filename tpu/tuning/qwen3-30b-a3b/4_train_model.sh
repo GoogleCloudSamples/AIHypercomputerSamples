@@ -30,7 +30,7 @@ fi
 echo "[$(date)] ==================== Submitting Training Workload... ===================="
 # [START hypercomputer_tpu_tune_qwen3_30b_rl_train]
 VLLM_OVERRIDES='{\"architectures\":[\"MaxTextForCausalLM\"]}'
-VLLM_CONFIG='{\"maxtext_config\":{\"model_name\":\"qwen3-30b-a3b\",\"allow_split_physical_axes\":true,\"weight_dtype\":\"bfloat16\"},\"stop\":[\"<|im_end|>\",\"<|endoftext|>\"]}'
+VLLM_CONFIG='{\"maxtext_config\":{\"model_name\":\"qwen3-30b-a3b\",\"allow_split_physical_axes\":true,\"weight_dtype\":\"bfloat16\"},\"stop\":[\"<|im_end|>\",\"<|endoftext|>\"],\"include_stop_str_in_output\":false,\"max_tokens\":1024}'
 
 TRAIN_CMD="JAX_PLATFORMS=proxy,cpu JAX_BACKEND_TARGET=grpc://127.0.0.1:29000 ENABLE_PATHWAYS_PERSISTENCE=1 HF_TOKEN=${HF_TOKEN} python3 -m maxtext.trainers.post_train.rl.train_rl run_name=rl base_output_directory=gs://${GCS_BUCKET}/${MODEL_NAME}/trained/ model_name=qwen3-30b-a3b load_parameters_path=gs://${GCS_BUCKET}/${MODEL_NAME}/max-text-format/0/items/ scan_layers=False dtype=bfloat16 weight_dtype=bfloat16 use_multimodal=False use_chat_template=True tokenizer_type=huggingface tokenizer_path=Qwen/Qwen3-30B-A3B-Instruct-2507 remat_policy=full train_micro_batch_size=4 batch_size=16 rollout_micro_batch_size=8 num_batches=50 per_device_batch_size=1 rollout_tensor_parallelism=4 rollout_expert_parallelism=4 trainer_devices_fraction=0.5 sampler_devices_fraction=0.5 ici_tensor_parallelism=4 ici_expert_parallelism=4 hbm_utilization_vllm=0.2 use_weight_converter=True async_scheduling=False allow_split_physical_axes=true stop_strings=['<|im_end|>','<|endoftext|>'] vllm_hf_overrides=\"${VLLM_OVERRIDES}\" vllm_additional_config=\"${VLLM_CONFIG}\""
 
