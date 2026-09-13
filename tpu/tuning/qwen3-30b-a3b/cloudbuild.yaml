@@ -23,7 +23,7 @@ steps:
         build_maxtext_docker_image WORKFLOW=post-training
         
         # 4. Tag the image properly
-        docker tag maxtext_base_image ${_CLOUD_IMAGE_NAME}
+        docker tag maxtext_base_image "${_CLOUD_IMAGE_NAME}"
 
 # Cloud Build automatically pushes images listed here
 images:
