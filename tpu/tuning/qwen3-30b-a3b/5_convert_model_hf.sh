@@ -20,6 +20,10 @@ if [ -d "venvp3" ]; then
   source venvp3/bin/activate
 fi
 
+echo "Waiting for Jobset and Kueue controllers to be ready..."
+kubectl wait --for=condition=available --timeout=5m deployment/jobset-controller-manager -n jobset-system
+kubectl wait --for=condition=available --timeout=5m deployment/kueue-controller-manager -n kueue-system
+
 echo "[$(date)] ==================== Submitting Hugging Face Conversion Workload... ===================="
 # [START hypercomputer_tpu_tune_qwen3_30b_rl_convert_hf]
 xpk workload create \
