@@ -104,18 +104,6 @@ if [ -n "${POD_NAME}" ]; then
     sleep 10
   done
 
-  # Give Kubernetes a brief moment to update the pod's phase after container finishes
-  if [[ "$POD_STATUS" != "Succeeded" && "$POD_STATUS" != "Failed" ]]; then
-    for i in {1..6}; do
-      POD_STATUS=$(kubectl get pod "${POD_NAME}" -o jsonpath='{.status.phase}' 2>/dev/null) || POD_STATUS="Unknown"
-      POD_STATUS="${POD_STATUS:-Unknown}"
-      if [[ "$POD_STATUS" == "Succeeded" || "$POD_STATUS" == "Failed" ]]; then
-        break
-      fi
-      sleep 5
-    done
-  fi
-
   if [ "$POD_STATUS" != "Succeeded" ]; then
     echo "ERROR: Conversion pod did not succeed (Status: ${POD_STATUS})."
     echo "Recent pod logs:"
