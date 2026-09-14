@@ -16,24 +16,28 @@
 
 set -euo pipefail
 
+# Ensure JobSet and Kueue controllers are ready before workload submission
+kubectl wait --for=condition=Available --timeout=300s deployment/jobset-controller-manager -n jobset-system 2>/dev/null || true
+kubectl wait --for=condition=Available --timeout=300s deployment/kueue-controller-manager -n kueue-system 2>/dev/null || true
+
 echo "[$(date)] ==================== Submitting Hugging Face Conversion Workload... ===================="
 # [START hypercomputer_tpu_tune_qwen3_30b_rl_convert_hf]
 ./gcluster job submit \
   --name="qwen-mt-to-hf" \
-  --cluster=${CLUSTER_NAME} \
-  --project=${PROJECT} \
-  --location=${REGION} \
+  --cluster="${CLUSTER_NAME}" \
+  --project="${PROJECT}" \
+  --location="${REGION}" \
   --num-slices=1 \
-  --image=$CLOUD_IMAGE_NAME \
-  --compute-type=${COMPUTE_TYPE} \
-  --topology=${TOPOLOGY} \
+  --image="${CLOUD_IMAGE_NAME}" \
+  --compute-type="${COMPUTE_TYPE}" \
+  --topology="${TOPOLOGY}" \
   --await-job-completion \
   --command="[ \"\$JOB_COMPLETION_INDEX\" != \"0\" ] || \
   python3 -m maxtext.checkpoint_conversion.to_huggingface \
   model_name=${MODEL_NAME} \
   hf_access_token=${HF_TOKEN} \
   load_parameters_path=gs://${GCS_BUCKET}/${MODEL_NAME}/trained/rl/checkpoints/actor/50/model_params/ \
-  base_output_directory=gs://$GCS_BUCKET/${MODEL_NAME}/hf-trained/ \
+  base_output_directory=gs://${GCS_BUCKET}/${MODEL_NAME}/hf-trained/ \
   skip_jax_distributed_system=true \
   hardware=cpu \
   scan_layers=True \
