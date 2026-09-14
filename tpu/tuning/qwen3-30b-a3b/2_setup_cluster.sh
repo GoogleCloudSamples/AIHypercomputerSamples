@@ -24,7 +24,7 @@ python3 -m venv "${VENV_DIR}"
 source "${VENV_DIR}/bin/activate"
 pip install xpk==1.14.0
 
-GKE_VERSION="$(gcloud container get-server-config --region="${REGION}" --flatten="channels" --filter="channels.channel=REGULAR" --format="value(channels.defaultVersion)" 2>/dev/null | head -n1)"
+GKE_VERSION="$(gcloud container get-server-config --region="${REGION}" --flatten="channels" --filter="channels.channel=REGULAR" --format="value(channels.defaultVersion)" 2>/dev/null | awk 'NR==1')"
 echo "Using GKE version from REGULAR channel: ${GKE_VERSION}"
 
 xpk cluster create-pathways \
