@@ -32,10 +32,18 @@ xpk workload list --cluster "${CLUSTER_NAME}" --project "${PROJECT}" --zone "${Z
 kubectl logs -f qwen-training-pathways-head-0-0-HASH
 # [END hypercomputer_tpu_tune_qwen3_sft_monitor_train_logs]
 
-# [START hypercomputer_tpu_tune_qwen3_sft_cleanup]
+if false; then
+  # [START hypercomputer_tpu_tune_qwen3_sft_cleanup]
+  xpk cluster delete --cluster "${CLUSTER_NAME}" --project "${PROJECT}" --zone "${ZONE}" --force
+
+  gcloud storage rm --recursive "gs://${GCS_BUCKET}"
+
+  gcloud artifacts repositories delete maxtext-images --location="${REGION}" --project="${PROJECT}" --quiet
+  # [END hypercomputer_tpu_tune_qwen3_sft_cleanup]
+fi
+
+# [START hypercomputer_tpu_tune_qwen3_sft_cleanup_v2]
 xpk cluster delete --cluster "${CLUSTER_NAME}" --project "${PROJECT}" --zone "${ZONE}" --force
 
 gcloud storage rm --recursive "gs://${GCS_BUCKET}"
-
-gcloud artifacts repositories delete maxtext-images --location="${REGION}" --project="${PROJECT}" --quiet
-# [END hypercomputer_tpu_tune_qwen3_sft_cleanup]
+# [END hypercomputer_tpu_tune_qwen3_sft_cleanup_v2]

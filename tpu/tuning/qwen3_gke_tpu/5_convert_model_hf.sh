@@ -20,6 +20,10 @@ if [ -d "venvp3" ]; then
   source venvp3/bin/activate
 fi
 
+echo "Waiting for Jobset and Kueue controllers to be ready..."
+kubectl wait --for=condition=available --timeout=5m deployment/jobset-controller-manager -n jobset-system
+kubectl wait --for=condition=available --timeout=5m deployment/kueue-controller-manager -n kueue-system
+
 echo "[$(date)] ==================== Submitting Hugging Face Conversion Workload... ===================="
 # [START hypercomputer_tpu_tune_qwen3_sft_convert_hf]
 xpk workload create \
@@ -59,28 +63,55 @@ done
 if [ -n "${POD_NAME}" ]; then
   echo "Found conversion pod: ${POD_NAME}"
   echo "Waiting for pod to start running..."
-  for i in {1..60}; do
-    POD_STATUS=$(kubectl get pod $POD_NAME -o jsonpath='{.status.phase}' 2>/dev/null) || POD_STATUS="Unknown"
+  while true; do
+    POD_STATUS=$(kubectl get pod "${POD_NAME}" -o jsonpath='{.status.phase}' 2>/dev/null) || POD_STATUS="Unknown"
     if [[ "$POD_STATUS" == "Running" || "$POD_STATUS" == "Succeeded" || "$POD_STATUS" == "Failed" ]]; then
       break
     fi
     sleep 10
   done
 
-  echo "Tailing logs... (this will block until conversion finishes)"
-  kubectl logs -f "${POD_NAME}" || true
-
-  echo "Waiting for conversion pod to reach terminal state..."
-  for i in {1..60}; do
+  echo "Tailing logs and monitoring workload until completion..."
+  INITIAL_ATTACH=true
+  UNKNOWN_COUNT=0
+  while true; do
     POD_STATUS=$(kubectl get pod "${POD_NAME}" -o jsonpath='{.status.phase}' 2>/dev/null) || POD_STATUS="Unknown"
-    if [[ "${POD_STATUS}" == "Succeeded" || "${POD_STATUS}" == "Failed" ]]; then
+    POD_STATUS="${POD_STATUS:-Unknown}"
+    if [[ "$POD_STATUS" == "Succeeded" || "$POD_STATUS" == "Failed" ]]; then
       break
     fi
-    sleep 5
+    if [[ "$POD_STATUS" == "Unknown" ]]; then
+      UNKNOWN_COUNT=$((UNKNOWN_COUNT + 1))
+      if [ $UNKNOWN_COUNT -ge 12 ]; then
+        echo "ERROR: Pod ${POD_NAME} status unknown or not found for 2 minutes."
+        exit 1
+      fi
+    else
+      UNKNOWN_COUNT=0
+    fi
+
+    if [ "$INITIAL_ATTACH" = true ]; then
+      echo "Streaming logs (pod phase: ${POD_STATUS})..."
+      kubectl logs -f "${POD_NAME}" || true
+      INITIAL_ATTACH=false
+    else
+      echo "Streaming logs (pod phase: ${POD_STATUS})..."
+      kubectl logs -f "${POD_NAME}" --tail=50 || true
+    fi
+
+    POD_STATUS=$(kubectl get pod "${POD_NAME}" -o jsonpath='{.status.phase}' 2>/dev/null) || POD_STATUS="Unknown"
+    POD_STATUS="${POD_STATUS:-Unknown}"
+    if [[ "$POD_STATUS" == "Succeeded" || "$POD_STATUS" == "Failed" ]]; then
+      break
+    fi
+    echo "Log stream disconnected; pod is still ${POD_STATUS}. Reconnecting in 10s..."
+    sleep 10
   done
 
-  if [ "${POD_STATUS}" != "Succeeded" ]; then
+  if [ "$POD_STATUS" != "Succeeded" ]; then
     echo "ERROR: HF conversion pod did not succeed (Status: ${POD_STATUS})."
+    echo "Recent pod logs:"
+    kubectl logs "${POD_NAME}" --tail=100 || true
     exit 1
   fi
   echo "[$(date)] ==================== Hugging Face conversion completed successfully. ===================="
