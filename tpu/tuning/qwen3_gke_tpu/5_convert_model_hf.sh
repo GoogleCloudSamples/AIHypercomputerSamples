@@ -23,19 +23,19 @@ fi
 echo "[$(date)] ==================== Submitting Hugging Face Conversion Workload... ===================="
 # [START hypercomputer_tpu_tune_qwen3_sft_convert_hf]
 xpk workload create \
-  --cluster=${CLUSTER_NAME} \
-  --project=${PROJECT} \
-  --zone=${ZONE} \
-  --docker-image=$CLOUD_IMAGE_NAME \
+  --cluster="${CLUSTER_NAME}" \
+  --project="${PROJECT}" \
+  --zone="${ZONE}" \
+  --docker-image="${CLOUD_IMAGE_NAME}" \
   --workload="qwen-mt-to-hf" \
-  --tpu-type=${TPU_TYPE} \
+  --tpu-type="${TPU_TYPE}" \
   --num-slices=1 \
   --command="[ \"\$JOB_COMPLETION_INDEX\" != \"0\" ] || \
   python3 -m maxtext.checkpoint_conversion.to_huggingface \
   model_name=${MODEL_NAME} \
   hf_access_token=${HF_TOKEN} \
   load_parameters_path=gs://${GCS_BUCKET}/qwen-3-14b/trained/sft/checkpoints/1000/model_params/ \
-  base_output_directory=gs://$GCS_BUCKET/qwen-3-14b/hf-trained/ \
+  base_output_directory=gs://${GCS_BUCKET}/qwen-3-14b/hf-trained/ \
   skip_jax_distributed_system=true \
   hardware=cpu \
   scan_layers=True \
@@ -50,37 +50,37 @@ echo "Waiting for conversion pod to be created..."
 POD_NAME=""
 for i in {1..30}; do
   POD_NAME=$(kubectl get pods --no-headers 2>/dev/null | grep qwen-mt-to-hf | awk '{print $1}' | head -n 1) || true
-  if [ -n "$POD_NAME" ]; then
+  if [ -n "${POD_NAME}" ]; then
     break
   fi
   sleep 5
 done
 
-if [ -n "$POD_NAME" ]; then
-  echo "Found conversion pod: $POD_NAME"
+if [ -n "${POD_NAME}" ]; then
+  echo "Found conversion pod: ${POD_NAME}"
   echo "Waiting for pod to start running..."
   while true; do
-    POD_STATUS=$(kubectl get pod $POD_NAME -o jsonpath='{.status.phase}' 2>/dev/null) || POD_STATUS="Unknown"
-    if [[ "$POD_STATUS" == "Running" || "$POD_STATUS" == "Succeeded" || "$POD_STATUS" == "Failed" ]]; then
+    POD_STATUS=$(kubectl get pod "${POD_NAME}" -o jsonpath='{.status.phase}' 2>/dev/null) || POD_STATUS="Unknown"
+    if [[ "${POD_STATUS}" == "Running" || "${POD_STATUS}" == "Succeeded" || "${POD_STATUS}" == "Failed" ]]; then
       break
     fi
     sleep 10
   done
 
   echo "Tailing logs... (this will block until conversion finishes)"
-  kubectl logs -f $POD_NAME || true
+  kubectl logs -f "${POD_NAME}" || true
 
   echo "Waiting for conversion pod to reach terminal state..."
   for i in {1..60}; do
-    POD_STATUS=$(kubectl get pod $POD_NAME -o jsonpath='{.status.phase}' 2>/dev/null) || POD_STATUS="Unknown"
-    if [[ "$POD_STATUS" == "Succeeded" || "$POD_STATUS" == "Failed" ]]; then
+    POD_STATUS=$(kubectl get pod "${POD_NAME}" -o jsonpath='{.status.phase}' 2>/dev/null) || POD_STATUS="Unknown"
+    if [[ "${POD_STATUS}" == "Succeeded" || "${POD_STATUS}" == "Failed" ]]; then
       break
     fi
     sleep 5
   done
 
-  if [ "$POD_STATUS" != "Succeeded" ]; then
-    echo "ERROR: HF conversion pod did not succeed (Status: $POD_STATUS)."
+  if [ "${POD_STATUS}" != "Succeeded" ]; then
+    echo "ERROR: HF conversion pod did not succeed (Status: ${POD_STATUS})."
     exit 1
   fi
   echo "[$(date)] ==================== Hugging Face conversion completed successfully. ===================="

@@ -22,13 +22,13 @@ fi
 
 echo "[$(date)] ==================== Cleaning up resources... ===================="
 echo "Waiting for background cluster operations (like autoscaling) to finish..."
-while gcloud container operations list --project=$PROJECT --location=$REGION --filter="status=RUNNING AND targetLink:$CLUSTER_NAME" --format="value(name)" | grep -q .; do
+while gcloud container operations list --project="${PROJECT}" --location="${REGION}" --filter="status=RUNNING AND targetLink:${CLUSTER_NAME}" --format="value(name)" | grep -q .; do
   sleep 30
 done
 
-xpk cluster delete --cluster $CLUSTER_NAME --project $PROJECT --zone $ZONE --force  || echo "Warning: Failed to delete cluster"
-gcloud storage rm --recursive gs://$GCS_BUCKET || echo "Warning: Failed to delete bucket"
-if gcloud artifacts repositories describe maxtext-images --location=$REGION --project=$PROJECT &>/dev/null; then
-  gcloud artifacts repositories delete maxtext-images --location=$REGION --project=$PROJECT --quiet || echo "Warning: Failed to delete repository"
+xpk cluster delete --cluster "${CLUSTER_NAME}" --project "${PROJECT}" --zone "${ZONE}" --force  || echo "Warning: Failed to delete cluster"
+gcloud storage rm --recursive "gs://${GCS_BUCKET}" || echo "Warning: Failed to delete bucket"
+if gcloud artifacts repositories describe maxtext-images --location="${REGION}" --project="${PROJECT}" &>/dev/null; then
+  gcloud artifacts repositories delete maxtext-images --location="${REGION}" --project="${PROJECT}" --quiet || echo "Warning: Failed to delete repository"
 fi
 echo "[$(date)] ==================== Resources cleaned up. ===================="
