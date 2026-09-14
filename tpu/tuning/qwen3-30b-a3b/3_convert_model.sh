@@ -60,7 +60,7 @@ if [ -n "${POD_NAME}" ]; then
   echo "Found conversion pod: ${POD_NAME}"
   echo "Waiting for pod to start running (this can take 5-10 minutes if autoscaler is provisioning nodes)..."
   while true; do
-    POD_STATUS=$(kubectl get pod "${POD_NAME}" -o jsonpath='{.status.phase}')
+    POD_STATUS=$(kubectl get pod "${POD_NAME}" -o jsonpath='{.status.phase}' 2>/dev/null) || POD_STATUS="Unknown"
     if [[ "$POD_STATUS" == "Running" || "$POD_STATUS" == "Succeeded" || "$POD_STATUS" == "Failed" ]]; then
       break
     fi
