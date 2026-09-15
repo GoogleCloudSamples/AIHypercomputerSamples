@@ -32,9 +32,6 @@ export MODEL_NAME="qwen3-30b-a3b"
 export HF_TOKEN="YOUR_HF_TOKEN"
 # [END hypercomputer_tpu_tune_qwen3_30b_rl_env]
 
-# Override for sample automation using prebuilt image
-export CLOUD_IMAGE_NAME="us-docker.pkg.dev/cloud-tpu-images/maxtext-images/tpu_post_training:0.2.4"
-
 # [START hypercomputer_tpu_tune_qwen3_30b_rl_env_v2]
 export PROJECT="YOUR_PROJECT_ID"
 export REGION="YOUR_REGION"
