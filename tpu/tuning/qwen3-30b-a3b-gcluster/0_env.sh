@@ -14,24 +14,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# [START hypercomputer_tpu_tune_qwen3_30b_rl_env]
-export PROJECT="YOUR_PROJECT_ID"
-export REGION="YOUR_REGION"
-export ZONE="YOUR_ZONE"
-export CLUSTER_NAME="YOUR_CLUSTER_NAME"
-export REPOSITORY_NAME="YOUR_REPOSITORY_NAME"
-export GCS_BUCKET="YOUR_BUCKET_NAME"
-export CLOUD_IMAGE_NAME="${REGION}-docker.pkg.dev/${PROJECT}/${REPOSITORY_NAME}/maxtext_base:latest"
-export COMPUTE_TYPE="ct6e-standard-4t"
-export TPU_TYPE="v6e-64"
-export TOPOLOGY="8x8"
-export CLUSTER_NODEPOOL_COUNT=1
-export PW_CPU_MACHINE_TYPE="c4d-standard-96"
-export RESERVATION="YOUR_RESERVATION_NAME"
-export MODEL_NAME="qwen3-30b-a3b"
-export HF_TOKEN="YOUR_HF_TOKEN"
-# [END hypercomputer_tpu_tune_qwen3_30b_rl_env]
-
 # [START hypercomputer_tpu_tune_qwen3_30b_rl_env_v2]
 export PROJECT="YOUR_PROJECT_ID"
 export REGION="YOUR_REGION"
@@ -46,6 +28,7 @@ export CLUSTER_NODEPOOL_COUNT=1
 export PW_CPU_MACHINE_TYPE="c4d-standard-96"
 export RESERVATION="YOUR_RESERVATION_NAME"
 export MODEL_NAME="qwen3-30b-a3b"
+export CLUSTER_TOOLKIT_VERSION="v1.103.0"
 export HF_TOKEN="YOUR_HF_TOKEN"
 # [END hypercomputer_tpu_tune_qwen3_30b_rl_env_v2]
 
