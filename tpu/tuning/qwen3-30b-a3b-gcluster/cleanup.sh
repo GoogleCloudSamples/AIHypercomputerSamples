@@ -46,7 +46,7 @@ cleanup_anp_firewalls() {
 cleanup_anp_firewalls
 
 echo "[$(date)] ==================== Destroying Cluster... ===================="
-./gcluster destroy ${CLUSTER_NAME} --auto-approve || true
+./gcluster destroy "${CLUSTER_NAME}" --auto-approve || true
 
 # Fallback: force delete GKE cluster via gcloud if gcluster/Terraform failed to destroy it
 if gcloud container clusters describe "${CLUSTER_NAME}" --location="${REGION}" --project="${PROJECT}" &>/dev/null; then
