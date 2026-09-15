@@ -78,7 +78,7 @@
 # [END hypercomputer_tpu_sft_gcluster_convert_hf_logs]
 
 # [START hypercomputer_tpu_sft_gcluster_cleanup_storage_v2]
-./gcluster destroy "${CLUSTER_NAME}" --robust
+./gcluster destroy "${CLUSTER_NAME}"
 gcloud storage rm -r "gs://${GCS_BUCKET}"
 
 # To delete the local deployment folder

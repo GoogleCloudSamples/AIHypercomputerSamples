@@ -31,7 +31,7 @@ echo "[$(date)] ==================== Submitting Model Conversion Workload... ===
         model_name=${MODEL_NAME} \
         hf_access_token=${HF_TOKEN} \
         base_output_directory=gs://${GCS_BUCKET}/${MODEL_NAME}/max-text-format/ \
-        scan_layers=True \
+        scan_layers=False \
         use_multimodal=False \
         skip_jax_distributed_system=true \
         checkpoint_storage_use_zarr3=0 \

@@ -34,7 +34,7 @@ echo "[$(date)] ==================== Submitting Model Conversion Workload... ===
         base_output_directory=gs://${GCS_BUCKET}/${MODEL_NAME}/hf-trained/ \
         skip_jax_distributed_system=true \
         hardware=cpu \
-        scan_layers=True \
+        scan_layers=False \
         use_multimodal=False \
         weight_dtype=bfloat16 \
         --override_model_architecture"
