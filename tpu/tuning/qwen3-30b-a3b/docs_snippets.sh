@@ -25,17 +25,25 @@ kubectl logs -f POD_NAME
 # [END hypercomputer_tpu_tune_qwen3_30b_rl_monitor_logs]
 
 # [START hypercomputer_tpu_tune_qwen3_30b_rl_monitor_workload]
-xpk workload list --cluster ${CLUSTER_NAME} --project ${PROJECT} --zone ${ZONE}
+xpk workload list --cluster "${CLUSTER_NAME}" --project "${PROJECT}" --zone "${ZONE}"
 # [END hypercomputer_tpu_tune_qwen3_30b_rl_monitor_workload]
 
 # [START hypercomputer_tpu_tune_qwen3_30b_rl_monitor_train_logs]
 kubectl logs -f qwen-training-pathways-head-0-0-HASH
 # [END hypercomputer_tpu_tune_qwen3_30b_rl_monitor_train_logs]
 
-# [START hypercomputer_tpu_tune_qwen3_30b_rl_cleanup]
-xpk cluster delete --cluster $CLUSTER_NAME --project $PROJECT --zone $ZONE --force
+if false; then
+  # [START hypercomputer_tpu_tune_qwen3_30b_rl_cleanup]
+  xpk cluster delete --cluster "${CLUSTER_NAME}" --project "${PROJECT}" --zone "${ZONE}" --force
 
-gcloud storage rm --recursive gs://$GCS_BUCKET
+  gcloud storage rm --recursive "gs://${GCS_BUCKET}"
 
-gcloud artifacts repositories delete maxtext-images --location=$REGION --project=$PROJECT --quiet
-# [END hypercomputer_tpu_tune_qwen3_30b_rl_cleanup]
+  gcloud artifacts repositories delete maxtext-images --location="${REGION}" --project="${PROJECT}" --quiet
+  # [END hypercomputer_tpu_tune_qwen3_30b_rl_cleanup]
+fi
+
+# [START hypercomputer_tpu_tune_qwen3_30b_rl_cleanup_v2]
+xpk cluster delete --cluster "${CLUSTER_NAME}" --project "${PROJECT}" --zone "${ZONE}" --force
+
+gcloud storage rm --recursive "gs://${GCS_BUCKET}"
+# [END hypercomputer_tpu_tune_qwen3_30b_rl_cleanup_v2]
