@@ -13,11 +13,13 @@
 # limitations under the License.
 
 # [START hypercomputer_gpu_train_ray_verl_std_runtime_env]
-py_modules: ["."]
 working_dir: "."
 excludes:
   - ".git"
   - "env"
+  - ".cache"
+  - ".zip"
+  - ".log"
 env_vars:
   PYTHONPATH: "/data/verl"
   LD_LIBRARY_PATH: "/usr/local/nvidia/lib64"
@@ -34,9 +36,9 @@ env_vars:
   NCCL_IB_QPS_PER_CONNECTION: "4"
   NCCL_IB_TC: "52"
   NCCL_IB_FIFO_TC: "84"
-  NCCL_TUNER_CONFIG_PATH: "/usr/local/gib/configs/tuner_config_a4.txtpb" 
+  NCCL_TUNER_CONFIG_PATH: "/usr/local/gib/configs/tuner_config_a4.txtpb"
   HF_HOME: "/data/huggingface_cache"
-  GLOO_SOCKET_IFNAME: "eth0" 
+  GLOO_SOCKET_IFNAME: "eth0"
 # [END hypercomputer_gpu_train_ray_verl_std_runtime_env]
- 
+
 

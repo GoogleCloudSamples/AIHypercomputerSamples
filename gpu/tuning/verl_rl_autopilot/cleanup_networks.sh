@@ -16,17 +16,16 @@
 
 set -euo pipefail
 
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+cd "${SCRIPT_DIR}"
+
+if [ -f "0_env.sh" ]; then
+  source 0_env.sh 2>/dev/null || true
+fi
+
 # Save user defined values from environment
 USER_CLUSTER_NAME="${CLUSTER_NAME:-}"
 USER_REGION="${CONTROL_PLANE_REGION:-}"
-
-# Determine the directory where the script is located
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-
-# Source defaults if env file exists
-if [ -f "${SCRIPT_DIR}/0_env.sh" ]; then
-    source "${SCRIPT_DIR}/0_env.sh"
-fi
 
 # Restore user defined values if they were set (overriding defaults)
 if [ -n "${USER_CLUSTER_NAME}" ]; then
@@ -50,27 +49,28 @@ fi
 
 echo "=== Starting Network Cleanup for Cluster: ${CLUSTER_NAME} in ${CONTROL_PLANE_REGION} ==="
 
-# 1. Get Cluster Hash
-echo "Retrieving cluster hash..."
-if ! POD_RANGE=$(gcloud container clusters describe "${CLUSTER_NAME}" --location="${CONTROL_PLANE_REGION}" --format="value(ipAllocationPolicy.clusterSecondaryRangeName)" 2>/dev/null); then
-    echo "Warning: Could not describe cluster ${CLUSTER_NAME}. It might already be deleted."
-    if [ -t 0 ]; then
-        echo "If you know the cluster hash (e.g. 4dbafcbf), enter it now, or press Enter to abort:"
-        read -r HASH
+# 1. Get Cluster Hash (scoped strictly to this cluster to protect concurrent clusters)
+if [ -z "${HASH:-}" ]; then
+    echo "Retrieving cluster hash for ${CLUSTER_NAME}..."
+    if POD_RANGE=$(gcloud container clusters describe "${CLUSTER_NAME}" --location="${CONTROL_PLANE_REGION}" --format="value(ipAllocationPolicy.clusterSecondaryRangeName)" 2>/dev/null); then
+        HASH=${POD_RANGE##*-}
+        echo "Found cluster hash: ${HASH}"
     else
-        echo "Error: Non-interactive shell and cluster hash could not be retrieved automatically."
-        exit 1
-    fi
-    if [ -z "${HASH:-}" ]; then
-        echo "Aborting."
-        exit 1
+        echo "Warning: Cluster ${CLUSTER_NAME} is not found or already deleted, and HASH is not provided."
+        if [ -t 0 ]; then
+            echo "If you know the cluster hash (e.g. 4dbafcbf), enter it now, or press Enter to skip:"
+            read -r HASH || true
+        fi
+        if [ -z "${HASH:-}" ]; then
+            echo "No cluster hash available to identify cluster-specific ANP networks. Skipping network cleanup to protect other clusters."
+            exit 0
+        fi
     fi
 else
-    HASH=${POD_RANGE##*-}
-    echo "Found cluster hash: ${HASH}"
+    echo "Using provided cluster hash: ${HASH}"
 fi
 
-# 2. Find Networks
+# 2. Find Networks specifically matching this cluster hash
 echo "Finding networks with hash ${HASH}..."
 # Using --format="value(name)" to get a space-separated list
 NETWORKS=$(gcloud compute networks list --filter="name:gke-anp-${HASH}" --format="value(name)")
@@ -80,41 +80,51 @@ if [ -z "${NETWORKS}" ]; then
     exit 0
 fi
 
-echo "Found networks:"
+echo "Found cluster-specific networks:"
 echo "${NETWORKS}"
 
-# 3. Find and Delete Firewall Rules
-echo "Checking for firewall rules..."
+# 3. Find and Delete Firewall Rules matching this cluster hash
+echo "Checking for firewall rules matching hash ${HASH}..."
 FIREWALLS=$(gcloud compute firewall-rules list --filter="name:gke-anp-${HASH}" --format="value(name)")
 if [ -n "${FIREWALLS}" ]; then
     echo "Deleting firewall rules..."
-    # gcloud delete can take multiple names separated by space
-    gcloud compute firewall-rules delete ${FIREWALLS} --quiet
+    gcloud compute firewall-rules delete ${FIREWALLS} --quiet || true
 else
     echo "No firewall rules found."
 fi
 
-# 4. Find and Delete Subnets
+# 4. Find and Delete Subnets matching this cluster hash (with retries for NIC detachment)
 echo "Checking for subnetworks in region ${CONTROL_PLANE_REGION}..."
 for NET in ${NETWORKS}; do
-    # List subnetworks in the specific network and region
     SUBNETS=$(gcloud compute networks subnets list --regions="${CONTROL_PLANE_REGION}" --filter="network:${NET}" --format="value(name)" 2>/dev/null || true)
     if [ -n "${SUBNETS}" ]; then
         echo "Deleting subnetworks for ${NET} in ${CONTROL_PLANE_REGION}:"
         echo "${SUBNETS}"
         for SUB in ${SUBNETS}; do
-            gcloud compute networks subnets delete "${SUB}" --region="${CONTROL_PLANE_REGION}" --quiet || true
+            for retry in {1..5}; do
+                if gcloud compute networks subnets delete "${SUB}" --region="${CONTROL_PLANE_REGION}" --quiet 2>/dev/null; then
+                    break
+                fi
+                echo "Subnet ${SUB} busy (waiting for NIC detach), retrying in 5s (attempt ${retry}/5)..."
+                sleep 5
+            done
         done
     else
         echo "No subnetworks found for ${NET}."
     fi
 done
 
-# 5. Delete Networks
-echo "Deleting networks..."
+# 5. Delete Networks matching this cluster hash (with retries)
+echo "Deleting networks for hash ${HASH}..."
 for NET in ${NETWORKS}; do
     echo "Deleting network ${NET}..."
-    gcloud compute networks delete "${NET}" --quiet || true
+    for retry in {1..5}; do
+        if gcloud compute networks delete "${NET}" --quiet 2>/dev/null; then
+            break
+        fi
+        echo "Network ${NET} busy, retrying in 5s (attempt ${retry}/5)..."
+        sleep 5
+    done
 done
 
 echo "=== Network Cleanup Complete ==="

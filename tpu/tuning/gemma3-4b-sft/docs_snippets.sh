@@ -15,5 +15,5 @@
 set -euo pipefail
 
 # [START hypercomputer_tpu_tune_gemma3_sft_ssh]
-gcloud compute tpus tpu-vm ssh $NAME --zone $ZONE --project $PROJECT
+gcloud compute tpus tpu-vm ssh "${NAME}" --zone "${ZONE}" --project "${PROJECT}"
 # [END hypercomputer_tpu_tune_gemma3_sft_ssh]

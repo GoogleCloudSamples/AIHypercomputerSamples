@@ -26,4 +26,3 @@ export HF_TOKEN="YOUR_HF_TOKEN"
 gcloud config set project "${PROJECT_ID}"
 gcloud config set billing/quota_project "${PROJECT_ID}"
 # [END hypercomputer_gpu_tune_gemma3_slurm_env]
-export WORK_DIR="$(mktemp -d -t gemma3_slurm_XXXXXX)"

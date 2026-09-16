@@ -1,3 +1,4 @@
+#!/bin/bash
 #  Copyright 2026 Google LLC
 #
 #  Licensed under the Apache License, Version 2.0 (the "License");
@@ -15,18 +16,20 @@
 set -euo pipefail
 
 # [START hypercomputer_tpu_tune_gemma3_sft_create]
-gcloud alpha compute tpus tpu-vm create $NAME \
-    --zone=$ZONE \
-    --project=$PROJECT \
+gcloud alpha compute tpus tpu-vm create "${NAME}" \
+    --zone="${ZONE}" \
+    --project="${PROJECT}" \
+    --network="${NETWORK}" \
+    --tags="${NAME}" \
     --accelerator-type=v6e-8 \
     --version=v2-alpha-tpuv6e \
     --provisioning-model=reservation-bound \
-    --reservation=$RESERVATION
+    --reservation="${RESERVATION}"
 # [END hypercomputer_tpu_tune_gemma3_sft_create]
 
 LIMIT=60
 count=0
-while ! gcloud compute tpus tpu-vm describe $NAME --project $PROJECT --zone $ZONE | grep -q 'state: READY'; do
+while ! gcloud compute tpus tpu-vm describe "${NAME}" --project "${PROJECT}" --zone "${ZONE}" | grep -q 'state: READY'; do
   if [ $count -ge $LIMIT ]; then
     echo "Timeout waiting for TPU to become READY." >&2
     exit 1

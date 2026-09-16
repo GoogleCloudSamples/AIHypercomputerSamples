@@ -16,6 +16,25 @@
 
 set -euo pipefail
 
+# Check and install Helm if not present
+if ! command -v helm &> /dev/null; then
+    echo "[$(date)] Helm not found. Installing Helm..."
+    curl -fsSL https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
+else
+    echo "Helm is already installed."
+fi
+
+# Install kubectl-ray plugin if not present
+if ! kubectl ray version &> /dev/null; then
+    echo "Installing kubectl ray plugin..."
+    KUBECTL_RAY_VERSION="v1.3.2"
+    curl -LO "https://github.com/ray-project/kuberay/releases/download/${KUBECTL_RAY_VERSION}/kubectl-ray_${KUBECTL_RAY_VERSION}_linux_amd64.tar.gz"
+    tar -xvf "kubectl-ray_${KUBECTL_RAY_VERSION}_linux_amd64.tar.gz"
+    sudo cp kubectl-ray /usr/local/bin/
+    sudo chmod +x /usr/local/bin/kubectl-ray
+    rm -f "kubectl-ray_${KUBECTL_RAY_VERSION}_linux_amd64.tar.gz" kubectl-ray
+fi
+
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 TARGET_DIR="${SCRIPT_DIR}/kubernetes-engine-samples"
 
