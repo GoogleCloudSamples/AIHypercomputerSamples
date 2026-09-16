@@ -66,7 +66,11 @@ echo "[$(date)] ========== Deploying the Ray cluster... =========="
 # [START hypercomputer_gpu_tune_gemma3_27b_nemo_rl_ray_cluster_deploy]
 export REPLICA_COUNT=2
 helm install ray-cluster . \
-  --set additionalWorkerGroups.worker-grp-0.replicas=$REPLICA_COUNT
+  --set additionalWorkerGroups.worker-grp-0.replicas=$REPLICA_COUNT \
+  --set head.resources.requests.cpu=12 \
+  --set head.resources.requests.memory=96Gi \
+  --set head.resources.limits.cpu=12 \
+  --set head.resources.limits.memory=96Gi
 # [END hypercomputer_gpu_tune_gemma3_27b_nemo_rl_ray_cluster_deploy]
 
 sleep 10
