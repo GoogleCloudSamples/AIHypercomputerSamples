@@ -1,18 +1,20 @@
 # _TUTORIAL_TITLE_
-# Example: Reinforcement Learning (RL) Fine-tuning for Llama 3.1 8B on TPU
+# Example: Fine-tune Qwen3 30B on a TPU GKE Cluster
 
-This code sample is intended for AI/ML engineers and demonstrates how to perform Reinforcement Learning (RL) fine-tuning for the Llama 3.1 8B model on TPUs on Google Cloud.
+This code sample is intended for AI/ML engineers and demonstrates how to fine-tune the Qwen3 30B model on a TPU GKE cluster on Google Cloud.
 
 Note: This sample doesn’t demonstrate how to prepare a dataset or serve the model in production.
 
 The scripts in this directory deploy the infrastructure and run the AI/ML workload on AI Hypercomputer. The sample includes the following files:
 
 * `0_env.sh`: Contains the starting environment variables.
-* `1_setup.sh`: Sets up the required infrastructure and environment.
-* `2_run_script.sh`: Submits the RL fine-tuning workload.
-* `*_validation.sh`: Validates the workload ran successfully.
+* `1_prerequisites.sh`: Installs required prerequisites.
+* `2_build_image.sh`: Builds the required Docker image.
+* `3_setup_cluster.sh`: Sets up the GKE cluster.
+* `4_convert_model.sh`: Converts the model to the required format.
+* `5_train_model.sh`: Submits the fine-tuning workload.
+* `6_convert_model_hf.sh`: Converts the model back to Hugging Face format.
 * `cleanup.sh`: Terminates all created resources.
-* `run_on_vm.sh`: Script to run the workload on a VM.
 
 For the complete step-by-step tutorial of how to use this sample, see the official Google Cloud documentation: _TUTORIAL_TITLE_.
 
@@ -21,11 +23,11 @@ For the complete step-by-step tutorial of how to use this sample, see the offici
 Before you run this sample, ensure you have the following:
 
 * A Google Cloud project with billing enabled. Running this sample provisions billable Google Cloud resources including:
-  - TPUs and Storage.
+  - GKE Clusters, TPUs, and Storage.
   
   You are billed for these resources for the time that they are running. To avoid incurring charges, delete the resources when you have finished running the sample.
-* Quota for TPUs in your chosen region.
-* A valid Hugging Face token (HF_TOKEN) with access to the Llama 3.1 model, and necessary IAM permissions.
+* Quota for GKE and TPUs in your chosen region.
+* A valid Hugging Face token (HF_TOKEN) with access to the model, and necessary IAM permissions.
 
 ## Run the sample
 
@@ -37,27 +39,42 @@ To execute this sample, follow these steps:
    source 0_env.sh
    ```
 
-2. Run the setup script.
+2. Install prerequisites.
    ```bash
-   ./1_setup.sh
+   ./1_prerequisites.sh
    ```
 
-3. Run the script to start the fine-tuning.
+3. Build the required Docker image.
    ```bash
-   ./2_run_script.sh
+   ./2_build_image.sh
+   ```
+
+4. Set up the GKE cluster.
+   ```bash
+   ./3_setup_cluster.sh
+   ```
+
+5. Convert the model.
+   ```bash
+   ./4_convert_model.sh
+   ```
+
+6. Train the model.
+   ```bash
+   ./5_train_model.sh
+   ```
+
+7. Convert the trained model to Hugging Face format.
+   ```bash
+   ./6_convert_model_hf.sh
    ```
 
 ## Verify the results
 
 To verify that the workload ran successfully:
 
-1. Run the validation script to check the output logs:
-
-   ```bash
-   ./*_validation.sh
-   ```
-
-2. You should see an output indicating success and the final training loss/rewards.
+1. Check the logs of the training job.
+2. You should see an output indicating success and the final training loss.
 
 ## Clean up
 

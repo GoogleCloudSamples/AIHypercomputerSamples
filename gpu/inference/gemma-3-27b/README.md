@@ -7,12 +7,13 @@ _[Provide a high-level description of the architecture, workload, and how the sc
 The sample includes the following files:
 
 * `0_env.sh`: Contains the starting environment variables.
-* `1_setup_cluster.sh`: Sets up the cluster.
+* `1_setup.sh`: Sets up the cluster and infrastructure.
 * `2_deploy_model.sh`: Deploys the model.
+* `3_interract_with_model.sh`: Interacts with the deployed model.
 * `*_validation.sh`: Validates the workload.
 * `cleanup.sh`: Terminates all created resources.
-* `docs_snippet.sh`: Documentation snippets.
-* `vllm-l4-17b.yaml`: Model configuration.
+* `docs_snippets.sh`: Documentation snippets.
+* `vllm-3-27b-it.yaml`: Model configuration.
 
 For the complete step-by-step tutorial of how to use this sample, see the official Google Cloud documentation: _TUTORIAL_TITLE_.
 
@@ -43,13 +44,19 @@ To execute this sample, follow these steps:
 2. Run the setup script:
 
    ```bash
-   ./1_setup_cluster.sh
+   ./1_setup.sh
    ```
 
 3. Deploy the model:
 
    ```bash
    ./2_deploy_model.sh
+   ```
+
+4. Interact with the model:
+
+   ```bash
+   ./3_interract_with_model.sh
    ```
 
 ## Verify the results
