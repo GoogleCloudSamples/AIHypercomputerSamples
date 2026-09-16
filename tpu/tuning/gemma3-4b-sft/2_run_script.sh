@@ -40,12 +40,27 @@ else
   echo "Firewall rule '${FIREWALL_RULE_NAME}' already exists for this network. Skipping creation."
 fi
 
-gcloud alpha compute tpus tpu-vm scp run_on_vm.sh "${NAME}":~/ \
+LIMIT=30
+count=0
+until gcloud compute ssh "${NAME}" \
+    --zone="${ZONE}" \
+    --project="${PROJECT}" \
+    --tunnel-through-iap \
+    --command="true" >/dev/null 2>&1; do
+  if [ $count -ge $LIMIT ]; then
+    echo "Timeout waiting for SSH on ${NAME}." >&2
+    exit 1
+  fi
+  sleep 10
+  count=$((count+1))
+done
+
+gcloud compute scp run_on_vm.sh "${NAME}":~/ \
     --zone="${ZONE}" \
     --project="${PROJECT}" \
     --tunnel-through-iap
 
-gcloud alpha compute tpus tpu-vm ssh "${NAME}" \
+gcloud compute ssh "${NAME}" \
     --zone="${ZONE}" \
     --project="${PROJECT}" \
     --tunnel-through-iap \

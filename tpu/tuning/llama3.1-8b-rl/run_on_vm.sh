@@ -19,7 +19,7 @@ sudo apt update && sudo apt upgrade -y --fix-missing
 # [END hypercomputer_tpu_tune_llama_rl_maxtext_0]
 
 # [START hypercomputer_tpu_tune_llama_rl_maxtext_1]
-sudo apt install -y python3.12 python3.12-venv
+sudo apt install -y build-essential cmake ninja-build
 # [END hypercomputer_tpu_tune_llama_rl_maxtext_1]
 
 # [START hypercomputer_tpu_tune_llama_rl_maxtext_2]
@@ -28,12 +28,13 @@ source $HOME/.local/bin/env
 # [END hypercomputer_tpu_tune_llama_rl_maxtext_2]
 
 # [START hypercomputer_tpu_tune_llama_rl_maxtext_3]
+uv python install 3.12
 uv venv --python 3.12 --seed maxtext_venv
 source maxtext_venv/bin/activate
 # [END hypercomputer_tpu_tune_llama_rl_maxtext_3]
 
 # [START hypercomputer_tpu_tune_llama_rl_maxtext_4]
-uv pip install maxtext[tpu-post-train]==0.2.2 --resolution=lowest
+UV_TORCH_BACKEND=cpu uv pip install maxtext[tpu-post-train]==0.2.4 --resolution=lowest
 # [END hypercomputer_tpu_tune_llama_rl_maxtext_4]
 
 # [START hypercomputer_tpu_tune_llama_rl_maxtext_5]

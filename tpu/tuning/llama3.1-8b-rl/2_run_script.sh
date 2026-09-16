@@ -14,6 +14,6 @@
 
 set -euo pipefail
 
-gcloud compute tpus tpu-vm scp run_on_vm.sh "${TPU_NAME}":~/ --zone $ZONE --project $PROJECT
+gcloud compute scp run_on_vm.sh "${TPU_NAME}":~/ --zone $ZONE --project $PROJECT
 
-gcloud compute tpus tpu-vm ssh $TPU_NAME --zone $ZONE --project $PROJECT --command="YOUR_HF_TOKEN='$HF_TOKEN' bash ~/run_on_vm.sh"
+gcloud compute ssh $TPU_NAME --zone $ZONE --project $PROJECT --command="YOUR_HF_TOKEN='$HF_TOKEN' bash ~/run_on_vm.sh"
