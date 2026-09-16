@@ -34,8 +34,8 @@ gcloud compute instances create "${NAME}" \
 
 LIMIT=60
 count=0
-while [ "$(gcloud compute instances describe "${NAME}" --project "${PROJECT}" --zone "${ZONE}" --format='value(status)')" != "RUNNING" ]; do
-  if [ $count -ge $LIMIT ]; then
+while [ "$(gcloud compute instances describe "${NAME}" --project "${PROJECT}" --zone "${ZONE}" --format='value(status)' 2>/dev/null || echo "PENDING")" != "RUNNING" ]; do
+  if [ "${count}" -ge "${LIMIT}" ]; then
     echo "Timeout waiting for TPU instance to become RUNNING." >&2
     exit 1
   fi

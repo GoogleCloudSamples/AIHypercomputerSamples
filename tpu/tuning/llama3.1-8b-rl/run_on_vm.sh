@@ -1,3 +1,4 @@
+#!/bin/bash
 #  Copyright 2026 Google LLC
 #
 #  Licensed under the Apache License, Version 2.0 (the "License");
@@ -24,7 +25,7 @@ sudo apt install -y build-essential cmake ninja-build
 
 # [START hypercomputer_tpu_tune_llama_rl_maxtext_2]
 curl -LsSf https://astral.sh/uv/install.sh | sh
-source $HOME/.local/bin/env
+source "${HOME}/.local/bin/env"
 # [END hypercomputer_tpu_tune_llama_rl_maxtext_2]
 
 # [START hypercomputer_tpu_tune_llama_rl_maxtext_3]
@@ -34,7 +35,7 @@ source maxtext_venv/bin/activate
 # [END hypercomputer_tpu_tune_llama_rl_maxtext_3]
 
 # [START hypercomputer_tpu_tune_llama_rl_maxtext_4]
-UV_TORCH_BACKEND=cpu uv pip install maxtext[tpu-post-train]==0.2.4 --resolution=lowest
+UV_TORCH_BACKEND=cpu uv pip install "maxtext[tpu-post-train]==0.2.4" --resolution=lowest
 # [END hypercomputer_tpu_tune_llama_rl_maxtext_4]
 
 # [START hypercomputer_tpu_tune_llama_rl_maxtext_5]
@@ -52,22 +53,23 @@ export HF_TOKEN=$YOUR_HF_TOKEN
 
 # [START hypercomputer_tpu_tune_llama_rl_tune_1_convert]
 python3 -m maxtext.checkpoint_conversion.to_maxtext \
-    model_name=${MODEL_NAME?} \
-    hf_access_token=${HF_TOKEN?} \
-    base_output_directory=${MODEL_CHECKPOINT_DIRECTORY?} \
+    model_name="${MODEL_NAME?}" \
+    hf_access_token="${HF_TOKEN?}" \
+    base_output_directory="${MODEL_CHECKPOINT_DIRECTORY?}" \
     scan_layers=True \
     use_multimodal=False \
     hardware=cpu \
     skip_jax_distributed_system=true \
     checkpoint_storage_use_zarr3=$((1 - USE_PATHWAYS)) \
     checkpoint_storage_use_ocdbt=$((1 - USE_PATHWAYS)) \
-    --lazy_load_tensors=${LAZY_LOAD_TENSORS?}
+    --lazy_load_tensors="${LAZY_LOAD_TENSORS?}"
 # [END hypercomputer_tpu_tune_llama_rl_tune_1_convert]
 
 # [START hypercomputer_tpu_tune_llama_rl_tune_2_env]
 # -- MaxText configuration --
 export BASE_OUTPUT_DIRECTORY=/dev/shm/$MODEL_NAME/post-train/
-export RUN_NAME=$(date +%Y-%m-%d-%H-%M-%S)
+RUN_NAME=$(date +%Y-%m-%d-%H-%M-%S)
+export RUN_NAME
 export CHIPS_PER_VM=8
 export NUM_BATCHES=50
 export MAXTEXT_CKPT_PATH=$MODEL_CHECKPOINT_DIRECTORY/0/items
@@ -75,12 +77,12 @@ export MAXTEXT_CKPT_PATH=$MODEL_CHECKPOINT_DIRECTORY/0/items
 
 # [START hypercomputer_tpu_tune_llama_rl_tune_3_run]
 python3 -m maxtext.trainers.post_train.rl.train_rl \
-    model_name=${MODEL_NAME?} \
-    load_parameters_path=${MAXTEXT_CKPT_PATH?} \
-    run_name=${RUN_NAME?} \
-    base_output_directory=${BASE_OUTPUT_DIRECTORY?} \
-    chips_per_vm=${CHIPS_PER_VM?} \
-    num_batches=${NUM_BATCHES?} \
+    model_name="${MODEL_NAME?}" \
+    load_parameters_path="${MAXTEXT_CKPT_PATH?}" \
+    run_name="${RUN_NAME?}" \
+    base_output_directory="${BASE_OUTPUT_DIRECTORY?}" \
+    chips_per_vm="${CHIPS_PER_VM?}" \
+    num_batches="${NUM_BATCHES?}" \
     num_test_batches=10 \
     rollout_data_parallelism=1 \
     rollout_tensor_parallelism=-1
@@ -94,9 +96,9 @@ export POST_TRAIN_PATH=$BASE_OUTPUT_DIRECTORY/$RUN_NAME/checkpoints/actor/$NUM_B
 
 # [START hypercomputer_tpu_tune_llama_rl_tune_5_convert]
 python3 -m maxtext.checkpoint_conversion.to_huggingface \
-    model_name=${HF_MODEL_NAME?} \
-    load_parameters_path=${POST_TRAIN_PATH?} \
-    base_output_directory=${HF_EXPORT?} \
+    model_name="${HF_MODEL_NAME?}" \
+    load_parameters_path="${POST_TRAIN_PATH?}" \
+    base_output_directory="${HF_EXPORT?}" \
     scan_layers=True \
     use_multimodal=False \
     weight_dtype=bfloat16

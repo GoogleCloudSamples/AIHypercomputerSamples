@@ -1,3 +1,4 @@
+#!/bin/bash
 #  Copyright 2026 Google LLC
 #
 #  Licensed under the Apache License, Version 2.0 (the "License");
@@ -15,5 +16,5 @@
 set -euo pipefail
 
 # [START hypercomputer_tpu_tune_gemma3_sft_ssh]
-gcloud compute ssh "${NAME}" --zone "${ZONE}" --project "${PROJECT}" --tunnel-through-iap
+gcloud compute ssh "${NAME}" --zone "${ZONE}" --project "${PROJECT}"
 # [END hypercomputer_tpu_tune_gemma3_sft_ssh]

@@ -1,3 +1,4 @@
+#!/bin/bash
 #  Copyright 2026 Google LLC
 #
 #  Licensed under the Apache License, Version 2.0 (the "License");
@@ -17,5 +18,5 @@ set -euo pipefail
 
 # Remove all resources created by your sample.
 # [START hypercomputer_tpu_tune_llama_rl_cleanup]
-gcloud compute instances delete $TPU_NAME --zone=$ZONE --project=$PROJECT --quiet
+gcloud compute instances delete "${TPU_NAME}" --zone="${ZONE}" --project="${PROJECT}" --quiet
 # [END hypercomputer_tpu_tune_llama_rl_cleanup]

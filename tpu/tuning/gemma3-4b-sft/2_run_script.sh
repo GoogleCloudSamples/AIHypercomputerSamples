@@ -47,7 +47,7 @@ until gcloud compute ssh "${NAME}" \
     --project="${PROJECT}" \
     --tunnel-through-iap \
     --command="true" >/dev/null 2>&1; do
-  if [ $count -ge $LIMIT ]; then
+  if [ "${count}" -ge "${LIMIT}" ]; then
     echo "Timeout waiting for SSH on ${NAME}." >&2
     exit 1
   fi
@@ -64,4 +64,4 @@ gcloud compute ssh "${NAME}" \
     --zone="${ZONE}" \
     --project="${PROJECT}" \
     --tunnel-through-iap \
-    --command="UV_HTTP_TIMEOUT=300 UV_CONCURRENT_DOWNLOADS=1 YOUR_HF_TOKEN=$HF_TOKEN bash ~/run_on_vm.sh"
+    --command="UV_HTTP_TIMEOUT=300 UV_CONCURRENT_DOWNLOADS=1 YOUR_HF_TOKEN='${HF_TOKEN}' bash ~/run_on_vm.sh"

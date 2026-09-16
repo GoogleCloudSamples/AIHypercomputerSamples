@@ -15,7 +15,6 @@
 
 set -euo pipefail
 
-NETWORK_NAME="${NETWORK}"
 FIREWALL_RULE_NAME="allow-ssh-from-iap-${NAME}"
 
 # Remove all resources created by your sample.
