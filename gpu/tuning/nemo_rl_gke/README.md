@@ -1,19 +1,23 @@
 # NeMo RL on GKE
 
-This code sample is intended for AI/ML engineers and demonstrates how to run NeMo reinforcement learning by using a GKE cluster on Google Cloud.
+This code sample is intended for AI/ML engineers and demonstrates how to run NeMo reinforcement learning using a Google Kubernetes Engine (GKE) cluster.
 
 Note: This sample doesn’t demonstrate how to prepare a dataset or serve the model in production.
 
-The scripts in this directory deploy the infrastructure and run the AI/ML workload on AI Hypercomputer. The sample includes the following files:
+## Architecture and Workload
 
-* `0_env.sh`: Contains the starting environment variables.
-* `1_create_vpc_network.sh`: Creates the VPC network for the cluster.
-* `2_create_cluster.sh`: Creates the GKE cluster.
-* `3_prepare_storage.sh`: Prepares the required storage.
-* `4_deploy_ray_cluster.sh`: Deploys a Ray cluster on GKE.
-* `5_launch_job.sh`: Launches the reinforcement learning job.
-* `6_monitor_job.sh`: Monitors the running job.
-* `cleanup.sh`: Terminates all created resources.
+This sample provisions a GKE cluster with a Ray cluster on top of it to orchestrate the distributed reinforcement learning workload. It uses GPU-enabled Virtual Machines (e.g., A3 or A4 instances), a Google Cloud Storage bucket, and a VPC network for communication. The NeMo framework is used within the Ray cluster for model training.
+
+The sample includes the following scripts:
+
+* `0_env.sh`: Configures starting environment variables (project ID, cluster name, zone, etc.).
+* `1_create_vpc_network.sh`: Creates the custom VPC network and firewall rules for the cluster.
+* `2_create_cluster.sh`: Provisions the GKE cluster with the required machine types and node pools.
+* `3_prepare_storage.sh`: Configures the necessary Persistent Volumes (e.g., Lustre or GCS Fuse).
+* `4_deploy_ray_cluster.sh`: Deploys the Ray cluster custom resources on GKE.
+* `5_launch_job.sh`: Submits the NeMo reinforcement learning job to the Ray cluster.
+* `6_monitor_job.sh`: Tails the logs and monitors the status of the running job.
+* `cleanup.sh`: Deletes the GKE cluster, Ray cluster, and all created network/storage resources.
 
 For the complete step-by-step tutorial of how to use this sample, see the official Google Cloud documentation: _TUTORIAL_TITLE_.
 
@@ -22,8 +26,9 @@ For the complete step-by-step tutorial of how to use this sample, see the offici
 Before you run this sample, ensure you have the following:
 
 * A Google Cloud project with billing enabled. Running this sample provisions billable Google Cloud resources including:
-  - Virtual Machines (VMs)
-  - Storage disks
+  - Google Kubernetes Engine (GKE) cluster and GPU Virtual Machines
+  - Persistent disks and Google Cloud Storage buckets
+  - Cloud NAT and VPC network resources
   
   You are billed for these resources for the time that they are running. To avoid incurring charges, delete the resources when you have finished running the sample.
 * Quota for the required hardware in your chosen region.

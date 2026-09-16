@@ -1,15 +1,19 @@
-# Gemma 3 12B Multihost Fine-tuning
+# Fine-tune Gemma 3 (12B) across multiple hosts on GKE
 
-This code sample is intended for AI/ML engineers and demonstrates how to run Gemma 3 12B multihost fine-tuning by using a GKE or Slurm cluster on Google Cloud.
+This code sample is intended for AI/ML engineers and demonstrates how to run multihost fine-tuning for the Gemma 3 (12B) model using a Google Kubernetes Engine (GKE) cluster.
 
 Note: This sample doesn’t demonstrate how to prepare a dataset or serve the model in production.
 
-The scripts in this directory deploy the infrastructure and run the AI/ML workload on AI Hypercomputer. The sample includes the following files:
+## Architecture and Workload
 
-* `0_env.sh`: Contains the starting environment variables.
-* `1_setup_cluster.sh`: Sets up the cluster infrastructure.
-* `2_build_and_deploy.sh`: Builds and deploys the workload.
-* `cleanup.sh`: Terminates all created resources.
+This sample provisions a GKE cluster with GPU node pools to run a distributed fine-tuning workload. The workload uses PyTorch Fully Sharded Data Parallel (FSDP) and Accelerate, orchestrated as a Kubernetes Job via JobSet. It utilizes Google Cloud Storage for storing model artifacts and checkpoints.
+
+The sample includes the following scripts:
+
+* `0_env.sh`: Configures environment variables such as the project ID, cluster name, and Hugging Face token.
+* `1_setup_cluster.sh`: Provisions the GKE cluster, configures node pools, sets up secrets, and installs necessary Kubernetes components like JobSet.
+* `2_build_and_deploy.sh`: Builds the container image, pushes it to Artifact Registry, and deploys the fine-tuning JobSet workload to the cluster.
+* `cleanup.sh`: Deletes the GKE cluster and removes all created resources.
 
 For the complete step-by-step tutorial of how to use this sample, see the official Google Cloud documentation: _TUTORIAL_TITLE_.
 
@@ -18,8 +22,9 @@ For the complete step-by-step tutorial of how to use this sample, see the offici
 Before you run this sample, ensure you have the following:
 
 * A Google Cloud project with billing enabled. Running this sample provisions billable Google Cloud resources including:
-  - Virtual Machines (VMs)
-  - Storage disks
+  - Google Kubernetes Engine (GKE) cluster and GPU Virtual Machines
+  - Artifact Registry for storing container images
+  - Persistent disks and Google Cloud Storage buckets
   
   You are billed for these resources for the time that they are running. To avoid incurring charges, delete the resources when you have finished running the sample.
 * Quota for the required hardware in your chosen region.

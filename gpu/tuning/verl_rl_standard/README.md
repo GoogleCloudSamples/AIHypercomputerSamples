@@ -1,20 +1,24 @@
 # vERL RL on GKE Standard
 
-This code sample is intended for AI/ML engineers and demonstrates how to run vERL reinforcement learning by using a GKE Standard cluster on Google Cloud.
+This code sample is intended for AI/ML engineers and demonstrates how to run vERL reinforcement learning using a Google Kubernetes Engine (GKE) Standard cluster.
 
 Note: This sample doesn’t demonstrate how to prepare a dataset or serve the model in production.
 
-The scripts in this directory deploy the infrastructure and run the AI/ML workload on AI Hypercomputer. The sample includes the following files:
+## Architecture and Workload
 
-* `0_env.sh`: Contains the starting environment variables.
-* `1_setup_network.sh`: Sets up the VPC network.
-* `2_setup_cluster.sh`: Sets up the GKE Standard cluster.
-* `3_setup_network_mappings.sh`: Sets up network mappings.
-* `4_setup_storage.sh`: Sets up the required storage.
-* `5_prepare_data.sh`: Prepares the data for training.
-* `6_deploy_workload.sh`: Deploys the workload.
-* `7_run_job.sh`: Runs the reinforcement learning job.
-* `cleanup.sh`: Terminates all created resources.
+This sample provisions a GKE Standard cluster to run a distributed reinforcement learning workload with vERL. The architecture utilizes GPU-enabled Virtual Machines (e.g., C2 Standard instances) and a Ray cluster running on top of GKE. It configures custom VPC networking and uses Google Cloud Storage for datasets and checkpoints.
+
+The sample includes the following scripts:
+
+* `0_env.sh`: Configures starting environment variables (project ID, zone, token).
+* `1_setup_network.sh`: Provisions the custom VPC network and firewall rules.
+* `2_setup_cluster.sh`: Creates the GKE Standard cluster with the required machine types and GPU accelerators.
+* `3_setup_network_mappings.sh`: Configures the necessary networking mappings.
+* `4_setup_storage.sh`: Configures storage such as GCS Fuse for the workload.
+* `5_prepare_data.sh`: Prepares the training data.
+* `6_deploy_workload.sh`: Deploys the Ray cluster and the vERL reinforcement learning job.
+* `7_run_job.sh`: Triggers and monitors the execution of the training job.
+* `cleanup.sh`: Deletes the GKE cluster, network resources, and all associated infrastructure.
 
 For the complete step-by-step tutorial of how to use this sample, see the official Google Cloud documentation: _TUTORIAL_TITLE_.
 
@@ -23,8 +27,9 @@ For the complete step-by-step tutorial of how to use this sample, see the offici
 Before you run this sample, ensure you have the following:
 
 * A Google Cloud project with billing enabled. Running this sample provisions billable Google Cloud resources including:
-  - Virtual Machines (VMs)
-  - Storage disks
+  - Google Kubernetes Engine (GKE) cluster and GPU Virtual Machines (e.g., c2-standard-16)
+  - VPC network, Cloud NAT, and IP addresses
+  - Persistent disks and Google Cloud Storage buckets
   
   You are billed for these resources for the time that they are running. To avoid incurring charges, delete the resources when you have finished running the sample.
 * Quota for the required hardware in your chosen region.

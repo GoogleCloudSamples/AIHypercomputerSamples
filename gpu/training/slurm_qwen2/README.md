@@ -1,15 +1,19 @@
-# Qwen2 Training on a Slurm cluster
+# Train Qwen2 on a Slurm cluster
 
-This code sample is intended for AI/ML engineers and demonstrates how to run the Qwen2 model training by using a Slurm cluster on Google Cloud.
+This code sample is intended for AI/ML engineers and demonstrates how to run Qwen2 model training using a Slurm cluster on Google Cloud. 
 
 Note: This sample doesn’t demonstrate how to prepare a dataset or serve the model in production.
 
-The scripts in this directory deploy the infrastructure and run the AI/ML workload on AI Hypercomputer. The sample includes the following files:
+## Architecture and Workload
 
-* `0_env.sh`: Contains the starting environment variables, such as the project ID, zone, and Hugging Face token.
-* `1_deploy_cluster.sh`: Uses the Google Cloud Cluster Toolkit to provision the Slurm cluster infrastructure.
-* `2_run_job.sh`: Submits the sbatch job that distributes the training workload.
-* `cleanup.sh`: Terminates all created resources.
+This sample provisions a Slurm cluster using the Google Cloud Cluster Toolkit. It uses A4 High GPU (a4-highgpu-8g) VMs for the compute nodes, a Google Cloud Storage bucket for storing datasets and model checkpoints, and Filestore for high-performance shared storage across the cluster. The workload is distributed using Accelerate and PyTorch FSDP via a Slurm `sbatch` job.
+
+The sample includes the following scripts:
+
+* `0_env.sh`: Sets up environment variables, including your project ID, region, zone, and Hugging Face token.
+* `1_deploy_cluster.sh`: Uses the Google Cloud Cluster Toolkit to provision the Slurm cluster infrastructure, networking, GCS buckets, and Filestore.
+* `2_run_job.sh`: Submits the `sbatch` job to the Slurm cluster to distribute the Qwen2 training workload.
+* `cleanup.sh`: Terminates and deletes all created Google Cloud resources.
 
 For the complete step-by-step tutorial of how to use this sample, see the official Google Cloud documentation: _TUTORIAL_TITLE_.
 
@@ -18,8 +22,9 @@ For the complete step-by-step tutorial of how to use this sample, see the offici
 Before you run this sample, ensure you have the following:
 
 * A Google Cloud project with billing enabled. Running this sample provisions billable Google Cloud resources including:
-  - Virtual Machines (VMs)
-  - Storage disks
+  - A4 High GPU Virtual Machines (e.g., a4-highgpu-8g)
+  - Google Cloud Storage buckets
+  - Filestore for shared cluster storage
   
   You are billed for these resources for the time that they are running. To avoid incurring charges, delete the resources when you have finished running the sample.
 * Quota for the required hardware in your chosen region.

@@ -1,19 +1,23 @@
 # vERL RL on GKE Autopilot
 
-This code sample is intended for AI/ML engineers and demonstrates how to run vERL reinforcement learning by using a GKE Autopilot cluster on Google Cloud.
+This code sample is intended for AI/ML engineers and demonstrates how to run vERL reinforcement learning using a Google Kubernetes Engine (GKE) Autopilot cluster.
 
 Note: This sample doesn’t demonstrate how to prepare a dataset or serve the model in production.
 
-The scripts in this directory deploy the infrastructure and run the AI/ML workload on AI Hypercomputer. The sample includes the following files:
+## Architecture and Workload
 
-* `0_env.sh`: Contains the starting environment variables.
-* `1_setup_cluster.sh`: Sets up the GKE Autopilot cluster.
-* `2_setup_storage.sh`: Sets up the required storage.
-* `3_setup_dranet.sh`: Sets up DraNet.
-* `4_prepare_data.sh`: Prepares the data for training.
-* `5_deploy_workload.sh`: Deploys the workload.
-* `6_run_job.sh`: Runs the reinforcement learning job.
-* `cleanup.sh`: Terminates all created resources.
+This sample provisions a fully managed GKE Autopilot cluster to run a distributed reinforcement learning workload with vERL. It sets up a Ray cluster over GKE, utilizing Dynamic Resource Allocation (DraNet) and GPU instances (e.g., C2 machine family) for computation. Storage is handled via Google Cloud Storage and Persistent Volumes.
+
+The sample includes the following scripts:
+
+* `0_env.sh`: Configures starting environment variables (project ID, region, cluster name).
+* `1_setup_cluster.sh`: Provisions the GKE Autopilot cluster.
+* `2_setup_storage.sh`: Prepares the required storage (e.g., GCS Fuse or persistent volumes).
+* `3_setup_dranet.sh`: Configures DraNet for optimized network performance.
+* `4_prepare_data.sh`: Prepares and downloads the dataset for training.
+* `5_deploy_workload.sh`: Deploys the vERL training workload and Ray cluster to GKE.
+* `6_run_job.sh`: Triggers and monitors the reinforcement learning job.
+* `cleanup.sh`: Deletes the GKE cluster and removes all related resources.
 
 For the complete step-by-step tutorial of how to use this sample, see the official Google Cloud documentation: _TUTORIAL_TITLE_.
 
@@ -22,8 +26,8 @@ For the complete step-by-step tutorial of how to use this sample, see the offici
 Before you run this sample, ensure you have the following:
 
 * A Google Cloud project with billing enabled. Running this sample provisions billable Google Cloud resources including:
-  - Virtual Machines (VMs)
-  - Storage disks
+  - Google Kubernetes Engine (GKE) Autopilot cluster and GPU compute resources
+  - Persistent disks and Google Cloud Storage buckets
   
   You are billed for these resources for the time that they are running. To avoid incurring charges, delete the resources when you have finished running the sample.
 * Quota for the required hardware in your chosen region.

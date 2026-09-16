@@ -1,8 +1,8 @@
-# _[Sample title]_
+# Serve Llama 4 Scout G4 on a GKE cluster
 
-_[Provide 1-2 sentences stating the purpose of the sample and the intended audience. If applicable, explicitly state what is not covered by this sample (for example, dataset preparation, serving the model in a production environment, or configuring VPC networks from scratch) to help users quickly determine if it meets their needs. The next sentence is an example of an introductory sentence. Delete the instructions provided in brackets and the examples after you add your own content.]_
+This sample provides a set of scripts to serve the Llama 4 Scout G4 model on Google Kubernetes Engine (GKE) for inference. It is intended for machine learning engineers and developers looking to deploy large language models on Google Cloud.
 
-_[Provide a high-level description of the architecture, workload, and how the scripts interact. Follow this description with a bulleted list of the scripts in the directory.]_
+The workload deploys a vLLM inference server on a GKE cluster equipped with NVIDIA GPUs. The deployment uses Kubernetes configurations to provision the model and serve it via an exposed service.
 
 The sample includes the following files:
 
@@ -22,16 +22,17 @@ For the complete step-by-step tutorial of how to use this sample, see the offici
 Before you run this sample, ensure you have the following:
 
 * A Google Cloud project with billing enabled. Running this sample provisions billable Google Cloud resources including:
-  - _[Provide a list of billable resources such as VMs and storage]_.
+  - GKE clusters
+  - Compute Engine instances with NVIDIA GPUs
+  - Google Cloud Storage buckets (if used for model storage)
+  - Network egress and load balancing
   
   You are billed for these resources for the time that they are running. To avoid incurring charges, delete the resources when you have finished running the sample.
-* _[Provide the necessary quota for the required hardware.]_
+* Sufficient quota for NVIDIA GPUs (e.g., 8 GPUs per node) and standard compute resources in your chosen region.
   
-* _[Specify any specific prerequisites, such as Hugging Face tokens, IAM permissions, or installed tools.]_
+* A Hugging Face token (if the model requires authentication), the gcloud and kubectl CLI tools installed, and appropriate IAM permissions for GKE and GCS.
 
 ## Run the sample
-
-_[Provide the step-by-step instructions to execute the sample, including setting environment variables, deploying infrastructure, and running the job.]_
 
 To execute this sample, follow these steps:
 
@@ -55,25 +56,21 @@ To execute this sample, follow these steps:
 
 ## Verify the results
 
-_[Provide steps to verify that the workload ran successfully. Describe the expected output or success criteria the user should see in the logs.]_
-
 To verify that the workload ran successfully:
 
-1. _[Check the logs and validate the output.]_
+1. Check the logs and validate the output:
 
    ```bash
    ./*_validation.sh
    ```
 
-2. _[Describe the expected output or success criteria the user should see in the logs.]_
+2. You should see successful inference responses in the validation logs.
 
 ## Clean up
 
-_[Provide instructions to terminate all created resources to avoid unnecessary charges.]_
-
 To clean up the resources created by this sample:
 
-1. _[Delete resources]_
+1. Delete resources:
 
    ```bash
    ./cleanup.sh
@@ -82,4 +79,3 @@ To clean up the resources created by this sample:
 ## Additional resources
   
 * _[Link to official AI Hypercomputer tutorial on Google Cloud]_
-* _[Link to related concepts or tools used in the sample]_

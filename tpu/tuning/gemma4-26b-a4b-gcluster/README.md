@@ -1,9 +1,13 @@
 # _TUTORIAL_TITLE_
-# Example: Fine-tune Gemma 4 26B on a TPU GKE Cluster
+# Fine-tune Gemma 4 26B on a TPU GKE Cluster
 
-This code sample is intended for AI/ML engineers and demonstrates how to fine-tune the Gemma 4 26B model on a TPU GKE cluster on Google Cloud.
+This code sample is intended for AI/ML engineers and demonstrates how to fine-tune the Gemma 4 26B model on a GKE cluster with Cloud TPUs.
 
 Note: This sample doesn’t demonstrate how to prepare a dataset or serve the model in production.
+
+## Architecture
+
+The sample uses the Google Cloud Cluster Toolkit to provision a GKE cluster with a v6e-64 TPU node pool and a c4d-standard-96 CPU node pool. It converts the model format, runs the supervised fine-tuning workload using MaxText, and converts the trained model back to Hugging Face format.
 
 The scripts in this directory deploy the infrastructure and run the AI/ML workload on AI Hypercomputer. The sample includes the following files:
 
@@ -23,8 +27,11 @@ For the complete step-by-step tutorial of how to use this sample, see the offici
 Before you run this sample, ensure you have the following:
 
 * A Google Cloud project with billing enabled. Running this sample provisions billable Google Cloud resources including:
-  - GKE Clusters, TPUs, and Storage.
-  
+  - Google Kubernetes Engine (GKE) cluster
+  - Compute Engine (Cloud TPU v6e-64 and CPU c4d-standard-96 node pools)
+  - Cloud Storage
+  - Artifact Registry
+
   You are billed for these resources for the time that they are running. To avoid incurring charges, delete the resources when you have finished running the sample.
 * Quota for GKE and TPUs in your chosen region.
 * A valid Hugging Face token (HF_TOKEN) with access to the model, and necessary IAM permissions.

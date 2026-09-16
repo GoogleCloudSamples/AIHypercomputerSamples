@@ -1,15 +1,19 @@
-# Gemma 3 Fine-tuning with Ray on GKE
+# Fine-tune Gemma 3 with Ray on GKE
 
-This code sample is intended for AI/ML engineers and demonstrates how to run Gemma 3 fine-tuning using Ray by using a GKE cluster on Google Cloud.
+This code sample is intended for AI/ML engineers and demonstrates how to run Gemma 3 fine-tuning using Ray on a Google Kubernetes Engine (GKE) cluster.
 
 Note: This sample doesn’t demonstrate how to prepare a dataset or serve the model in production.
 
-The scripts in this directory deploy the infrastructure and run the AI/ML workload on AI Hypercomputer. The sample includes the following files:
+## Architecture and Workload
 
-* `0_env.sh`: Contains the starting environment variables.
-* `1_setup.sh`: Sets up the GKE cluster and Ray environment.
-* `2_deploy_model.sh`: Deploys the model and initiates training.
-* `cleanup.sh`: Terminates all created resources.
+This sample provisions a GKE cluster and deploys a Ray cluster on top to manage distributed fine-tuning of the Gemma 3 model. It uses GPU-enabled Virtual Machines for the compute nodes and Google Cloud Storage for datasets and checkpointing.
+
+The sample includes the following scripts:
+
+* `0_env.sh`: Configures environment variables (project ID, cluster name, token).
+* `1_setup.sh`: Provisions the GKE cluster, configures the node pools, sets up necessary secrets, and deploys the Ray cluster environment.
+* `2_deploy_model.sh`: Submits the fine-tuning workload to the Ray cluster and initiates the training job.
+* `cleanup.sh`: Deletes the GKE cluster, the Ray environment, and all associated Google Cloud resources.
 
 For the complete step-by-step tutorial of how to use this sample, see the official Google Cloud documentation: _TUTORIAL_TITLE_.
 
@@ -18,8 +22,9 @@ For the complete step-by-step tutorial of how to use this sample, see the offici
 Before you run this sample, ensure you have the following:
 
 * A Google Cloud project with billing enabled. Running this sample provisions billable Google Cloud resources including:
-  - Virtual Machines (VMs)
-  - Storage disks
+  - Google Kubernetes Engine (GKE) cluster and GPU Virtual Machines
+  - Google Cloud Storage buckets
+  - Persistent disks
   
   You are billed for these resources for the time that they are running. To avoid incurring charges, delete the resources when you have finished running the sample.
 * Quota for the required hardware in your chosen region.
