@@ -1,0 +1,147 @@
+# [START hypercomputer_tpu_infer_gemma4_26b_yaml]
+apiVersion: leaderworkerset.x-k8s.io/v1
+kind: LeaderWorkerSet
+metadata:
+  name: vllm-tpu-gemma4-26b
+spec:
+  replicas: 1
+  leaderWorkerTemplate:
+    size: 2
+    restartPolicy: RecreateGroupOnPodRestart
+    leaderTemplate:
+      metadata:
+        labels:
+          role: leader
+      spec:
+        containers:
+        - name: vllm-leader
+          image: vllm/vllm-tpu:v0.28.0
+          command:
+            - sh
+            - -c
+            - |
+              set -e
+              ray start --head --port=6379
+              echo "Waiting for Ray worker to connect..."
+              while [ "$(ray status | grep ' node_' | wc -l)" -lt 2 ]; do
+                sleep 5
+              done
+              vllm serve google/gemma-4-26B-A4B \
+                --tensor-parallel-size 4 \
+                --pipeline-parallel-size 2 \
+                --host 0.0.0.0 \
+                --port 8000 \
+                --max-model-len 8192 \
+                --max-num-seqs 16 \
+                --gpu-memory-utilization 0.70 \
+                --enforce-eager \
+                --trust-remote-code
+          resources:
+            requests:
+              cpu: "20"
+              memory: "100Gi"
+              ephemeral-storage: "100Gi"
+              google.com/tpu: 4
+            limits:
+              cpu: "20"
+              memory: "100Gi"
+              ephemeral-storage: "100Gi"
+              google.com/tpu: 4
+          ports:
+          - containerPort: 8000
+          - containerPort: 6379
+          env:
+          - name: XLA_PYTHON_CLIENT_MEM_FRACTION
+            value: "0.75"
+          - name: TPU_MULTIHOST_BACKEND
+            value: "ray"
+          - name: HF_TOKEN
+            valueFrom:
+              secretKeyRef:
+                name: hf-secret
+                key: hf_api_token
+          volumeMounts:
+          - mountPath: /dev/shm
+            name: dshm
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8000
+            initialDelaySeconds: 3600
+            periodSeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 8000
+            initialDelaySeconds: 3600
+            periodSeconds: 5
+        nodeSelector:
+          topology.kubernetes.io/zone: "$ZONE"
+          cloud.google.com/gke-tpu-accelerator: tpu-v6e-slice
+          cloud.google.com/gke-tpu-topology: 2x4
+          cloud.google.com/reservation-name: $RESERVATION_URL
+          cloud.google.com/reservation-affinity: "specific"
+        volumes:
+        - name: dshm
+          emptyDir:
+            medium: Memory
+    workerTemplate:
+      spec:
+        containers:
+        - name: vllm-worker
+          image: vllm/vllm-tpu:v0.28.0
+          command:
+            - sh
+            - -c
+            - |
+              set -e
+              ray start --address=$LWS_LEADER_ADDRESS:6379 --block
+          resources:
+            requests:
+              cpu: "20"
+              memory: "100Gi"
+              ephemeral-storage: "100Gi"
+              google.com/tpu: 4
+            limits:
+              cpu: "20"
+              memory: "100Gi"
+              ephemeral-storage: "100Gi"
+              google.com/tpu: 4
+          env:
+          - name: XLA_PYTHON_CLIENT_MEM_FRACTION
+            value: "0.75"
+          - name: TPU_MULTIHOST_BACKEND
+            value: "ray"
+          - name: HF_TOKEN
+            valueFrom:
+              secretKeyRef:
+                name: hf-secret
+                key: hf_api_token
+          volumeMounts:
+          - mountPath: /dev/shm
+            name: dshm
+        nodeSelector:
+          topology.kubernetes.io/zone: "$ZONE"
+          cloud.google.com/gke-tpu-accelerator: tpu-v6e-slice
+          cloud.google.com/gke-tpu-topology: 2x4
+          cloud.google.com/reservation-name: $RESERVATION_URL
+          cloud.google.com/reservation-affinity: "specific"
+        volumes:
+        - name: dshm
+          emptyDir:
+            medium: Memory
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: llm-service
+spec:
+  selector:
+    leaderworkerset.sigs.k8s.io/name: vllm-tpu-gemma4-26b
+    role: leader
+  type: ClusterIP
+  ports:
+    - protocol: TCP
+      port: 8000
+      targetPort: 8000
+# [END hypercomputer_tpu_infer_gemma4_26b_yaml]
