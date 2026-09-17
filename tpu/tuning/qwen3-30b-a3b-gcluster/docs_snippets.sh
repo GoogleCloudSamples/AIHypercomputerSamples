@@ -59,6 +59,19 @@ cp examples/gke-tpu-v6e/gke-tpu-v6e-advanced.yaml .
 gcloud storage ls "gs://${GCS_BUCKET}/${MODEL_NAME}/max-text-format/"
 # [END hypercomputer_tpu_tune_qwen3_30b_rl_verify_converted_model]
 
+# [START hypercomputer_tpu_tune_qwen3_30b_rl_create_prompt_template]
+cat << 'EOF' > qwen_gsm8k_rl.json
+{
+  "SYSTEM_PROMPT": "You are given a problem. Think about the problem and provide your reasoning. Place it between {reasoning_start_token} and {reasoning_end_token}. Then, provide the final answer (i.e., just one numerical value) between {solution_start_token} and {solution_end_token}.",
+  "TEMPLATE": "{system_prompt}\n\n{question}"
+}
+EOF
+# [END hypercomputer_tpu_tune_qwen3_30b_rl_create_prompt_template]
+
+# [START hypercomputer_tpu_tune_qwen3_30b_rl_upload_prompt_template]
+gcloud storage cp qwen_gsm8k_rl.json "gs://${GCS_BUCKET}/templates/qwen_gsm8k_rl.json"
+# [END hypercomputer_tpu_tune_qwen3_30b_rl_upload_prompt_template]
+
 # [START hypercomputer_tpu_tune_qwen3_30b_rl_train_logs_v2]
 # Use the list command to check status (completed jobs are cleaned up after 1 hour by default)
 ./gcluster job list \
