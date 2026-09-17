@@ -20,6 +20,10 @@ if [ -d "venvp3" ]; then
   source venvp3/bin/activate
 fi
 
+echo "Waiting for Jobset and Kueue controllers to be ready..."
+kubectl wait --for=condition=available --timeout=5m deployment/jobset-controller-manager -n jobset-system
+kubectl wait --for=condition=available --timeout=5m deployment/kueue-controller-manager -n kueue-system
+
 echo "[$(date)] ==================== Submitting Training Workload... ===================="
 # [START hypercomputer_tpu_tune_qwen3_30b_rl_train]
 xpk workload create-pathways \
@@ -30,7 +34,6 @@ xpk workload create-pathways \
   --workload="qwen-training" \
   --tpu-type="${TPU_TYPE}" \
   --num-slices=1 \
-  --injection-failure-policy=false \
   --command="JAX_PLATFORMS=proxy,cpu JAX_BACKEND_TARGET=grpc://127.0.0.1:29000 ENABLE_PATHWAYS_PERSISTENCE=1 \
       python3 -m maxtext.trainers.post_train.rl.train_rl \
       run_name=rl \
@@ -51,7 +54,6 @@ xpk workload create-pathways \
       hbm_utilization_vllm=0.2 \
       async_scheduling=False \
       allow_split_physical_axes=true \
-      debug.rl=True \
       vllm_hf_overrides='{architectures: [\"MaxTextForCausalLM\"]}' \
       vllm_additional_config=\"{'maxtext_config': {'model_name': '${MODEL_NAME}', 'allow_split_physical_axes': 'true', weight_dtype: bfloat16}}\""
 # [END hypercomputer_tpu_tune_qwen3_30b_rl_train]
@@ -62,36 +64,64 @@ echo "Waiting for training pod to be created..."
 POD_NAME=""
 for i in {1..30}; do
   POD_NAME=$(kubectl get pods --no-headers 2>/dev/null | grep qwen-training | awk '{print $1}' | head -n 1) || true
-  if [ -n "$POD_NAME" ]; then
+  if [ -n "${POD_NAME}" ]; then
     break
   fi
   sleep 5
 done
 
-if [ -n "$POD_NAME" ]; then
-  echo "Found training pod: $POD_NAME"
+if [ -n "${POD_NAME}" ]; then
+  echo "Found training pod: ${POD_NAME}"
   echo "Waiting for pod to start running..."
   while true; do
-    POD_STATUS=$(kubectl get pod $POD_NAME -o jsonpath='{.status.phase}' 2>/dev/null) || POD_STATUS="Unknown"
+    POD_STATUS=$(kubectl get pod "${POD_NAME}" -o jsonpath='{.status.phase}' 2>/dev/null) || POD_STATUS="Unknown"
     if [[ "$POD_STATUS" == "Running" || "$POD_STATUS" == "Succeeded" || "$POD_STATUS" == "Failed" ]]; then
       break
     fi
     sleep 10
   done
 
-  echo "Tailing logs... (this will block until training finishes)"
-  kubectl logs -f $POD_NAME || true
-
-  for i in {1..10}; do
-    POD_STATUS=$(kubectl get pod $POD_NAME -o jsonpath='{.status.phase}' 2>/dev/null) || POD_STATUS="Unknown"
+  echo "Tailing logs and monitoring workload until completion..."
+  INITIAL_ATTACH=true
+  UNKNOWN_COUNT=0
+  while true; do
+    POD_STATUS=$(kubectl get pod "${POD_NAME}" -o jsonpath='{.status.phase}' 2>/dev/null) || POD_STATUS="Unknown"
+    POD_STATUS="${POD_STATUS:-Unknown}"
     if [[ "$POD_STATUS" == "Succeeded" || "$POD_STATUS" == "Failed" ]]; then
       break
     fi
-    sleep 3
+    if [[ "$POD_STATUS" == "Unknown" ]]; then
+      UNKNOWN_COUNT=$((UNKNOWN_COUNT + 1))
+      if [ $UNKNOWN_COUNT -ge 12 ]; then
+        echo "ERROR: Pod ${POD_NAME} status unknown or not found for 2 minutes."
+        exit 1
+      fi
+    else
+      UNKNOWN_COUNT=0
+    fi
+
+    if [ "$INITIAL_ATTACH" = true ]; then
+      echo "Streaming logs (pod phase: ${POD_STATUS})..."
+      kubectl logs -f "${POD_NAME}" || true
+      INITIAL_ATTACH=false
+    else
+      echo "Streaming logs (pod phase: ${POD_STATUS})..."
+      kubectl logs -f "${POD_NAME}" --tail=50 || true
+    fi
+
+    POD_STATUS=$(kubectl get pod "${POD_NAME}" -o jsonpath='{.status.phase}' 2>/dev/null) || POD_STATUS="Unknown"
+    POD_STATUS="${POD_STATUS:-Unknown}"
+    if [[ "$POD_STATUS" == "Succeeded" || "$POD_STATUS" == "Failed" ]]; then
+      break
+    fi
+    echo "Log stream disconnected; pod is still ${POD_STATUS}. Reconnecting in 10s..."
+    sleep 10
   done
 
   if [ "$POD_STATUS" != "Succeeded" ]; then
-    echo "ERROR: Training pod did not succeed (Status: $POD_STATUS)."
+    echo "ERROR: Training pod did not succeed (Status: ${POD_STATUS})."
+    echo "Recent pod logs:"
+    kubectl logs "${POD_NAME}" --tail=100 || true
     exit 1
   fi
   echo "[$(date)] ==================== Training completed successfully. ===================="

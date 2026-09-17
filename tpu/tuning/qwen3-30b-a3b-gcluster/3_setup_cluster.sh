@@ -19,15 +19,13 @@ set -euo pipefail
 echo "[$(date)] ==================== Preparing gcluster blueprint... ===================="
 # [START hypercomputer_tpu_tune_qwen3_30b_rl_create_cluster]
 echo "[$(date)] ==================== Configuring blueprint... ===================="
-# Add enable_private_ipv6_google_access: false to the gke-cluster module settings
-sed -i '/id: gke-tpu-v6e-cluster/!b; :a; /settings:/!{n;ba}; a\      enable_private_ipv6_google_access: false' examples/gke-tpu-v6e/gke-tpu-v6e-advanced.yaml
-
 # Change n2-standard-8 to e2-standard-8
 sed -i "s/n2-standard-8/e2-standard-8/" examples/gke-tpu-v6e/gke-tpu-v6e-advanced.yaml
 
 echo "[$(date)] ==================== Deploying cluster with gcluster... ===================="
 ./gcluster deploy examples/gke-tpu-v6e/gke-tpu-v6e-advanced.yaml \
     --vars "project_id=${PROJECT},deployment_name=${CLUSTER_NAME},region=${REGION},zone=${ZONE},num_slices=${CLUSTER_NODEPOOL_COUNT},tpu_topology=${TOPOLOGY},authorized_cidr=0.0.0.0/0,reservation=${RESERVATION:-}" \
+    --download-dependencies \
     -l IGNORE --auto-approve -w
 
 # Fetch GKE cluster credentials for kubectl
@@ -39,5 +37,19 @@ gcloud auth configure-docker ${REGION}-docker.pkg.dev --quiet
 gcloud projects add-iam-policy-binding $PROJECT --member="serviceAccount:${CLUSTER_NAME}-gke-wl-sa@${PROJECT}.iam.gserviceaccount.com" --role="roles/storage.admin" --quiet
 gcloud projects add-iam-policy-binding $PROJECT --member="serviceAccount:${CLUSTER_NAME}-gke-np-sa@${PROJECT}.iam.gserviceaccount.com" --role="roles/storage.admin" --quiet
 # [END hypercomputer_tpu_tune_qwen3_30b_rl_create_cluster]
+
+echo "Waiting for any pending cluster operations to complete..."
+while true; do
+  OPS=$(gcloud container operations list --filter="status=RUNNING AND targetLink ~ ${CLUSTER_NAME}" --format="value(name)" 2>/dev/null || true)
+  if [ -z "$OPS" ]; then
+    break
+  fi
+  echo "Cluster operations still running: ${OPS}. Waiting 15s..."
+  sleep 15
+done
+
+echo "Waiting for JobSet and Kueue controllers to be ready..."
+kubectl -n jobset-system rollout status deployment/jobset-controller-manager --timeout=300s 2>/dev/null || true
+kubectl -n kueue-system rollout status deployment/kueue-controller-manager --timeout=300s 2>/dev/null || true
 
 echo "[$(date)] ==================== Cluster deployment completed. ===================="

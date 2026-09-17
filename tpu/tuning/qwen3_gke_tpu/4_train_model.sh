@@ -20,17 +20,21 @@ if [ -d "venvp3" ]; then
   source venvp3/bin/activate
 fi
 
+echo "Waiting for Jobset and Kueue controllers to be ready..."
+kubectl wait --for=condition=available --timeout=5m deployment/jobset-controller-manager -n jobset-system
+kubectl wait --for=condition=available --timeout=5m deployment/kueue-controller-manager -n kueue-system
+
 echo "[$(date)] ==================== Submitting Training Workload... ===================="
 # [START hypercomputer_tpu_tune_qwen3_sft_train]
 xpk workload create-pathways \
-  --cluster=${CLUSTER_NAME} \
-  --project=${PROJECT} \
-  --zone=${ZONE} \
-  --docker-image=$CLOUD_IMAGE_NAME \
+  --cluster="${CLUSTER_NAME}" \
+  --project="${PROJECT}" \
+  --zone="${ZONE}" \
+  --docker-image="${CLOUD_IMAGE_NAME}" \
   --workload="qwen-training" \
-  --tpu-type=${TPU_TYPE} \
+  --tpu-type="${TPU_TYPE}" \
   --num-slices=1 \
-  --command="JAX_PLATFORMS=proxy JAX_BACKEND_TARGET=grpc://127.0.0.1:29000 ENABLE_PATHWAYS_PERSISTENCE=1 \
+  --command="JAX_PLATFORMS=proxy,cpu JAX_BACKEND_TARGET=grpc://127.0.0.1:29000 ENABLE_PATHWAYS_PERSISTENCE=1 \
   python3 -m maxtext.trainers.post_train.sft.train_sft \
   run_name=sft \
   base_output_directory=gs://${GCS_BUCKET}/qwen-3-14b/trained/ \
@@ -45,3 +49,74 @@ xpk workload create-pathways \
   enable_single_controller=True"
 # [END hypercomputer_tpu_tune_qwen3_sft_train]
 echo "[$(date)] ==================== Training Workload submitted. ===================="
+
+echo "[$(date)] ==================== Waiting for Training Workload to Complete... ===================="
+echo "Waiting for training pod to be created..."
+POD_NAME=""
+for i in {1..30}; do
+  POD_NAME=$(kubectl get pods --no-headers 2>/dev/null | grep qwen-training | awk '{print $1}' | head -n 1) || true
+  if [ -n "${POD_NAME}" ]; then
+    break
+  fi
+  sleep 5
+done
+
+if [ -n "${POD_NAME}" ]; then
+  echo "Found training pod: ${POD_NAME}"
+  echo "Waiting for pod to start running..."
+  while true; do
+    POD_STATUS=$(kubectl get pod "${POD_NAME}" -o jsonpath='{.status.phase}' 2>/dev/null) || POD_STATUS="Unknown"
+    if [[ "$POD_STATUS" == "Running" || "$POD_STATUS" == "Succeeded" || "$POD_STATUS" == "Failed" ]]; then
+      break
+    fi
+    sleep 10
+  done
+
+  echo "Tailing logs and monitoring workload until completion..."
+  INITIAL_ATTACH=true
+  UNKNOWN_COUNT=0
+  while true; do
+    POD_STATUS=$(kubectl get pod "${POD_NAME}" -o jsonpath='{.status.phase}' 2>/dev/null) || POD_STATUS="Unknown"
+    POD_STATUS="${POD_STATUS:-Unknown}"
+    if [[ "$POD_STATUS" == "Succeeded" || "$POD_STATUS" == "Failed" ]]; then
+      break
+    fi
+    if [[ "$POD_STATUS" == "Unknown" ]]; then
+      UNKNOWN_COUNT=$((UNKNOWN_COUNT + 1))
+      if [ $UNKNOWN_COUNT -ge 12 ]; then
+        echo "ERROR: Pod ${POD_NAME} status unknown or not found for 2 minutes."
+        exit 1
+      fi
+    else
+      UNKNOWN_COUNT=0
+    fi
+
+    if [ "$INITIAL_ATTACH" = true ]; then
+      echo "Streaming logs (pod phase: ${POD_STATUS})..."
+      kubectl logs -f "${POD_NAME}" || true
+      INITIAL_ATTACH=false
+    else
+      echo "Streaming logs (pod phase: ${POD_STATUS})..."
+      kubectl logs -f "${POD_NAME}" --tail=50 || true
+    fi
+
+    POD_STATUS=$(kubectl get pod "${POD_NAME}" -o jsonpath='{.status.phase}' 2>/dev/null) || POD_STATUS="Unknown"
+    POD_STATUS="${POD_STATUS:-Unknown}"
+    if [[ "$POD_STATUS" == "Succeeded" || "$POD_STATUS" == "Failed" ]]; then
+      break
+    fi
+    echo "Log stream disconnected; pod is still ${POD_STATUS}. Reconnecting in 10s..."
+    sleep 10
+  done
+
+  if [ "$POD_STATUS" != "Succeeded" ]; then
+    echo "ERROR: Training pod did not succeed (Status: ${POD_STATUS})."
+    echo "Recent pod logs:"
+    kubectl logs "${POD_NAME}" --tail=100 || true
+    exit 1
+  fi
+  echo "[$(date)] ==================== Training completed successfully. ===================="
+else
+  echo "ERROR: Could not find the training pod. It may have failed to schedule."
+  exit 1
+fi

@@ -1,3 +1,5 @@
+#!/bin/bash
+#
 #  Copyright 2026 Google LLC
 #
 #  Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,17 +14,16 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
-# [START hypercomputer_gpu_tune_gemma3_ray_env]
-export PROJECT_ID="YOUR_PROJECT_ID"
-export RESERVATION="YOUR_RESERVATION_NAME"
-export REGION="YOUR_REGION"
-export CLUSTER_NAME="YOUR_CLUSTER_NAME"
-export HF_TOKEN="YOUR_HF_TOKEN"
-export NETWORK="default"
-export RAY_SA="YOUR_RAY_SA"
-export GSA_NAME="YOUR_GSA_NAME"
-export GCS_BUCKET="YOUR_GCS_BUCKET"
+set -e
 
-gcloud config set project $PROJECT_ID
-gcloud config set billing/quota_project $PROJECT_ID
-# [END hypercomputer_gpu_tune_gemma3_ray_env]
+kubectl delete job finetune-job --ignore-not-found=true || true
+echo "[$(date)] ==================== Job deleted. ===================="
+
+gcloud container clusters delete "${CLUSTER_NAME}" \
+    --region="${CLUSTER_REGION}" --quiet || true
+echo "[$(date)] ==================== Cluster deleted. ===================="
+
+gcloud artifacts repositories delete gemma \
+    --location="${ARTIFACT_REPO_LOCATION}" \
+    --quiet || true
+echo "[$(date)] ==================== Artifact Registry deleted. ===================="

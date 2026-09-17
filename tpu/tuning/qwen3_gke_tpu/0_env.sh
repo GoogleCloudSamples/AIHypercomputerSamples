@@ -20,7 +20,7 @@ export REGION="YOUR_REGION"
 export ZONE="YOUR_ZONE"
 export CLUSTER_NAME="YOUR_CLUSTER_NAME"
 export GCS_BUCKET="YOUR_GCS_BUCKET"
-export CLOUD_IMAGE_NAME="$REGION-docker.pkg.dev/$PROJECT/maxtext-images/maxtext_base:latest"
+export CLOUD_IMAGE_NAME="${REGION}-docker.pkg.dev/${PROJECT}/maxtext-images/maxtext_base:latest"
 export TPU_TYPE="v6e-32"
 export CLUSTER_NODEPOOL_COUNT=1
 export PW_CPU_MACHINE_TYPE="c4d-standard-96"
@@ -28,3 +28,19 @@ export RESERVATION="YOUR_RESERVATION_NAME"
 export MODEL_NAME="qwen3-14b"
 export HF_TOKEN="YOUR_HF_TOKEN"
 # [END hypercomputer_tpu_tune_qwen3_sft_env]
+
+
+# [START hypercomputer_tpu_tune_qwen3_sft_env_v2]
+export PROJECT="YOUR_PROJECT_ID"
+export REGION="YOUR_REGION"
+export ZONE="YOUR_ZONE"
+export CLUSTER_NAME="YOUR_CLUSTER_NAME"
+export GCS_BUCKET="YOUR_GCS_BUCKET"
+export CLOUD_IMAGE_NAME="us-docker.pkg.dev/cloud-tpu-images/maxtext-images/tpu_post_training:0.2.4"
+export TPU_TYPE="v6e-32"
+export CLUSTER_NODEPOOL_COUNT=1
+export PW_CPU_MACHINE_TYPE="c4d-standard-96"
+export RESERVATION="YOUR_RESERVATION_NAME"
+export MODEL_NAME="qwen3-14b"
+export HF_TOKEN="YOUR_HF_TOKEN"
+# [END hypercomputer_tpu_tune_qwen3_sft_env_v2]

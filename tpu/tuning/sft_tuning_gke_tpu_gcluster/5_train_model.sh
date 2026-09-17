@@ -19,12 +19,12 @@ set -euo pipefail
 echo "[$(date)] ==================== Submitting Training Workload... ===================="
 # [START hypercomputer_tpu_sft_gcluster_train]
 ./gcluster job submit --name sft \
-    --cluster ${CLUSTER_NAME} \
-    --project ${PROJECT} \
-    --location ${REGION} \
-    --compute-type ${TPU_TYPE} \
+    --cluster "${CLUSTER_NAME}" \
+    --project "${PROJECT}" \
+    --location "${REGION}" \
+    --compute-type "${TPU_TYPE}" \
     --num-slices 1 \
-    --image ${CLOUD_IMAGE_NAME} \
+    --image "${CLOUD_IMAGE_NAME}" \
     --await-job-completion \
     --command "JAX_PLATFORMS=tpu,cpu ENABLE_PJRT_COMPATIBILITY=true JAX_TRACEBACK_FILTERING=off LIBTPU_INIT_ARGS=' --xla_tpu_scoped_vmem_limit_kib=61440 --xla_tpu_bf16_emission_mode=NATIVE_EMISSION --xla_tpu_enable_sparse_core_collective_offload_all_reduce=true --xla_tpu_use_single_sparse_core_for_all_gather_offload=true ' \
       python3 -m maxtext.trainers.post_train.sft.train_sft \

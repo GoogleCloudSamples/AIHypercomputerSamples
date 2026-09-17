@@ -12,17 +12,15 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
-# [START hypercomputer_gpu_tune_gemma3_ray_env]
+# [START hypercomputer_gpu_tune_gemma4_gke_env]
 export PROJECT_ID="YOUR_PROJECT_ID"
-export RESERVATION="YOUR_RESERVATION_NAME"
-export REGION="YOUR_REGION"
 export CLUSTER_NAME="YOUR_CLUSTER_NAME"
+export CLUSTER_REGION="YOUR_REGION"
+export RESERVATION="YOUR_RESERVATION_NAME"
 export HF_TOKEN="YOUR_HF_TOKEN"
+export ARTIFACT_REPO_LOCATION="YOUR_ARTIFACT_REGISTRY_LOCATION"
 export NETWORK="default"
-export RAY_SA="YOUR_RAY_SA"
-export GSA_NAME="YOUR_GSA_NAME"
-export GCS_BUCKET="YOUR_GCS_BUCKET"
 
-gcloud config set project $PROJECT_ID
-gcloud config set billing/quota_project $PROJECT_ID
-# [END hypercomputer_gpu_tune_gemma3_ray_env]
+gcloud config set project "${PROJECT_ID}"
+gcloud config set billing/quota_project "${PROJECT_ID}"
+# [END hypercomputer_gpu_tune_gemma4_gke_env]
