@@ -17,9 +17,20 @@
 # This file contains the exact documentation snippets for checking logs,
 # containing placeholders like <pod suffix> that shouldn't be executed in CI.
 
+# [START hypercomputer_tpu_tune_qwen3_30b_rl_copy_blueprint]
+cp examples/gke-tpu-v6e/gke-tpu-v6e-advanced.yaml .
+# [END hypercomputer_tpu_tune_qwen3_30b_rl_copy_blueprint]
+
 # [START hypercomputer_tpu_tune_qwen3_30b_rl_create_cluster]
-./gcluster deploy examples/gke-tpu-v6e/gke-tpu-v6e-advanced.yaml \
-    --vars "project_id=${PROJECT},deployment_name=${CLUSTER_NAME},region=${REGION},zone=${ZONE},num_slices=${CLUSTER_NODEPOOL_COUNT},tpu_topology=${TOPOLOGY},authorized_cidr=0.0.0.0/0,reservation=${RESERVATION:-}" \
+./gcluster deploy gke-tpu-v6e-advanced.yaml \
+    --vars project_id="${PROJECT}" \
+    --vars deployment_name="${CLUSTER_NAME}" \
+    --vars region="${REGION}" \
+    --vars zone="${ZONE}" \
+    --vars num_slices="${CLUSTER_NODEPOOL_COUNT}" \
+    --vars tpu_topology="${TOPOLOGY}" \
+    --vars authorized_cidr="0.0.0.0/0" \
+    --vars reservation="${RESERVATION:-}" \
     -l IGNORE --auto-approve -w
 # [END hypercomputer_tpu_tune_qwen3_30b_rl_create_cluster]
 
@@ -74,11 +85,11 @@ kubectl logs -f \
 # [END hypercomputer_tpu_tune_qwen3_30b_rl_convert_hf_logs]
 
 # [START hypercomputer_tpu_tune_qwen3_30b_rl_cleanup_storage_v2]
-./gcluster destroy "${CLUSTER_NAME}" --robust
+./gcluster destroy "${CLUSTER_NAME}"
 gcloud storage rm -r "gs://${GCS_BUCKET}"
 
-# To delete the local deployment folder
-rm -rf .ghpc "${CLUSTER_NAME}"
+# To delete the local deployment folder and copied blueprint
+rm -rf .ghpc "${CLUSTER_NAME}" gke-tpu-v6e-advanced.yaml
 # [END hypercomputer_tpu_tune_qwen3_30b_rl_cleanup_storage_v2]
 
 # [START hypercomputer_tpu_tune_qwen3_30b_rl_yaml_service_account]
