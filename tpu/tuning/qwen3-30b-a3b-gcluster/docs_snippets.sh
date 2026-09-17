@@ -60,7 +60,7 @@ gcloud storage ls "gs://${GCS_BUCKET}/${MODEL_NAME}/max-text-format/"
 # [END hypercomputer_tpu_tune_qwen3_30b_rl_verify_converted_model]
 
 # [START hypercomputer_tpu_tune_qwen3_30b_rl_train_logs_v2]
-# Use the list command to check status
+# Use the list command to check status (completed jobs are cleaned up after 1 hour by default)
 ./gcluster job list \
     --cluster "${CLUSTER_NAME}" \
     --project "${PROJECT}" \
