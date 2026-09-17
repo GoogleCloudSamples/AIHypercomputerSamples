@@ -76,4 +76,4 @@ To clean up the resources created by this sample:
   
 ## Additional resources
   
-* _[Link to official AI Hypercomputer tutorial on Google Cloud]_
+* [Fine-tune Gemma 3 on an A4 Slurm cluster](https://docs.cloud.google.com/ai-hypercomputer/docs/tutorials/gpu/gemma-3-slurm-cluster)

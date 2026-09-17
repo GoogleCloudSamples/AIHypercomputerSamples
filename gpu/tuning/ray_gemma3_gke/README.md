@@ -76,4 +76,4 @@ To clean up the resources created by this sample:
   
 ## Additional resources
   
-* _[Link to official AI Hypercomputer tutorial on Google Cloud]_
+* [Use Ray to fine-tune Gemma 3 for vision tasks on GKE](https://docs.cloud.google.com/ai-hypercomputer/docs/tutorials/gpu/use-ray-fine-tune-gemma-vision-task-gke)
