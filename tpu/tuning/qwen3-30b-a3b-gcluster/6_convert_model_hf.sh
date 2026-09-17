@@ -36,7 +36,7 @@ echo "[$(date)] ==================== Submitting Hugging Face Conversion Workload
   python3 -m maxtext.checkpoint_conversion.to_huggingface \
   model_name=${MODEL_NAME} \
   hf_access_token=${HF_TOKEN} \
-  load_parameters_path=gs://${GCS_BUCKET}/${MODEL_NAME}/trained/rl/checkpoints/actor/50/model_params/ \
+  load_parameters_path=gs://${GCS_BUCKET}/${MODEL_NAME}/trained/rl/checkpoints/actor/24/model_params/ \
   base_output_directory=gs://${GCS_BUCKET}/${MODEL_NAME}/hf-trained/ \
   skip_jax_distributed_system=true \
   hardware=cpu \
