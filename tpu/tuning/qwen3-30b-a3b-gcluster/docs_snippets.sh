@@ -62,9 +62,14 @@ cp examples/gke-tpu-v6e/gke-tpu-v6e-advanced.yaml .
     --project "${PROJECT}" \
     --location "${REGION}"
 
+# Ensure kubectl credentials are configured
+gcloud container clusters get-credentials "${CLUSTER_NAME}" \
+    --location="${REGION}" \
+    --project="${PROJECT}"
+
 # Check progress of the job
 kubectl logs -f \
-    -l job-name=qwen-training-pathways-head-0 \
+    -l jobset.sigs.k8s.io/replicatedjob-name=pathways-head \
     -c workload-container
 # [END hypercomputer_tpu_tune_qwen3_30b_rl_train_logs_v2]
 
