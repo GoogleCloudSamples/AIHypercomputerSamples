@@ -98,4 +98,3 @@ To clean up the resources created by this sample:
 ## Additional resources
   
 * [Run SFT for Gemma 4 31B on multi-host TPU v6e](https://docs.cloud.google.com/ai-hypercomputer/docs/tutorials/tpu/run-gemma4-31b-sft-maxtext)
-* _[Link to related concepts or tools used in the sample]_
