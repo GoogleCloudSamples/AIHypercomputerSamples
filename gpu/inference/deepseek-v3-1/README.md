@@ -1,6 +1,6 @@
-# Serve DeepSeek v3 (2) on a GKE cluster
+# Serve DeepSeek v3 on a GKE cluster
 
-This sample provides a set of scripts to serve the DeepSeek v3 (2) model on Google Kubernetes Engine (GKE) for inference. It is intended for machine learning engineers and developers looking to deploy large language models on Google Cloud.
+This sample provides a set of scripts to serve the DeepSeek v3 model on Google Kubernetes Engine (GKE) for inference. It is intended for machine learning engineers and developers looking to deploy large language models on Google Cloud.
 
 The workload deploys a vLLM inference server on a GKE cluster equipped with NVIDIA GPUs. The deployment uses Kubernetes configurations to provision the model and serve it via an exposed service.
 
@@ -10,13 +10,12 @@ The sample includes the following files:
 * `1_setup.sh`: Sets up the cluster and infrastructure.
 * `2_download_model.sh`: Downloads the model.
 * `3_deploy_model.sh`: Deploys the model.
-* `4_interact_with_model.sh`: Interacts with the deployed model.
+* `4_interract_with_model.sh`: Interacts with the deployed model.
 * `*_validation.sh`: Validates the workload.
 * `cleanup.sh`: Terminates all created resources.
 * `deepseek-download-job.yaml`: Job configuration.
 * `docs_snippets.sh`: Documentation snippets.
-* `metadata.yaml`: Metadata file.
-* `vllm-deepseek3-2.yaml`: Model configuration.
+* `vllm-deepseek3-1-base.yaml`: Model configuration.
 
 For the complete step-by-step tutorial of how to use this sample, see the official Google Cloud documentation: _TUTORIAL_TITLE_.
 
@@ -66,7 +65,7 @@ To execute this sample, follow these steps:
 5. Interact with the model:
 
    ```bash
-   ./4_interact_with_model.sh
+   ./4_interract_with_model.sh
    ```
 
 ## Verify the results
@@ -93,4 +92,4 @@ To clean up the resources created by this sample:
   
 ## Additional resources
   
-* [Use vLLM on GKE to run inference with DeepSeek-V3.2-Speciale](https://docs.cloud.google.com/ai-hypercomputer/docs/tutorials/gpu/vllm-gke-deepseek-speciale)
+* [Use vLLM on GKE to run inference with DeepSeek-V3.1-Base](https://docs.cloud.google.com/ai-hypercomputer/docs/tutorials/gpu/deepseek-vllm-inference)
