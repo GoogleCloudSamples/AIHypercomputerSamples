@@ -18,13 +18,32 @@
 # containing placeholders like <pod suffix> that shouldn't be executed in CI.
 
 
+# [START hypercomputer_tpu_sft_gcluster_copy_blueprint]
+mkdir -p tmp
+cp examples/gke-tpu-v6e/gke-tpu-v6e-advanced.yaml tmp/
+# [END hypercomputer_tpu_sft_gcluster_copy_blueprint]
+
 # [START hypercomputer_tpu_sft_gcluster_create_cluster]
-./gcluster deploy examples/gke-tpu-v6e/gke-tpu-v6e-advanced.yaml \
+./gcluster deploy tmp/gke-tpu-v6e-advanced.yaml \
     --vars "project_id=${PROJECT},deployment_name=${CLUSTER_NAME},region=${REGION},zone=${ZONE},num_slices=1,tpu_topology=4x8,authorized_cidr=0.0.0.0/0,reservation=${RESERVATION:-}" \
     --download-dependencies \
     -l IGNORE \
     -w
 # [END hypercomputer_tpu_sft_gcluster_create_cluster]
+
+# [START hypercomputer_tpu_sft_gcluster_get_credentials]
+gcloud container clusters get-credentials "${CLUSTER_NAME}" --location="${REGION}" --project="${PROJECT}"
+# [END hypercomputer_tpu_sft_gcluster_get_credentials]
+
+# [START hypercomputer_tpu_sft_gcluster_configure_docker]
+gcloud auth configure-docker gcr.io --quiet
+gcloud auth configure-docker "${REGION}-docker.pkg.dev" --quiet
+# [END hypercomputer_tpu_sft_gcluster_configure_docker]
+
+# [START hypercomputer_tpu_sft_gcluster_iam_storage_admin]
+gcloud projects add-iam-policy-binding "${PROJECT}" --member="serviceAccount:${CLUSTER_NAME}-gke-wl-sa@${PROJECT}.iam.gserviceaccount.com" --role="roles/storage.admin" --quiet || true
+gcloud projects add-iam-policy-binding "${PROJECT}" --member="serviceAccount:${CLUSTER_NAME}-gke-np-sa@${PROJECT}.iam.gserviceaccount.com" --role="roles/storage.admin" --quiet || true
+# [END hypercomputer_tpu_sft_gcluster_iam_storage_admin]
 
 # [START hypercomputer_tpu_sft_gcluster_configure_defaults]
 # Configure gcluster Defaults

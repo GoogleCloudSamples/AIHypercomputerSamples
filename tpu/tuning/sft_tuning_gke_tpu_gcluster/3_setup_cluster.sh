@@ -16,15 +16,20 @@
 
 set -euo pipefail
 
+echo "[$(date)] ==================== Preparing blueprint workspace ===================="
+mkdir -p tmp
+cp examples/gke-tpu-v6e/gke-tpu-v6e-advanced.yaml tmp/gke-tpu-v6e-advanced.yaml
+echo "[$(date)] ==================== Blueprint workspace prepared ====================="
+
 echo "[$(date)] ==================== Configuring blueprint... ===================="
 # This line can be uncommented if you need to use e2-standard-8 instead of n2-standard-8 due to capacity issues
-#sed -i "s/n2-standard-8/e2-standard-8/" examples/gke-tpu-v6e/gke-tpu-v6e-advanced.yaml
+# sed -i "s/n2-standard-8/e2-standard-8/" tmp/gke-tpu-v6e-advanced.yaml
 
 # Grant the GKE Node Pool Service Account storage.admin access to resolve the GCS bucket not found error
-sed -i "s/- storage.objectViewer/- storage.admin/" examples/gke-tpu-v6e/gke-tpu-v6e-advanced.yaml
+sed -i "s/- storage.objectViewer/- storage.admin/" tmp/gke-tpu-v6e-advanced.yaml
 
 echo "[$(date)] ==================== Deploying cluster with gcluster... ===================="
-./gcluster deploy examples/gke-tpu-v6e/gke-tpu-v6e-advanced.yaml \
+./gcluster deploy tmp/gke-tpu-v6e-advanced.yaml \
     --vars "project_id=${PROJECT},deployment_name=${CLUSTER_NAME},region=${REGION},zone=${ZONE},num_slices=1,tpu_topology=4x8,authorized_cidr=0.0.0.0/0,reservation=${RESERVATION:-}" \
     --download-dependencies \
     -l IGNORE \

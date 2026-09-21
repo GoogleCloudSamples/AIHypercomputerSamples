@@ -26,4 +26,7 @@ export RESERVATION="YOUR_RESERVATION_NAME"
 export HF_TOKEN="YOUR_HF_TOKEN"
 export MODEL_NAME="gemma4-31b"
 export CLUSTER_TOOLKIT_VERSION="v1.103.0"
+
+gcloud config set project "${PROJECT}"
+gcloud auth application-default set-quota-project "${PROJECT}"
 # [END hypercomputer_tpu_sft_gcluster_env_v2]
