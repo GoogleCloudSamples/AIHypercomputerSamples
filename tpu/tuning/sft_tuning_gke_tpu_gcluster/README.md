@@ -15,7 +15,7 @@ The scripts in this directory deploy the infrastructure and run the AI/ML worklo
 * `6_convert_model_hf.sh`: Converts the trained model back to Hugging Face format.
 * `cleanup.sh`: Terminates all created resources.
 
-For the complete step-by-step tutorial of how to use this sample, see the official Google Cloud documentation: _TUTORIAL_TITLE_.
+For the complete step-by-step tutorial of how to use this sample, see the official Google Cloud documentation: [Run SFT for Gemma 4 31B on multi-host TPU v6e](https://docs.cloud.google.com/ai-hypercomputer/docs/tutorials/tpu/run-gemma4-31b-sft-maxtext).
 
 ## Before you begin
 

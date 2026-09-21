@@ -18,7 +18,7 @@ The scripts in this directory deploy the infrastructure and run the AI/ML worklo
 * `*_validation.sh`: Validates the workload ran successfully.
 * `cleanup.sh`: Terminates all created resources.
 
-For the complete step-by-step tutorial of how to use this sample, see the official Google Cloud documentation: _TUTORIAL_TITLE_.
+For the complete step-by-step tutorial of how to use this sample, see the official Google Cloud documentation: [Serve Qwen2-7B-Instruct with vLLM on TPUs](https://docs.cloud.google.com/ai-hypercomputer/docs/tutorials/tpu/serve-qwen2-7b-instruct).
 
 ## Before you begin
 

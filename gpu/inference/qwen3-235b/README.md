@@ -17,7 +17,7 @@ The sample includes the following files:
 * `qwen3-235b-deploy.yaml`: Model deployment configuration.
 * `qwen3-model-loader.yaml`: Model loader configuration.
 
-For the complete step-by-step tutorial of how to use this sample, see the official Google Cloud documentation: _TUTORIAL_TITLE_.
+For the complete step-by-step tutorial of how to use this sample, see the official Google Cloud documentation: [Use vLLM on GKE to run inference with Qwen3](https://docs.cloud.google.com/ai-hypercomputer/docs/tutorials/gpu/qwen3-vllm-inference).
 
 ## Before you begin
 

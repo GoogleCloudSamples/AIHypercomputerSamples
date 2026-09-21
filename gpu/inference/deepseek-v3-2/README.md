@@ -18,7 +18,7 @@ The sample includes the following files:
 * `metadata.yaml`: Metadata file.
 * `vllm-deepseek3-2.yaml`: Model configuration.
 
-For the complete step-by-step tutorial of how to use this sample, see the official Google Cloud documentation: _TUTORIAL_TITLE_.
+For the complete step-by-step tutorial of how to use this sample, see the official Google Cloud documentation: [Use vLLM on GKE to run inference with DeepSeek-V3.2-Speciale](https://docs.cloud.google.com/ai-hypercomputer/docs/tutorials/gpu/vllm-gke-deepseek-speciale).
 
 ## Before you begin
 

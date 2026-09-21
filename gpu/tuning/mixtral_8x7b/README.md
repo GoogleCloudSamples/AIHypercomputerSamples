@@ -15,7 +15,7 @@ The sample includes the following scripts:
 * `2_run_job.sh`: Submits the `sbatch` job to distribute the fine-tuning workload across the cluster.
 * `cleanup.sh`: Deletes the Slurm cluster and all associated resources.
 
-For the complete step-by-step tutorial of how to use this sample, see the official Google Cloud documentation: _TUTORIAL_TITLE_.
+For the complete step-by-step tutorial of how to use this sample, see the official Google Cloud documentation: [Use FSDP to fine-tune Mixtral-8x7B on an A4 Slurm cluster](https://docs.cloud.google.com/ai-hypercomputer/docs/tutorials/gpu/fsdp-mixtral-8x7b).
 
 ## Before you begin
 

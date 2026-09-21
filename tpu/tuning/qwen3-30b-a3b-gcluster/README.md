@@ -20,7 +20,7 @@ The scripts in this directory deploy the infrastructure and run the AI/ML worklo
 * `6_convert_model_hf.sh`: Converts the model back to Hugging Face format.
 * `cleanup.sh`: Terminates all created resources.
 
-For the complete step-by-step tutorial of how to use this sample, see the official Google Cloud documentation: _TUTORIAL_TITLE_.
+For the complete step-by-step tutorial of how to use this sample, see the official Google Cloud documentation: [Run multi-host RL training for Qwen3-30b-a3b on TPU v6e](https://docs.cloud.google.com/ai-hypercomputer/docs/tutorials/tpu/run-qwen3-30b-a3b-rl-maxtext).
 
 ## Before you begin
 

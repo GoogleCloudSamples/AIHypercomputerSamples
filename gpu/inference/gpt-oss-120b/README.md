@@ -17,7 +17,7 @@ The sample includes the following files:
 * `gpt-download-job.yaml`: Job configuration.
 * `vllm-gpt-oss-120b.yaml`: Model configuration.
 
-For the complete step-by-step tutorial of how to use this sample, see the official Google Cloud documentation: _TUTORIAL_TITLE_.
+For the complete step-by-step tutorial of how to use this sample, see the official Google Cloud documentation: [Use vLLM on GKE to run inference with gpt-oss-120b](https://docs.cloud.google.com/ai-hypercomputer/docs/tutorials/gpu/gpt-oss-vllm-inference).
 
 ## Before you begin
 

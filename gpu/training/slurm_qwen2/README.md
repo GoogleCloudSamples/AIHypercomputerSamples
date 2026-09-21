@@ -15,7 +15,7 @@ The sample includes the following scripts:
 * `2_run_job.sh`: Submits the `sbatch` job to the Slurm cluster to distribute the Qwen2 training workload.
 * `cleanup.sh`: Terminates and deletes all created Google Cloud resources.
 
-For the complete step-by-step tutorial of how to use this sample, see the official Google Cloud documentation: _TUTORIAL_TITLE_.
+For the complete step-by-step tutorial of how to use this sample, see the official Google Cloud documentation: [Train Qwen2 on an A4 Slurm cluster](https://docs.cloud.google.com/ai-hypercomputer/docs/tutorials/gpu/train-qwen2-a4-slurm-cluster).
 
 ## Before you begin
 

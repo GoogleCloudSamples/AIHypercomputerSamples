@@ -18,7 +18,7 @@ The scripts in this directory deploy the infrastructure and run the AI/ML worklo
 * `cleanup.sh`: Terminates all created resources.
 * `run_on_vm.sh`: Script to run the workload on a VM.
 
-For the complete step-by-step tutorial of how to use this sample, see the official Google Cloud documentation: _TUTORIAL_TITLE_.
+For the complete step-by-step tutorial of how to use this sample, see the official Google Cloud documentation: [Run reinforcement learning training on a TPU VM by using MaxText](https://docs.cloud.google.com/ai-hypercomputer/docs/tutorials/tpu/run-rl-v6e-8-tpu-vm).
 
 ## Before you begin
 

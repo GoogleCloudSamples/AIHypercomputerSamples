@@ -15,7 +15,7 @@ The sample includes the following scripts:
 * `2_deploy_model.sh`: Submits the fine-tuning workload to the Ray cluster and initiates the training job.
 * `cleanup.sh`: Deletes the GKE cluster, the Ray environment, and all associated Google Cloud resources.
 
-For the complete step-by-step tutorial of how to use this sample, see the official Google Cloud documentation: _TUTORIAL_TITLE_.
+For the complete step-by-step tutorial of how to use this sample, see the official Google Cloud documentation: [Use Ray to fine-tune Gemma 3 for vision tasks on GKE](https://docs.cloud.google.com/ai-hypercomputer/docs/tutorials/gpu/use-ray-fine-tune-gemma-vision-task-gke).
 
 ## Before you begin
 

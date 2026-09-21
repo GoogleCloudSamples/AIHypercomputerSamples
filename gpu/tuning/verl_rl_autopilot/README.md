@@ -19,7 +19,7 @@ The sample includes the following scripts:
 * `6_run_job.sh`: Triggers and monitors the reinforcement learning job.
 * `cleanup.sh`: Deletes the GKE cluster and removes all related resources.
 
-For the complete step-by-step tutorial of how to use this sample, see the official Google Cloud documentation: _TUTORIAL_TITLE_.
+For the complete step-by-step tutorial of how to use this sample, see the official Google Cloud documentation: [Fine-tune and scale reinforcement learning with verl on GKE](https://docs.cloud.google.com/kubernetes-engine/docs/tutorials/scaling-rl-verl-gke).
 
 ## Before you begin
 

@@ -15,7 +15,7 @@ The sample includes the following files:
 * `docs_snippets.sh`: Documentation snippets.
 * `vllm-3-27b-it.yaml`: Model configuration.
 
-For the complete step-by-step tutorial of how to use this sample, see the official Google Cloud documentation: _TUTORIAL_TITLE_.
+For the complete step-by-step tutorial of how to use this sample, see the official Google Cloud documentation: [Use vLLM on GKE to serve Gemma 3 27B inference](https://docs.cloud.google.com/ai-hypercomputer/docs/tutorials/gpu/gemma-3-vllm-inference).
 
 ## Before you begin
 

@@ -14,7 +14,7 @@ The sample includes the following files:
 * `docs_snippet.sh`: Documentation snippets.
 * `vllm-l4-17b.yaml`: Model configuration.
 
-For the complete step-by-step tutorial of how to use this sample, see the official Google Cloud documentation: _TUTORIAL_TITLE_.
+For the complete step-by-step tutorial of how to use this sample, see the official Google Cloud documentation: [Use vLLM on GKE to run inference with Llama 4](https://docs.cloud.google.com/ai-hypercomputer/docs/tutorials/gpu/vllm-gke-llama4).
 
 ## Before you begin
 

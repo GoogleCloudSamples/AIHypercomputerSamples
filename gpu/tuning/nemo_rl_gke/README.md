@@ -19,7 +19,7 @@ The sample includes the following scripts:
 * `6_monitor_job.sh`: Tails the logs and monitors the status of the running job.
 * `cleanup.sh`: Deletes the GKE cluster, Ray cluster, and all created network/storage resources.
 
-For the complete step-by-step tutorial of how to use this sample, see the official Google Cloud documentation: _TUTORIAL_TITLE_.
+For the complete step-by-step tutorial of how to use this sample, see the official Google Cloud documentation: [Fine-tune and scale reinforcement learning with NVIDIA NeMo RL on GKE](https://docs.cloud.google.com/kubernetes-engine/docs/tutorials/nemo-rl-gke).
 
 ## Before you begin
 
