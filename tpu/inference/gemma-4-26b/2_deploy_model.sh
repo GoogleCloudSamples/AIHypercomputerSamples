@@ -17,7 +17,7 @@ set -euo pipefail
 # [START hypercomputer_tpu_infer_gemma4_deploy]
 echo "Applying LeaderWorkerSet (retrying if webhook is not fully ready)..."
 for i in {1..12}; do
-  if envsubst '$RESERVATION_URL $ZONE' < vllm-gemma4-26b.yaml | kubectl apply -f -; then
+  if envsubst '$RESERVATION_URL $ZONE' < gemma4-26b-multihost-v6e-4x4.yaml | kubectl apply -f -; then
     break
   fi
   echo "Webhook not ready yet, retrying in 5 seconds..."

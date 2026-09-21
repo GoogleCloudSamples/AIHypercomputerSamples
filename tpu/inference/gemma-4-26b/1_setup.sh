@@ -14,14 +14,25 @@
 
 set -euo pipefail
 
-# [START hypercomputer_tpu_infer_gemma4_cluster_create_auto]
-gcloud container clusters create-auto $CLUSTER_NAME \
+# [START hypercomputer_tpu_infer_gemma4_cluster_create]
+gcloud container clusters create $CLUSTER_NAME \
     --project=$PROJECT_ID \
-    --region=$REGION \
-    --release-channel=rapid \
+    --location=$REGION \
+    --machine-type=e2-standard-4 \
     --network=$NETWORK \
     --subnetwork=$SUBNETWORK
-# [END hypercomputer_tpu_infer_gemma4_cluster_create_auto]
+
+gcloud container node-pools create $NODE_POOL_NAME \
+    --project=$PROJECT_ID \
+    --location=${REGION} \
+    --cluster=${CLUSTER_NAME} \
+    --node-locations=${ZONE} \
+    --machine-type=ct6e-standard-4t \
+    --tpu-topology=4x4 \
+    --num-nodes=4 \
+    --reservation-affinity=specific \
+    --reservation=${RESERVATION_URL}
+# [END hypercomputer_tpu_infer_gemma4_cluster_create]
 
 echo "Verifying cluster status..."
 STATUS=$(gcloud container clusters describe $CLUSTER_NAME --region $REGION --format="value(status)")
@@ -46,7 +57,7 @@ kubectl create secret generic hf-secret \
 
 echo "Installing LeaderWorkerSet controller..."
 # [START hypercomputer_tpu_infer_gemma4_lws_install]
-kubectl apply --server-side -f https://github.com/kubernetes-sigs/lws/releases/download/v0.10.0/manifests.yaml
+kubectl apply --server-side -k github.com/kubernetes-sigs/lws/config/default?ref=main
 echo "Waiting for LWS controller to be ready..."
 kubectl wait --for=condition=Available --timeout=300s deployment/lws-controller-manager -n lws-system
 # [END hypercomputer_tpu_infer_gemma4_lws_install]

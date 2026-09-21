@@ -6,7 +6,7 @@ metadata:
 spec:
   replicas: 1
   leaderWorkerTemplate:
-    size: 2
+    size: 4
     restartPolicy: RecreateGroupOnPodRestart
     leaderTemplate:
       metadata:
@@ -15,7 +15,7 @@ spec:
       spec:
         containers:
         - name: vllm-leader
-          image: vllm/vllm-tpu:v0.28.0
+          image: <YOUR_CUSTOM_VTT_IMAGE>
           command:
             - sh
             - -c
@@ -23,12 +23,11 @@ spec:
               set -e
               ray start --head --port=6379
               echo "Waiting for Ray worker to connect..."
-              while [ "$(ray status | grep ' node_' | wc -l)" -lt 2 ]; do
+              while [ "$(ray status | grep ' node_' | wc -l)" -lt 4 ]; do
                 sleep 5
               done
-              vllm serve google/gemma-4-26B-A4B \
-                --tensor-parallel-size 4 \
-                --pipeline-parallel-size 2 \
+              vllm serve google/gemma-4-26B-A4B-it \
+                --tensor-parallel-size 16 \
                 --host 0.0.0.0 \
                 --port 8000 \
                 --max-model-len 8192 \
@@ -78,7 +77,7 @@ spec:
         nodeSelector:
           topology.kubernetes.io/zone: "$ZONE"
           cloud.google.com/gke-tpu-accelerator: tpu-v6e-slice
-          cloud.google.com/gke-tpu-topology: 2x4
+          cloud.google.com/gke-tpu-topology: 4x4
           cloud.google.com/reservation-name: $RESERVATION_URL
           cloud.google.com/reservation-affinity: "specific"
         volumes:
@@ -89,7 +88,7 @@ spec:
       spec:
         containers:
         - name: vllm-worker
-          image: vllm/vllm-tpu:v0.28.0
+          image: <YOUR_CUSTOM_VTT_IMAGE>
           command:
             - sh
             - -c
@@ -123,7 +122,7 @@ spec:
         nodeSelector:
           topology.kubernetes.io/zone: "$ZONE"
           cloud.google.com/gke-tpu-accelerator: tpu-v6e-slice
-          cloud.google.com/gke-tpu-topology: 2x4
+          cloud.google.com/gke-tpu-topology: 4x4
           cloud.google.com/reservation-name: $RESERVATION_URL
           cloud.google.com/reservation-affinity: "specific"
         volumes:

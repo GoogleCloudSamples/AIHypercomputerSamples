@@ -20,6 +20,8 @@ export CLUSTER_NAME="YOUR_CLUSTER_NAME"
 export HUGGING_FACE_TOKEN="YOUR_HF_TOKEN"
 export NETWORK="YOUR_NETWORK_NAME"
 export SUBNETWORK="YOUR_SUBNETWORK_NAME"
+export ZONE="YOUR_ZONE"
+export NODE_POOL_NAME="tpuv6e-pool"
 
 gcloud config set project "${PROJECT_ID}"
 gcloud config set billing/quota_project "${PROJECT_ID}"
