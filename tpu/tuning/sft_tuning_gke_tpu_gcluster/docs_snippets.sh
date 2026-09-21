@@ -24,7 +24,7 @@ cp examples/gke-tpu-v6e/gke-tpu-v6e-advanced.yaml tmp/
 # [END hypercomputer_tpu_sft_gcluster_copy_blueprint]
 
 # [START hypercomputer_tpu_sft_gcluster_create_cluster]
-./gcluster deploy examples/gke-tpu-v6e/gke-tpu-v6e-advanced.yaml \
+./gcluster deploy tmp/gke-tpu-v6e-advanced.yaml \
     --vars "project_id=${PROJECT},deployment_name=${CLUSTER_NAME},region=${REGION},zone=${ZONE},num_slices=1,tpu_topology=4x8,authorized_cidr=0.0.0.0/0,reservation=${RESERVATION:-}" \
     --download-dependencies \
     -l IGNORE \

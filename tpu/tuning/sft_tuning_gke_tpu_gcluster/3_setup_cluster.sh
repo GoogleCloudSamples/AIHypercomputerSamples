@@ -23,7 +23,7 @@ echo "[$(date)] ==================== Blueprint workspace prepared ==============
 
 echo "[$(date)] ==================== Configuring blueprint... ===================="
 # This line can be uncommented if you need to use e2-standard-8 instead of n2-standard-8 due to capacity issues
-sed -i "s/n2-standard-8/e2-standard-8/" tmp/gke-tpu-v6e-advanced.yaml
+# sed -i "s/n2-standard-8/e2-standard-8/" tmp/gke-tpu-v6e-advanced.yaml
 
 # Grant the GKE Node Pool Service Account storage.admin access to resolve the GCS bucket not found error
 sed -i "s/- storage.objectViewer/- storage.admin/" tmp/gke-tpu-v6e-advanced.yaml
