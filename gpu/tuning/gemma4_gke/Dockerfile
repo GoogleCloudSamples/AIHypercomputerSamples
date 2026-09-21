@@ -1,13 +1,15 @@
 # [START hypercomputer_gpu_tune_gemma4_gke_dockerfile]
 FROM nvidia/cuda:12.8.1-cudnn-devel-ubuntu24.04
 RUN apt-get update && \
-    apt-get -y install python3 python3-dev gcc python3-pip python3-venv git curl vim && \
+    apt-get -y install python3 python3-dev gcc python3-pip \
+        python3-venv git curl vim && \
     rm -rf /var/lib/apt/lists/*
 RUN python3 -m venv /opt/venv
 ENV PATH="/opt/venv/bin:/usr/local/nvidia/bin:$PATH"
 ENV LD_LIBRARY_PATH="/usr/local/nvidia/lib64:$LD_LIBRARY_PATH"
 RUN pip3 install setuptools wheel packaging ninja
-RUN pip3 install torch torchvision torchaudio  --index-url https://download.pytorch.org/whl/cu128
+RUN pip3 install torch torchvision torchaudio \
+    --index-url https://download.pytorch.org/whl/cu128
 RUN pip3 install \
     "transformers>=4.53.3" \
     "datasets>=4.0.0" \
