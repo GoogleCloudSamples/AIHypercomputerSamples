@@ -111,4 +111,4 @@ To clean up the resources created by this sample:
   
 ## Additional resources
   
-* _[Link to official AI Hypercomputer tutorial on Google Cloud]_
+* [Fine-tune and scale reinforcement learning with verl on GKE](https://docs.cloud.google.com/kubernetes-engine/docs/tutorials/scaling-rl-verl-gke)
