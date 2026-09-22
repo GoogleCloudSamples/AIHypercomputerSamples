@@ -38,15 +38,18 @@ echo "[$(date)] ==================== Submitting Training Workload... ===========
   --pathways-server-env="GRPC_DNS_RESOLVER=native" \
   --pathways-worker-env="GRPC_DNS_RESOLVER=native" \
   --command="export VLLM_HOST_IP=\$(hostname -I | awk '{print \$1}'); \
-      JAX_PLATFORMS=proxy,cpu ENABLE_PATHWAYS_PERSISTENCE=1 \
+      JAX_PLATFORMS=proxy,cpu ENABLE_PATHWAYS_PERSISTENCE=1 NEW_MODEL_DESIGN=1 \
       python3 -m maxtext.trainers.post_train.rl.train_rl \
       run_name=rl \
       base_output_directory=gs://${GCS_BUCKET}/${MODEL_NAME}/trained/ \
       model_name=${MODEL_NAME} \
       load_parameters_path=gs://${GCS_BUCKET}/${MODEL_NAME}/max-text-format/0/items/ \
+      load_checkpoint_only_once=true \
       hf_access_token=${HF_TOKEN} \
-      num_batches=50 \
-      batch_size=4 \
+      num_batches=24 \
+      batch_size=2 \
+      max_target_length=512 \
+      max_prefill_predict_length=128 \
       rollout_tensor_parallelism=4 \
       rollout_expert_parallelism=4 \
       trainer_devices_fraction=0.5 \
@@ -55,6 +58,8 @@ echo "[$(date)] ==================== Submitting Training Workload... ===========
       ici_tensor_parallelism=4 \
       ici_expert_parallelism=4 \
       hbm_utilization_vllm=0.2 \
+      weight_dtype=bfloat16 \
+      grad_dtype=bfloat16 \
       remat_policy=full \
       async_scheduling=False \
       allow_split_physical_axes=true \
