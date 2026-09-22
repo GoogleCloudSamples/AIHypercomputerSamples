@@ -58,7 +58,7 @@ gcloud container clusters delete ${CLUSTER_NAME} \
 # [END hypercomputer_gpu_tune_gemma3_27b_nemo_rl_gke_cluster_cleanup]
 
 # [START hypercomputer_gpu_tune_gemma3_27b_nemo_rl_lustre_cleanup]
-gcloud lustre instances delete ${LUSTRE_NAME} --location=${NODE_ZONE} --quiet
+gcloud lustre instances delete ${LUSTRE_NAME} --location=${LUSTRE_ZONE} --quiet
 # [END hypercomputer_gpu_tune_gemma3_27b_nemo_rl_lustre_cleanup]
 
 # [START hypercomputer_gpu_tune_gemma3_27b_nemo_rl_vpc_peering_cleanup]
