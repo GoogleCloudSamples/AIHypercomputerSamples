@@ -22,25 +22,34 @@ echo "[$(date)] ========== Deleting Ray cluster =========="
 helm delete ray-cluster || true
 
 echo "[$(date)] ========== Deleting GKE cluster =========="
+# [START hypercomputer_gpu_tune_gemma3_27b_nemo_rl_gke_cluster_cleanup]
 gcloud container clusters delete ${CLUSTER_NAME} \
     --location=${CONTROL_PLANE_REGION} \
     --quiet || true
+# [END hypercomputer_gpu_tune_gemma3_27b_nemo_rl_gke_cluster_cleanup]
 
 echo "[$(date)] ========== Deleting the Lustre filesystem =========="
+# [START hypercomputer_gpu_tune_gemma3_27b_nemo_rl_lustre_cleanup]
 gcloud lustre instances delete ${LUSTRE_NAME} \
-    --location=${NODE_ZONE} \
+    --location=${LUSTRE_ZONE} \
     --quiet || true
+# [END hypercomputer_gpu_tune_gemma3_27b_nemo_rl_lustre_cleanup]
 
 echo "[$(date)] ========== Deleting VPC peering =========="
+# [START hypercomputer_gpu_tune_gemma3_27b_nemo_rl_vpc_peering_cleanup]
 gcloud services vpc-peerings delete \
     --service=servicenetworking.googleapis.com \
     --network=${NETWORK} \
     --quiet || true
+# [END hypercomputer_gpu_tune_gemma3_27b_nemo_rl_vpc_peering_cleanup]
 
 echo "[$(date)] ========== Deleting the Lustre private IP address range =========="
+# [START hypercomputer_gpu_tune_gemma3_27b_nemo_rl_lustre_ip_cleanup]
 gcloud compute addresses delete ${LUSTRE_NAME}-range --global --quiet || true
+# [END hypercomputer_gpu_tune_gemma3_27b_nemo_rl_lustre_ip_cleanup]
 
 echo "[$(date)] ========== Deleting RDMA and GVNIC subnets =========="
+# [START hypercomputer_gpu_tune_gemma3_27b_nemo_rl_subnets_cleanup]
 gcloud compute networks subnets delete ${GVNIC_NETWORK_PREFIX}-sub \
     --region=${CONTROL_PLANE_REGION} \
     --quiet || true
@@ -50,6 +59,7 @@ for N in $(seq 0 7); do
     --region=${CONTROL_PLANE_REGION} --quiet || true &
 done
 wait
+# [END hypercomputer_gpu_tune_gemma3_27b_nemo_rl_subnets_cleanup]
 
 # [START hypercomputer_gpu_tune_gemma3_27b_nemo_rl_fwrules_and_network_cleanup]
 echo "[$(date)] ========== Deleting firewall rules and networks =========="

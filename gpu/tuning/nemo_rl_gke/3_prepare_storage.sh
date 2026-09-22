@@ -31,20 +31,33 @@ gcloud services vpc-peerings connect \
     --network=${NETWORK}
 # [END hypercomputer_gpu_tune_gemma3_27b_nemo_rl_lustre_connect_vpc_peering]
 
+echo "[$(date)] ========== Checking Managed Lustre quota in ${LUSTRE_ZONE}... =========="
+LUSTRE_CAPACITY_QUOTA=$(gcloud beta quotas info list \
+    --service=lustre.googleapis.com \
+    --project="${PROJECT_ID}" \
+    --flatten="dimensionsInfos[]" \
+    --filter="quotaId=Capacity AND dimensionsInfos.applicableLocations=${LUSTRE_ZONE}" \
+    --format="value(dimensionsInfos.details.value)")
+
+if [[ "${LUSTRE_CAPACITY_QUOTA:-0}" -lt 18000 ]]; then
+    echo "Error: Insufficient Managed Lustre capacity quota in ${LUSTRE_ZONE} (available quota: ${LUSTRE_CAPACITY_QUOTA:-0} GiB, required: 18000 GiB)." >&2
+    exit 1
+fi
+
 echo "[$(date)] ========== Creating a Managed Lustre instance... =========="
 # [START hypercomputer_gpu_tune_gemma3_27b_nemo_rl_lustre_create]
 gcloud lustre instances create ${LUSTRE_NAME} \
     --per-unit-storage-throughput=500 \
     --capacity-gib=18000 \
     --filesystem=lustrefs \
-    --location=${NODE_ZONE} \
+    --location=${LUSTRE_ZONE} \
     --network=projects/${PROJECT_ID}/global/networks/${NETWORK} \
     --gke-support-enabled
 # [END hypercomputer_gpu_tune_gemma3_27b_nemo_rl_lustre_create]
 
 # [START hypercomputer_gpu_tune_gemma3_27b_nemo_rl_lustre_ip_export]
 export LUSTRE_IP=$(gcloud lustre instances describe ${LUSTRE_NAME} \
-    --location=$NODE_ZONE --format="value(mountPoint)" | awk -F'@' '{print $1}')
+    --location=${LUSTRE_ZONE} --format="value(mountPoint)" | awk -F'@' '{print $1}')
 # [END hypercomputer_gpu_tune_gemma3_27b_nemo_rl_lustre_ip_export]
 
 echo "[$(date)] ========== Creating a Persistent Volume for Lustre... =========="
