@@ -20,9 +20,6 @@ set -euo pipefail
 kubectl wait --for=condition=Available --timeout=300s deployment/jobset-controller-manager -n jobset-system 2>/dev/null || true
 kubectl wait --for=condition=Available --timeout=300s deployment/kueue-controller-manager -n kueue-system 2>/dev/null || true
 
-echo "[$(date)] ==================== Uploading Prompt Template... ===================="
-gcloud storage cp "$(dirname "$0")/qwen_gsm8k_rl.json" "gs://${GCS_BUCKET}/templates/qwen_gsm8k_rl.json"
-
 echo "[$(date)] ==================== Submitting Training Workload... ===================="
 # [START hypercomputer_tpu_tune_qwen3_30b_rl_train]
 ./gcluster job submit \
@@ -47,7 +44,7 @@ echo "[$(date)] ==================== Submitting Training Workload... ===========
       base_output_directory=gs://${GCS_BUCKET}/${MODEL_NAME}/trained/ \
       model_name=${MODEL_NAME} \
       load_parameters_path=gs://${GCS_BUCKET}/${MODEL_NAME}/max-text-format/0/items/ \
-      data_template_path=gs://${GCS_BUCKET}/templates/qwen_gsm8k_rl.json \
+      data_template_path=maxtext/examples/chat_templates/openmathinstruct2_rl.json \
       hf_access_token=${HF_TOKEN} \
       num_batches=50 \
       batch_size=4 \
