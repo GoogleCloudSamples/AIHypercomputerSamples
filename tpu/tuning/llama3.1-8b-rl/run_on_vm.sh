@@ -82,8 +82,8 @@ python3 -m maxtext.trainers.post_train.rl.train_rl \
     chips_per_vm="${CHIPS_PER_VM?}" \
     num_batches="${NUM_BATCHES?}" \
     num_test_batches=10 \
-    rollout_data_parallelism=1 \
-    rollout_tensor_parallelism=-1
+    rollout_data_parallelism=-1 \
+    rollout_tensor_parallelism=1
 # [END hypercomputer_tpu_tune_llama_rl_tune_3_run]
 
 # [START hypercomputer_tpu_tune_llama_rl_tune_4_env]
