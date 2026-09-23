@@ -16,5 +16,9 @@
 set -euo pipefail
 
 # [START hypercomputer_tpu_tune_llama_rl_ssh]
-gcloud compute ssh "${TPU_NAME}" --zone "${ZONE}" --project "${PROJECT}"
+gcloud compute ssh "${TPU_NAME}" \
+  --zone "${ZONE}" \
+  --project "${PROJECT}" \
+  --ssh-flag="-t" \
+  --command="HF_TOKEN='${HF_TOKEN}' exec bash -l"
 # [END hypercomputer_tpu_tune_llama_rl_ssh]
