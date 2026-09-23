@@ -45,22 +45,24 @@ echo "[$(date)] ==================== Submitting Training Workload... ===========
       model_name=${MODEL_NAME} \
       load_parameters_path=gs://${GCS_BUCKET}/${MODEL_NAME}/max-text-format/0/items/ \
       data_template_path=maxtext/examples/chat_templates/openmathinstruct2_rl.json \
+      reshard_chunk_size=8 \
       hf_access_token=${HF_TOKEN} \
       num_batches=50 \
       batch_size=4 \
-      rollout_tensor_parallelism=4 \
-      rollout_expert_parallelism=4 \
+      rollout_tensor_parallelism=8 \
+      rollout_expert_parallelism=1 \
       trainer_devices_fraction=0.5 \
       sampler_devices_fraction=0.5 \
       tokenizer_path='Qwen/Qwen3-30B-A3B-Instruct-2507' \
       ici_tensor_parallelism=4 \
       ici_expert_parallelism=4 \
-      hbm_utilization_vllm=0.2 \
+      hbm_utilization_vllm=0.65 \
       remat_policy=full \
       async_scheduling=False \
       allow_split_physical_axes=true \
+      ragged_gather_reduce_fallback=True \
       vllm_hf_overrides='{architectures: [\"MaxTextForCausalLM\"]}' \
-      vllm_additional_config=\"{'maxtext_config': {'model_name': '${MODEL_NAME}', 'allow_split_physical_axes': 'true', 'weight_dtype': 'bfloat16'}}\""
+      vllm_additional_config=\"{'maxtext_config': {'model_name': '${MODEL_NAME}', 'allow_split_physical_axes': 'true', 'use_ragged_sort': 'false', 'ragged_gather_reduce_fallback': 'true', 'prefuse_moe_weights': 'true', 'weight_dtype': 'bfloat16'}}\""
 # [END hypercomputer_tpu_tune_qwen3_30b_rl_train]
 echo "[$(date)] ==================== Training Workload submitted. ===================="
 

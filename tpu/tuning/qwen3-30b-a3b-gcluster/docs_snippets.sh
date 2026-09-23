@@ -98,7 +98,7 @@ gcloud storage ls "gs://${GCS_BUCKET}/${MODEL_NAME}/trained/rl/checkpoints/actor
 # [END hypercomputer_tpu_tune_qwen3_30b_rl_convert_hf_logs]
 
 # [START hypercomputer_tpu_tune_qwen3_30b_rl_verify_hf_weights]
-gcloud storage ls -lh "gs://${GCS_BUCKET}/${MODEL_NAME}/hf-trained/"
+gcloud storage ls -l --readable-sizes "gs://${GCS_BUCKET}/${MODEL_NAME}/hf-trained/"
 # [END hypercomputer_tpu_tune_qwen3_30b_rl_verify_hf_weights]
 
 # [START hypercomputer_tpu_tune_qwen3_30b_rl_cleanup_storage_v2]
