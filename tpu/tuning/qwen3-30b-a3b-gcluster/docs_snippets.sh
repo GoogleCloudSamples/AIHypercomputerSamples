@@ -32,24 +32,15 @@
 
 # [START hypercomputer_tpu_tune_qwen3_30b_rl_convert_model_logs]
 # Use the list command to check status
-./gcluster job list \
-    --cluster "${CLUSTER_NAME}" \
-    --project "${PROJECT}" \
-    --location "${REGION}"
+./gcluster job list
 
 # Check progress of the job (--main-only targets the coordinator pod (Job Index 0, Pod Index 0) to avoid duplicate logs from other workers)
-./gcluster job logs qwen-hf-to-mt --main-only -f \
-    --cluster "${CLUSTER_NAME}" \
-    --project "${PROJECT}" \
-    --location "${REGION}"
+./gcluster job logs qwen-hf-to-mt --main-only -f
 # [END hypercomputer_tpu_tune_qwen3_30b_rl_convert_model_logs]
 
 # [START hypercomputer_tpu_tune_qwen3_30b_rl_train_logs_v2]
 # Use the list command to check status
-./gcluster job list \
-    --cluster "${CLUSTER_NAME}" \
-    --project "${PROJECT}" \
-    --location "${REGION}"
+./gcluster job list
 
 # Check progress of the job
 kubectl logs -f \
@@ -59,17 +50,10 @@ kubectl logs -f \
 
 # [START hypercomputer_tpu_tune_qwen3_30b_rl_convert_hf_logs]
 # Use the list command to check status
-./gcluster job list \
-    --cluster "${CLUSTER_NAME}" \
-    --project "${PROJECT}" \
-    --location "${REGION}"
+./gcluster job list
 
 # Check progress of the job (--main-only targets the coordinator pod (Job Index 0, Pod Index 0) to avoid duplicate logs from other workers)
-./gcluster job logs qwen-mt-to-hf --main-only -f \
-    --cluster "${CLUSTER_NAME}" \
-    --project "${PROJECT}" \
-    --location "${REGION}"
-
+./gcluster job logs qwen-mt-to-hf --main-only -f
 # The trained model is now available in gs://${GCS_BUCKET}/${MODEL_NAME}/hf-trained/
 # [END hypercomputer_tpu_tune_qwen3_30b_rl_convert_hf_logs]
 
