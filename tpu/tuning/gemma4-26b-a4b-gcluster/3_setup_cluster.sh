@@ -26,12 +26,15 @@ cp ./examples/gke-tpu-v6e/gke-tpu-v6e-advanced.yaml ./tmp/gke-tpu-v6e-advanced.y
 sed -i "s/n2-standard-8/e2-standard-8/" ./tmp/gke-tpu-v6e-advanced.yaml
 
 echo "[$(date)] ==================== Configuring IAM for default Compute SA... ===================="
+# Ensure Compute API is enabled so the default Compute Service Account exists
+gcloud services enable compute.googleapis.com --project="$PROJECT"
+
 PROJECT_NUMBER=$(gcloud projects describe "$PROJECT" --format="value(projectNumber)")
-BUILD_SA="${PROJECT_NUMBER}-compute@developer.gserviceaccount.com"
+COMPUTE_SA="${PROJECT_NUMBER}-compute@developer.gserviceaccount.com"
 
 for role in roles/storage.objectViewer roles/logging.logWriter roles/artifactregistry.writer; do
   gcloud projects add-iam-policy-binding "$PROJECT" \
-    --member="serviceAccount:${BUILD_SA}" \
+    --member="serviceAccount:${COMPUTE_SA}" \
     --role="$role" --quiet
 done
 
