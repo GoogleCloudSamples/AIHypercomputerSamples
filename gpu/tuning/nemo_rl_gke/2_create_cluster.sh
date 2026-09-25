@@ -80,7 +80,7 @@ gcloud container node-pools create gpu-pool \
 
 echo "[$(date)] ========== Installing NCCL RDMA... =========="
 # [START hypercomputer_gpu_tune_gemma3_27b_nemo_rl_nccl_rdma_installer]
-kubectl apply -f https://raw.githubusercontent.com/GoogleCloudPlatform/container-engine-accelerators/refs/heads/master/gpudirect-rdma/nccl-rdma-installer.yaml
+kubectl apply -f https://raw.githubusercontent.com/GoogleCloudPlatform/container-engine-accelerators/64f0eeb0dc1d980eaef8939584f832bb10e3d482/gpudirect-rdma/nccl-rdma-installer.yaml
 # [END hypercomputer_gpu_tune_gemma3_27b_nemo_rl_nccl_rdma_installer]
 
 echo "[$(date)] ========== Setting up network mapping... =========="
