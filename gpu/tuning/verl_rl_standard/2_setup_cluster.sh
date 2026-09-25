@@ -19,6 +19,11 @@ set -euo pipefail
 # Create GKE Standard Cluster
 if ! gcloud container clusters describe ${CLUSTER_NAME} --location=${CONTROL_PLANE_REGION} --project=${PROJECT_ID} >/dev/null 2>&1; then
   echo "Creating GKE Standard cluster ${CLUSTER_NAME}..."
+
+  if [[ "${CPU_MACHINE_TYPE:-YOUR_CPU_MACHINE_TYPE}" == "YOUR_CPU_MACHINE_TYPE" ]]; then
+    CPU_MACHINE_TYPE="n2-standard-16"
+  fi
+
   # [START hypercomputer_gpu_train_ray_verl_std_create_cluster]
   gcloud container clusters create ${CLUSTER_NAME} \
       --location=${CONTROL_PLANE_REGION} \
@@ -27,7 +32,7 @@ if ! gcloud container clusters describe ${CLUSTER_NAME} --location=${CONTROL_PLA
       --enable-ip-alias \
       --enable-multi-networking \
       --addons=RayOperator,GcsFuseCsiDriver \
-      --machine-type=c2-standard-16 \
+      --machine-type=${CPU_MACHINE_TYPE} \
       --num-nodes=1 \
       --min-nodes=1 \
       --max-nodes=5 \
@@ -115,4 +120,3 @@ kubectl apply -f https://raw.githubusercontent.com/GoogleCloudPlatform/container
 # [END hypercomputer_gpu_train_ray_verl_std_install_nccl]
 
 echo "Cluster setup complete."
-

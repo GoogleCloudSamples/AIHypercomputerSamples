@@ -24,9 +24,6 @@ echo "[$(date)] ==================== Submitting Training Workload... ===========
 # [START hypercomputer_tpu_tune_qwen3_30b_rl_train]
 ./gcluster job submit \
   --name="qwen-training" \
-  --cluster="${CLUSTER_NAME}" \
-  --project="${PROJECT}" \
-  --location="${REGION}" \
   --num-slices=1 \
   --image="${CLOUD_IMAGE_NAME}" \
   --compute-type="${COMPUTE_TYPE}" \

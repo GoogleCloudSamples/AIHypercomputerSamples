@@ -17,6 +17,11 @@
 set -euo pipefail
 
 echo "[$(date)] ========== Creating GKE Cluster... =========="
+
+  if [[ "${CPU_MACHINE_TYPE:-YOUR_CPU_MACHINE_TYPE}" == "YOUR_CPU_MACHINE_TYPE" ]]; then
+    CPU_MACHINE_TYPE="n2-highmem-16"
+  fi
+
 # [START hypercomputer_gpu_tune_gemma3_27b_nemo_rl_cluster_create_standard]
 gcloud container clusters create ${CLUSTER_NAME} \
     --location=${CONTROL_PLANE_REGION} \
@@ -26,7 +31,7 @@ gcloud container clusters create ${CLUSTER_NAME} \
     --enable-multi-networking \
     --addons=RayOperator,LustreCsiDriver \
     --enable-legacy-lustre-port \
-    --machine-type=n2-highmem-80 \
+    --machine-type=${CPU_MACHINE_TYPE} \
     --num-nodes=1 \
     --min-nodes=1 \
     --max-nodes=5 \

@@ -15,14 +15,13 @@
 
 set -euo pipefail
 
-NETWORK_NAME="${NETWORK}"
 FIREWALL_RULE_NAME="allow-ssh-from-iap-${NAME}"
 
 # Remove all resources created by your sample.
 # [START hypercomputer_tpu_tune_gemma3_sft_cleanup]
-# 1. Delete TPU VM instance
-echo "Deleting TPU VM instance: ${NAME}..."
-gcloud alpha compute tpus tpu-vm delete "${NAME}" \
+# 1. Delete TPU instance
+echo "Deleting TPU instance: ${NAME}..."
+gcloud compute instances delete "${NAME}" \
     --zone="${ZONE}" \
     --project="${PROJECT}" \
     --quiet || true

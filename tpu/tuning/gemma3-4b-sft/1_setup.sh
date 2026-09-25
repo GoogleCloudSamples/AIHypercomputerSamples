@@ -16,22 +16,27 @@
 set -euo pipefail
 
 # [START hypercomputer_tpu_tune_gemma3_sft_create]
-gcloud alpha compute tpus tpu-vm create "${NAME}" \
+gcloud compute instances create "${NAME}" \
     --zone="${ZONE}" \
     --project="${PROJECT}" \
     --network="${NETWORK}" \
     --tags="${NAME}" \
-    --accelerator-type=v6e-8 \
-    --version=v2-alpha-tpuv6e \
-    --provisioning-model=reservation-bound \
+    --machine-type=ct6e-standard-8t \
+    --image-project=ubuntu-os-accelerator-images \
+    --image-family=ubuntu-accel-2204-amd64-tpu-v5e-v5p-v6e \
+    --boot-disk-size=200GB \
+    --maintenance-policy=TERMINATE \
+    --instance-termination-action=DELETE \
+    --provisioning-model=RESERVATION_BOUND \
+    --reservation-affinity=specific \
     --reservation="${RESERVATION}"
 # [END hypercomputer_tpu_tune_gemma3_sft_create]
 
 LIMIT=60
 count=0
-while ! gcloud compute tpus tpu-vm describe "${NAME}" --project "${PROJECT}" --zone "${ZONE}" | grep -q 'state: READY'; do
-  if [ $count -ge $LIMIT ]; then
-    echo "Timeout waiting for TPU to become READY." >&2
+while [ "$(gcloud compute instances describe "${NAME}" --project "${PROJECT}" --zone "${ZONE}" --format='value(status)' 2>/dev/null || echo "PENDING")" != "RUNNING" ]; do
+  if [ "${count}" -ge "${LIMIT}" ]; then
+    echo "Timeout waiting for TPU instance to become RUNNING." >&2
     exit 1
   fi
   sleep 10
