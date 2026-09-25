@@ -18,6 +18,7 @@
 
 # [START hypercomputer_gpu_tune_gemma3_27b_nemo_rl_git_clone]
 git clone https://github.com/GoogleCloudPlatform/kubernetes-engine-samples.git
+git -C kubernetes-engine-samples checkout 87fa0575c977b96f6d3af2cab58c9128f3cf0dc3
 # [END hypercomputer_gpu_tune_gemma3_27b_nemo_rl_git_clone]
 
 # [START hypercomputer_gpu_tune_gemma3_27b_nemo_rl_navigate_working_dir]
