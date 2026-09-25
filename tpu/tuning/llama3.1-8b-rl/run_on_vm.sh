@@ -43,13 +43,11 @@ install_tpu_post_train_extra_deps
 # [END hypercomputer_tpu_tune_llama_rl_maxtext_5]
 
 # [START hypercomputer_tpu_tune_llama_rl_tune_0_env]
-export HF_TOKEN="YOUR_HF_TOKEN"
 export MODEL_NAME='llama3.1-8b-Instruct'
 export MODEL_CHECKPOINT_DIRECTORY=/dev/shm/$MODEL_NAME/mt-format/
 export USE_PATHWAYS=0 # Set to 1 for Pathways, 0 for McJAX
 export LAZY_LOAD_TENSORS=False # True to use lazy load, False to use eager load.
 # [END hypercomputer_tpu_tune_llama_rl_tune_0_env]
-export HF_TOKEN=$YOUR_HF_TOKEN
 
 # [START hypercomputer_tpu_tune_llama_rl_tune_1_convert]
 python3 -m maxtext.checkpoint_conversion.to_maxtext \
@@ -84,8 +82,8 @@ python3 -m maxtext.trainers.post_train.rl.train_rl \
     chips_per_vm="${CHIPS_PER_VM?}" \
     num_batches="${NUM_BATCHES?}" \
     num_test_batches=10 \
-    rollout_data_parallelism=1 \
-    rollout_tensor_parallelism=-1
+    rollout_data_parallelism=-1 \
+    rollout_tensor_parallelism=1
 # [END hypercomputer_tpu_tune_llama_rl_tune_3_run]
 
 # [START hypercomputer_tpu_tune_llama_rl_tune_4_env]
