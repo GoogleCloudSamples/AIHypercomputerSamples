@@ -33,8 +33,11 @@ export HF_TOKEN="YOUR_HF_TOKEN"
 # [END hypercomputer_tpu_tune_qwen3_30b_rl_env_v2]
 
 # Ensure CLUSTER_NAME is <= 20 chars so service account IDs (${CLUSTER_NAME}-gke-np-sa) stay <= 30 chars
-if [[ "$CLUSTER_NAME" == pkb-*-cluster ]]; then
-  export CLUSTER_NAME="${CLUSTER_NAME%-cluster}"
-elif [ ${#CLUSTER_NAME} -gt 20 ]; then
-  export CLUSTER_NAME="${CLUSTER_NAME:0:20}"
+case "$CLUSTER_NAME" in
+  pkb-*-cluster)
+    export CLUSTER_NAME="${CLUSTER_NAME%-cluster}"
+    ;;
+esac
+if [ "${#CLUSTER_NAME}" -gt 20 ]; then
+  export CLUSTER_NAME="$(printf '%.20s' "$CLUSTER_NAME")"
 fi
