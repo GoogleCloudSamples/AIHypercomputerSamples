@@ -17,6 +17,12 @@
 # This file contains the exact documentation snippets for checking logs,
 # containing placeholders like <pod suffix> that shouldn't be executed in CI.
 
+# [START hypercomputer_tpu_tune_gemma4_26b_rl_authenticate]
+gcloud auth login
+gcloud auth application-default login --no-launch-browser
+gcloud auth application-default set-quota-project "${PROJECT}"
+# [END hypercomputer_tpu_tune_gemma4_26b_rl_authenticate]
+
 # [START hypercomputer_tpu_tune_gemma4_26b_rl_create_cluster]
 mkdir -p tmp
 cp ./examples/gke-tpu-v6e/gke-tpu-v6e-advanced.yaml ./tmp/gke-tpu-v6e-advanced.yaml
