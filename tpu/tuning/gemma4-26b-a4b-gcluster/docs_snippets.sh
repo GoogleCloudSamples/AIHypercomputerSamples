@@ -17,8 +17,20 @@
 # This file contains the exact documentation snippets for checking logs,
 # containing placeholders like <pod suffix> that shouldn't be executed in CI.
 
+# [START hypercomputer_tpu_tune_gemma4_26b_rl_authenticate]
+gcloud auth login
+gcloud auth application-default login --no-launch-browser
+gcloud auth application-default set-quota-project "${PROJECT}"
+# [END hypercomputer_tpu_tune_gemma4_26b_rl_authenticate]
+
 # [START hypercomputer_tpu_tune_gemma4_26b_rl_create_cluster]
-./gcluster deploy examples/gke-tpu-v6e/gke-tpu-v6e-advanced.yaml \
+mkdir -p tmp
+cp ./examples/gke-tpu-v6e/gke-tpu-v6e-advanced.yaml ./tmp/gke-tpu-v6e-advanced.yaml
+
+# Change n2-standard-8 to e2-standard-8 to avoid GCE_STOCKOUT in some regions
+sed -i "s/n2-standard-8/e2-standard-8/" ./tmp/gke-tpu-v6e-advanced.yaml
+
+./gcluster deploy ./tmp/gke-tpu-v6e-advanced.yaml \
     --vars "project_id=${PROJECT},deployment_name=${CLUSTER_NAME},region=${REGION},zone=${ZONE},num_slices=${CLUSTER_NODEPOOL_COUNT},tpu_topology=${TOPOLOGY},authorized_cidr=0.0.0.0/0,reservation=${RESERVATION:-}" \
     -l IGNORE --auto-approve -w
 # [END hypercomputer_tpu_tune_gemma4_26b_rl_create_cluster]

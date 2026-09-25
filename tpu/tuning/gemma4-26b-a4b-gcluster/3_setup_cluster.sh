@@ -21,10 +21,25 @@ echo "[$(date)] ==================== Preparing gcluster blueprint... ===========
 echo "[$(date)] ==================== Configuring blueprint... ===================="
 
 # Change n2-standard-8 to e2-standard-8
-sed -i "s/n2-standard-8/e2-standard-8/" examples/gke-tpu-v6e/gke-tpu-v6e-advanced.yaml
+mkdir -p tmp
+cp ./examples/gke-tpu-v6e/gke-tpu-v6e-advanced.yaml ./tmp/gke-tpu-v6e-advanced.yaml
+sed -i "s/n2-standard-8/e2-standard-8/" ./tmp/gke-tpu-v6e-advanced.yaml
+
+echo "[$(date)] ==================== Configuring IAM for default Compute SA... ===================="
+# Ensure Compute API is enabled so the default Compute Service Account exists
+gcloud services enable compute.googleapis.com --project="$PROJECT"
+
+PROJECT_NUMBER=$(gcloud projects describe "$PROJECT" --format="value(projectNumber)")
+COMPUTE_SA="${PROJECT_NUMBER}-compute@developer.gserviceaccount.com"
+
+for role in roles/storage.objectViewer roles/logging.logWriter roles/artifactregistry.writer; do
+  gcloud projects add-iam-policy-binding "$PROJECT" \
+    --member="serviceAccount:${COMPUTE_SA}" \
+    --role="$role" --quiet
+done
 
 echo "[$(date)] ==================== Deploying cluster with gcluster... ===================="
-./gcluster deploy examples/gke-tpu-v6e/gke-tpu-v6e-advanced.yaml \
+./gcluster deploy ./tmp/gke-tpu-v6e-advanced.yaml \
     --vars "project_id=${PROJECT},deployment_name=${CLUSTER_NAME},region=${REGION},zone=${ZONE},num_slices=${CLUSTER_NODEPOOL_COUNT},tpu_topology=${TOPOLOGY},authorized_cidr=0.0.0.0/0,reservation=${RESERVATION:-}" \
     --download-dependencies \
     -l IGNORE --auto-approve -w
