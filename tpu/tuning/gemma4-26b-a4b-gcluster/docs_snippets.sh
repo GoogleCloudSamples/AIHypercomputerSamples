@@ -73,7 +73,7 @@ gcloud container clusters get-credentials "${CLUSTER_NAME}" \
   --location="${REGION}" \
   --project="${PROJECT}"
 
-# Check progress of the job
+# Check progress of the job. A successful run should output metrics with mean_reward > 0.
 kubectl logs -f \
     -l job-name=gemma4-training-pathways-head-0 \
     -c workload-container
