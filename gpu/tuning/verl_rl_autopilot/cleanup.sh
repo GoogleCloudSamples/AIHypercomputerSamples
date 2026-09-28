@@ -24,9 +24,9 @@ fi
 echo "=== Starting Cleanup ==="
 
 echo "Deleting Ray Cluster (if exists)..."
-if [ -f "${SCRIPT_DIR}/ray-cluster-auto-dranet.yaml" ]; then
+if [ -f "ray-cluster-auto-dranet.yaml" ]; then
   # [START hypercomputer_gpu_train_ray_verl_auto_delete_ray]
-  envsubst < "${SCRIPT_DIR}/ray-cluster-auto-dranet.yaml" | kubectl delete -f - --ignore-not-found=true || true
+  envsubst < "ray-cluster-auto-dranet.yaml" | kubectl delete -f - --ignore-not-found=true || true
   # [END hypercomputer_gpu_train_ray_verl_auto_delete_ray]
 fi
 
@@ -34,9 +34,9 @@ echo "Deleting Data Preparation Job (if exists)..."
 kubectl delete job data-prep-job -n "${NAMESPACE:-default}" --ignore-not-found=true || true
 
 echo "Deleting GCS FUSE Storage..."
-if [ -f "${SCRIPT_DIR}/gcsfuse-storage.yaml" ]; then
+if [ -f "gcsfuse-storage.yaml" ]; then
   # [START hypercomputer_gpu_train_ray_verl_auto_delete_gcsfuse]
-  envsubst < "${SCRIPT_DIR}/gcsfuse-storage.yaml" | kubectl delete -f - --ignore-not-found=true || true
+  envsubst < "gcsfuse-storage.yaml" | kubectl delete -f - --ignore-not-found=true || true
   # [END hypercomputer_gpu_train_ray_verl_auto_delete_gcsfuse]
 fi
 
@@ -46,12 +46,8 @@ kubectl delete serviceaccount "${KSA_NAME:-}" -n "${NAMESPACE:-default}" --ignor
 
 echo "Deleting DRANET resources..."
 # [START hypercomputer_gpu_train_ray_verl_auto_delete_dranet]
-if [ -f "${SCRIPT_DIR}/resourceclaim-dranet.yaml" ]; then
-  kubectl delete -f "${SCRIPT_DIR}/resourceclaim-dranet.yaml" --ignore-not-found=true || true
-fi
-if [ -f "${SCRIPT_DIR}/computeclass-dranet.yaml" ]; then
-  kubectl delete -f "${SCRIPT_DIR}/computeclass-dranet.yaml" --ignore-not-found=true || true
-fi
+kubectl delete -f "resourceclaim-dranet.yaml" --ignore-not-found=true || true
+kubectl delete -f "computeclass-dranet.yaml" --ignore-not-found=true || true
 # [END hypercomputer_gpu_train_ray_verl_auto_delete_dranet]
 
 echo "Deleting GCS Bucket gs://${GS_BUCKET}..."

@@ -128,9 +128,10 @@ SUBMIT_OUT=$(ray job submit \
       actor_rollout_ref.ref.use_torch_compile=False \
       actor_rollout_ref.ref.fsdp_config.use_torch_compile=False \
       trainer.total_epochs=1")
+echo "${SUBMIT_OUT}"
+JOB_ID=$(echo "${SUBMIT_OUT}" | grep "submitted successfully" | awk -F"'" '{print $2}')
 # [END hypercomputer_gpu_train_ray_verl_auto_job_submit]
 
-JOB_ID=$(echo "$SUBMIT_OUT" | grep "submitted successfully" | awk -F"'" '{print $2}')
 if [ -z "${JOB_ID}" ]; then
     echo "Error: Failed to extract Job ID from submission output."
     echo "Output was: ${SUBMIT_OUT}"
