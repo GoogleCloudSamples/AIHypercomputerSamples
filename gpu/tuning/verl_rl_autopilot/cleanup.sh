@@ -46,8 +46,8 @@ kubectl delete serviceaccount "${KSA_NAME:-}" -n "${NAMESPACE:-default}" --ignor
 
 echo "Deleting DRANET resources..."
 # [START hypercomputer_gpu_train_ray_verl_auto_delete_dranet]
-kubectl delete -f "resourceclaim-dranet.yaml" --ignore-not-found=true || true
-kubectl delete -f "computeclass-dranet.yaml" --ignore-not-found=true || true
+kubectl delete -f "resourceclaim-dranet.yaml" --ignore-not-found=true 2>/dev/null || true
+kubectl delete -f "computeclass-dranet.yaml" --ignore-not-found=true 2>/dev/null || true
 # [END hypercomputer_gpu_train_ray_verl_auto_delete_dranet]
 
 echo "Deleting GCS Bucket gs://${GS_BUCKET}..."
