@@ -32,6 +32,8 @@ cp ./examples/gke-tpu-v6e/gke-tpu-v6e-advanced.yaml ./tmp/gke-tpu-v6e-advanced.y
 
 # Change n2-standard-8 to e2-standard-8 to avoid GCE_STOCKOUT in some regions
 sed -i "s/n2-standard-8/e2-standard-8/" ./tmp/gke-tpu-v6e-advanced.yaml
+# Pin system node pool to a single zone to avoid cross-zone stockouts
+sed -i '/system_node_pool_machine_type/a \      system_node_pool_zones: [$(vars.zone)]' ./tmp/gke-tpu-v6e-advanced.yaml
 
 ./gcluster deploy ./tmp/gke-tpu-v6e-advanced.yaml \
     --vars "project_id=${PROJECT},deployment_name=${CLUSTER_NAME},region=${REGION},zone=${ZONE},num_slices=${CLUSTER_NODEPOOL_COUNT},tpu_topology=${TOPOLOGY},authorized_cidr=0.0.0.0/0,reservation=${RESERVATION:-}" \

@@ -24,6 +24,7 @@ echo "[$(date)] ==================== Configuring blueprint... ==================
 mkdir -p tmp
 cp ./examples/gke-tpu-v6e/gke-tpu-v6e-advanced.yaml ./tmp/gke-tpu-v6e-advanced.yaml
 sed -i "s/n2-standard-8/e2-standard-8/" ./tmp/gke-tpu-v6e-advanced.yaml
+sed -i '/system_node_pool_machine_type/a \      system_node_pool_zones: [$(vars.zone)]' ./tmp/gke-tpu-v6e-advanced.yaml
 
 echo "[$(date)] ==================== Configuring IAM for default Compute SA... ===================="
 # Ensure Compute API is enabled so the default Compute Service Account exists
