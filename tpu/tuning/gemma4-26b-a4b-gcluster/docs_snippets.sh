@@ -21,6 +21,9 @@
 gcloud auth login
 gcloud auth application-default login --no-launch-browser
 gcloud auth application-default set-quota-project "${PROJECT}"
+
+gcloud auth configure-docker gcr.io --quiet
+gcloud auth configure-docker ${REGION}-docker.pkg.dev --quiet
 # [END hypercomputer_tpu_tune_gemma4_26b_rl_authenticate]
 
 # [START hypercomputer_tpu_tune_gemma4_26b_rl_create_cluster]
