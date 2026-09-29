@@ -29,7 +29,7 @@ echo "[$(date)] ==================== Deploying cluster with gcluster... ========
     -l IGNORE --auto-approve -w
 
 # Fetch GKE cluster credentials for kubectl
-gcloud container clusters get-credentials ${CLUSTER_NAME} --location=${REGION} --project=${PROJECT}
+gcloud container clusters get-credentials "${CLUSTER_NAME}" --location="${REGION}" --project="${PROJECT}"
 # [END hypercomputer_tpu_tune_qwen3_30b_rl_create_cluster]
 
 # Configure docker and IAM for the service accounts created by cluster-toolkit

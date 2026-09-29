@@ -84,7 +84,7 @@ fi
 
 echo "[$(date)] ==================== Streaming Training Logs... ===================="
 # Wait until pod is Ready before tailing logs
-kubectl wait --for=condition=Ready pod/${POD_NAME} --timeout=600s 2>/dev/null || true
+kubectl wait --for=condition=Ready "pod/${POD_NAME}" --timeout=600s 2>/dev/null || true
 
 # Stream logs in a reconnect loop so XLA compilation silent pauses don't prematurely end the script
 while true; do
