@@ -49,7 +49,6 @@ export MODEL_CHECKPOINT_DIRECTORY=/dev/shm/$MODEL_NAME/mt-format/
 export USE_PATHWAYS=0 # Set to 1 for Pathways, 0 for McJAX
 export LAZY_LOAD_TENSORS=False # True to use lazy load, False to use eager load.
 # [END hypercomputer_tpu_tune_gemma3_sft_tune_0_env]
-export HF_TOKEN=$YOUR_HF_TOKEN
 
 # [START hypercomputer_tpu_tune_gemma3_sft_tune_1_convert]
 python3 -m maxtext.checkpoint_conversion.to_maxtext \
