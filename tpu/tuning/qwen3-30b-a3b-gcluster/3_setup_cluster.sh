@@ -32,6 +32,11 @@ echo "[$(date)] ==================== Deploying cluster with gcluster... ========
 gcloud container clusters get-credentials "${CLUSTER_NAME}" --location="${REGION}" --project="${PROJECT}"
 # [END hypercomputer_tpu_tune_qwen3_30b_rl_create_cluster]
 
+# Configure gcluster Defaults
+./gcluster job config set project "${PROJECT}"
+./gcluster job config set cluster "${CLUSTER_NAME}"
+./gcluster job config set location "${REGION}"
+
 # Configure docker and IAM for the service accounts created by cluster-toolkit
 # [START hypercomputer_tpu_tune_qwen3_30b_rl_configure_docker]
 gcloud auth configure-docker gcr.io --quiet
