@@ -15,7 +15,7 @@
 set -euo pipefail
 
 # [START hypercomputer_tpu_infer_gemma4_26b_deploy_cleanup]
-envsubst '$RESERVATION_URL $ZONE' < gemma4-26b-multihost-v6e-4x4.yaml | kubectl delete -f - || true
+envsubst '$RESERVATION_URL $ZONE' < gemma4-26b-multihost-v6e-2x4.yaml | kubectl delete -f - || true
 kubectl delete secret hf-secret || true
 # [END hypercomputer_tpu_infer_gemma4_26b_deploy_cleanup]
 

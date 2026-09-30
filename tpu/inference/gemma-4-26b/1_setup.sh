@@ -28,8 +28,8 @@ gcloud container node-pools create $NODE_POOL_NAME \
     --cluster=${CLUSTER_NAME} \
     --node-locations=${ZONE} \
     --machine-type=ct6e-standard-4t \
-    --tpu-topology=4x4 \
-    --num-nodes=4 \
+    --tpu-topology=2x4 \
+    --num-nodes=2 \
     --reservation-affinity=specific \
     --reservation=${RESERVATION_URL}
 # [END hypercomputer_tpu_infer_gemma4_cluster_create]
