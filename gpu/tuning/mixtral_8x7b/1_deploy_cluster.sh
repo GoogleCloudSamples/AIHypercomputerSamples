@@ -16,6 +16,40 @@
 
 set -euo pipefail
 
+# Define versions
+export TERRAFORM_VERSION="1.12.2"
+export PACKER_VERSION="1.15.3"
+export INSTALL_TEMP_DIR="/tmp/bin_dependencies"
+mkdir -p "${INSTALL_TEMP_DIR}"
+
+# Install Terraform
+if ! command -v terraform &> /dev/null; then
+  echo "[$(date)] Installing Terraform..."
+  curl -f -s -L \
+    -o "${INSTALL_TEMP_DIR}/terraform.zip" \
+    "https://releases.hashicorp.com/terraform/${TERRAFORM_VERSION}/terraform_${TERRAFORM_VERSION}_linux_amd64.zip"
+  python3 -m zipfile -e "${INSTALL_TEMP_DIR}/terraform.zip" "${INSTALL_TEMP_DIR}"
+  sudo mv "${INSTALL_TEMP_DIR}/terraform" /usr/local/bin/
+  sudo chmod +x /usr/local/bin/terraform
+  rm -f "${INSTALL_TEMP_DIR}/terraform.zip"
+fi
+
+# Install Packer
+if ! command -v packer &> /dev/null; then
+  echo "[$(date)] Installing Packer..."
+  curl -f -s -L \
+    -o "${INSTALL_TEMP_DIR}/packer.zip" \
+    "https://releases.hashicorp.com/packer/${PACKER_VERSION}/packer_${PACKER_VERSION}_linux_amd64.zip"
+  python3 -m zipfile -e "${INSTALL_TEMP_DIR}/packer.zip" "${INSTALL_TEMP_DIR}"
+  sudo mv "${INSTALL_TEMP_DIR}/packer" /usr/local/bin/
+  sudo chmod +x /usr/local/bin/packer
+  rm -f "${INSTALL_TEMP_DIR}/packer.zip"
+fi
+
+# Verify installation
+echo "[$(date)] Terraform version: $(terraform --version)"
+echo "[$(date)] Packer version: $(packer --version)"
+
 declare -r SCRIPT_PATH="$(realpath "${BASH_SOURCE[0]}")"
 declare -r BASEDIR="$(dirname "${SCRIPT_PATH}")"
 
