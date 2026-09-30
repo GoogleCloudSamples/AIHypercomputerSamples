@@ -59,28 +59,54 @@ echo "Detected VPC Network: ${CLUSTER_NETWORK}"
 
 FIREWALL_RULE_NAME="allow-ssh-from-iap-${CLUSTER_NETWORK}"
 
-FIREWALL_EXISTS=$(gcloud compute firewall-rules list \
-  --project="${PROJECT_ID:-}" \
-  --filter="name=${FIREWALL_RULE_NAME} AND network=${CLUSTER_NETWORK}" \
-  --format="value(name)" 2>/dev/null || echo "")
-
-if [ -z "${FIREWALL_EXISTS}" ]; then
-  echo "Creating missing firewall rule '${FIREWALL_RULE_NAME}' for network ${CLUSTER_NETWORK}..."
-  gcloud compute firewall-rules create "${FIREWALL_RULE_NAME}" \
+ensure_iap_firewall() {
+  local firewall_exists
+  firewall_exists=$(gcloud compute firewall-rules list \
     --project="${PROJECT_ID:-}" \
-    --network="${CLUSTER_NETWORK}" \
-    --direction=INGRESS \
-    --action=allow \
-    --rules=tcp:22 \
-    --source-ranges=35.235.240.0/20 \
-    --description="Allow SSH ingress from Google Cloud Identity-Aware Proxy (IAP) for ${CLUSTER_NETWORK}"
-  echo "Firewall rule created successfully."
-else
-  echo "Firewall rule '${FIREWALL_RULE_NAME}' already exists for this network. Skipping creation."
-fi
+    --filter="name=${FIREWALL_RULE_NAME} AND network=${CLUSTER_NETWORK}" \
+    --format="value(name)" 2>/dev/null || echo "")
+
+  if [ -z "${firewall_exists}" ]; then
+    echo "Creating missing firewall rule '${FIREWALL_RULE_NAME}' for network ${CLUSTER_NETWORK}..."
+    gcloud compute firewall-rules create "${FIREWALL_RULE_NAME}" \
+      --project="${PROJECT_ID:-}" \
+      --network="${CLUSTER_NETWORK}" \
+      --direction=INGRESS \
+      --action=allow \
+      --rules=tcp:22 \
+      --source-ranges=35.235.240.0/20 \
+      --description="Allow SSH ingress from Google Cloud Identity-Aware Proxy (IAP) for ${CLUSTER_NETWORK}" || true
+    echo "Firewall rule created successfully."
+  else
+    echo "Firewall rule '${FIREWALL_RULE_NAME}' already exists for this network. Skipping creation."
+  fi
+}
+
+ensure_iap_firewall
+
+# Wait for Slurm controller and login node startup scripts to finish
+echo "[$(date)] Waiting for Slurm to be ready on ${LOGIN_NODE}..."
+for i in {1..30}; do
+  ensure_iap_firewall
+  if gcloud compute ssh "${LOGIN_NODE}" \
+    --project="${PROJECT_ID}" \
+    --zone="${ZONE}" \
+    --tunnel-through-iap \
+    --command="sinfo >/dev/null 2>&1" 2>/dev/null; then
+    echo "Slurm is ready!"
+    break
+  fi
+  if [ "${i}" -eq 30 ]; then
+    echo "Error: Timed out waiting for Slurm to become ready on ${LOGIN_NODE}." >&2
+    exit 1
+  fi
+  echo "Slurm not ready yet. Waiting 15 seconds... (${i}/30)"
+  sleep 15
+done
 
 # 2. Transfer the submission script to the Login Node
 echo "[$(date)] Uploading workload scripts to login node..."
+ensure_iap_firewall
 # [START hypercomputer_gpu_tune_mixtral_slurm_transfer_scripts]
 gcloud compute scp \
   --project="${PROJECT_ID}" \
@@ -95,6 +121,7 @@ gcloud compute scp \
 
 # 3. Connect and run environment setup & submit job
 echo "[$(date)] Running environment setup and submitting Slurm job on login node..."
+ensure_iap_firewall
 
 # Run ssh and capture stdout to get the Job ID.
 # Since we need to run multiple commands, we chain them.
@@ -125,7 +152,19 @@ echo "[$(date)] Monitoring Slurm job ${JOB_ID}..."
 LIMIT=240 # 2 hours maximum polling (30s * 240)
 count=0
 
-while gcloud compute ssh "${LOGIN_NODE}" --project="${PROJECT_ID}" --zone="${ZONE}" --tunnel-through-iap --command="squeue -j ${JOB_ID}" 2>/dev/null | grep -q "${JOB_ID}"; do
+while true; do
+  ensure_iap_firewall
+  if SQUEUE_OUTPUT=$(gcloud compute ssh "${LOGIN_NODE}" \
+    --project="${PROJECT_ID}" \
+    --zone="${ZONE}" \
+    --tunnel-through-iap \
+    --command="squeue -j ${JOB_ID} || true" 2>/dev/null); then
+    if ! echo "${SQUEUE_OUTPUT}" | grep -q "${JOB_ID}"; then
+      break
+    fi
+  else
+    echo "Warning: SSH connection to ${LOGIN_NODE} failed while polling job ${JOB_ID}. Retrying..."
+  fi
   if [ ${count} -ge ${LIMIT} ]; then
     echo "Timeout waiting for Slurm job ${JOB_ID} to complete." >&2
     exit 1
