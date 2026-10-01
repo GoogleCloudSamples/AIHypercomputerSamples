@@ -35,7 +35,7 @@ source maxtext_venv/bin/activate
 # [END hypercomputer_tpu_tune_gemma3_sft_maxtext_3]
 
 # [START hypercomputer_tpu_tune_gemma3_sft_maxtext_4]
-UV_TORCH_BACKEND=cpu uv pip install "maxtext[tpu-post-train]==0.2.4" --resolution=lowest
+UV_TORCH_BACKEND=cpu uv pip install "maxtext[tpu-post-train]==0.2.2" --resolution=lowest
 # [END hypercomputer_tpu_tune_gemma3_sft_maxtext_4]
 
 # [START hypercomputer_tpu_tune_gemma3_sft_maxtext_5]
@@ -79,6 +79,15 @@ export TRAIN_SPLIT="train_sft"
 export TRAIN_DATA_COLUMNS="['messages']"
 
 export MAXTEXT_CKPT_PATH=$MODEL_CHECKPOINT_DIRECTORY/0/items
+export TPU_ACCELERATOR_TYPE=v6e-8
+export TPU_WORKER_ID=0
+TPU_NAME=$(hostname)
+export TPU_NAME
+export TPU_SKIP_MDS_QUERY=1
+export TPU_WORKER_HOSTNAMES=localhost
+export TPU_TOPOLOGY=2x4
+export TPU_CHIPS_PER_HOST_BOUNDS=2,4,1
+export TPU_HOST_BOUNDS=1,1,1
 # [END hypercomputer_tpu_tune_gemma3_sft_tune_2_env]
 
 # [START hypercomputer_tpu_tune_gemma3_sft_tune_3_run]
