@@ -17,8 +17,25 @@
 # This file contains the exact documentation snippets for checking logs,
 # containing placeholders like <pod suffix> that shouldn't be executed in CI.
 
+# [START hypercomputer_tpu_tune_gemma4_26b_rl_authenticate]
+gcloud auth login
+gcloud auth application-default login --no-launch-browser
+gcloud auth application-default set-quota-project "${PROJECT}"
+
+gcloud auth configure-docker gcr.io --quiet
+gcloud auth configure-docker ${REGION}-docker.pkg.dev --quiet
+# [END hypercomputer_tpu_tune_gemma4_26b_rl_authenticate]
+
 # [START hypercomputer_tpu_tune_gemma4_26b_rl_create_cluster]
-./gcluster deploy examples/gke-tpu-v6e/gke-tpu-v6e-advanced.yaml \
+mkdir -p tmp
+cp ./examples/gke-tpu-v6e/gke-tpu-v6e-advanced.yaml ./tmp/gke-tpu-v6e-advanced.yaml
+
+# Change n2-standard-8 to e2-standard-8 to avoid GCE_STOCKOUT in some regions
+sed -i "s/n2-standard-8/e2-standard-8/" ./tmp/gke-tpu-v6e-advanced.yaml
+# Pin system node pool to a single zone to avoid cross-zone stockouts
+sed -i '/system_node_pool_machine_type/a \      system_node_pool_zones: [$(vars.zone)]' ./tmp/gke-tpu-v6e-advanced.yaml
+
+./gcluster deploy ./tmp/gke-tpu-v6e-advanced.yaml \
     --vars "project_id=${PROJECT},deployment_name=${CLUSTER_NAME},region=${REGION},zone=${ZONE},num_slices=${CLUSTER_NODEPOOL_COUNT},tpu_topology=${TOPOLOGY},authorized_cidr=0.0.0.0/0,reservation=${RESERVATION:-}" \
     -l IGNORE --auto-approve -w
 # [END hypercomputer_tpu_tune_gemma4_26b_rl_create_cluster]
@@ -47,7 +64,7 @@ gcloud container clusters get-credentials "${CLUSTER_NAME}" \
   --location="${REGION}" \
   --project="${PROJECT}"
 
-# Check progress of the job
+# Check progress of the job. A successful run should output metrics with mean_reward > 0.
 kubectl logs -f \
     -l job-name=gemma4-training-pathways-head-0 \
     -c workload-container
