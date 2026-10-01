@@ -31,6 +31,7 @@ spec:
       restartPolicy: OnFailure
       nodeSelector:
         cloud.google.com/compute-class: Performance
+        cloud.google.com/machine-family: c3
       containers:
       - name: prep-data
         image: verlai/verl:vllm011.latest
