@@ -27,8 +27,13 @@ gcloud container clusters delete ${CLUSTER_NAME} \
     --quiet || true
 
 echo "[$(date)] ========== Deleting the Lustre filesystem =========="
+ACTUAL_LUSTRE_ZONE=$(gcloud lustre instances list \
+    --location=- \
+    --filter="name ~ /instances/${LUSTRE_NAME}$" \
+    --format="value(name.segment(3))" 2>/dev/null | head -n 1 || true)
+LUSTRE_ZONE="${ACTUAL_LUSTRE_ZONE:-${LUSTRE_ZONE}}"
 gcloud lustre instances delete ${LUSTRE_NAME} \
-    --location=${NODE_ZONE} \
+    --location=${LUSTRE_ZONE} \
     --quiet || true
 
 echo "[$(date)] ========== Deleting VPC peering =========="

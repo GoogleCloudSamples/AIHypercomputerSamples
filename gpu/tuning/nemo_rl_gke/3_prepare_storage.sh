@@ -32,19 +32,42 @@ gcloud services vpc-peerings connect \
 # [END hypercomputer_gpu_tune_gemma3_27b_nemo_rl_lustre_connect_vpc_peering]
 
 echo "[$(date)] ========== Creating a Managed Lustre instance... =========="
-# [START hypercomputer_gpu_tune_gemma3_27b_nemo_rl_lustre_create]
-gcloud lustre instances create ${LUSTRE_NAME} \
-    --per-unit-storage-throughput=500 \
-    --capacity-gib=18000 \
-    --filesystem=lustrefs \
-    --location=${NODE_ZONE} \
-    --network=projects/${PROJECT_ID}/global/networks/${NETWORK} \
-    --gke-support-enabled
-# [END hypercomputer_gpu_tune_gemma3_27b_nemo_rl_lustre_create]
+create_lustre_instance() {
+    # [START hypercomputer_gpu_tune_gemma3_27b_nemo_rl_lustre_create]
+    gcloud lustre instances create ${LUSTRE_NAME} \
+        --per-unit-storage-throughput=500 \
+        --capacity-gib=18000 \
+        --filesystem=lustrefs \
+        --location=${LUSTRE_ZONE} \
+        --network=projects/${PROJECT_ID}/global/networks/${NETWORK} \
+        --gke-support-enabled
+    # [END hypercomputer_gpu_tune_gemma3_27b_nemo_rl_lustre_create]
+}
+
+if ! create_lustre_instance; then
+    echo "Failed to create Lustre instance in ${LUSTRE_ZONE}. Trying other zones in ${CONTROL_PLANE_REGION}..."
+    AVAILABLE_ZONES=$(gcloud compute zones list \
+        --filter="region:(${CONTROL_PLANE_REGION}) AND status=UP AND name!=${LUSTRE_ZONE}" \
+        --format="value(name)")
+    LUSTRE_CREATED=false
+    for ZONE in ${AVAILABLE_ZONES}; do
+        export LUSTRE_ZONE="${ZONE}"
+        echo "Retrying Lustre instance creation in ${LUSTRE_ZONE}..."
+        if create_lustre_instance; then
+            echo "Successfully created Lustre instance in ${LUSTRE_ZONE}."
+            LUSTRE_CREATED=true
+            break
+        fi
+    done
+    if [[ "${LUSTRE_CREATED}" != "true" ]]; then
+        echo "Error: Failed to create Lustre instance in any zone in ${CONTROL_PLANE_REGION}." >&2
+        exit 1
+    fi
+fi
 
 # [START hypercomputer_gpu_tune_gemma3_27b_nemo_rl_lustre_ip_export]
 export LUSTRE_IP=$(gcloud lustre instances describe ${LUSTRE_NAME} \
-    --location=$NODE_ZONE --format="value(mountPoint)" | awk -F'@' '{print $1}')
+    --location=${LUSTRE_ZONE} --format="value(mountPoint)" | awk -F'@' '{print $1}')
 # [END hypercomputer_gpu_tune_gemma3_27b_nemo_rl_lustre_ip_export]
 
 echo "[$(date)] ========== Creating a Persistent Volume for Lustre... =========="

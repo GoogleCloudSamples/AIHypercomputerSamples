@@ -34,7 +34,7 @@ spec:
     name: lustre-pvc
   csi:
     driver: lustre.csi.storage.gke.io
-    volumeHandle: "${PROJECT_ID}/${NODE_ZONE}/${LUSTRE_NAME}"
+    volumeHandle: "${PROJECT_ID}/${LUSTRE_ZONE}/${LUSTRE_NAME}"
     volumeAttributes:
       ip: ${LUSTRE_IP}
       filesystem: lustrefs
