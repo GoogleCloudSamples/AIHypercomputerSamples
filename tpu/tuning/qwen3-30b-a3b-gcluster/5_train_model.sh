@@ -52,7 +52,7 @@ echo "[$(date)] ==================== Submitting Training Workload... ===========
     model_name=${MODEL_NAME} \
     load_parameters_path=gs://${GCS_BUCKET}/${MODEL_NAME}/max-text-format/0/items/ \
     hf_access_token=${HF_TOKEN} \
-    data_template_path=maxtext/examples/chat_templates/gsm8k_rl.json \
+    data_template_path=maxtext/examples/chat_templates/openmathinstruct2_rl.json \
     num_batches=50 \
     num_test_batches=0 \
     batch_size=8 \
