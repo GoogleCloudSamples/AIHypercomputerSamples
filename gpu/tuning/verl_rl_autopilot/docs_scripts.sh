@@ -35,3 +35,15 @@ kubectl logs -n ${NAMESPACE} -l job-name=data-prep-job -f
 # [START hypercomputer_gpu_train_ray_verl_auto_job_logs]
 ray job logs "${JOB_ID}" --address "http://localhost:8265" --follow
 # [END hypercomputer_gpu_train_ray_verl_auto_job_logs]
+
+# [START hypercomputer_gpu_train_ray_verl_auto_verify_checkpoints]
+gcloud storage ls "gs://${GS_BUCKET}/verl/checkpoints/"
+# [END hypercomputer_gpu_train_ray_verl_auto_verify_checkpoints]
+
+# [START hypercomputer_gpu_train_ray_verl_auto_kill_port_forward]
+kill ${PF_LOOP_PID}
+# [END hypercomputer_gpu_train_ray_verl_auto_kill_port_forward]
+
+# [START hypercomputer_gpu_train_ray_verl_std_kill_port_forward]
+kill ${PF_PID}
+# [END hypercomputer_gpu_train_ray_verl_std_kill_port_forward]
