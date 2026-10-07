@@ -19,6 +19,7 @@ set -euo pipefail
 # [START hypercomputer_gpu_tune_mixtral_slurm_env]
 export PROJECT_ID="YOUR_PROJECT_ID"
 export ZONE="YOUR_ZONE"
+export LUSTRE_ZONE="YOUR_LUSTRE_ZONE"
 export REGION="YOUR_REGION"
 export RESERVATION_NAME="YOUR_RESERVATION_NAME"
 export DEPLOYMENT_NAME="YOUR_CLUSTER_NAME"

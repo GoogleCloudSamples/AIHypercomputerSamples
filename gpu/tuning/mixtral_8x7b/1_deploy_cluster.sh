@@ -107,6 +107,7 @@ gcluster --version
 
 # 3. Configure deployment and blueprint YAML
 echo "[$(date)] Configuring a4high-slurm-deployment.yaml..."
+LUSTRE_ZONE="${LUSTRE_ZONE:-${ZONE}}"
 # [START hypercomputer_gpu_tune_mixtral_slurm_deployment_yaml]
 MANIFEST_PATH="${CLUSTER_TOOLKIT_PATH}/examples/machine-learning/a4-highgpu-8g"
 cat <<EOF > "${MANIFEST_PATH}/a4high-slurm-deployment.yaml"
@@ -120,6 +121,7 @@ vars:
   project_id: ${PROJECT_ID}
   region: ${REGION}
   zone: ${ZONE}
+  lustre_zone: ${LUSTRE_ZONE}
   a4h_cluster_size: 2
   a4h_reservation_name: ${RESERVATION_NAME}
 EOF
