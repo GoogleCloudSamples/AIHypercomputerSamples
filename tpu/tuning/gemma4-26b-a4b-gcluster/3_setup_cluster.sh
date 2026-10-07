@@ -21,10 +21,12 @@ echo "[$(date)] ==================== Preparing gcluster blueprint... ===========
 echo "[$(date)] ==================== Configuring blueprint... ===================="
 
 # Change n2-standard-8 to e2-standard-8
-mkdir -p tmp
-cp ./examples/gke-tpu-v6e/gke-tpu-v6e-advanced.yaml ./tmp/gke-tpu-v6e-advanced.yaml
-sed -i "s/n2-standard-8/e2-standard-8/" ./tmp/gke-tpu-v6e-advanced.yaml
-sed -i '/system_node_pool_machine_type/a \      system_node_pool_zones: [$(vars.zone)]' ./tmp/gke-tpu-v6e-advanced.yaml
+TMP_DIR=$(mktemp -d)
+BLUEPRINT_FILE="${TMP_DIR}/gke-tpu-v6e-advanced.yaml"
+
+cp ./examples/gke-tpu-v6e/gke-tpu-v6e-advanced.yaml "${BLUEPRINT_FILE}"
+sed -i "s/n2-standard-8/e2-standard-8/" "${BLUEPRINT_FILE}"
+sed -i '/system_node_pool_machine_type/a \      system_node_pool_zones: [$(vars.zone)]' "${BLUEPRINT_FILE}"
 
 echo "[$(date)] ==================== Configuring IAM for default Compute SA... ===================="
 # Ensure Compute API is enabled so the default Compute Service Account exists
@@ -40,7 +42,7 @@ for role in roles/storage.objectViewer roles/logging.logWriter roles/artifactreg
 done
 
 echo "[$(date)] ==================== Deploying cluster with gcluster... ===================="
-./gcluster deploy ./tmp/gke-tpu-v6e-advanced.yaml \
+./gcluster deploy "${BLUEPRINT_FILE}" \
     --vars "project_id=${PROJECT},deployment_name=${CLUSTER_NAME},region=${REGION},zone=${ZONE},num_slices=${CLUSTER_NODEPOOL_COUNT},tpu_topology=${TOPOLOGY},authorized_cidr=0.0.0.0/0,reservation=${RESERVATION:-}" \
     --download-dependencies \
     -l IGNORE --auto-approve -w

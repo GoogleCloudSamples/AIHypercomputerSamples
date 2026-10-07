@@ -101,5 +101,5 @@ if [ -n "${GCS_BUCKET:-}" ] && [ "${GCS_BUCKET}" != "YOUR_BUCKET_NAME" ] && gclo
   gcloud storage rm -r "gs://${GCS_BUCKET}" || echo "Warning: Failed to delete bucket"
 fi
 
-rm -rf .ghpc "${CLUSTER_NAME}" tmp gcluster examples community gcluster_bundle_linux_amd64.tgz
+rm -rf .ghpc "${CLUSTER_NAME}" gcluster examples community gcluster_bundle_linux_amd64.tgz
 echo "[$(date)] ==================== Resources cleaned up. ===================="

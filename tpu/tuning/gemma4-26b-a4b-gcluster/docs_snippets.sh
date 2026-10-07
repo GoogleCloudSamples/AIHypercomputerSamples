@@ -27,15 +27,17 @@ gcloud auth configure-docker ${REGION}-docker.pkg.dev --quiet
 # [END hypercomputer_tpu_tune_gemma4_26b_rl_authenticate]
 
 # [START hypercomputer_tpu_tune_gemma4_26b_rl_create_cluster]
-mkdir -p tmp
-cp ./examples/gke-tpu-v6e/gke-tpu-v6e-advanced.yaml ./tmp/gke-tpu-v6e-advanced.yaml
+TMP_DIR=$(mktemp -d)
+BLUEPRINT_FILE="${TMP_DIR}/gke-tpu-v6e-advanced.yaml"
+
+cp ./examples/gke-tpu-v6e/gke-tpu-v6e-advanced.yaml "${BLUEPRINT_FILE}"
 
 # Change n2-standard-8 to e2-standard-8 to avoid GCE_STOCKOUT in some regions
-sed -i "s/n2-standard-8/e2-standard-8/" ./tmp/gke-tpu-v6e-advanced.yaml
+sed -i "s/n2-standard-8/e2-standard-8/" "${BLUEPRINT_FILE}"
 # Pin system node pool to a single zone to avoid cross-zone stockouts
-sed -i '/system_node_pool_machine_type/a \      system_node_pool_zones: [$(vars.zone)]' ./tmp/gke-tpu-v6e-advanced.yaml
+sed -i '/system_node_pool_machine_type/a \      system_node_pool_zones: [$(vars.zone)]' "${BLUEPRINT_FILE}"
 
-./gcluster deploy ./tmp/gke-tpu-v6e-advanced.yaml \
+./gcluster deploy "${BLUEPRINT_FILE}" \
     --vars "project_id=${PROJECT},deployment_name=${CLUSTER_NAME},region=${REGION},zone=${ZONE},num_slices=${CLUSTER_NODEPOOL_COUNT},tpu_topology=${TOPOLOGY},authorized_cidr=0.0.0.0/0,reservation=${RESERVATION:-}" \
     -l IGNORE --auto-approve -w
 # [END hypercomputer_tpu_tune_gemma4_26b_rl_create_cluster]
