@@ -31,7 +31,6 @@ echo "[$(date)] ==================== Submitting Training Workload... ===========
   --pathways-server-env="GRPC_DNS_RESOLVER=native" \
   --pathways-worker-env="GRPC_DNS_RESOLVER=native" \
   --command="export VLLM_HOST_IP=\$(hostname -I | awk '{print \$1}'); \
-      python3 -c \"import pathlib, tpu_inference.layers.common.fused_moe_gmm as f; p = pathlib.Path(f.__file__); p.write_text(p.read_text().replace('onehot_moe_permute_threshold: int = 0,', 'onehot_moe_permute_threshold: int = 100000,'))\"; \
       JAX_PLATFORMS=proxy,cpu ENABLE_PATHWAYS_PERSISTENCE=1 \
       python3 -m maxtext.trainers.post_train.rl.train_rl \
       run_name=rl \
@@ -42,8 +41,8 @@ echo "[$(date)] ==================== Submitting Training Workload... ===========
       hf_access_token=${HF_TOKEN} \
       num_batches=50 \
       batch_size=8 \
-      rollout_tensor_parallelism=2 \
-      rollout_expert_parallelism=4 \
+      rollout_tensor_parallelism=4 \
+      rollout_expert_parallelism=1 \
       trainer_devices_fraction=0.5 \
       sampler_devices_fraction=0.5 \
       tokenizer_path='google/gemma-4-26b-a4b-it' \
@@ -82,6 +81,7 @@ echo "[$(date)] ==================== Streaming Training Logs... ================
 # Wait until pod is Ready before tailing logs
 kubectl wait --for=condition=Ready pod/${POD_NAME} --timeout=600s 2>/dev/null || true
 
+# A successful run should output metrics with mean_reward > 0.
 kubectl logs -f "${POD_NAME}" -c workload-container || true
 
 echo "Checking final job status..."
