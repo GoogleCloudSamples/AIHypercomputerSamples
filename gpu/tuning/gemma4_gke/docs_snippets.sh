@@ -26,8 +26,14 @@ kubectl logs job.batch/finetune-job -f
 # [END hypercomputer_gpu_tune_gemma4_gke_monitor_logs]
 
 # [START hypercomputer_gpu_tune_gemma4_gke_view_metrics]
-echo "https://console.cloud.google.com/kubernetes/clusters/details/${CLUSTER_REGION}/${CLUSTER_NAME}/observability?mods=monitoring_api_prod&project=${PROJECT_ID}&pageState=("timeRange":("duration":"PT1H"),"nav":("section":"gpu"),"groupBy":("groupByType":"namespacesTop5"))"
+echo "https://console.cloud.google.com/kubernetes/clusters/details/${CLUSTER_REGION}/${CLUSTER_NAME}/observability?mods=monitoring_api_prod&project=${PROJECT_ID}&pageState=(\"timeRange\":(\"duration\":\"PT1H\"),\"nav\":(\"section\":\"gpu\"),\"groupBy\":(\"groupByType\":\"namespacesTop5\"))"
 # [END hypercomputer_gpu_tune_gemma4_gke_view_metrics]
+
+# [START hypercomputer_gpu_tune_gemma4_gke_view_hf_model]
+HF_USERNAME=$(curl -s -H "Authorization: Bearer ${HF_TOKEN}" \
+    https://huggingface.co/api/whoami-v2 | jq -r .name)
+echo "https://huggingface.co/${HF_USERNAME}/gemma-31b-text-to-sql"
+# [END hypercomputer_gpu_tune_gemma4_gke_view_hf_model]
 
 # [START hypercomputer_gpu_tune_gemma4_gke_delete_job]
 kubectl delete job finetune-job
@@ -37,3 +43,18 @@ kubectl delete job finetune-job
 gcloud container clusters delete "${CLUSTER_NAME}" \
     --region="${CLUSTER_REGION}"
 # [END hypercomputer_gpu_tune_gemma4_gke_delete_cluster]
+
+# [START hypercomputer_gpu_tune_gemma4_gke_delete_repo]
+gcloud artifacts repositories delete gemma \
+    --location="${ARTIFACT_REPO_LOCATION}"
+# [END hypercomputer_gpu_tune_gemma4_gke_delete_repo]
+
+# [START hypercomputer_gpu_tune_gemma4_gke_delete_hf_model]
+HF_USERNAME=$(curl -s -H "Authorization: Bearer ${HF_TOKEN}" \
+    https://huggingface.co/api/whoami-v2 | jq -r .name)
+curl -X DELETE https://huggingface.co/api/repos/delete \
+    -H "Authorization: Bearer ${HF_TOKEN}" \
+    -H "Content-Type: application/json" \
+    -d "{\"type\": \"model\", \"name\": \"gemma-31b-text-to-sql\",
+         \"organization\": \"${HF_USERNAME}\"}"
+# [END hypercomputer_gpu_tune_gemma4_gke_delete_hf_model]

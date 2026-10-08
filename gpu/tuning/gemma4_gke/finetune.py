@@ -9,7 +9,7 @@ from transformers import (
     BitsAndBytesConfig,
     AutoConfig,
 )
-from peft import LoraConfig, prepare_model_for_kbit_training, get_peft_model
+from peft import LoraConfig
 from trl import SFTTrainer, SFTConfig
 from huggingface_hub import login
 
@@ -74,7 +74,8 @@ def get_args():
         "--push_to_hub", action='store_true',
         help="Push model back up to HF")
     parser.add_argument(
-        "--hub_private_repo", type=bool, default="True",
+        "--hub_private_repo", type=lambda x: str(x).lower() == "true",
+        default=True,
         help="Push to a private repo")
     return parser.parse_args()
 
@@ -139,18 +140,20 @@ def main():
         torch_dtype=torch_dtype_obj,
     )
 
-    model = prepare_model_for_kbit_training(model)
     peft_config = LoraConfig(
         lora_alpha=args.lora_alpha,
         lora_dropout=args.lora_dropout,
         r=args.lora_r,
         bias="none",
-        target_modules="all-linear",
+        # Train only the text decoder projections; skip vision/audio modules.
+        target_modules=[
+            "q_proj", "k_proj", "v_proj", "o_proj",
+            "gate_proj", "up_proj", "down_proj",
+        ],
+        exclude_modules=(
+            r".*(vision_tower|audio_tower|embed_vision|embed_audio).*"),
         task_type="CAUSAL_LM",
     )
-    print("Applying PEFT configuration...")
-    model = get_peft_model(model, peft_config)
-    model.print_trainable_parameters()
     # --- 6. Configure Training Arguments ---
     training_args = SFTConfig(
         output_dir=args.output_dir,
@@ -173,12 +176,14 @@ def main():
         warmup_steps=0.03,
         lr_scheduler_type="constant",
         push_to_hub=args.push_to_hub,
+        hub_private_repo=args.hub_private_repo,
         report_to="tensorboard",
     )
     # --- 7. Create Trainer and Start Training ---
     trainer = SFTTrainer(
         model=model,
         args=training_args,
+        peft_config=peft_config,
         train_dataset=dataset["train"],
         eval_dataset=dataset["test"],
         processing_class=tokenizer,
@@ -189,6 +194,9 @@ def main():
     print("Training finished.")
     # --- 8. Save the final model ---
     print(f"Saving final model to {args.output_dir}")
+    if trainer.is_fsdp_enabled:
+        trainer.accelerator.state.fsdp_plugin.set_state_dict_type(
+            "FULL_STATE_DICT")
     trainer.save_model(args.output_dir)
     if torch.distributed.is_initialized():
         torch.distributed.destroy_process_group()

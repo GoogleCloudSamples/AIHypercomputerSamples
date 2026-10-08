@@ -35,15 +35,18 @@ spec:
         - "--save_strategy"
         - "steps"
         - "--save_steps"
-        - "100"
+        - "20"
+        - "--push_to_hub"
+        - "--hf_token"
+        - "$(HF_TOKEN)"
         resources:
           limits:
             nvidia.com/gpu: "8"
-            memory: "1000Gi"
+            memory: "1200Gi"
             ephemeral-storage: "350Gi"
           requests:
             nvidia.com/gpu: "8"
-            memory: "1000Gi"
+            memory: "1200Gi"
             ephemeral-storage: "350Gi"
         env:
         - name: HF_TOKEN
