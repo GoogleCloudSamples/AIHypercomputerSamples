@@ -37,8 +37,6 @@ spec:
         - "--save_steps"
         - "20"
         - "--push_to_hub"
-        - "--hf_token"
-        - "$(HF_TOKEN)"
         resources:
           limits:
             nvidia.com/gpu: "8"
