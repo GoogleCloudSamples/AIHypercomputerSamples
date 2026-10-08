@@ -63,8 +63,7 @@ spec:
                   --learning_rate 1e-5 \
                   --save_strategy steps \
                   --save_steps 15 \
-                  --push_to_hub \
-                  --hf_token $(HF_TOKEN)
+                  --push_to_hub
               resources:
                 limits:
                   nvidia.com/gpu: "8"
