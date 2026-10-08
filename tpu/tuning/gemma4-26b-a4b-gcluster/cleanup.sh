@@ -95,6 +95,19 @@ if gcloud compute networks describe "${CLUSTER_NAME}-net-0" --project="${PROJECT
   gcloud compute networks delete "${CLUSTER_NAME}-net-0" --project="${PROJECT}" --quiet 2>/dev/null || true
 fi
 
+echo "[$(date)] ==================== Cleaning up dangling Service Accounts... ===================="
+WL_SA="${CLUSTER_NAME}-gke-wl-sa@${PROJECT}.iam.gserviceaccount.com"
+if gcloud iam service-accounts describe "${WL_SA}" --project="${PROJECT}" &>/dev/null; then
+  echo "Deleting dangling workload service account ${WL_SA}..."
+  gcloud iam service-accounts delete "${WL_SA}" --project="${PROJECT}" --quiet || true
+fi
+
+NP_SA="${CLUSTER_NAME}-gke-np-sa@${PROJECT}.iam.gserviceaccount.com"
+if gcloud iam service-accounts describe "${NP_SA}" --project="${PROJECT}" &>/dev/null; then
+  echo "Deleting dangling node pool service account ${NP_SA}..."
+  gcloud iam service-accounts delete "${NP_SA}" --project="${PROJECT}" --quiet || true
+fi
+
 echo "[$(date)] ==================== Deleting storage and artifacts... ===================="
 if [ -n "${GCS_BUCKET:-}" ] && [ "${GCS_BUCKET}" != "YOUR_BUCKET_NAME" ] && gcloud storage buckets describe "gs://${GCS_BUCKET}" &>/dev/null; then
   echo "Deleting Cloud Storage bucket gs://${GCS_BUCKET}..."
