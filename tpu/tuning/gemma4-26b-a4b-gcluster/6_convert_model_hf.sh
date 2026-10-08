@@ -20,9 +20,6 @@ echo "[$(date)] ==================== Submitting Hugging Face Conversion Workload
 # [START hypercomputer_tpu_tune_gemma4_26b_rl_convert_model_hf]
 ./gcluster job submit \
   --name="gemma4-mt-to-hf" \
-  --cluster="${CLUSTER_NAME}" \
-  --project="${PROJECT}" \
-  --location="${REGION}" \
   --num-slices=1 \
   --image="${CLOUD_IMAGE_NAME}" \
   --compute-type="${COMPUTE_TYPE}" \

@@ -19,7 +19,6 @@ echo "[$(date)] ==================== Creating Cluster... ===================="
 gcloud container clusters create-auto $CLUSTER_NAME \
     --project=$PROJECT_ID \
     --region=$REGION \
-    --release-channel=rapid \
     --network=$NETWORK \
     --subnetwork=$SUBNETWORK
 # [END hypercomputer_gpu_infer_deepseek31_cluster_create_auto]

@@ -24,9 +24,6 @@ echo "[$(date)] ==================== Submitting Model Conversion Workload... ===
 # [START hypercomputer_tpu_tune_qwen3_30b_rl_convert_model]
 ./gcluster job submit \
   --name qwen-hf-to-mt \
-  --cluster "${CLUSTER_NAME}" \
-  --project "${PROJECT}" \
-  --location "${REGION}" \
   --num-slices 1 \
   --image "${CLOUD_IMAGE_NAME}" \
   --compute-type "${COMPUTE_TYPE}" \

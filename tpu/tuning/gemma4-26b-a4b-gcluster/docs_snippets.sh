@@ -51,24 +51,15 @@ sed -i '/system_node_pool_machine_type/a \      system_node_pool_zones: [$(vars.
 
 # [START hypercomputer_tpu_tune_gemma4_26b_rl_convert_model_logs]
 # Use the list command to check status
-./gcluster job list \
-    --cluster "${CLUSTER_NAME}" \
-    --project "${PROJECT}" \
-    --location "${REGION}"
+./gcluster job list
 
 # Check progress of the job (--main-only targets the coordinator pod (Job Index 0, Pod Index 0) to avoid duplicate logs from other workers)
-./gcluster job logs gemma4-hf-to-mt --main-only -f \
-    --cluster "${CLUSTER_NAME}" \
-    --project "${PROJECT}" \
-    --location "${REGION}"
+./gcluster job logs gemma4-hf-to-mt --main-only -f
 # [END hypercomputer_tpu_tune_gemma4_26b_rl_convert_model_logs]
 
 # [START hypercomputer_tpu_tune_gemma4_26b_rl_train_logs_v2]
 # Use the list command to check status
-./gcluster job list \
-    --cluster "${CLUSTER_NAME}" \
-    --project "${PROJECT}" \
-    --location "${REGION}"
+./gcluster job list
 
 # Ensure kubectl is configured
 gcloud container clusters get-credentials "${CLUSTER_NAME}" \
@@ -83,16 +74,10 @@ kubectl logs -f \
 
 # [START hypercomputer_tpu_tune_gemma4_26b_rl_convert_hf_logs]
 # Use the list command to check status
-./gcluster job list \
-    --cluster "${CLUSTER_NAME}" \
-    --project "${PROJECT}" \
-    --location "${REGION}"
+./gcluster job list 
 
 # Check progress of the job (--main-only targets the coordinator pod (Job Index 0, Pod Index 0) to avoid duplicate logs from other workers)
-./gcluster job logs gemma4-mt-to-hf --main-only -f \
-    --cluster "${CLUSTER_NAME}" \
-    --project "${PROJECT}" \
-    --location "${REGION}"
+./gcluster job logs gemma4-mt-to-hf --main-only -f
 
 # The trained model is now available in gs://${GCS_BUCKET}/${MODEL_NAME}/hf-trained/
 # [END hypercomputer_tpu_tune_gemma4_26b_rl_convert_hf_logs]

@@ -16,10 +16,7 @@
 
 set -euo pipefail
 
-# Determine the directory where the script is located
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-cd "${SCRIPT_DIR}"
-
+# [START hypercomputer_gpu_train_ray_verl_std_create_env]
 if [ ! -d "env" ]; then
   echo "Creating local virtual environment for Ray client..."
   python3 -m venv env
@@ -29,6 +26,7 @@ fi
 source env/bin/activate
 pip3 install --upgrade pip
 pip3 install ray[default]
+# [END hypercomputer_gpu_train_ray_verl_std_create_env]
 
 # Prepare runtime-env-local.yaml from our local runtime-env.yaml
 cp runtime-env.yaml ./runtime-env-local.yaml
@@ -42,8 +40,11 @@ fi
 # 2. Port forwarding setup
 # Standard RayCluster name is b200-ray-cluster (from ray-cluster-standard.yaml)
 # We can also get it dynamically
+# [START hypercomputer_gpu_train_ray_verl_std_get_svc]
 SVC_NAME="$(kubectl get svc -l "ray.io/node-type=head" -o jsonpath='{..metadata.name}')"
 echo "Ray head service name: ${SVC_NAME}"
+# [END hypercomputer_gpu_train_ray_verl_std_get_svc]
+
 if [ -z "${SVC_NAME}" ]; then
     echo "No service found for label ray.io/node-type=head"
     kubectl get svc -n "${NAMESPACE}"
@@ -57,9 +58,11 @@ until kubectl get svc "${SVC_NAME}" -n "${NAMESPACE}" &> /dev/null; do
 done
 
 # Start port forwarding in background
+# [START hypercomputer_gpu_train_ray_verl_std_ray_port_fwd]
 echo "Starting port-forwarding to ${SVC_NAME} on port 8265..."
 kubectl port-forward svc/"${SVC_NAME}" 8265:8265 -n "${NAMESPACE}" &
 PF_PID=$!
+# [END hypercomputer_gpu_train_ray_verl_std_ray_port_fwd]
 
 # Ensure we kill port forwarding on exit
 cleanup() {

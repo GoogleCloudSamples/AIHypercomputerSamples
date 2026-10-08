@@ -16,6 +16,10 @@
 
 set -euo pipefail
 
+if [[ "${CONTROL_PLANE_REGION:-}" == "europe-north1" ]]; then
+  sed -i "s/machine-family: c3/machine-family: c2/g" data-prep-job.yaml
+fi
+
 # Apply Data Prep Job
 echo "Applying Data Prep Job..."
 # [START hypercomputer_gpu_train_ray_verl_auto_run_data_prep]

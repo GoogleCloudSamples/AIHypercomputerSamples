@@ -19,9 +19,6 @@ set -euo pipefail
 echo "[$(date)] ==================== Submitting Training Workload... ===================="
 # [START hypercomputer_tpu_sft_gcluster_train]
 ./gcluster job submit --name sft \
-    --cluster "${CLUSTER_NAME}" \
-    --project "${PROJECT}" \
-    --location "${REGION}" \
     --compute-type "${TPU_TYPE}" \
     --num-slices 1 \
     --image "${CLOUD_IMAGE_NAME}" \
