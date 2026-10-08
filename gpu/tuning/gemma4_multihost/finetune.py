@@ -223,7 +223,7 @@ def main():
         fp16=torch_dtype_obj == torch.float16,
         bf16=torch_dtype_obj == torch.bfloat16,
         max_grad_norm=0.3,
-        warmup_ratio=0.03,
+        warmup_steps=0.03,
         lr_scheduler_type="constant",
         push_to_hub=args.push_to_hub,
         hub_private_repo=args.hub_private_repo,
