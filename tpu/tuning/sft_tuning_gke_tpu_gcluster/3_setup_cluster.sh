@@ -37,7 +37,7 @@ BUILD_SA="${PROJECT_NUMBER}-compute@developer.gserviceaccount.com"
 for role in roles/storage.objectViewer roles/logging.logWriter roles/artifactregistry.writer; do
   gcloud projects add-iam-policy-binding "${PROJECT}" \
     --member="serviceAccount:${BUILD_SA}" \
-    --role="${role}" --quiet
+    --role="${role}" --quiet > /dev/null
 done
 
 echo "[$(date)] ==================== Deploying cluster with gcluster... ===================="
