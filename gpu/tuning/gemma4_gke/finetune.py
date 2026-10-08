@@ -22,10 +22,12 @@ def get_args():
         "--hf_token", type=str, default=None,
         help="Hugging Face token for private models")
     parser.add_argument(
-        "--trust_remote", type=bool, default="False",
+        "--trust_remote", type=lambda x: str(x).lower() == "true",
+        default=False,
         help="Trust remote code when loading tokenizer")
     parser.add_argument(
-        "--use_fast", type=bool, default="True",
+        "--use_fast", type=lambda x: str(x).lower() == "true",
+        default=True,
         help="Determines if a fast Rust-based tokenizer should be used")
     parser.add_argument(
         "--dataset_name", type=str,
