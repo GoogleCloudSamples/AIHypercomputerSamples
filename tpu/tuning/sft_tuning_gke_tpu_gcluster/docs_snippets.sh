@@ -18,6 +18,19 @@
 # containing placeholders like <pod suffix> that shouldn't be executed in CI.
 
 
+# [START hypercomputer_tpu_sft_gcluster_iam_compute_sa]
+gcloud services enable compute.googleapis.com --project="${PROJECT}"
+
+PROJECT_NUMBER=$(gcloud projects describe "${PROJECT}" --format="value(projectNumber)")
+BUILD_SA="${PROJECT_NUMBER}-compute@developer.gserviceaccount.com"
+
+for role in roles/storage.objectViewer roles/logging.logWriter roles/artifactregistry.writer; do
+  gcloud projects add-iam-policy-binding "${PROJECT}" \
+    --member="serviceAccount:${BUILD_SA}" \
+    --role="${role}" --quiet > /dev/null
+done
+# [END hypercomputer_tpu_sft_gcluster_iam_compute_sa]
+
 # [START hypercomputer_tpu_sft_gcluster_copy_blueprint]
 mkdir -p tmp
 cp examples/gke-tpu-v6e/gke-tpu-v6e-advanced.yaml tmp/
