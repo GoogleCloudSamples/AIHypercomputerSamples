@@ -27,7 +27,7 @@ BUILD_SA="${PROJECT_NUMBER}-compute@developer.gserviceaccount.com"
 for role in roles/storage.objectViewer roles/logging.logWriter roles/artifactregistry.writer; do
   gcloud projects add-iam-policy-binding "${PROJECT}" \
     --member="serviceAccount:${BUILD_SA}" \
-    --role="${role}"
+    --role="${role}" --quiet > /dev/null
 done
 # [END hypercomputer_tpu_sft_gcluster_iam_compute_sa]
 
