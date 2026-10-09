@@ -50,7 +50,7 @@ echo "[$(date)] ==================== Submitting Training Workload... ===========
     data_template_path=maxtext/examples/chat_templates/openmathinstruct2_rl.json \
     num_batches=50 \
     batch_size=4 \
-    train_micro_batch_size=4 \
+    train_micro_batch_size=2 \
     max_target_length=640 \
     max_prefill_predict_length=256 \
     mu_dtype=bfloat16 \
