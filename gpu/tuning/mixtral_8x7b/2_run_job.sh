@@ -79,6 +79,25 @@ else
   echo "Firewall rule '${FIREWALL_RULE_NAME}' already exists for this network. Skipping creation."
 fi
 
+# Wait for Slurm controller and login node startup scripts to finish
+echo "[$(date)] Waiting for Slurm to be ready on ${LOGIN_NODE}..."
+for i in {1..30}; do
+  if gcloud compute ssh "${LOGIN_NODE}" \
+    --project="${PROJECT_ID}" \
+    --zone="${ZONE}" \
+    --tunnel-through-iap \
+    --command="test -f /etc/slurm/slurm.conf && sinfo >/dev/null 2>&1" 2>/dev/null; then
+    echo "Slurm is ready!"
+    break
+  fi
+  if [ "${i}" -eq 30 ]; then
+    echo "Error: Timed out waiting for Slurm to become ready on ${LOGIN_NODE}." >&2
+    exit 1
+  fi
+  echo "Slurm not ready yet. Waiting 15 seconds... (${i}/30)"
+  sleep 15
+done
+
 # 2. Transfer the submission script to the Login Node
 echo "[$(date)] Uploading workload scripts to login node..."
 # [START hypercomputer_gpu_tune_mixtral_slurm_transfer_scripts]
