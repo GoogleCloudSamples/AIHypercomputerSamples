@@ -13,8 +13,8 @@ sed -i 's/# per_unit_storage_throughput: 500/per_unit_storage_throughput: 500/' 
 # 3. Uncomment lustre_size_gib: 36000
 sed -i 's/# lustre_size_gib: 36000/lustre_size_gib: 36000/' "$YAML_PATH"
 
-# 4. Uncomment lustre_instance_id: lustre-instance
-sed -i 's/# lustre_instance_id: lustre-instance/lustre_instance_id: lustre-instance/' "$YAML_PATH"
+# 4. Uncomment lustre_instance_id: lustre-instance and add lustre_zone
+sed -i 's/# lustre_instance_id: lustre-instance/lustre_instance_id: lustre-instance\n  lustre_zone:/' "$YAML_PATH"
 
 # 5. Comment out unused filestore_ip_range in vars
 sed -i 's/^  filestore_ip_range:/  # filestore_ip_range:/' "$YAML_PATH"
@@ -34,6 +34,19 @@ def uncomment(m):
     return '\n'.join([re.sub(r'^(\s*)#\s?', r'\1', line) for line in m.group(0).splitlines()])
 
 text = re.sub(pattern, uncomment, text)
+
+# Set zone: \$(vars.lustre_zone) in the managed-lustre module settings
+text = re.sub(
+    r'(source: modules/file-system/managed-lustre[\s\S]*?settings:\n)',
+    r'\1      zone: \$(vars.lustre_zone)\n',
+    text,
+)
+
+# Workaround: set network_name to default-nemo-rl for a4high-slurm-net-0 to use existing Managed Lustre quota in dx-supercomputer-testing project
+text = text.replace(
+    'network_name: \$(vars.base_network_name)-net-0',
+    'network_name: default-nemo-rl',
+)
 
 with open('$YAML_PATH', 'w') as f:
     f.write(text)

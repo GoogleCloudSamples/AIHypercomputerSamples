@@ -34,6 +34,29 @@ gcluster --version
 echo "[$(date)] Destroying Slurm cluster ${DEPLOYMENT_NAME}..."
 gcluster destroy "${BASEDIR}/${DEPLOYMENT_NAME}" --auto-approve --robust || true
 
+# Cleanup for a workaround with "default-nemo-rl" VPC network (lines 38-47)
+echo "[$(date)] Ensuring default-nemo-rl network and any remaining firewall rules are removed..."
+FW_RULES=$(gcloud compute firewall-rules list \
+  --project="${PROJECT_ID}" \
+  --filter="network~default-nemo-rl" \
+  --format="value(name)" \
+  --quiet 2>/dev/null || true)
+if [ -n "${FW_RULES}" ]; then
+  gcloud compute firewall-rules delete ${FW_RULES} --project="${PROJECT_ID}" --quiet || true
+fi
+gcloud compute networks delete default-nemo-rl --project="${PROJECT_ID}" --quiet 2>/dev/null || true
+
+# Delete Packer-built custom compute image (not removed by gcluster destroy)
+echo "[$(date)] Deleting custom compute images for ${DEPLOYMENT_NAME} if present..."
+IMAGES=$(gcloud compute images list \
+  --project="${PROJECT_ID}" \
+  --filter="family=${DEPLOYMENT_NAME}-u24" \
+  --format="value(name)" \
+  --quiet 2>/dev/null || true)
+if [ -n "${IMAGES}" ]; then
+  gcloud compute images delete ${IMAGES} --project="${PROJECT_ID}" --quiet || true
+fi
+
 # 2. Delete GCS bucket
 echo "[$(date)] Deleting GCS bucket gs://${BUCKET_NAME}..."
 # [START hypercomputer_gpu_tune_mixtral_slurm_destroy_gcs]
