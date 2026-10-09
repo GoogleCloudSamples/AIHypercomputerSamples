@@ -42,6 +42,12 @@ text = re.sub(
     text,
 )
 
+# Workaround: set network_name to default-nemo-rl for a4high-slurm-net-0 to use existing Managed Lustre quota in dx-supercomputer-testing project
+text = text.replace(
+    'network_name: \$(vars.base_network_name)-net-0',
+    'network_name: default-nemo-rl',
+)
+
 with open('$YAML_PATH', 'w') as f:
     f.write(text)
 "
