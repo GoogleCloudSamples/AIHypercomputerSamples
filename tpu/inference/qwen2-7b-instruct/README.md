@@ -25,7 +25,7 @@ For the complete step-by-step tutorial of how to use this sample, see the offici
 Before you run this sample, ensure you have the following:
 
 * A Google Cloud project with billing enabled. Running this sample provisions billable Google Cloud resources including:
-  - Compute Engine (Cloud TPU v6e-8 via TPU VM)
+  - Compute Engine (Cloud TPU v6e-8 using TPU VM)
   - Cloud Storage
 
   You are billed for these resources for the time that they are running. To avoid incurring charges, delete the resources when you have finished running the sample.

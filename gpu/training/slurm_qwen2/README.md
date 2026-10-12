@@ -6,7 +6,7 @@ Note: This sample doesn’t demonstrate how to prepare a dataset or serve the mo
 
 ## Architecture and Workload
 
-This sample provisions a Slurm cluster using the Google Cloud Cluster Toolkit. It uses A4 High GPU (a4-highgpu-8g) VMs for the compute nodes, a Google Cloud Storage bucket for storing datasets and model checkpoints, and Filestore for high-performance shared storage across the cluster. The workload is distributed using Accelerate and PyTorch FSDP via a Slurm `sbatch` job.
+This sample provisions a Slurm cluster using the Google Cloud Cluster Toolkit. It uses A4 High GPU (a4-highgpu-8g) VMs for the compute nodes, a Google Cloud Storage bucket for storing datasets and model checkpoints, and Filestore for high-performance shared storage across the cluster. The workload is distributed with Accelerate and PyTorch FSDP using a Slurm `sbatch` job.
 
 The sample includes the following scripts:
 

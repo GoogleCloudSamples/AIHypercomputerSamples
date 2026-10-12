@@ -6,7 +6,7 @@ Note: This sample doesn’t demonstrate how to prepare a dataset or serve the mo
 
 ## Architecture and Workload
 
-This sample provisions a GKE cluster with GPU node pools to run a distributed fine-tuning workload. The workload uses PyTorch Fully Sharded Data Parallel (FSDP) and Accelerate, orchestrated as a Kubernetes Job via JobSet. It utilizes Google Cloud Storage for storing model artifacts and checkpoints.
+This sample provisions a GKE cluster with GPU node pools to run a distributed fine-tuning workload. The workload uses PyTorch Fully Sharded Data Parallel (FSDP) and Accelerate, orchestrated as a Kubernetes Job using JobSet. It utilizes Google Cloud Storage for storing model artifacts and checkpoints.
 
 The sample includes the following scripts:
 

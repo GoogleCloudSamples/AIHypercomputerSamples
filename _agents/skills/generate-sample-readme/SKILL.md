@@ -13,7 +13,7 @@ Use your file tools to locate and read the contents of `sample_template/README.m
 
 ## Step 2: Analyze the Sample Directory
 - Read the `.sh` files in the directory (especially `0_env.sh` and any setup scripts).
-- **Determine Infrastructure**: Identify if the sample uses "GKE Autopilot", "GKE cluster with TPUs", or a cluster provisioned via "Google Cloud Cluster Toolkit" (e.g., uses the `gcluster` command).
+- **Determine Infrastructure**: Identify if the sample uses "GKE Autopilot", "GKE cluster with TPUs", or a cluster provisioned using "Google Cloud Cluster Toolkit" (e.g., uses the `gcluster` command).
 - **Identify the Model**: Find the model name being used.
 - **Determine Billable Resources**: Resources usually include Google Kubernetes Engine (GKE), Compute Engine (GPUs/TPUs), and Cloud Storage.
 - **List the Steps**: Create a sequential list of all relevant `.sh` and `.yaml` scripts and a short description of what they do.

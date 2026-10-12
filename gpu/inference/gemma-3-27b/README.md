@@ -2,7 +2,7 @@
 
 This sample provides a set of scripts to serve the Gemma 3 27B model on Google Kubernetes Engine (GKE) for inference. It is intended for machine learning engineers and developers looking to deploy large language models on Google Cloud.
 
-The workload deploys a vLLM inference server on a GKE cluster equipped with NVIDIA GPUs. The deployment uses Kubernetes configurations to provision the model and serve it via an exposed service.
+The workload deploys a vLLM inference server on a GKE cluster equipped with NVIDIA GPUs. The deployment uses Kubernetes configurations to provision the model and serve it using an exposed service.
 
 The sample includes the following files:
 
