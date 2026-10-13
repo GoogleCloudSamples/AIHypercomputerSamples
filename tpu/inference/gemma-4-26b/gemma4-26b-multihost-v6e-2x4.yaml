@@ -6,6 +6,7 @@ metadata:
 spec:
   replicas: 1
   leaderWorkerTemplate:
+    # One pod per TPU host: a 2x4 v6e slice has 2 ct6e-standard-4t hosts.
     size: 2
     restartPolicy: RecreateGroupOnPodRestart
     leaderTemplate:
@@ -13,122 +14,180 @@ spec:
         labels:
           role: leader
       spec:
-        containers:
-        - name: vllm-leader
-          image: <YOUR_CUSTOM_VTT_IMAGE>
-          command:
-            - sh
-            - -c
-            - |
-              set -e
-              ray start --head --port=6379
-              echo "Waiting for Ray worker to connect..."
-              while [ "$(ray status | grep ' node_' | wc -l)" -lt 2 ]; do
-                sleep 5
-              done
-              vllm serve google/gemma-4-26B-A4B-it \
-                --tensor-parallel-size 8 \
-                --host 0.0.0.0 \
-                --port 8000 \
-                --max-model-len 8192 \
-                --max-num-seqs 16 \
-                --gpu-memory-utilization 0.70 \
-                --enforce-eager \
-                --trust-remote-code
-          resources:
-            requests:
-              cpu: "20"
-              memory: "100Gi"
-              ephemeral-storage: "100Gi"
-              google.com/tpu: 4
-            limits:
-              cpu: "20"
-              memory: "100Gi"
-              ephemeral-storage: "100Gi"
-              google.com/tpu: 4
-          ports:
-          - containerPort: 8000
-          - containerPort: 6379
+        # Download the model into the pod-local cache before vLLM starts, so the
+        # serving ranks can run offline and never hit Hugging Face during init.
+        initContainers:
+        - name: prefetch-model
+          image: $VLLM_IMAGE
+          command: ["hf", "download", "google/gemma-4-26B-A4B-it"]
           env:
-          - name: XLA_PYTHON_CLIENT_MEM_FRACTION
-            value: "0.75"
-          - name: TPU_MULTIHOST_BACKEND
-            value: "ray"
           - name: HF_TOKEN
             valueFrom:
               secretKeyRef:
                 name: hf-secret
                 key: hf_api_token
+          - name: HF_HOME
+            value: "/data/huggingface_cache"
+          volumeMounts:
+          - name: model-cache
+            mountPath: /data
+        containers:
+        - name: vllm-leader
+          image: $VLLM_IMAGE
+          command:
+            - sh
+            - -c
+            - |
+              set -e
+              mkdir -p "${TMPDIR}"
+              ray start --head --port=6379
+              echo "Waiting for all 8 TPU chips to join the Ray cluster..."
+              until ray status 2>/dev/null | grep -E -q "8(\.0)? TPU"; do
+                sleep 5
+              done
+              vllm serve google/gemma-4-26B-A4B-it \
+                --tensor-parallel-size 8 \
+                --distributed-executor-backend ray \
+                --host 0.0.0.0 \
+                --port 8000 \
+                --max-model-len 5248 \
+                --max-num-seqs 128 \
+                --max-num-batched-tokens 4096 \
+                --kv-cache-dtype fp8 \
+                --gpu-memory-utilization 0.85 \
+                --disable-chunked-mm-input
+          resources:
+            requests:
+              cpu: "128"
+              memory: "384Gi"
+              google.com/tpu: 4
+            limits:
+              cpu: "170"
+              memory: "650Gi"
+              google.com/tpu: 4
+          ports:
+          - containerPort: 8000
+          - containerPort: 6379
+          env:
+          - name: TPU_MULTIHOST_BACKEND
+            value: "ray"
+          - name: VLLM_ENGINE_READY_TIMEOUT_S
+            value: "3600"
+          # Same cache the init container populated; offline mode guarantees no
+          # Hugging Face requests from the serving ranks.
+          - name: HF_HOME
+            value: "/data/huggingface_cache"
+          - name: HF_HUB_OFFLINE
+            value: "1"
+          - name: TMPDIR
+            value: "/data/tmp"
           volumeMounts:
           - mountPath: /dev/shm
             name: dshm
+          - mountPath: /data
+            name: model-cache
+          # Model loading and compilation can take a long time; allow up to 60 minutes.
+          startupProbe:
+            httpGet:
+              path: /health
+              port: 8000
+            periodSeconds: 10
+            failureThreshold: 360
           livenessProbe:
             httpGet:
               path: /health
               port: 8000
-            initialDelaySeconds: 3600
             periodSeconds: 10
           readinessProbe:
             httpGet:
               path: /health
               port: 8000
-            initialDelaySeconds: 3600
             periodSeconds: 5
         nodeSelector:
           topology.kubernetes.io/zone: "$ZONE"
           cloud.google.com/gke-tpu-accelerator: tpu-v6e-slice
           cloud.google.com/gke-tpu-topology: 2x4
           cloud.google.com/reservation-name: $RESERVATION_URL
-          cloud.google.com/reservation-affinity: "specific"
         volumes:
         - name: dshm
           emptyDir:
             medium: Memory
+            sizeLimit: 32Gi
+        - name: model-cache
+          emptyDir:
+            medium: Memory
+            sizeLimit: 350Gi
     workerTemplate:
       spec:
-        containers:
-        - name: vllm-worker
-          image: <YOUR_CUSTOM_VTT_IMAGE>
-          command:
-            - sh
-            - -c
-            - |
-              set -e
-              ray start --address=$LWS_LEADER_ADDRESS:6379 --block
-          resources:
-            requests:
-              cpu: "20"
-              memory: "100Gi"
-              ephemeral-storage: "100Gi"
-              google.com/tpu: 4
-            limits:
-              cpu: "20"
-              memory: "100Gi"
-              ephemeral-storage: "100Gi"
-              google.com/tpu: 4
+        # Each pod has its own cache, so the worker downloads the model too.
+        initContainers:
+        - name: prefetch-model
+          image: $VLLM_IMAGE
+          command: ["hf", "download", "google/gemma-4-26B-A4B-it"]
           env:
-          - name: XLA_PYTHON_CLIENT_MEM_FRACTION
-            value: "0.75"
-          - name: TPU_MULTIHOST_BACKEND
-            value: "ray"
           - name: HF_TOKEN
             valueFrom:
               secretKeyRef:
                 name: hf-secret
                 key: hf_api_token
+          - name: HF_HOME
+            value: "/data/huggingface_cache"
+          volumeMounts:
+          - name: model-cache
+            mountPath: /data
+        containers:
+        - name: vllm-worker
+          image: $VLLM_IMAGE
+          command:
+            - sh
+            - -c
+            - |
+              set -e
+              mkdir -p "${TMPDIR}"
+              echo "Waiting for the Ray head at ${LWS_LEADER_ADDRESS}:6379..."
+              until ray status --address="${LWS_LEADER_ADDRESS}:6379" 2>/dev/null | grep -q "node_"; do
+                sleep 3
+              done
+              ray start --address="${LWS_LEADER_ADDRESS}:6379" --block
+          resources:
+            requests:
+              cpu: "128"
+              memory: "384Gi"
+              google.com/tpu: 4
+            limits:
+              cpu: "170"
+              memory: "650Gi"
+              google.com/tpu: 4
+          env:
+          - name: TPU_MULTIHOST_BACKEND
+            value: "ray"
+          - name: VLLM_ENGINE_READY_TIMEOUT_S
+            value: "3600"
+          - name: HF_HOME
+            value: "/data/huggingface_cache"
+          - name: HF_HUB_OFFLINE
+            value: "1"
+          - name: TMPDIR
+            value: "/data/tmp"
           volumeMounts:
           - mountPath: /dev/shm
             name: dshm
+          - mountPath: /data
+            name: model-cache
         nodeSelector:
           topology.kubernetes.io/zone: "$ZONE"
           cloud.google.com/gke-tpu-accelerator: tpu-v6e-slice
           cloud.google.com/gke-tpu-topology: 2x4
           cloud.google.com/reservation-name: $RESERVATION_URL
-          cloud.google.com/reservation-affinity: "specific"
         volumes:
         - name: dshm
           emptyDir:
             medium: Memory
+            sizeLimit: 32Gi
+        - name: model-cache
+          emptyDir:
+            medium: Memory
+            sizeLimit: 350Gi
 ---
 apiVersion: v1
 kind: Service

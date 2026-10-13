@@ -1,3 +1,5 @@
+#!/bin/bash
+#
 #  Copyright 2026 Google LLC
 #
 #  Licensed under the Apache License, Version 2.0 (the "License");
@@ -23,26 +25,69 @@ cleanup() {
 trap cleanup EXIT
 
 echo "Waiting for port forwarding to be ready..."
-until curl -s http://localhost:8000/health >/dev/null; do
+LIMIT=60
+count=0
+until curl -sf http://localhost:8000/health >/dev/null; do
   if ! kill -0 "$PORT_FORWARD_PID" 2>/dev/null; then
     echo "Error: Port forwarding failed to start or died unexpectedly." >&2
     exit 1
   fi
+  if [ "${count}" -ge "${LIMIT}" ]; then
+    echo "Error: timeout waiting for the model server health endpoint." >&2
+    exit 1
+  fi
   sleep 1
+  count=$((count + 1))
 done
 
-echo "Sending request to the model..."
-# [START hypercomputer_tpu_infer_gemma4_interact]
-curl http://127.0.0.1:8000/v1/chat/completions \
--X POST \
--H "Content-Type: application/json" \
--d '{
-  "model": "google/gemma-4-26B-A4B",
-  "messages": [
-    {
-      "role": "user",
-      "content": "Why is the sky blue?"
-    }
-  ]
-}' | jq .
-# [END hypercomputer_tpu_infer_gemma4_interact]
+check_completion() {
+  local name="$1"
+  local response="$2"
+  echo "${response}" | jq .
+  if echo "${response}" | jq -e '.choices[0].message.content | length > 0' >/dev/null; then
+    echo "${name} request succeeded: model returned a non-empty completion."
+  else
+    echo "Validation failed: ${name} response did not contain a completion." >&2
+    exit 1
+  fi
+}
+
+echo "Sending text request to the model..."
+TEXT_RESPONSE=$(curl -sf http://localhost:8000/v1/chat/completions \
+    -H "Content-Type: application/json" \
+    -d '{
+        "model": "google/gemma-4-26B-A4B-it",
+        "messages": [{"role": "user", "content": "Explain Mixture of Experts in 2 sentences."}],
+        "max_tokens": 128
+    }')
+check_completion "Text" "${TEXT_RESPONSE}"
+
+echo "Sending image request to the model..."
+IMAGE_RESPONSE=$(curl -sf http://localhost:8000/v1/chat/completions \
+    -H "Content-Type: application/json" \
+    -d '{
+        "model": "google/gemma-4-26B-A4B-it",
+        "messages": [
+            {
+                "role": "user",
+                "content": [
+                    {
+                        "type": "image_url",
+                        "image_url": {
+                            "url": "https://images.unsplash.com/photo-1501594907352-04cda38ebc29?auto=format&fit=crop&w=800&q=80"
+                        }
+                    },
+                    {
+                        "type": "text",
+                        "text": "Describe the image above"
+                    }
+                ]
+            }
+        ],
+        "max_tokens": 300,
+        "temperature": 0.0,
+        "top_p": 1.0
+    }')
+check_completion "Image" "${IMAGE_RESPONSE}"
+
+echo "Validation succeeded: text and image requests returned non-empty completions."

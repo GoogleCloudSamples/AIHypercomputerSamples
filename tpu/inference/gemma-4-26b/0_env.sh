@@ -1,3 +1,5 @@
+#!/bin/bash
+#
 #  Copyright 2026 Google LLC
 #
 #  Licensed under the Apache License, Version 2.0 (the "License");
@@ -17,11 +19,10 @@ export PROJECT_ID="YOUR_PROJECT_ID"
 export RESERVATION_URL="YOUR_RESERVATION_NAME"
 export REGION="YOUR_REGION"
 export CLUSTER_NAME="YOUR_CLUSTER_NAME"
-export HUGGING_FACE_TOKEN="YOUR_HF_TOKEN"
-export NETWORK="YOUR_NETWORK_NAME"
-export SUBNETWORK="YOUR_SUBNETWORK_NAME"
+export HF_TOKEN="YOUR_HF_TOKEN"
 export ZONE="YOUR_ZONE"
 export NODE_POOL_NAME="tpuv6e-pool"
+export VLLM_IMAGE="YOUR_VLLM_TPU_IMAGE"
 
 gcloud config set project "${PROJECT_ID}"
 gcloud config set billing/quota_project "${PROJECT_ID}"

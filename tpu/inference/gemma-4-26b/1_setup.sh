@@ -1,3 +1,5 @@
+#!/bin/bash
+#
 #  Copyright 2026 Google LLC
 #
 #  Licensed under the Apache License, Version 2.0 (the "License");
@@ -15,49 +17,52 @@
 set -euo pipefail
 
 # [START hypercomputer_tpu_infer_gemma4_cluster_create]
-gcloud container clusters create $CLUSTER_NAME \
-    --project=$PROJECT_ID \
-    --location=$REGION \
+gcloud container clusters create "${CLUSTER_NAME}" \
+    --project="${PROJECT_ID}" \
+    --location="${REGION}" \
     --machine-type=e2-standard-4 \
-    --network=$NETWORK \
-    --subnetwork=$SUBNETWORK
 
-gcloud container node-pools create $NODE_POOL_NAME \
-    --project=$PROJECT_ID \
-    --location=${REGION} \
-    --cluster=${CLUSTER_NAME} \
-    --node-locations=${ZONE} \
+gcloud container node-pools create "${NODE_POOL_NAME}" \
+    --project="${PROJECT_ID}" \
+    --location="${REGION}" \
+    --cluster="${CLUSTER_NAME}" \
+    --node-locations="${ZONE}" \
     --machine-type=ct6e-standard-4t \
     --tpu-topology=2x4 \
     --num-nodes=2 \
+    --disk-size=500 \
     --reservation-affinity=specific \
-    --reservation=${RESERVATION_URL}
+    --reservation="${RESERVATION_URL}"
 # [END hypercomputer_tpu_infer_gemma4_cluster_create]
 
 echo "Verifying cluster status..."
-STATUS=$(gcloud container clusters describe $CLUSTER_NAME --region $REGION --format="value(status)")
+STATUS=$(gcloud container clusters describe "${CLUSTER_NAME}" \
+    --project="${PROJECT_ID}" \
+    --location="${REGION}" \
+    --format="value(status)")
 
-if [ "$STATUS" = "RUNNING" ]; then
-    echo "Success! Cluster $CLUSTER_NAME is RUNNING and ready for deployment."
+if [ "${STATUS}" = "RUNNING" ]; then
+    echo "Success! Cluster ${CLUSTER_NAME} is RUNNING and ready for deployment."
 else
-    echo "Warning: Cluster is in '$STATUS' state."
+    echo "Error: Cluster is in '${STATUS}' state." >&2
     exit 1
 fi
 
 # [START hypercomputer_tpu_infer_gemma4_cluster_get_creds]
-gcloud container clusters get-credentials $CLUSTER_NAME \
-    --location=$REGION
+gcloud container clusters get-credentials "${CLUSTER_NAME}" \
+    --project="${PROJECT_ID}" \
+    --location="${REGION}"
 # [END hypercomputer_tpu_infer_gemma4_cluster_get_creds]
 
 # [START hypercomputer_tpu_infer_gemma4_secret_create]
 kubectl create secret generic hf-secret \
-    --from-literal=hf_api_token=${HUGGING_FACE_TOKEN} \
+    --from-literal=hf_api_token="${HF_TOKEN}" \
     --dry-run=client -o yaml | kubectl apply -f -
 # [END hypercomputer_tpu_infer_gemma4_secret_create]
 
 echo "Installing LeaderWorkerSet controller..."
 # [START hypercomputer_tpu_infer_gemma4_lws_install]
-kubectl apply --server-side -k github.com/kubernetes-sigs/lws/config/default?ref=main
+kubectl apply --server-side -k "github.com/kubernetes-sigs/lws/config/default?ref=main"
 echo "Waiting for LWS controller to be ready..."
 kubectl wait --for=condition=Available --timeout=300s deployment/lws-controller-manager -n lws-system
 # [END hypercomputer_tpu_infer_gemma4_lws_install]
