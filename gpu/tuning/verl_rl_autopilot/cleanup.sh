@@ -51,8 +51,11 @@ kubectl delete -f "computeclass-dranet.yaml" --ignore-not-found=true 2>/dev/null
 echo "Deleting GCS Bucket gs://${GS_BUCKET}..."
 if [ -n "${GS_BUCKET:-}" ] && gcloud storage buckets describe "gs://${GS_BUCKET}" >/dev/null 2>&1; then
   # [START hypercomputer_gpu_train_ray_verl_auto_delete_bucket]
-  gcloud storage rm -r "gs://${GS_BUCKET}" --project="${PROJECT_ID:-$(gcloud config get project)}" --quiet || \
-    gcloud storage rm -r "gs://${GS_BUCKET}" --project="${PROJECT_ID:-$(gcloud config get project)}" --quiet || true
+  gcloud storage rm -r "gs://${GS_BUCKET}" --project="${PROJECT_ID:-$(gcloud config get project)}" --quiet || {
+    echo "First deletion attempt failed. Retrying in 5 seconds..."
+    sleep 5
+    gcloud storage rm -r "gs://${GS_BUCKET}" --project="${PROJECT_ID:-$(gcloud config get project)}" --quiet
+  } || true
   # [END hypercomputer_gpu_train_ray_verl_auto_delete_bucket]
 fi
 

@@ -55,8 +55,11 @@ fi
 echo "Deleting GCS Bucket gs://${GS_BUCKET}..."
 if gcloud storage buckets describe "gs://${GS_BUCKET}" --project="${PROJECT_ID}" >/dev/null 2>&1; then
   # [START hypercomputer_gpu_train_ray_verl_std_delete_bucket]
-  gcloud storage rm -r "gs://${GS_BUCKET}" --project="${PROJECT_ID}" || \
-    gcloud storage rm -r "gs://${GS_BUCKET}" --project="${PROJECT_ID}" || true
+  gcloud storage rm -r "gs://${GS_BUCKET}" --project="${PROJECT_ID}" || {
+    echo "First deletion attempt failed. Retrying in 5 seconds..."
+    sleep 5
+    gcloud storage rm -r "gs://${GS_BUCKET}" --project="${PROJECT_ID}"
+  } || true
   # [END hypercomputer_gpu_train_ray_verl_std_delete_bucket]
 fi
 

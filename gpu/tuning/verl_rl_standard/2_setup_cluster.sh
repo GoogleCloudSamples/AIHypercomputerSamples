@@ -57,6 +57,10 @@ if ! gcloud container node-pools describe gpu-pool --cluster=${CLUSTER_NAME} --l
   echo "Creating GPU node pool gpu-pool..."
 
   # [START hypercomputer_gpu_train_ray_verl_std_create_nodepool]
+  RESERVATION_ARGS=("--reservation-affinity=none")
+  if [ -n "${RESERVATION:-}" ]; then
+    RESERVATION_ARGS=("--reservation-affinity=specific" "--reservation=${RESERVATION}")
+  fi
   gcloud container node-pools create gpu-pool \
       --cluster="${CLUSTER_NAME}" \
       --location="${CONTROL_PLANE_REGION}" \
@@ -64,8 +68,7 @@ if ! gcloud container node-pools describe gpu-pool --cluster=${CLUSTER_NAME} --l
       --machine-type="${MACHINE_TYPE}" \
       --accelerator="type=${GPU_TYPE},count=8,gpu-driver-version=DEFAULT" \
       --num-nodes=2 \
-      --reservation-affinity=specific \
-      --reservation="${RESERVATION}" \
+      "${RESERVATION_ARGS[@]}" \
       --additional-node-network="network=${GVNIC_NETWORK_PREFIX}-net,subnetwork=${GVNIC_NETWORK_PREFIX}-sub" \
       --additional-node-network="network=${RDMA_NETWORK_PREFIX}-net,subnetwork=${RDMA_NETWORK_PREFIX}-sub-0" \
       --additional-node-network="network=${RDMA_NETWORK_PREFIX}-net,subnetwork=${RDMA_NETWORK_PREFIX}-sub-1" \
