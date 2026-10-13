@@ -86,17 +86,6 @@ spec:
               {"interfaceName":"eth9","network":"rdma-7"}
             ]
       spec:
-        initContainers:
-        - name: verl-setup
-          image: verlai/verl:vllm011.latest
-          command: ["/bin/bash", "-c"]
-          args:
-            - |
-              echo "Performing local editable install..."
-              cd /data/verl && pip3 install --no-deps -e .
-          volumeMounts:
-          - name: training-bucket-vol
-            mountPath: /data
         serviceAccountName: ${KSA_NAME}
         nodeSelector:
           cloud.google.com/gke-accelerator: ${GPU_TYPE}

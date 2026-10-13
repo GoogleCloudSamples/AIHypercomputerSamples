@@ -54,12 +54,13 @@ fi
 echo "Starting auto-restarting port-forwarding to ${SVC_NAME} on port 8265..."
 run_port_forward() {
     while true; do
-        kubectl port-forward svc/"${SVC_NAME}" 8265:8265 -n "${NAMESPACE}" >/dev/null 2>&1 || true
+        kubectl port-forward --address 0.0.0.0 svc/"${SVC_NAME}" 8265:8265 -n "${NAMESPACE}" >/dev/null 2>&1 || true
         sleep 1
     done
 }
 run_port_forward &
 PF_LOOP_PID=$!
+export RAY_ADDRESS="http://localhost:8265"
 # [END hypercomputer_gpu_train_ray_verl_auto_ray_port_fwd]
 
 # Ensure we kill port forwarding on exit without overwriting exit status

@@ -20,6 +20,8 @@ echo "Deploying RayCluster..."
 
 # [START hypercomputer_gpu_train_ray_verl_std_deploy_ray]
 envsubst < "ray-cluster-standard.yaml" | kubectl apply -f -
+echo "Waiting for Ray head and GPU worker Pods to pull images and become Ready (this takes ~2–5 minutes)..."
+kubectl wait --for=condition=ready pod -l ray.io/cluster=b200-ray-cluster -n ${NAMESPACE} --timeout=1200s
 # [END hypercomputer_gpu_train_ray_verl_std_deploy_ray]
 
 echo "Workload deployment initiated."

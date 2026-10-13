@@ -30,13 +30,11 @@ if [ -f "ray-cluster-auto-dranet.yaml" ]; then
   # [END hypercomputer_gpu_train_ray_verl_auto_delete_ray]
 fi
 
-echo "Deleting Data Preparation Job (if exists)..."
-kubectl delete job data-prep-job -n "${NAMESPACE:-default}" --ignore-not-found=true || true
-
 echo "Deleting GCS FUSE Storage..."
 if [ -f "gcsfuse-storage.yaml" ]; then
   # [START hypercomputer_gpu_train_ray_verl_auto_delete_gcsfuse]
-  envsubst < "gcsfuse-storage.yaml" | kubectl delete -f - --ignore-not-found=true || true
+  kubectl delete job data-prep-job -n "${NAMESPACE:-default}" --ignore-not-found=true || true
+  envsubst < "gcsfuse-storage.yaml" | kubectl delete --timeout=30s -f - --ignore-not-found=true || true
   # [END hypercomputer_gpu_train_ray_verl_auto_delete_gcsfuse]
 fi
 
@@ -53,7 +51,8 @@ kubectl delete -f "computeclass-dranet.yaml" --ignore-not-found=true 2>/dev/null
 echo "Deleting GCS Bucket gs://${GS_BUCKET}..."
 if [ -n "${GS_BUCKET:-}" ] && gcloud storage buckets describe "gs://${GS_BUCKET}" >/dev/null 2>&1; then
   # [START hypercomputer_gpu_train_ray_verl_auto_delete_bucket]
-  gcloud storage rm -r "gs://${GS_BUCKET}" --project="${PROJECT_ID:-$(gcloud config get project)}" --quiet || true
+  gcloud storage rm -r "gs://${GS_BUCKET}" --project="${PROJECT_ID:-$(gcloud config get project)}" --quiet || \
+    gcloud storage rm -r "gs://${GS_BUCKET}" --project="${PROJECT_ID:-$(gcloud config get project)}" --quiet || true
   # [END hypercomputer_gpu_train_ray_verl_auto_delete_bucket]
 fi
 
