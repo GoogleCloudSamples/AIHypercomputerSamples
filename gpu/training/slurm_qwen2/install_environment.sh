@@ -35,4 +35,4 @@ echo "--- Installing application requirements ---"
 pip install -r requirements.txt
 
 echo "--- Environment setup complete. You can now submit jobs with sbatch. ---"
-# [START hypercomputer_gpu_train_qwen2_slurm_install_environment]
+# [END hypercomputer_gpu_train_qwen2_slurm_install_environment]

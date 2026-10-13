@@ -18,6 +18,7 @@
 
 # [START hypercomputer_gpu_tune_gemma3_27b_nemo_rl_git_clone]
 git clone https://github.com/GoogleCloudPlatform/kubernetes-engine-samples.git
+git -C kubernetes-engine-samples checkout 87fa0575c977b96f6d3af2cab58c9128f3cf0dc3
 # [END hypercomputer_gpu_tune_gemma3_27b_nemo_rl_git_clone]
 
 # [START hypercomputer_gpu_tune_gemma3_27b_nemo_rl_navigate_working_dir]
@@ -50,34 +51,3 @@ apt update && apt install -y tree
 # [START hypercomputer_gpu_tune_gemma3_27b_nemo_rl_ray_cluster_cleanup]
 helm delete ray-cluster
 # [END hypercomputer_gpu_tune_gemma3_27b_nemo_rl_ray_cluster_cleanup]
-
-# [START hypercomputer_gpu_tune_gemma3_27b_nemo_rl_gke_cluster_cleanup]
-gcloud container clusters delete ${CLUSTER_NAME} \
-    --location=${CONTROL_PLANE_REGION} \
-    --quiet
-# [END hypercomputer_gpu_tune_gemma3_27b_nemo_rl_gke_cluster_cleanup]
-
-# [START hypercomputer_gpu_tune_gemma3_27b_nemo_rl_lustre_cleanup]
-gcloud lustre instances delete ${LUSTRE_NAME} --location=${NODE_ZONE} --quiet
-# [END hypercomputer_gpu_tune_gemma3_27b_nemo_rl_lustre_cleanup]
-
-# [START hypercomputer_gpu_tune_gemma3_27b_nemo_rl_vpc_peering_cleanup]
-gcloud services vpc-peerings delete \
-    --service=servicenetworking.googleapis.com \
-    --network=${NETWORK}
-# [END hypercomputer_gpu_tune_gemma3_27b_nemo_rl_vpc_peering_cleanup]
-
-# [START hypercomputer_gpu_tune_gemma3_27b_nemo_rl_lustre_ip_cleanup]
-gcloud compute addresses delete ${LUSTRE_NAME}-range --global --quiet
-# [END hypercomputer_gpu_tune_gemma3_27b_nemo_rl_lustre_ip_cleanup]
-
-# [START hypercomputer_gpu_tune_gemma3_27b_nemo_rl_subnets_cleanup]
-gcloud compute networks subnets delete ${GVNIC_NETWORK_PREFIX}-sub \
-    --region=${CONTROL_PLANE_REGION} --quiet
-
-for N in $(seq 0 7); do
-  gcloud compute networks subnets delete ${RDMA_NETWORK_PREFIX}-sub-$N \
-    --region=${CONTROL_PLANE_REGION} --quiet &
-done
-wait
-# [END hypercomputer_gpu_tune_gemma3_27b_nemo_rl_subnets_cleanup]

@@ -62,7 +62,15 @@ gcluster deploy "${CLUSTER_NAME}" --auto-approve --skip "image" -w
 # ==============================================================================
 
 # [START hypercomputer_gpu_train_qwen2_slurm_firewall_rule]
-gcloud compute firewall-rules create allow-ssh-ingress-from-iap \
+# Identify the VPC network used by the Slurm cluster's login node
+VPC_NETWORK_URI=$(gcloud compute instances describe "${LOGIN_NODE}" \
+  --project="${PROJECT_ID}" \
+  --zone="${ZONE}" \
+  --format="value(networkInterfaces[0].network)")
+CLUSTER_NETWORK=$(basename "${VPC_NETWORK_URI}")
+
+# Create the IAP firewall rule to allow SSH access to the login node
+gcloud compute firewall-rules create "allow-ssh-from-iap-${CLUSTER_NETWORK}" \
   --project="${PROJECT_ID}" \
   --network="${CLUSTER_NETWORK}" \
   --direction=INGRESS \

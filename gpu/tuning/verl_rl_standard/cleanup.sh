@@ -38,6 +38,7 @@ echo "Deleting GCS FUSE Storage..."
 if [ -f "gcsfuse-storage.yaml" ]; then
   if gcloud container clusters describe ${CLUSTER_NAME} --location=${CONTROL_PLANE_REGION} --project=${PROJECT_ID} >/dev/null 2>&1; then
     # [START hypercomputer_gpu_train_ray_verl_std_delete_gcsfuse]
+    kubectl delete job data-prep-job -n ${NAMESPACE} --ignore-not-found=true || true
     envsubst < "gcsfuse-storage.yaml" | kubectl delete --timeout=30s -f - --ignore-not-found=true || true
     # [END hypercomputer_gpu_train_ray_verl_std_delete_gcsfuse]
   fi
@@ -54,7 +55,11 @@ fi
 echo "Deleting GCS Bucket gs://${GS_BUCKET}..."
 if gcloud storage buckets describe "gs://${GS_BUCKET}" --project="${PROJECT_ID}" >/dev/null 2>&1; then
   # [START hypercomputer_gpu_train_ray_verl_std_delete_bucket]
-  gcloud storage rm -r "gs://${GS_BUCKET}" --project="${PROJECT_ID}" || true
+  gcloud storage rm -r "gs://${GS_BUCKET}" --project="${PROJECT_ID}" || {
+    echo "First deletion attempt failed. Retrying in 5 seconds..."
+    sleep 5
+    gcloud storage rm -r "gs://${GS_BUCKET}" --project="${PROJECT_ID}"
+  } || true
   # [END hypercomputer_gpu_train_ray_verl_std_delete_bucket]
 fi
 

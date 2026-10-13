@@ -16,10 +16,7 @@
 
 set -euo pipefail
 
-# Determine the directory where the script is located
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-cd "${SCRIPT_DIR}"
-
+# [START hypercomputer_gpu_train_ray_verl_std_create_env]
 if [ ! -d "env" ]; then
   echo "Creating local virtual environment for Ray client..."
   python3 -m venv env
@@ -29,21 +26,22 @@ fi
 source env/bin/activate
 pip3 install --upgrade pip
 pip3 install ray[default]
+# [END hypercomputer_gpu_train_ray_verl_std_create_env]
 
-# Prepare runtime-env-local.yaml from our local runtime-env.yaml
-cp runtime-env.yaml ./runtime-env-local.yaml
-
-# Modify runtime-env-local.yaml based on GPU type if needed
+# Modify runtime-env.yaml based on GPU type if needed
 if [[ "${GPU_TYPE:-}" == *"h200"* ]]; then
-    echo "H200 GPU detected. Updating NCCL_TUNER_CONFIG_PATH in runtime-env-local.yaml..."
-    sed -i 's|/usr/local/gib/configs/tuner_config_a4.txtpb|/usr/local/gib/configs/tuner_config_a3u.txtpb|g' runtime-env-local.yaml
+    echo "H200 GPU detected. Updating NCCL_TUNER_CONFIG_PATH in runtime-env.yaml..."
+    sed -i 's|/usr/local/gib/configs/tuner_config_a4.txtpb|/usr/local/gib/configs/tuner_config_a3u.txtpb|g' runtime-env.yaml
 fi
 
 # 2. Port forwarding setup
 # Standard RayCluster name is b200-ray-cluster (from ray-cluster-standard.yaml)
 # We can also get it dynamically
+# [START hypercomputer_gpu_train_ray_verl_std_get_svc]
 SVC_NAME="$(kubectl get svc -l "ray.io/node-type=head" -o jsonpath='{..metadata.name}')"
 echo "Ray head service name: ${SVC_NAME}"
+# [END hypercomputer_gpu_train_ray_verl_std_get_svc]
+
 if [ -z "${SVC_NAME}" ]; then
     echo "No service found for label ray.io/node-type=head"
     kubectl get svc -n "${NAMESPACE}"
@@ -56,10 +54,20 @@ until kubectl get svc "${SVC_NAME}" -n "${NAMESPACE}" &> /dev/null; do
     sleep 5
 done
 
-# Start port forwarding in background
-echo "Starting port-forwarding to ${SVC_NAME} on port 8265..."
-kubectl port-forward svc/"${SVC_NAME}" 8265:8265 -n "${NAMESPACE}" &
+# Start auto-restarting port forwarding in background
+# [START hypercomputer_gpu_train_ray_verl_std_ray_port_fwd]
+echo "Starting port-forwarding loop to ${SVC_NAME} on port 8265..."
+run_port_forward() {
+    while true; do
+        kubectl port-forward --address 0.0.0.0 svc/"${SVC_NAME}" 8265:8265 -n "${NAMESPACE}" >/dev/null 2>&1 || true
+        sleep 1
+    done
+}
+run_port_forward &
 PF_PID=$!
+export RAY_ADDRESS="http://localhost:8265"
+sleep 3
+# [END hypercomputer_gpu_train_ray_verl_std_ray_port_fwd]
 
 # Ensure we kill port forwarding on exit
 cleanup() {
@@ -86,11 +94,12 @@ echo "Port 8265 is open. Port-forwarding is ready."
 # 3. Submit the job
 echo "Submitting Ray job..."
 # [START hypercomputer_gpu_train_ray_verl_std_job_submit]
-ray job submit \
---address "http://localhost:8265" \
---runtime-env runtime-env-local.yaml \
--- \
-bash -c "
+SUBMIT_OUT=$(ray job submit \
+  --address "http://localhost:8265" \
+  --no-wait \
+  --runtime-env runtime-env.yaml \
+  -- \
+  bash -c "
     cd /data/verl && PYTHONUNBUFFERED=1 python3 -m verl.trainer.main_ppo \
     data.train_files=/data/gsm8k/train.parquet \
     data.val_files=/data/gsm8k/test.parquet \
@@ -114,10 +123,54 @@ bash -c "
     trainer.nnodes=2 \
     trainer.save_freq=10 \
     trainer.test_freq=10 \
+    trainer.total_training_steps=10 \
     trainer.default_local_dir=/data/verl/checkpoints \
     algorithm.adv_estimator=grpo \
     actor_rollout_ref.rollout.n=8 \
-    trainer.total_epochs=2"
+    trainer.total_epochs=1")
+echo "${SUBMIT_OUT}"
+JOB_ID=$(echo "${SUBMIT_OUT}" | grep "submitted successfully" | awk -F"'" '{print $2}' || true)
 # [END hypercomputer_gpu_train_ray_verl_std_job_submit]
+
+if [ -n "${JOB_ID:-}" ]; then
+    FAIL_COUNT=0
+    while true; do
+        STATUS=$(python3 -c "
+from ray.job_submission import JobSubmissionClient
+try:
+    client = JobSubmissionClient('http://localhost:8265')
+    print(client.get_job_status('${JOB_ID}').value)
+except Exception:
+    pass
+" 2>/dev/null || true)
+
+        if [ -z "$STATUS" ]; then
+            echo "Unable to get job status. Retrying..."
+            ((FAIL_COUNT++))
+            if [ "$FAIL_COUNT" -ge 12 ]; then
+                echo "Error: Repeatedly failed to get job status. Exiting."
+                exit 1
+            fi
+            sleep 5
+            continue
+        fi
+        FAIL_COUNT=0
+
+        if [[ "$STATUS" == "SUCCEEDED" || "$STATUS" == "FAILED" || "$STATUS" == "STOPPED" ]]; then
+            echo "Job finished with status: ${STATUS}"
+            ray job logs "${JOB_ID}" --address "http://localhost:8265" || true
+            if [[ "$STATUS" == "FAILED" || "$STATUS" == "STOPPED" ]]; then
+                echo "Job execution failed with status: ${STATUS}"
+                exit 1
+            fi
+            echo "Job execution completed successfully."
+            break
+        fi
+
+        echo "Streaming logs (will restart if connection is lost)..."
+        ray job logs "${JOB_ID}" --address "http://localhost:8265" --follow || true
+        sleep 5
+    done
+fi
 
 echo "Job execution completed."

@@ -24,19 +24,17 @@ fi
 echo "=== Starting Cleanup ==="
 
 echo "Deleting Ray Cluster (if exists)..."
-if [ -f "${SCRIPT_DIR}/ray-cluster-auto-dranet.yaml" ]; then
+if [ -f "ray-cluster-auto-dranet.yaml" ]; then
   # [START hypercomputer_gpu_train_ray_verl_auto_delete_ray]
-  envsubst < "${SCRIPT_DIR}/ray-cluster-auto-dranet.yaml" | kubectl delete -f - --ignore-not-found=true || true
+  envsubst < "ray-cluster-auto-dranet.yaml" | kubectl delete -f - --ignore-not-found=true || true
   # [END hypercomputer_gpu_train_ray_verl_auto_delete_ray]
 fi
 
-echo "Deleting Data Preparation Job (if exists)..."
-kubectl delete job data-prep-job -n "${NAMESPACE:-default}" --ignore-not-found=true || true
-
 echo "Deleting GCS FUSE Storage..."
-if [ -f "${SCRIPT_DIR}/gcsfuse-storage.yaml" ]; then
+if [ -f "gcsfuse-storage.yaml" ]; then
   # [START hypercomputer_gpu_train_ray_verl_auto_delete_gcsfuse]
-  envsubst < "${SCRIPT_DIR}/gcsfuse-storage.yaml" | kubectl delete -f - --ignore-not-found=true || true
+  kubectl delete job data-prep-job -n "${NAMESPACE:-default}" --ignore-not-found=true || true
+  envsubst < "gcsfuse-storage.yaml" | kubectl delete --timeout=30s -f - --ignore-not-found=true || true
   # [END hypercomputer_gpu_train_ray_verl_auto_delete_gcsfuse]
 fi
 
@@ -46,18 +44,18 @@ kubectl delete serviceaccount "${KSA_NAME:-}" -n "${NAMESPACE:-default}" --ignor
 
 echo "Deleting DRANET resources..."
 # [START hypercomputer_gpu_train_ray_verl_auto_delete_dranet]
-if [ -f "${SCRIPT_DIR}/resourceclaim-dranet.yaml" ]; then
-  kubectl delete -f "${SCRIPT_DIR}/resourceclaim-dranet.yaml" --ignore-not-found=true || true
-fi
-if [ -f "${SCRIPT_DIR}/computeclass-dranet.yaml" ]; then
-  kubectl delete -f "${SCRIPT_DIR}/computeclass-dranet.yaml" --ignore-not-found=true || true
-fi
+kubectl delete -f "resourceclaim-dranet.yaml" --ignore-not-found=true 2>/dev/null || true
+kubectl delete -f "computeclass-dranet.yaml" --ignore-not-found=true 2>/dev/null || true
 # [END hypercomputer_gpu_train_ray_verl_auto_delete_dranet]
 
 echo "Deleting GCS Bucket gs://${GS_BUCKET}..."
 if [ -n "${GS_BUCKET:-}" ] && gcloud storage buckets describe "gs://${GS_BUCKET}" >/dev/null 2>&1; then
   # [START hypercomputer_gpu_train_ray_verl_auto_delete_bucket]
-  gcloud storage rm -r "gs://${GS_BUCKET}" --project="${PROJECT_ID:-$(gcloud config get project)}" --quiet || true
+  gcloud storage rm -r "gs://${GS_BUCKET}" --project="${PROJECT_ID:-$(gcloud config get project)}" --quiet || {
+    echo "First deletion attempt failed. Retrying in 5 seconds..."
+    sleep 5
+    gcloud storage rm -r "gs://${GS_BUCKET}" --project="${PROJECT_ID:-$(gcloud config get project)}" --quiet
+  } || true
   # [END hypercomputer_gpu_train_ray_verl_auto_delete_bucket]
 fi
 

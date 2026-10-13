@@ -23,7 +23,8 @@ excludes:
 env_vars:
   PYTHONPATH: "/data/verl"
   LD_LIBRARY_PATH: "/usr/local/nvidia/lib64"
-  NCCL_DEBUG: "INFO"
+  NCCL_DEBUG: "WARN"
+  NCCL_NVLS_ENABLE: "0"
   NUM_WORKERS: "2"
   CPUS_PER_WORKER: "192"
   GPUS_PER_WORKER: "8"

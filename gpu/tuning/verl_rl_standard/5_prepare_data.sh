@@ -32,10 +32,13 @@ fi
 
 # Apply Data Prep Job
 echo "Applying Data Prep Job..."
-# Determine the directory where the script is located
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # [START hypercomputer_gpu_train_ray_verl_std_run_data_prep]
-envsubst < "${SCRIPT_DIR}/data-prep-job.yaml" | kubectl apply -f -
+envsubst < data-prep-job.yaml | kubectl apply -f -
+echo "Waiting for data-prep-job Pod to be created and pull image (this takes ~5 minutes)..."
+until [ -n "$(kubectl get pods -l job-name=data-prep-job -n "${NAMESPACE}" --no-headers 2>/dev/null)" ]; do
+  sleep 2
+done
+kubectl wait --for=condition=ready pod -l job-name=data-prep-job -n "${NAMESPACE}" --timeout=600s
 # [END hypercomputer_gpu_train_ray_verl_std_run_data_prep]
 
 echo "Job submitted. You can monitor it with:"

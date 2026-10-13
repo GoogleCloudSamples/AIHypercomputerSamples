@@ -19,15 +19,21 @@ set -euo pipefail
 # Create GKE Standard Cluster
 if ! gcloud container clusters describe ${CLUSTER_NAME} --location=${CONTROL_PLANE_REGION} --project=${PROJECT_ID} >/dev/null 2>&1; then
   echo "Creating GKE Standard cluster ${CLUSTER_NAME}..."
+
+  if [[ "${CPU_MACHINE_TYPE:-YOUR_CPU_MACHINE_TYPE}" == "YOUR_CPU_MACHINE_TYPE" ]]; then
+    CPU_MACHINE_TYPE="n2-standard-16"
+  fi
+
   # [START hypercomputer_gpu_train_ray_verl_std_create_cluster]
   gcloud container clusters create ${CLUSTER_NAME} \
       --location=${CONTROL_PLANE_REGION} \
+      --node-locations=${NODE_ZONE} \
       --enable-dataplane-v2 \
       --workload-pool=${PROJECT_ID}.svc.id.goog \
       --enable-ip-alias \
       --enable-multi-networking \
       --addons=RayOperator,GcsFuseCsiDriver \
-      --machine-type=c2-standard-16 \
+      --machine-type=${CPU_MACHINE_TYPE} \
       --num-nodes=1 \
       --min-nodes=1 \
       --max-nodes=5 \
@@ -49,60 +55,30 @@ gcloud container clusters get-credentials ${CLUSTER_NAME} \
 # Create GPU Node Pool
 if ! gcloud container node-pools describe gpu-pool --cluster=${CLUSTER_NAME} --location=${CONTROL_PLANE_REGION} --project=${PROJECT_ID} >/dev/null 2>&1; then
   echo "Creating GPU node pool gpu-pool..."
-  
-  # Build the gcloud command. We need to handle reservation if it is set.
+
   # [START hypercomputer_gpu_train_ray_verl_std_create_nodepool]
-  CMD=(
-    gcloud container node-pools create gpu-pool
-    --cluster="${CLUSTER_NAME}"
-    --location="${CONTROL_PLANE_REGION}"
-    --node-locations="${NODE_ZONE}"
-    --machine-type="${MACHINE_TYPE}"
-    --accelerator="type=${GPU_TYPE},count=8,gpu-driver-version=DEFAULT"
-    --enable-autoscaling
-    --num-nodes=2
-    --total-max-nodes=10
-    --additional-node-network="network=${GVNIC_NETWORK_PREFIX}-net,subnetwork=${GVNIC_NETWORK_PREFIX}-sub"
-    --additional-node-network="network=${RDMA_NETWORK_PREFIX}-net,subnetwork=${RDMA_NETWORK_PREFIX}-sub-0"
-    --additional-node-network="network=${RDMA_NETWORK_PREFIX}-net,subnetwork=${RDMA_NETWORK_PREFIX}-sub-1"
-    --additional-node-network="network=${RDMA_NETWORK_PREFIX}-net,subnetwork=${RDMA_NETWORK_PREFIX}-sub-2"
-    --additional-node-network="network=${RDMA_NETWORK_PREFIX}-net,subnetwork=${RDMA_NETWORK_PREFIX}-sub-3"
-    --additional-node-network="network=${RDMA_NETWORK_PREFIX}-net,subnetwork=${RDMA_NETWORK_PREFIX}-sub-4"
-    --additional-node-network="network=${RDMA_NETWORK_PREFIX}-net,subnetwork=${RDMA_NETWORK_PREFIX}-sub-5"
-    --additional-node-network="network=${RDMA_NETWORK_PREFIX}-net,subnetwork=${RDMA_NETWORK_PREFIX}-sub-6"
-    --additional-node-network="network=${RDMA_NETWORK_PREFIX}-net,subnetwork=${RDMA_NETWORK_PREFIX}-sub-7"
-    --project="${PROJECT_ID}"
-    --async
-    --format="value(name)"
-  )
-
+  RESERVATION_ARGS=("--reservation-affinity=none")
   if [ -n "${RESERVATION:-}" ]; then
-    CMD+=("--reservation-affinity=specific" "--reservation=${RESERVATION}")
-  else
-    CMD+=("--reservation-affinity=none")
+    RESERVATION_ARGS=("--reservation-affinity=specific" "--reservation=${RESERVATION}")
   fi
-
-  if ! OPERATION_ID="$("${CMD[@]}")" || [[ -z "${OPERATION_ID}" ]]; then
-    echo "Error: Failed to initiate nodepool creation."
-    exit 1
-  fi
-
-  # Wait for nodepool creation to complete
-  if [[ "${NODEPOOL_TIMEOUT:-YOUR_NODEPOOL_TIMEOUT}" == "YOUR_NODEPOOL_TIMEOUT" ]]; then
-    NODEPOOL_TIMEOUT="3600"
-    echo "Debug: NODEPOOL_TIMEOUT is not set to a custom value, using default: ${NODEPOOL_TIMEOUT}"
-  fi
-  echo "Waiting for nodepool ${OPERATION_ID} to be created..."
-  if ! timeout "${NODEPOOL_TIMEOUT}" gcloud container operations wait "${OPERATION_ID}" --location="${CONTROL_PLANE_REGION}" --project="${PROJECT_ID}"; then
-    echo "Error: Nodepool creation timed out or failed after ${NODEPOOL_TIMEOUT} seconds."
-
-    # Describe the operation to get more details
-    gcloud container operations describe "${OPERATION_ID}" \
+  gcloud container node-pools create gpu-pool \
+      --cluster="${CLUSTER_NAME}" \
       --location="${CONTROL_PLANE_REGION}" \
+      --node-locations="${NODE_ZONE}" \
+      --machine-type="${MACHINE_TYPE}" \
+      --accelerator="type=${GPU_TYPE},count=8,gpu-driver-version=DEFAULT" \
+      --num-nodes=2 \
+      "${RESERVATION_ARGS[@]}" \
+      --additional-node-network="network=${GVNIC_NETWORK_PREFIX}-net,subnetwork=${GVNIC_NETWORK_PREFIX}-sub" \
+      --additional-node-network="network=${RDMA_NETWORK_PREFIX}-net,subnetwork=${RDMA_NETWORK_PREFIX}-sub-0" \
+      --additional-node-network="network=${RDMA_NETWORK_PREFIX}-net,subnetwork=${RDMA_NETWORK_PREFIX}-sub-1" \
+      --additional-node-network="network=${RDMA_NETWORK_PREFIX}-net,subnetwork=${RDMA_NETWORK_PREFIX}-sub-2" \
+      --additional-node-network="network=${RDMA_NETWORK_PREFIX}-net,subnetwork=${RDMA_NETWORK_PREFIX}-sub-3" \
+      --additional-node-network="network=${RDMA_NETWORK_PREFIX}-net,subnetwork=${RDMA_NETWORK_PREFIX}-sub-4" \
+      --additional-node-network="network=${RDMA_NETWORK_PREFIX}-net,subnetwork=${RDMA_NETWORK_PREFIX}-sub-5" \
+      --additional-node-network="network=${RDMA_NETWORK_PREFIX}-net,subnetwork=${RDMA_NETWORK_PREFIX}-sub-6" \
+      --additional-node-network="network=${RDMA_NETWORK_PREFIX}-net,subnetwork=${RDMA_NETWORK_PREFIX}-sub-7" \
       --project="${PROJECT_ID}"
-    exit 1
-  fi
-  echo "Nodepool creation completed successfully."
   # [END hypercomputer_gpu_train_ray_verl_std_create_nodepool]
 else
   echo "Node pool gpu-pool already exists."
@@ -115,4 +91,3 @@ kubectl apply -f https://raw.githubusercontent.com/GoogleCloudPlatform/container
 # [END hypercomputer_gpu_train_ray_verl_std_install_nccl]
 
 echo "Cluster setup complete."
-

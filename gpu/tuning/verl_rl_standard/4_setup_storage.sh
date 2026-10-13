@@ -56,8 +56,6 @@ kubectl create secret generic hf-secret --from-literal=hf_token=${HF_TOKEN} -n $
 
 # Create GCS fuse PV and PVC
 echo "Creating GCS fuse PV and PVC..."
-# Determine the directory where the script is located
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # [START hypercomputer_gpu_train_ray_verl_std_apply_storage]
 envsubst < gcsfuse-storage.yaml | kubectl apply -f -
 # [END hypercomputer_gpu_train_ray_verl_std_apply_storage]

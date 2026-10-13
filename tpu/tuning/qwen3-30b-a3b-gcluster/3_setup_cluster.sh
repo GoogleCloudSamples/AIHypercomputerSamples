@@ -29,14 +29,21 @@ echo "[$(date)] ==================== Deploying cluster with gcluster... ========
     -l IGNORE --auto-approve -w
 
 # Fetch GKE cluster credentials for kubectl
-gcloud container clusters get-credentials ${CLUSTER_NAME} --location=${REGION} --project=${PROJECT}
+gcloud container clusters get-credentials "${CLUSTER_NAME}" --location="${REGION}" --project="${PROJECT}"
+# [END hypercomputer_tpu_tune_qwen3_30b_rl_create_cluster]
+
+# Configure gcluster Defaults
+./gcluster job config set project "${PROJECT}"
+./gcluster job config set cluster "${CLUSTER_NAME}"
+./gcluster job config set location "${REGION}"
 
 # Configure docker and IAM for the service accounts created by cluster-toolkit
+# [START hypercomputer_tpu_tune_qwen3_30b_rl_configure_docker]
 gcloud auth configure-docker gcr.io --quiet
-gcloud auth configure-docker ${REGION}-docker.pkg.dev --quiet
-gcloud projects add-iam-policy-binding $PROJECT --member="serviceAccount:${CLUSTER_NAME}-gke-wl-sa@${PROJECT}.iam.gserviceaccount.com" --role="roles/storage.admin" --quiet
-gcloud projects add-iam-policy-binding $PROJECT --member="serviceAccount:${CLUSTER_NAME}-gke-np-sa@${PROJECT}.iam.gserviceaccount.com" --role="roles/storage.admin" --quiet
-# [END hypercomputer_tpu_tune_qwen3_30b_rl_create_cluster]
+gcloud auth configure-docker "${REGION}-docker.pkg.dev" --quiet
+gcloud projects add-iam-policy-binding "${PROJECT}" --member="serviceAccount:${CLUSTER_NAME}-gke-wl-sa@${PROJECT}.iam.gserviceaccount.com" --role="roles/storage.admin" --quiet
+gcloud projects add-iam-policy-binding "${PROJECT}" --member="serviceAccount:${CLUSTER_NAME}-gke-np-sa@${PROJECT}.iam.gserviceaccount.com" --role="roles/storage.admin" --quiet
+# [END hypercomputer_tpu_tune_qwen3_30b_rl_configure_docker]
 
 echo "Waiting for any pending cluster operations to complete..."
 while true; do

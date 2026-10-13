@@ -3,35 +3,82 @@ import torch
 import argparse
 import subprocess
 from datasets import load_dataset
-from transformers import AutoTokenizer, AutoModelForCausalLM, BitsAndBytesConfig, AutoConfig
-from peft import LoraConfig, prepare_model_for_kbit_training, get_peft_model
+from transformers import (
+    AutoTokenizer,
+    AutoModelForCausalLM,
+    BitsAndBytesConfig,
+    AutoConfig,
+)
+from peft import LoraConfig
 from trl import SFTTrainer, SFTConfig
 from huggingface_hub import login
 
 def get_args():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--model_id", type=str, default="google/gemma-4-31b-it", help="Hugging Face model ID")
-    parser.add_argument("--hf_token", type=str, default=None, help="Hugging Face token for private models")
-    parser.add_argument("--trust_remote", type=bool, default="False", help="Trust remote code when loading tokenizer")
-    parser.add_argument("--use_fast", type=bool, default="True", help="Determines if a fast Rust-based tokenizer should be used")
-    parser.add_argument("--dataset_name", type=str, default="philschmid/gretel-synthetic-text-to-sql", help="Hugging Face dataset name")
-    parser.add_argument("--output_dir", type=str, default="gemma-31b-text-to-sql", help="Directory to save model checkpoints")
+    parser.add_argument(
+        "--model_id", type=str, default="google/gemma-4-31b-it",
+        help="Hugging Face model ID")
+    parser.add_argument(
+        "--hf_token", type=str, default=None,
+        help="Hugging Face token for private models")
+    parser.add_argument(
+        "--trust_remote", type=lambda x: str(x).lower() == "true",
+        default=False,
+        help="Trust remote code when loading tokenizer")
+    parser.add_argument(
+        "--use_fast", type=lambda x: str(x).lower() == "true",
+        default=True,
+        help="Determines if a fast Rust-based tokenizer should be used")
+    parser.add_argument(
+        "--dataset_name", type=str,
+        default="philschmid/gretel-synthetic-text-to-sql",
+        help="Hugging Face dataset name")
+    parser.add_argument(
+        "--output_dir", type=str, default="gemma-31b-text-to-sql",
+        help="Directory to save model checkpoints")
 
     # LoRA arguments
-    parser.add_argument("--lora_r", type=int, default=16, help="LoRA attention dimension")
-    parser.add_argument("--lora_alpha", type=int, default=32, help="LoRA alpha scaling factor")
-    parser.add_argument("--lora_dropout", type=float, default=0.05, help="LoRA dropout probability")
+    parser.add_argument(
+        "--lora_r", type=int, default=16,
+        help="LoRA attention dimension")
+    parser.add_argument(
+        "--lora_alpha", type=int, default=32,
+        help="LoRA alpha scaling factor")
+    parser.add_argument(
+        "--lora_dropout", type=float, default=0.05,
+        help="LoRA dropout probability")
     # SFTConfig arguments
-    parser.add_argument("--max_length", type=int, default=1024, help="Maximum sequence length")
-    parser.add_argument("--num_train_epochs", type=int, default=3, help="Number of training epochs")
-    parser.add_argument("--per_device_train_batch_size", type=int, default=2, help="Batch size per device during training")
-    parser.add_argument("--gradient_accumulation_steps", type=int, default=32, help="Gradient accumulation steps")
-    parser.add_argument("--learning_rate", type=float, default=1e-5, help="Learning rate")
-    parser.add_argument("--logging_steps", type=int, default=10, help="Log every X steps")
-    parser.add_argument("--save_strategy", type=str, default="steps", help="Checkpoint save strategy")
-    parser.add_argument("--save_steps", type=int, default=100, help="Save checkpoint every X steps")
-    parser.add_argument("--push_to_hub", action='store_true', help="Push model back up to HF")
-    parser.add_argument("--hub_private_repo", type=bool, default="True", help="Push to a private repo")
+    parser.add_argument(
+        "--max_length", type=int, default=1024,
+        help="Maximum sequence length")
+    parser.add_argument(
+        "--num_train_epochs", type=int, default=3,
+        help="Number of training epochs")
+    parser.add_argument(
+        "--per_device_train_batch_size", type=int, default=2,
+        help="Batch size per device during training")
+    parser.add_argument(
+        "--gradient_accumulation_steps", type=int, default=32,
+        help="Gradient accumulation steps")
+    parser.add_argument(
+        "--learning_rate", type=float, default=1e-5,
+        help="Learning rate")
+    parser.add_argument(
+        "--logging_steps", type=int, default=10,
+        help="Log every X steps")
+    parser.add_argument(
+        "--save_strategy", type=str, default="steps",
+        help="Checkpoint save strategy")
+    parser.add_argument(
+        "--save_steps", type=int, default=100,
+        help="Save checkpoint every X steps")
+    parser.add_argument(
+        "--push_to_hub", action='store_true',
+        help="Push model back up to HF")
+    parser.add_argument(
+        "--hub_private_repo", type=lambda x: str(x).lower() == "true",
+        default=True,
+        help="Push to a private repo")
     return parser.parse_args()
 
 def main():
@@ -50,17 +97,37 @@ def main():
     else:
         torch_dtype_obj = torch.float16
         torch_dtype_str = "float16"
-    tokenizer = AutoTokenizer.from_pretrained(args.model_id, trust_remote_code=args.trust_remote, use_fast=args.use_fast)
+    tokenizer = AutoTokenizer.from_pretrained(
+        args.model_id,
+        trust_remote_code=args.trust_remote,
+        use_fast=args.use_fast,
+    )
     if tokenizer.pad_token is None:
         tokenizer.pad_token = tokenizer.eos_token
     # --- 4. Define the Formatting Function ---
     def formatting_func(example):
-        system_message = "You are a text to SQL query translator. Users will ask you questions in English and you will generate a SQL query based on the provided SCHEMA."
-        user_prompt = "Given the <USER_QUERY> and the <SCHEMA>, generate the corresponding SQL command to retrieve the desired data, considering the query's syntax, semantics, and schema constraints.\n\n<SCHEMA>\n{context}\n</SCHEMA>\n\n<USER_QUERY>\n{question}\n</USER_QUERY>\n"
+        system_message = (
+            "You are a text to SQL query translator. Users will ask you "
+            "questions in English and you will generate a SQL query based "
+            "on the provided SCHEMA."
+        )
+        user_prompt = (
+            "Given the <USER_QUERY> and the <SCHEMA>, generate the "
+            "corresponding SQL command to retrieve the desired data, "
+            "considering the query's syntax, semantics, and schema "
+            "constraints.\n\n<SCHEMA>\n{context}\n</SCHEMA>\n\n"
+            "<USER_QUERY>\n{question}\n</USER_QUERY>\n"
+        )
 
         messages = [
             {"role": "system", "content": system_message},
-            {"role": "user", "content": user_prompt.format(question=example["sql_prompt"], context=example["sql_context"])},
+            {
+                "role": "user",
+                "content": user_prompt.format(
+                    question=example["sql_prompt"],
+                    context=example["sql_context"],
+                ),
+            },
             {"role": "assistant", "content": example["sql"]}
         ]
         return tokenizer.apply_chat_template(messages, tokenize=False)
@@ -75,18 +142,20 @@ def main():
         torch_dtype=torch_dtype_obj,
     )
 
-    model = prepare_model_for_kbit_training(model)
     peft_config = LoraConfig(
         lora_alpha=args.lora_alpha,
         lora_dropout=args.lora_dropout,
         r=args.lora_r,
         bias="none",
-        target_modules="all-linear",
+        # Train only the text decoder projections; skip vision/audio modules.
+        target_modules=[
+            "q_proj", "k_proj", "v_proj", "o_proj",
+            "gate_proj", "up_proj", "down_proj",
+        ],
+        exclude_modules=(
+            r".*(vision_tower|audio_tower|embed_vision|embed_audio).*"),
         task_type="CAUSAL_LM",
     )
-    print("Applying PEFT configuration...")
-    model = get_peft_model(model, peft_config)
-    model.print_trainable_parameters()
     # --- 6. Configure Training Arguments ---
     training_args = SFTConfig(
         output_dir=args.output_dir,
@@ -109,12 +178,14 @@ def main():
         warmup_steps=0.03,
         lr_scheduler_type="constant",
         push_to_hub=args.push_to_hub,
+        hub_private_repo=args.hub_private_repo,
         report_to="tensorboard",
     )
     # --- 7. Create Trainer and Start Training ---
     trainer = SFTTrainer(
         model=model,
         args=training_args,
+        peft_config=peft_config,
         train_dataset=dataset["train"],
         eval_dataset=dataset["test"],
         processing_class=tokenizer,
@@ -125,6 +196,9 @@ def main():
     print("Training finished.")
     # --- 8. Save the final model ---
     print(f"Saving final model to {args.output_dir}")
+    if trainer.is_fsdp_enabled:
+        trainer.accelerator.state.fsdp_plugin.set_state_dict_type(
+            "FULL_STATE_DICT")
     trainer.save_model(args.output_dir)
     if torch.distributed.is_initialized():
         torch.distributed.destroy_process_group()

@@ -1,3 +1,4 @@
+#!/bin/bash
 #  Copyright 2026 Google LLC
 #
 #  Licensed under the Apache License, Version 2.0 (the "License");
@@ -15,5 +16,5 @@
 set -euo pipefail
 
 # [START hypercomputer_tpu_tune_llama_rl_ssh]
-gcloud compute tpus tpu-vm ssh $TPU_NAME --zone $ZONE --project $PROJECT
+gcloud compute ssh "${TPU_NAME}" --zone "${ZONE}" --project "${PROJECT}"
 # [END hypercomputer_tpu_tune_llama_rl_ssh]

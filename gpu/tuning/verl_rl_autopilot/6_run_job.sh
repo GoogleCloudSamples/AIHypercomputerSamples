@@ -54,12 +54,13 @@ fi
 echo "Starting auto-restarting port-forwarding to ${SVC_NAME} on port 8265..."
 run_port_forward() {
     while true; do
-        kubectl port-forward svc/"${SVC_NAME}" 8265:8265 -n "${NAMESPACE}" >/dev/null 2>&1 || true
+        kubectl port-forward --address 0.0.0.0 svc/"${SVC_NAME}" 8265:8265 -n "${NAMESPACE}" >/dev/null 2>&1 || true
         sleep 1
     done
 }
 run_port_forward &
 PF_LOOP_PID=$!
+export RAY_ADDRESS="http://localhost:8265"
 # [END hypercomputer_gpu_train_ray_verl_auto_ray_port_fwd]
 
 # Ensure we kill port forwarding on exit without overwriting exit status
@@ -128,9 +129,10 @@ SUBMIT_OUT=$(ray job submit \
       actor_rollout_ref.ref.use_torch_compile=False \
       actor_rollout_ref.ref.fsdp_config.use_torch_compile=False \
       trainer.total_epochs=1")
+echo "${SUBMIT_OUT}"
+JOB_ID=$(echo "${SUBMIT_OUT}" | grep "submitted successfully" | awk -F"'" '{print $2}' || true)
 # [END hypercomputer_gpu_train_ray_verl_auto_job_submit]
 
-JOB_ID=$(echo "$SUBMIT_OUT" | grep "submitted successfully" | awk -F"'" '{print $2}')
 if [ -z "${JOB_ID}" ]; then
     echo "Error: Failed to extract Job ID from submission output."
     echo "Output was: ${SUBMIT_OUT}"

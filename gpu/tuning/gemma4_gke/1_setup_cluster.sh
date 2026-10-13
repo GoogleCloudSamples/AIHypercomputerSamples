@@ -21,8 +21,7 @@ echo "[$(date)] ==================== Creating Cluster... ===================="
 # [START hypercomputer_gpu_tune_gemma4_gke_create_cluster]
 gcloud container clusters create-auto "${CLUSTER_NAME}" \
     --project="${PROJECT_ID}" \
-    --location="${CLUSTER_REGION}" \
-    --release-channel=rapid
+    --location="${CLUSTER_REGION}"
 # [END hypercomputer_gpu_tune_gemma4_gke_create_cluster]
 echo "[$(date)] ==================== Cluster created. ===================="
 

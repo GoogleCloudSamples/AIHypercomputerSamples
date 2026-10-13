@@ -52,5 +52,5 @@ if gcloud storage buckets describe "gs://${GCS_BUCKET}" --project="${PROJECT}" >
   gcloud storage rm -r "gs://${GCS_BUCKET}" || echo "Warning: Failed to delete bucket"
 fi
 
-rm -rf .ghpc "${CLUSTER_NAME}" gcluster examples community gcluster_bundle_linux_amd64.tgz
+rm -rf .ghpc "${CLUSTER_NAME}" gcluster examples community gcluster_bundle_linux_amd64.tgz tmp
 echo "[$(date)] ==================== Resources cleaned up. ===================="

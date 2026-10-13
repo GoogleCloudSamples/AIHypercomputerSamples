@@ -27,12 +27,14 @@ fi
 # Install kubectl-ray plugin if not present
 if ! kubectl ray version &> /dev/null; then
     echo "Installing kubectl ray plugin..."
+    # [START hypercomputer_gpu_tune_gemma3_27b_nemo_rl_kubectl_ray_plugin_install]
     KUBECTL_RAY_VERSION="v1.3.2"
     curl -LO "https://github.com/ray-project/kuberay/releases/download/${KUBECTL_RAY_VERSION}/kubectl-ray_${KUBECTL_RAY_VERSION}_linux_amd64.tar.gz"
     tar -xvf "kubectl-ray_${KUBECTL_RAY_VERSION}_linux_amd64.tar.gz"
     sudo cp kubectl-ray /usr/local/bin/
     sudo chmod +x /usr/local/bin/kubectl-ray
     rm -f "kubectl-ray_${KUBECTL_RAY_VERSION}_linux_amd64.tar.gz" kubectl-ray
+    # [END hypercomputer_gpu_tune_gemma3_27b_nemo_rl_kubectl_ray_plugin_install]
 fi
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -66,7 +68,11 @@ echo "[$(date)] ========== Deploying the Ray cluster... =========="
 # [START hypercomputer_gpu_tune_gemma3_27b_nemo_rl_ray_cluster_deploy]
 export REPLICA_COUNT=2
 helm install ray-cluster . \
-  --set additionalWorkerGroups.worker-grp-0.replicas=$REPLICA_COUNT
+  --set additionalWorkerGroups.worker-grp-0.replicas=$REPLICA_COUNT \
+  --set head.resources.requests.cpu=12 \
+  --set head.resources.requests.memory=96Gi \
+  --set head.resources.limits.cpu=12 \
+  --set head.resources.limits.memory=96Gi
 # [END hypercomputer_gpu_tune_gemma3_27b_nemo_rl_ray_cluster_deploy]
 
 sleep 10

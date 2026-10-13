@@ -41,7 +41,7 @@ gcloud compute firewall-rules create ${GVNIC_NETWORK_PREFIX}-internal \
 
 # Create a VPC network and subnets for RDMA with 8 subnets for 8 GPUs:
 # [START hypercomputer_gpu_train_ray_verl_std_create_rdma_net]
-gcloud beta compute networks create ${RDMA_NETWORK_PREFIX}-net \
+gcloud compute networks create ${RDMA_NETWORK_PREFIX}-net \
   --network-profile=${NODE_ZONE}-vpc-roce \
   --subnet-mode=custom \
   --project=${PROJECT_ID}
@@ -65,4 +65,3 @@ wait
 
 echo "GVNIC Network setup complete: ${GVNIC_NETWORK_PREFIX}-net"
 echo "RDMA Network setup complete: ${RDMA_NETWORK_PREFIX}-net"
-
