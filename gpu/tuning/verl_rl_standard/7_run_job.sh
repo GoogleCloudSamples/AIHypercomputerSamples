@@ -54,10 +54,16 @@ until kubectl get svc "${SVC_NAME}" -n "${NAMESPACE}" &> /dev/null; do
     sleep 5
 done
 
-# Start port forwarding in background
+# Start auto-restarting port forwarding in background
 # [START hypercomputer_gpu_train_ray_verl_std_ray_port_fwd]
-echo "Starting port-forwarding to ${SVC_NAME} on port 8265..."
-kubectl port-forward --address 0.0.0.0 svc/"${SVC_NAME}" 8265:8265 -n "${NAMESPACE}" >/dev/null 2>&1 &
+echo "Starting port-forwarding loop to ${SVC_NAME} on port 8265..."
+run_port_forward() {
+    while true; do
+        kubectl port-forward --address 0.0.0.0 svc/"${SVC_NAME}" 8265:8265 -n "${NAMESPACE}" >/dev/null 2>&1 || true
+        sleep 1
+    done
+}
+run_port_forward &
 PF_PID=$!
 export RAY_ADDRESS="http://localhost:8265"
 sleep 3
@@ -127,7 +133,44 @@ JOB_ID=$(echo "${SUBMIT_OUT}" | grep "submitted successfully" | awk -F"'" '{prin
 # [END hypercomputer_gpu_train_ray_verl_std_job_submit]
 
 if [ -n "${JOB_ID:-}" ]; then
-    ray job logs "${JOB_ID}" --address "http://localhost:8265" --follow
+    FAIL_COUNT=0
+    while true; do
+        STATUS=$(python3 -c "
+from ray.job_submission import JobSubmissionClient
+try:
+    client = JobSubmissionClient('http://localhost:8265')
+    print(client.get_job_status('${JOB_ID}').value)
+except Exception:
+    pass
+" 2>/dev/null || true)
+
+        if [ -z "$STATUS" ]; then
+            echo "Unable to get job status. Retrying..."
+            ((FAIL_COUNT++))
+            if [ "$FAIL_COUNT" -ge 12 ]; then
+                echo "Error: Repeatedly failed to get job status. Exiting."
+                exit 1
+            fi
+            sleep 5
+            continue
+        fi
+        FAIL_COUNT=0
+
+        if [[ "$STATUS" == "SUCCEEDED" || "$STATUS" == "FAILED" || "$STATUS" == "STOPPED" ]]; then
+            echo "Job finished with status: ${STATUS}"
+            ray job logs "${JOB_ID}" --address "http://localhost:8265" || true
+            if [[ "$STATUS" == "FAILED" || "$STATUS" == "STOPPED" ]]; then
+                echo "Job execution failed with status: ${STATUS}"
+                exit 1
+            fi
+            echo "Job execution completed successfully."
+            break
+        fi
+
+        echo "Streaming logs (will restart if connection is lost)..."
+        ray job logs "${JOB_ID}" --address "http://localhost:8265" --follow || true
+        sleep 5
+    done
 fi
 
 echo "Job execution completed."

@@ -34,8 +34,11 @@ fi
 echo "Applying Data Prep Job..."
 # [START hypercomputer_gpu_train_ray_verl_std_run_data_prep]
 envsubst < data-prep-job.yaml | kubectl apply -f -
-echo "Waiting for data-prep-job Pod to pull image and become Ready (this takes ~5 minutes)..."
-kubectl wait --for=condition=ready pod -l job-name=data-prep-job -n ${NAMESPACE} --timeout=600s
+echo "Waiting for data-prep-job Pod to be created and pull image (this takes ~5 minutes)..."
+until [ -n "$(kubectl get pods -l job-name=data-prep-job -n "${NAMESPACE}" --no-headers 2>/dev/null)" ]; do
+  sleep 2
+done
+kubectl wait --for=condition=ready pod -l job-name=data-prep-job -n "${NAMESPACE}" --timeout=600s
 # [END hypercomputer_gpu_train_ray_verl_std_run_data_prep]
 
 echo "Job submitted. You can monitor it with:"
