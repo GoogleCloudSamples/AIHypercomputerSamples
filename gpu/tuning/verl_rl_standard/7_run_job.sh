@@ -28,13 +28,10 @@ pip3 install --upgrade pip
 pip3 install ray[default]
 # [END hypercomputer_gpu_train_ray_verl_std_create_env]
 
-# Prepare runtime-env-local.yaml from our local runtime-env.yaml
-cp runtime-env.yaml ./runtime-env-local.yaml
-
-# Modify runtime-env-local.yaml based on GPU type if needed
+# Modify runtime-env.yaml based on GPU type if needed
 if [[ "${GPU_TYPE:-}" == *"h200"* ]]; then
-    echo "H200 GPU detected. Updating NCCL_TUNER_CONFIG_PATH in runtime-env-local.yaml..."
-    sed -i 's|/usr/local/gib/configs/tuner_config_a4.txtpb|/usr/local/gib/configs/tuner_config_a3u.txtpb|g' runtime-env-local.yaml
+    echo "H200 GPU detected. Updating NCCL_TUNER_CONFIG_PATH in runtime-env.yaml..."
+    sed -i 's|/usr/local/gib/configs/tuner_config_a4.txtpb|/usr/local/gib/configs/tuner_config_a3u.txtpb|g' runtime-env.yaml
 fi
 
 # 2. Port forwarding setup
@@ -60,8 +57,10 @@ done
 # Start port forwarding in background
 # [START hypercomputer_gpu_train_ray_verl_std_ray_port_fwd]
 echo "Starting port-forwarding to ${SVC_NAME} on port 8265..."
-kubectl port-forward svc/"${SVC_NAME}" 8265:8265 -n "${NAMESPACE}" &
+kubectl port-forward --address 0.0.0.0 svc/"${SVC_NAME}" 8265:8265 -n "${NAMESPACE}" >/dev/null 2>&1 &
 PF_PID=$!
+export RAY_ADDRESS="http://localhost:8265"
+sleep 3
 # [END hypercomputer_gpu_train_ray_verl_std_ray_port_fwd]
 
 # Ensure we kill port forwarding on exit
@@ -89,11 +88,12 @@ echo "Port 8265 is open. Port-forwarding is ready."
 # 3. Submit the job
 echo "Submitting Ray job..."
 # [START hypercomputer_gpu_train_ray_verl_std_job_submit]
-ray job submit \
---address "http://localhost:8265" \
---runtime-env runtime-env-local.yaml \
--- \
-bash -c "
+SUBMIT_OUT=$(ray job submit \
+  --address "http://localhost:8265" \
+  --no-wait \
+  --runtime-env runtime-env.yaml \
+  -- \
+  bash -c "
     cd /data/verl && PYTHONUNBUFFERED=1 python3 -m verl.trainer.main_ppo \
     data.train_files=/data/gsm8k/train.parquet \
     data.val_files=/data/gsm8k/test.parquet \
@@ -117,10 +117,17 @@ bash -c "
     trainer.nnodes=2 \
     trainer.save_freq=10 \
     trainer.test_freq=10 \
+    trainer.total_training_steps=10 \
     trainer.default_local_dir=/data/verl/checkpoints \
     algorithm.adv_estimator=grpo \
     actor_rollout_ref.rollout.n=8 \
-    trainer.total_epochs=2"
+    trainer.total_epochs=1")
+echo "${SUBMIT_OUT}"
+JOB_ID=$(echo "${SUBMIT_OUT}" | grep "submitted successfully" | awk -F"'" '{print $2}' || true)
 # [END hypercomputer_gpu_train_ray_verl_std_job_submit]
+
+if [ -n "${JOB_ID:-}" ]; then
+    ray job logs "${JOB_ID}" --address "http://localhost:8265" --follow
+fi
 
 echo "Job execution completed."
