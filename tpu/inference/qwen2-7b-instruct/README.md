@@ -1,4 +1,3 @@
-# _TUTORIAL_TITLE_
 # Run inference with Qwen2 7B Instruct on TPU v6e
 
 This code sample is intended for AI/ML engineers and demonstrates how to run inference and benchmark workloads with the Qwen2 7B Instruct model on Google Cloud TPUs (v6e).

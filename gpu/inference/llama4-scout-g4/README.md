@@ -15,7 +15,7 @@ The sample includes the following files:
 * `gpu-recipes/`: Directory containing recipes.
 * `metadata.yaml`: Metadata file.
 
-For the complete step-by-step tutorial of how to use this sample, see the official Google Cloud documentation: _TUTORIAL_TITLE_.
+For the complete step-by-step tutorial of how to use this sample, see the official Google Cloud documentation: [Use vLLM on GKE to run inference with Llama 4](https://docs.cloud.google.com/ai-hypercomputer/docs/tutorials/gpu/vllm-gke-llama4).
 
 ## Before you begin
 
@@ -78,4 +78,4 @@ To clean up the resources created by this sample:
   
 ## Additional resources
   
-* _[Link to official AI Hypercomputer tutorial on Google Cloud]_
+* [Use vLLM on GKE to run inference with Llama 4](https://docs.cloud.google.com/ai-hypercomputer/docs/tutorials/gpu/vllm-gke-llama4)

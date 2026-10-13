@@ -28,5 +28,5 @@ Use your file tools to locate and read the contents of `sample_template/README.m
 
 ## Step 5: Generate and Write the README
 - Generate the README content by mapping the extracted sample details, the tutorial URL, and the tutorial title into the exact structure you read from the template in Step 1.
-- Replace the `_TUTORIAL_TITLE_` and `_[Link to official AI Hypercomputer tutorial on Google Cloud]_` placeholders with the actual title and link. Remove any other unneeded generic placeholders from the "Additional resources" section.
+- Replace the `*TUTORIAL_TITLE*` and `*[Link to official AI Hypercomputer tutorial on Google Cloud]*` placeholders with the actual title and link. Remove any other unneeded generic placeholders from the "Additional resources" section.
 - Use the `write_to_file` tool to save the generated content to `README.md` inside the target sample's directory.

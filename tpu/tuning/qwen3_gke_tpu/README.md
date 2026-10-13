@@ -1,4 +1,3 @@
-# _TUTORIAL_TITLE_
 # Fine-tune Qwen3 on a TPU GKE Cluster
 
 This code sample is intended for AI/ML engineers and demonstrates how to fine-tune the Qwen3 model on a GKE cluster with Cloud TPUs.

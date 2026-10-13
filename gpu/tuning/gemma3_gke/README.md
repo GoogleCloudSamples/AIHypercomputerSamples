@@ -15,7 +15,7 @@ The sample includes the following scripts:
 * `2_build_and_deploy.sh`: Builds the container image, pushes it to Artifact Registry, and deploys the fine-tuning Job.
 * `cleanup.sh`: Deletes the GKE cluster and cleans up all created resources.
 
-For the complete step-by-step tutorial of how to use this sample, see the official Google Cloud documentation: _TUTORIAL_TITLE_.
+For the complete step-by-step tutorial of how to use this sample, see the official Google Cloud documentation: [Fine-tune Gemma 3 on an A4 GKE cluster](https://docs.cloud.google.com/ai-hypercomputer/docs/tutorials/gpu/gemma3-finetune-a4-gke-cluster).
 
 ## Before you begin
 
@@ -76,4 +76,4 @@ To clean up the resources created by this sample:
   
 ## Additional resources
   
-* _[Link to official AI Hypercomputer tutorial on Google Cloud]_
+* [Fine-tune Gemma 3 on an A4 GKE cluster](https://docs.cloud.google.com/ai-hypercomputer/docs/tutorials/gpu/gemma3-finetune-a4-gke-cluster)
