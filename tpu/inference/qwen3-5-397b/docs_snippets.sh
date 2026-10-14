@@ -40,3 +40,27 @@ kubectl logs -f qwen3-5-bench-8k1k
 gcloud auth login
 gcloud auth application-default login
 # [END hypercomputer_tpu_infer_qwen3_5_397b_auth]
+
+# [START hypercomputer_tpu_infer_qwen3_5_397b_vpc_create]
+gcloud compute networks create "${NETWORK}" \
+  --project="${PROJECT_ID}" \
+  --subnet-mode=custom \
+  --mtu=8896 \
+  --bgp-routing-mode=regional
+
+gcloud compute networks subnets create "${SUBNETWORK}" \
+  --project="${PROJECT_ID}" \
+  --network="${NETWORK}" \
+  --region="${REGION}" \
+  --range="192.168.0.0/18" \
+  --secondary-range="pods=10.4.0.0/14,services=10.0.32.0/20" \
+  --enable-private-ip-google-access
+
+gcloud compute firewall-rules create "${NETWORK}-allow-internal" \
+  --project="${PROJECT_ID}" \
+  --network="${NETWORK}" \
+  --action=ALLOW \
+  --direction=INGRESS \
+  --rules=tcp:0-65535,udp:0-65535,icmp \
+  --source-ranges="192.168.0.0/16,10.4.0.0/14,10.0.32.0/20"
+# [END hypercomputer_tpu_infer_qwen3_5_397b_vpc_create]
