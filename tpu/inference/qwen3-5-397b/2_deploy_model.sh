@@ -38,9 +38,9 @@ until kubectl get pods -l app=vllm-qwen3-5 2>/dev/null | grep -q "vllm-qwen3-5";
   ELAPSED=$((ELAPSED + 5))
 done
 
-echo "Waiting for the vllm-qwen3-5 pod to be scheduled and initialized..."
-if ! kubectl wait --for=condition=Initialized --timeout=1800s pod -l app=vllm-qwen3-5; then
-  echo "Pod failed to initialize within 30 minutes! Describing pod:" >&2
+echo "Waiting for the vllm-qwen3-5 pod to start running..."
+if ! kubectl wait --for=jsonpath='{.status.phase}'=Running pod -l app=vllm-qwen3-5 --timeout=900s; then
+  echo "Pod failed to start running within 15 minutes! Describing pod:" >&2
   kubectl describe pod -l app=vllm-qwen3-5 >&2
   exit 1
 fi
