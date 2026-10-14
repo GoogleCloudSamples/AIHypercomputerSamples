@@ -16,9 +16,13 @@
 
 set -euo pipefail
 
+if [[ -z "${VLLM_IMAGE:-}" || "${VLLM_IMAGE}" == "YOUR_VLLM_TPU_IMAGE" ]]; then
+  export VLLM_IMAGE="us-central1-docker.pkg.dev/cloud-ullm-inference-ci-cd/vllm-torchtpu/torchtpu-vllm-prod:nightly-20260805"
+fi
+
 echo "[$(date)] ==================== Deploying the vLLM Qwen 3.5 397B server... ===================="
 # [START hypercomputer_tpu_infer_qwen3_5_397b_deploy]
-kubectl apply -f qwen3_5_server.yaml
+envsubst '$VLLM_IMAGE' < "qwen3_5_server.yaml" | kubectl apply -f -
 # [END hypercomputer_tpu_infer_qwen3_5_397b_deploy]
 
 echo "Waiting for the vllm-qwen3-5 pod to be created..."

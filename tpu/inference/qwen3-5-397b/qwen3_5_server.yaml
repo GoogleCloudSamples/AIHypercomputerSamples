@@ -62,7 +62,7 @@ spec:
         effect: "NoSchedule"
       containers:
       - name: vllm-tpu
-        image: us-central1-docker.pkg.dev/cloud-ullm-inference-ci-cd/vllm-torchtpu/torchtpu-vllm-prod:nightly-20260805
+        image: $VLLM_IMAGE
         command: ["vllm", "serve"]
         args:
         - --host=0.0.0.0
