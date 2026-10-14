@@ -34,3 +34,8 @@ kubectl port-forward service/vllm-qwen3-5-service 8000:8000
 # [START hypercomputer_tpu_infer_qwen3_5_397b_benchmark_logs]
 kubectl logs -f qwen3-5-bench-8k1k
 # [END hypercomputer_tpu_infer_qwen3_5_397b_benchmark_logs]
+
+# [START hypercomputer_tpu_infer_qwen3_5_397b_auth]
+gcloud auth login
+gcloud auth application-default login
+# [END hypercomputer_tpu_infer_qwen3_5_397b_auth]
