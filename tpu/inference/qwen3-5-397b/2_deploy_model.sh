@@ -22,8 +22,16 @@ kubectl apply -f qwen3_5_server.yaml
 # [END hypercomputer_tpu_infer_qwen3_5_397b_deploy]
 
 echo "Waiting for the vllm-qwen3-5 pod to be created..."
+TIMEOUT=300
+ELAPSED=0
 until kubectl get pods -l app=vllm-qwen3-5 2>/dev/null | grep -q "vllm-qwen3-5"; do
+  if [[ "${ELAPSED}" -ge "${TIMEOUT}" ]]; then
+    echo "Timeout waiting for vllm-qwen3-5 pod to be created! Describing deployment:" >&2
+    kubectl describe deployment vllm-qwen3-5 >&2
+    exit 1
+  fi
   sleep 5
+  ELAPSED=$((ELAPSED + 5))
 done
 
 echo "Waiting for the vllm-qwen3-5 pod to be scheduled and initialized..."
