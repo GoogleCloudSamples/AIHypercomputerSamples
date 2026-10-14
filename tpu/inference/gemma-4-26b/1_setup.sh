@@ -16,7 +16,7 @@
 
 set -euo pipefail
 
-# [START hypercomputer_tpu_infer_gemma4_cluster_create]
+# [START hypercomputer_tpu_infer_gemma4_26b_cluster_create]
 gcloud container clusters create "${CLUSTER_NAME}" \
     --project="${PROJECT_ID}" \
     --location="${REGION}" \
@@ -33,7 +33,7 @@ gcloud container node-pools create "${NODE_POOL_NAME}" \
     --disk-size=500 \
     --reservation-affinity=specific \
     --reservation="${RESERVATION_URL}"
-# [END hypercomputer_tpu_infer_gemma4_cluster_create]
+# [END hypercomputer_tpu_infer_gemma4_26b_cluster_create]
 
 echo "Verifying cluster status..."
 STATUS=$(gcloud container clusters describe "${CLUSTER_NAME}" \
@@ -48,21 +48,21 @@ else
     exit 1
 fi
 
-# [START hypercomputer_tpu_infer_gemma4_cluster_get_creds]
+# [START hypercomputer_tpu_infer_gemma4_26b_cluster_get_creds]
 gcloud container clusters get-credentials "${CLUSTER_NAME}" \
     --project="${PROJECT_ID}" \
     --location="${REGION}"
-# [END hypercomputer_tpu_infer_gemma4_cluster_get_creds]
+# [END hypercomputer_tpu_infer_gemma4_26b_cluster_get_creds]
 
-# [START hypercomputer_tpu_infer_gemma4_secret_create]
+# [START hypercomputer_tpu_infer_gemma4_26b_secret_create]
 kubectl create secret generic hf-secret \
     --from-literal=hf_api_token="${HF_TOKEN}" \
     --dry-run=client -o yaml | kubectl apply -f -
-# [END hypercomputer_tpu_infer_gemma4_secret_create]
+# [END hypercomputer_tpu_infer_gemma4_26b_secret_create]
 
 echo "Installing LeaderWorkerSet controller..."
-# [START hypercomputer_tpu_infer_gemma4_lws_install]
+# [START hypercomputer_tpu_infer_gemma4_26b_lws_install]
 kubectl apply --server-side -k "github.com/kubernetes-sigs/lws/config/default?ref=main"
 echo "Waiting for LWS controller to be ready..."
 kubectl wait --for=condition=Available --timeout=300s deployment/lws-controller-manager -n lws-system
-# [END hypercomputer_tpu_infer_gemma4_lws_install]
+# [END hypercomputer_tpu_infer_gemma4_26b_lws_install]

@@ -51,7 +51,7 @@ until curl -sf http://localhost:8000/health >/dev/null; do
 done
 
 echo "Running benchmark (the first run downloads vLLM into the uv cache)..."
-# [START hypercomputer_tpu_infer_gemma4_benchmark_run]
+# [START hypercomputer_tpu_infer_gemma4_26b_benchmark_run]
 uvx --python 3.12 --from "vllm[bench]==0.31.0" vllm bench serve \
   --backend openai-chat \
   --endpoint /v1/chat/completions \
@@ -66,7 +66,7 @@ uvx --python 3.12 --from "vllm[bench]==0.31.0" vllm bench serve \
   --save-result \
   --result-dir benchmark-results \
   --result-filename gemma4-26b-benchmark.json
-# [END hypercomputer_tpu_infer_gemma4_benchmark_run]
+# [END hypercomputer_tpu_infer_gemma4_26b_benchmark_run]
 
 COMPLETED=$(jq -r '.completed' "${RESULT_DIR}/${RESULT_FILE}")
 if [ "${COMPLETED}" -ne "${NUM_PROMPTS}" ]; then

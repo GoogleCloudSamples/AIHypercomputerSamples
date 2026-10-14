@@ -14,7 +14,7 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
-# [START hypercomputer_tpu_infer_gemma4_env]
+# [START hypercomputer_tpu_infer_gemma4_26b_env]
 export PROJECT_ID="YOUR_PROJECT_ID"
 export RESERVATION_URL="YOUR_RESERVATION_NAME"
 export REGION="YOUR_REGION"
@@ -26,5 +26,5 @@ export VLLM_IMAGE="YOUR_VLLM_TPU_IMAGE"
 
 gcloud config set project "${PROJECT_ID}"
 gcloud config set billing/quota_project "${PROJECT_ID}"
-# [END hypercomputer_tpu_infer_gemma4_env]
+# [END hypercomputer_tpu_infer_gemma4_26b_env]
 

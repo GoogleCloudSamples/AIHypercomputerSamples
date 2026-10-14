@@ -18,7 +18,7 @@ set -euo pipefail
 
 : "${VLLM_IMAGE:?VLLM_IMAGE must be set (see 0_env.sh)}"
 
-# [START hypercomputer_tpu_infer_gemma4_deploy]
+# [START hypercomputer_tpu_infer_gemma4_26b_deploy]
 MANIFEST="gemma4-26b-multihost-v6e-2x4.yaml"
 echo "Applying LeaderWorkerSet (retrying if webhook is not fully ready)..."
 MAX_ATTEMPTS=12
@@ -33,10 +33,10 @@ until envsubst '$RESERVATION_URL $ZONE $VLLM_IMAGE' < "${MANIFEST}" | kubectl ap
   attempt=$((attempt + 1))
   sleep 5
 done
-# [END hypercomputer_tpu_infer_gemma4_deploy]
+# [END hypercomputer_tpu_infer_gemma4_26b_deploy]
 
 echo "Deploying the model and tracking progress..."
-# [START hypercomputer_tpu_infer_gemma4_deploy_wait]
+# [START hypercomputer_tpu_infer_gemma4_26b_deploy_wait]
 LIMIT=60
 count=0
 until kubectl get pod -l role=leader -o name | grep -q "vllm-tpu"; do
@@ -70,4 +70,4 @@ if ! kubectl wait --for=condition=Ready --timeout=3600s pod -l role=leader; then
 fi
 
 echo "Pod is Ready!"
-# [END hypercomputer_tpu_infer_gemma4_deploy_wait]
+# [END hypercomputer_tpu_infer_gemma4_26b_deploy_wait]

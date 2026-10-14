@@ -14,11 +14,11 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
-# [START hypercomputer_tpu_infer_gemma4_port_forward]
+# [START hypercomputer_tpu_infer_gemma4_26b_port_forward]
 kubectl port-forward service/llm-service 8000:8000
-# [END hypercomputer_tpu_infer_gemma4_port_forward]
+# [END hypercomputer_tpu_infer_gemma4_26b_port_forward]
 
-# [START hypercomputer_tpu_infer_gemma4_text_request]
+# [START hypercomputer_tpu_infer_gemma4_26b_text_request]
 curl http://localhost:8000/v1/chat/completions \
     -H "Content-Type: application/json" \
     -d '{
@@ -26,9 +26,9 @@ curl http://localhost:8000/v1/chat/completions \
         "messages": [{"role": "user", "content": "Explain Mixture of Experts in 2 sentences."}],
         "max_tokens": 128
     }'
-# [END hypercomputer_tpu_infer_gemma4_text_request]
+# [END hypercomputer_tpu_infer_gemma4_26b_text_request]
 
-# [START hypercomputer_tpu_infer_gemma4_image_request]
+# [START hypercomputer_tpu_infer_gemma4_26b_image_request]
 curl http://localhost:8000/v1/chat/completions \
     -H "Content-Type: application/json" \
     -d '{
@@ -54,11 +54,11 @@ curl http://localhost:8000/v1/chat/completions \
         "temperature": 0.0,
         "top_p": 1.0
     }'
-# [END hypercomputer_tpu_infer_gemma4_image_request]
+# [END hypercomputer_tpu_infer_gemma4_26b_image_request]
 
-# [START hypercomputer_tpu_infer_gemma4_benchmark_install_uv]
+# [START hypercomputer_tpu_infer_gemma4_26b_benchmark_install_uv]
 curl -LsSf https://astral.sh/uv/install.sh | sh
 source "${HOME}/.local/bin/env"
 # If you run on Cloud Shell, keep the uv cache outside the 5 GB home directory:
 export UV_CACHE_DIR=/tmp/uv-cache
-# [END hypercomputer_tpu_infer_gemma4_benchmark_install_uv]
+# [END hypercomputer_tpu_infer_gemma4_26b_benchmark_install_uv]
