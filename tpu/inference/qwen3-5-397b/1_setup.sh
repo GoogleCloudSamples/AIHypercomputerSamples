@@ -22,9 +22,6 @@ fi
 if [[ -z "${SUBNETWORK:-}" || "${SUBNETWORK}" == "YOUR_SUBNETWORK_NAME" ]]; then
   SUBNETWORK="default"
 fi
-if [[ -z "${MACHINE_TYPE:-}" || "${MACHINE_TYPE}" == "YOUR_MACHINE_TYPE" ]]; then
-  MACHINE_TYPE="tpu7x-standard-4t"
-fi
 
 echo "[$(date)] ==================== Creating GKE Standard cluster ${CLUSTER_NAME}... ===================="
 if ! gcloud container clusters describe "${CLUSTER_NAME}" --location="${REGION}" --project="${PROJECT_ID}" >/dev/null 2>&1; then
