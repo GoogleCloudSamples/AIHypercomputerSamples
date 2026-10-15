@@ -30,11 +30,13 @@ echo "Bucket:      gs://${GCS_BUCKET}"
 echo "Repository:  ${REPO_NAME}"
 echo "=============================================================================="
 
-read -p "Are you sure you want to delete ALL these G4 resources? (y/N) " -n 1 -r
-echo
-if [[ ! $REPLY =~ ^[Yy]$ ]]; then
-    echo "Cleanup cancelled."
-    exit 0
+if [[ -t 0 ]]; then
+    read -p "Are you sure you want to delete ALL these G4 resources? (y/N) " -n 1 -r
+    echo
+    if [[ ! $REPLY =~ ^[Yy]$ ]]; then
+        echo "Cleanup cancelled."
+        exit 0
+    fi
 fi
 
 echo "--------------------------------------------------------"
@@ -137,7 +139,7 @@ echo "--------------------------------------------------------"
 echo "Step 6: Cleaning Local Workspace Files & Tunnels"
 echo "--------------------------------------------------------"
 
-BUILD_DIR="${SCRIPT_DIR}/build_g4"
+BUILD_DIR="${SCRIPT_DIR}/build_rtx6000"
 if [[ -d "$BUILD_DIR" ]]; then
     rm -rf "$BUILD_DIR"
     echo "✓ Deleted local build directory: ${BUILD_DIR}"

@@ -58,6 +58,7 @@ echo "--------------------------------------------------------"
 # [START hypercomputer_gpu_infer_llama4scout_a4_enable_apis]
 gcloud services enable \
     artifactregistry.googleapis.com \
+    cloudbuild.googleapis.com \
     container.googleapis.com \
     storage.googleapis.com \
     --project="${PROJECT_ID}"
