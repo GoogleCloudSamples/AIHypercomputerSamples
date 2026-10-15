@@ -36,6 +36,8 @@ cp ./examples/gke-tpu-v6e/gke-tpu-v6e-advanced.yaml "${BLUEPRINT_FILE}"
 sed -i "s/n2-standard-8/e2-standard-8/" "${BLUEPRINT_FILE}"
 # Pin system node pool to a single zone to avoid cross-zone stockouts
 sed -i '/system_node_pool_machine_type/a \      system_node_pool_zones: [$(vars.zone)]' "${BLUEPRINT_FILE}"
+# Grant the GKE Node Pool Service Account storage.admin access for checkpoint writes
+sed -i "s/- storage.objectViewer/- storage.admin/" "${BLUEPRINT_FILE}"
 
 ./gcluster deploy "${BLUEPRINT_FILE}" \
     --vars "project_id=${PROJECT},deployment_name=${CLUSTER_NAME},region=${REGION},zone=${ZONE},num_slices=${CLUSTER_NODEPOOL_COUNT},tpu_topology=${TOPOLOGY},authorized_cidr=0.0.0.0/0,reservation=${RESERVATION:-}" \
@@ -58,7 +60,7 @@ sed -i '/system_node_pool_machine_type/a \      system_node_pool_zones: [$(vars.
 # [END hypercomputer_tpu_tune_gemma4_26b_rl_convert_model_logs]
 
 # [START hypercomputer_tpu_tune_gemma4_26b_rl_train_logs_v2]
-# Use the list command to check status
+# Use the list command to check status (initially shows "Suspended" briefly while the CPU node pool scales up)
 ./gcluster job list
 
 # Ensure kubectl is configured
@@ -66,7 +68,12 @@ gcloud container clusters get-credentials "${CLUSTER_NAME}" \
   --location="${REGION}" \
   --project="${PROJECT}"
 
-# Check progress of the job. A successful run should output metrics with mean_reward > 0.
+# Wait for the Pathways head pod to be ready before streaming logs
+kubectl wait --for=condition=Ready pod \
+    -l job-name=gemma4-training-pathways-head-0 \
+    --timeout=600s
+
+# Stream training logs (runs for 50 steps; wait for "Post RL Training: ... mean_reward=..." and job status Succeeded before converting to Hugging Face)
 kubectl logs -f \
     -l job-name=gemma4-training-pathways-head-0 \
     -c workload-container
@@ -83,7 +90,7 @@ kubectl logs -f \
 # [END hypercomputer_tpu_tune_gemma4_26b_rl_convert_hf_logs]
 
 # [START hypercomputer_tpu_tune_gemma4_26b_rl_cleanup_storage_v2]
-./gcluster destroy "${CLUSTER_NAME}"
+./gcluster destroy "${CLUSTER_NAME}" --auto-approve
 gcloud storage rm -r "gs://${GCS_BUCKET}"
 
 # To delete the local deployment folder

@@ -26,6 +26,8 @@ BLUEPRINT_FILE="${TMP_DIR}/gke-tpu-v6e-advanced.yaml"
 cp ./examples/gke-tpu-v6e/gke-tpu-v6e-advanced.yaml "${BLUEPRINT_FILE}"
 sed -i "s/n2-standard-8/e2-standard-8/" "${BLUEPRINT_FILE}"
 sed -i '/system_node_pool_machine_type/a \      system_node_pool_zones: [$(vars.zone)]' "${BLUEPRINT_FILE}"
+# Grant the GKE Node Pool Service Account storage.admin access for checkpoint writes
+sed -i "s/- storage.objectViewer/- storage.admin/" "${BLUEPRINT_FILE}"
 
 echo "[$(date)] ==================== Configuring IAM for default Compute SA... ===================="
 # Ensure Compute API is enabled so the default Compute Service Account exists
