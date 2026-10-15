@@ -105,7 +105,7 @@ echo "[$(date)] ==================== Streaming Training Logs... ================
 # Wait until pod is Ready before tailing logs
 kubectl wait --for=condition=Ready pod/${POD_NAME} --timeout=600s 2>/dev/null || true
 
-# A successful run should output metrics with mean_reward > 0.
+# A successful 50-step run outputs "Post RL Training: ... mean_reward=..." with mean_reward > 0.
 kubectl logs -f "${POD_NAME}" -c workload-container || true
 
 echo "Checking final job status..."
