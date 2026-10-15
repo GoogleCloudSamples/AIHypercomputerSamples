@@ -53,7 +53,7 @@ else
   echo "Workload policy ${WORKLOAD_POLICY_NAME} already exists."
 fi
 
-if [[ "${USE_FLEX_START:-false}" == "true" || -z "${RESERVATION_NAME:-}" || "${RESERVATION_NAME}" == "YOUR_RESERVATION_NAME" ]]; then
+if [[ ( "${USE_FLEX_START:-false}" == "true" || -z "${RESERVATION_NAME:-}" || "${RESERVATION_NAME}" == "YOUR_RESERVATION_NAME" ) && "${USE_SPOT:-false}" != "true" ]]; then
   echo "[$(date)] ==================== Creating TPU v7x node pools ${NODE_POOL_NAME_0} and ${NODE_POOL_NAME_1} (Flex-Start)... ===================="
   # [START hypercomputer_tpu_infer_qwen3_5_397b_multihost_nodepool_create_flex_start]
   gcloud container node-pools create "${NODE_POOL_NAME_0}" \

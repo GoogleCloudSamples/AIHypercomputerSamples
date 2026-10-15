@@ -29,8 +29,16 @@ kubectl apply -f v7x_qwen3_5_benchmark_multihost_slice.yaml
 # [END hypercomputer_tpu_infer_qwen3_5_397b_multihost_benchmark_apply]
 
 echo "Waiting for benchmark pod to be created and start running..."
+pod_creation_timeout=300
+elapsed=0
 until [[ -n "$(kubectl get pods -l "job-name=${BENCHMARK_JOB}" --no-headers 2>/dev/null)" ]]; do
+  if [[ "${elapsed}" -ge "${pod_creation_timeout}" ]]; then
+    echo "Error: Timed out after ${pod_creation_timeout}s waiting for ${BENCHMARK_JOB} pod to be created." >&2
+    kubectl describe "job/${BENCHMARK_JOB}" >&2 || true
+    exit 1
+  fi
   sleep 2
+  elapsed=$((elapsed + 2))
 done
 if kubectl wait --for=condition=Ready pod -l "job-name=${BENCHMARK_JOB}" --timeout=600s; then
   kubectl logs -f "job/${BENCHMARK_JOB}" &

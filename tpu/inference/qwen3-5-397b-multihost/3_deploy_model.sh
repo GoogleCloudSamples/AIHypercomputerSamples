@@ -28,8 +28,17 @@ for i in {1..12}; do
 done
 
 echo "Waiting for prefill, decode, and proxy pods to be created..."
+pod_creation_timeout=300
+elapsed=0
 until [[ $(kubectl get pods -l "jobset.sigs.k8s.io/jobset-name=${JOBSET_NAME}" --no-headers 2>/dev/null | wc -l) -ge 5 ]]; do
+  if [[ "${elapsed}" -ge "${pod_creation_timeout}" ]]; then
+    echo "Error: Timed out after ${pod_creation_timeout}s waiting for JobSet ${JOBSET_NAME} pods to be created." >&2
+    kubectl describe jobset "${JOBSET_NAME}" >&2 || true
+    kubectl get jobs -l "jobset.sigs.k8s.io/jobset-name=${JOBSET_NAME}" >&2 || true
+    exit 1
+  fi
   sleep 5
+  elapsed=$((elapsed + 5))
 done
 
 echo "Waiting for all pods in JobSet ${JOBSET_NAME} to be scheduled and initialized..."

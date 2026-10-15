@@ -54,3 +54,5 @@ gcloud compute resource-policies delete "${WORKLOAD_POLICY_NAME}" \
     --project="${PROJECT_ID}" \
     --quiet || true
 # [END hypercomputer_tpu_infer_qwen3_5_397b_multihost_cluster_cleanup]
+
+echo "[$(date)] ==================== Cleanup Complete. ===================="
