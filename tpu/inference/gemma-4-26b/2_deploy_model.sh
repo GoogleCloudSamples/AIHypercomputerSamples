@@ -23,7 +23,7 @@ MANIFEST="gemma4-26b-multihost-v6e-2x4.yaml"
 echo "Applying LeaderWorkerSet (retrying if webhook is not fully ready)..."
 MAX_ATTEMPTS=12
 attempt=1
-until envsubst '$RESERVATION_URL $ZONE $VLLM_IMAGE' < "${MANIFEST}" | kubectl apply -f -; do
+until envsubst '$RESERVATION_NAME $ZONE $VLLM_IMAGE' < "${MANIFEST}" | kubectl apply -f -; do
   if [ "${attempt}" -ge "${MAX_ATTEMPTS}" ]; then
     echo "Error: failed to apply ${MANIFEST} after ${MAX_ATTEMPTS} attempts." >&2
     exit 1

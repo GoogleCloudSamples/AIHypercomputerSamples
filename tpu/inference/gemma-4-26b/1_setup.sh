@@ -32,7 +32,7 @@ gcloud container node-pools create "${NODE_POOL_NAME}" \
     --num-nodes=2 \
     --disk-size=500 \
     --reservation-affinity=specific \
-    --reservation="${RESERVATION_URL}"
+    --reservation="${RESERVATION_NAME}"
 # [END hypercomputer_tpu_infer_gemma4_26b_cluster_create]
 
 echo "Verifying cluster status..."

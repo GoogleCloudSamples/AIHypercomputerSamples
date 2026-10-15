@@ -107,7 +107,7 @@ spec:
           topology.kubernetes.io/zone: "$ZONE"
           cloud.google.com/gke-tpu-accelerator: tpu-v6e-slice
           cloud.google.com/gke-tpu-topology: 2x4
-          cloud.google.com/reservation-name: $RESERVATION_URL
+          cloud.google.com/reservation-name: $RESERVATION_NAME
         volumes:
         - name: dshm
           emptyDir:
@@ -178,7 +178,7 @@ spec:
           topology.kubernetes.io/zone: "$ZONE"
           cloud.google.com/gke-tpu-accelerator: tpu-v6e-slice
           cloud.google.com/gke-tpu-topology: 2x4
-          cloud.google.com/reservation-name: $RESERVATION_URL
+          cloud.google.com/reservation-name: $RESERVATION_NAME
         volumes:
         - name: dshm
           emptyDir:
