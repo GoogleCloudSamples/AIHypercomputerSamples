@@ -1,0 +1,469 @@
+#  Copyright 2026 Google LLC
+#
+#  Licensed under the Apache License, Version 2.0 (the "License");
+#  you may not use this file except in compliance with the License.
+#  You may obtain a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+#  Unless required by applicable law or agreed to in writing, software
+#  distributed under the License is distributed on an "AS IS" BASIS,
+#  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#  See the License for the specific language governing permissions and
+#  limitations under the License.
+
+# [START hypercomputer_tpu_infer_qwen3_5_397b_multihost_v6e_server_yaml]
+apiVersion: jobset.x-k8s.io/v1alpha2
+kind: JobSet
+metadata:
+  name: vllm-qwen3-30b-pd-disagg-v6e
+spec:
+  failurePolicy:
+    restartStrategy: BlockingRecreate
+    maxRestarts: 5
+  ttlSecondsAfterFinished: 86400
+  network:
+    enableDNSHostnames: true
+  replicatedJobs:
+  # ---------------------------------------------------------
+  # PREFILL SERVERS (2 Replicas, 1 Node each = 4 chips on 2x4 v6e slice)
+  # ---------------------------------------------------------
+  - name: prefill
+    replicas: 2
+    template:
+      spec:
+        parallelism: 1
+        completions: 1
+        backoffLimit: 0
+        template:
+          metadata:
+            labels:
+              app: vllm-tpu-prefill
+          spec:
+            dnsPolicy: ClusterFirstWithHostNet
+            nodeSelector:
+              cloud.google.com/gke-tpu-topology: 2x4
+              cloud.google.com/gke-tpu-accelerator: tpu-v6e-slice
+            tolerations:
+            - key: "google.com/tpu"
+              operator: "Exists"
+              effect: "NoSchedule"
+            - key: "cloud.google.com/gke-spot"
+              operator: "Equal"
+              value: "true"
+              effect: "NoSchedule"
+            affinity:
+              podAntiAffinity:
+                requiredDuringSchedulingIgnoredDuringExecution:
+                - labelSelector:
+                    matchExpressions:
+                    - key: app
+                      operator: In
+                      values:
+                      - vllm-tpu-decode
+                  topologyKey: "cloud.google.com/gke-nodepool"
+              podAffinity:
+                requiredDuringSchedulingIgnoredDuringExecution:
+                - labelSelector:
+                    matchExpressions:
+                    - key: app
+                      operator: In
+                      values:
+                      - vllm-tpu-prefill
+                  topologyKey: "cloud.google.com/gke-nodepool"
+            initContainers:
+            - name: tpu-node-setup
+              image: busybox
+              securityContext:
+                privileged: true
+              command:
+              - /bin/sh
+              - -c
+              args:
+              - |
+                sysctl -w vm.max_map_count=8388608
+                if [ -f /sys/module/vfio_iommu_type1/parameters/dma_entry_limit ]; then
+                  echo 2000000 > /sys/module/vfio_iommu_type1/parameters/dma_entry_limit
+                fi
+            containers:
+            - name: vllm-tpu-prefill
+              image: us-central1-docker.pkg.dev/cloud-ullm-inference-ci-cd/vllm-torchtpu/torchtpu-vllm-prod:nightly-20260922
+              imagePullPolicy: IfNotPresent
+              command:
+              - /bin/bash
+              - -c
+              args:
+                - |
+                  set -e
+                  export TPU_WORKER_ID=$JOBSET_JOB_INDEX
+                  unset TPU_VISIBLE_CHIPS
+
+                  echo "=== Installing runai-model-streamer[gcs] and pre-caching metadata from GCS on $HOSTNAME ==="
+                  pip install -q "runai-model-streamer[gcs]==0.16.1"
+                  python3 -c "from vllm.transformers_utils.runai_utils import ObjectStorageModel; uri = 'gs://${GCS_BUCKET}/Qwen/Qwen3-30B-A3B-FP8'; m = ObjectStorageModel(uri); m.pull_files(uri, ignore_pattern=['*.pt', '*.safetensors', '*.bin', '*.tensors', '*.pth']); print('Pulled metadata/tokenizer to', m.dir)"
+
+                  HEAD_ADDR="${JS_NAME}-prefill-0-0.${JS_NAME}"
+
+                  if [ "$JOBSET_JOB_INDEX" = "0" ]; then
+                    echo "=== Node 0: Starting Ray Head on $HOSTNAME (port 6379, IP $POD_IP) ==="
+                    ray start --head --port=6379 --node-ip-address=$POD_IP --resources='{"TPU": 4}' --block &
+
+                    echo "Waiting for worker node to join Ray cluster (expecting 8.0 TPU total across 2 nodes)..."
+                    until ray status 2>/dev/null | grep -E -q "8(\.0)? TPU"; do
+                      echo "Waiting for worker to connect to Ray Head..."
+                      sleep 2
+                    done
+                    echo "Worker joined! Ray cluster status:"
+                    ray status
+
+                    echo "=== Starting vLLM Prefill Server (Qwen3 30B FP8, DP=8, TP=1, Port 8000) ==="
+                    PREFILL_ARGS=(
+                      gs://${GCS_BUCKET}/Qwen/Qwen3-30B-A3B-FP8
+                      --served-model-name=Qwen/Qwen3-30B-A3B-FP8
+                      --load-format=runai_streamer
+                      --enable-ep-weight-filter
+                      --tensor-parallel-size=1
+                      --data-parallel-size=8
+                      --data-parallel-size-local=4
+                      --data-parallel-backend=ray
+                      --data-parallel-address=$POD_IP
+                      --distributed-executor-backend=ray
+                      --enable-expert-parallel
+                      --max-model-len=18432
+                      --max-num-batched-tokens=8192
+                      --max-num-seqs=64
+                      --num-gpu-blocks-override=128
+                      --host=0.0.0.0
+                      --port=8000
+                      --async-scheduling
+                      --no-enable-prefix-caching
+                      --kv-cache-dtype=fp8
+                      --attention-backend=CUSTOM
+                      --block-size=1024
+                      --return-tokens-as-token-ids
+                      --compilation-config '{"backend":"vllm_torchtpu.compilation.tpu_compiler.TpuCompilerAdaptor","compile_sizes":[4096,8192],"inductor_compile_config":{"enable_auto_functionalized_v2":false,"size_asserts":false,"alignment_asserts":false,"scalar_asserts":false}}'
+                      --kv-transfer-config '{"kv_connector":"TPURaidenConnector","kv_connector_module_path":"vllm_torchtpu.distributed.kv_transfer.tpu_connector","kv_role":"kv_producer","kv_port":14579}'
+                    )
+                    exec vllm serve "${PREFILL_ARGS[@]}"
+                  else
+                    echo "=== Node 1: Starting Ray Worker on $HOSTNAME (IP $POD_IP) ==="
+                    until timeout 1 bash -c "cat < /dev/null > /dev/tcp/${HEAD_ADDR}/6379" 2>/dev/null; do
+                      echo "Waiting for Ray head at ${HEAD_ADDR}:6379..."
+                      sleep 2
+                    done
+                    echo "Ray head is reachable! Starting Ray worker..."
+                    sleep 3
+                    exec ray start --address="${HEAD_ADDR}:6379" --node-ip-address=$POD_IP --resources='{"TPU": 4}' --block
+                  fi
+
+              env:
+              - name: JS_NAME
+                valueFrom:
+                  fieldRef:
+                    fieldPath: metadata.labels['jobset.sigs.k8s.io/jobset-name']
+              - name: JOBSET_JOB_INDEX
+                valueFrom:
+                  fieldRef:
+                    fieldPath: metadata.labels['jobset.sigs.k8s.io/job-index']
+              - name: POD_IP
+                valueFrom:
+                  fieldRef:
+                    fieldPath: status.podIP
+              - name: TPU_MULTIHOST_BACKEND
+                value: "ray"
+              - name: RAY_EXPERIMENTAL_NOSET_TPU_VISIBLE_CHIPS
+                value: "1"
+              - name: RAY_ADDRESS
+                value: "127.0.0.1:6379"
+              - name: VLLM_ENGINE_READY_TIMEOUT_S
+                value: "14400"
+              - name: SKIP_MEGASCALE_PJRT_CLIENT
+                value: "true"
+              - name: USE_MOE_FUSED_EP_KERNEL
+                value: "1"
+              - name: RAGGED_GATHER_REDUCE_VERSION
+                value: "v3"
+              - name: LIBTPU_INIT_ARGS
+                value: "--xla_tpu_use_minor_sharding_for_major_trivial_input=true --xla_tpu_enable_sparse_core_collective_offload_reduce_scatter=false --xla_tpu_ars_combiner_threshold_in_bytes=0 --xla_tpu_enable_async_collective_merger=false --xla_tpu_enable_diagnostic_coordinator=false --xla_enable_async_all_gather=true --xla_tpu_enable_sparse_core_collective_offload_all_gather=true --xla_tpu_sparse_core_all_gather_offload_min_size_in_bytes=262144"
+              # Raiden KV-transfer configuration (Prefill / Producer)
+              - name: TPU_KV_RESHARD_TRANSPORT
+                value: "raiden"
+              - name: TPU_RAIDEN_RESHARD_IMPL
+                value: "store"
+              - name: TPU_RAIDEN_ADVERTISE_HOST
+                valueFrom:
+                  fieldRef:
+                    fieldPath: status.podIP
+              - name: TPU_USE_RAIDEN_KV_CACHE_MANAGER
+                value: "1"
+              - name: TPU_RAIDEN_QWEN35_ADMISSION
+                value: "1"
+              - name: TPU_RAIDEN_TRANSFER_PARALLELISM
+                value: "1"
+              - name: TPU_VLLM_ENABLE_UNIFIED_BLOCK_POOL
+                value: "1"
+              volumeMounts:
+              - name: dshm
+                mountPath: /dev/shm
+              securityContext:
+                privileged: true
+                capabilities:
+                  add:
+                  - IPC_LOCK
+              ports:
+              - name: http
+                containerPort: 8000
+              - name: ray-gcs
+                containerPort: 6379
+              resources:
+                limits:
+                  google.com/tpu: "4"
+                requests:
+                  google.com/tpu: "4"
+            volumes:
+            - name: dshm
+              emptyDir:
+                medium: Memory
+
+  # ---------------------------------------------------------
+  # DECODE SERVERS (2 Replicas, 1 Node each = 4 chips on 2x4 v6e slice)
+  # ---------------------------------------------------------
+  - name: decode
+    replicas: 2
+    template:
+      spec:
+        parallelism: 1
+        completions: 1
+        backoffLimit: 0
+        template:
+          metadata:
+            labels:
+              app: vllm-tpu-decode
+          spec:
+            dnsPolicy: ClusterFirstWithHostNet
+            nodeSelector:
+              cloud.google.com/gke-tpu-topology: 2x4
+              cloud.google.com/gke-tpu-accelerator: tpu-v6e-slice
+            tolerations:
+            - key: "google.com/tpu"
+              operator: "Exists"
+              effect: "NoSchedule"
+            - key: "cloud.google.com/gke-spot"
+              operator: "Equal"
+              value: "true"
+              effect: "NoSchedule"
+            affinity:
+              podAntiAffinity:
+                requiredDuringSchedulingIgnoredDuringExecution:
+                - labelSelector:
+                    matchExpressions:
+                    - key: app
+                      operator: In
+                      values:
+                      - vllm-tpu-prefill
+                  topologyKey: "cloud.google.com/gke-nodepool"
+              podAffinity:
+                requiredDuringSchedulingIgnoredDuringExecution:
+                - labelSelector:
+                    matchExpressions:
+                    - key: app
+                      operator: In
+                      values:
+                      - vllm-tpu-decode
+                  topologyKey: "cloud.google.com/gke-nodepool"
+            initContainers:
+            - name: tpu-node-setup
+              image: busybox
+              securityContext:
+                privileged: true
+              command:
+              - /bin/sh
+              - -c
+              args:
+              - |
+                sysctl -w vm.max_map_count=8388608
+                if [ -f /sys/module/vfio_iommu_type1/parameters/dma_entry_limit ]; then
+                  echo 2000000 > /sys/module/vfio_iommu_type1/parameters/dma_entry_limit
+                fi
+            containers:
+            - name: vllm-tpu-decode
+              image: us-central1-docker.pkg.dev/cloud-ullm-inference-ci-cd/vllm-torchtpu/torchtpu-vllm-prod:nightly-20260922
+              imagePullPolicy: IfNotPresent
+              command:
+              - /bin/bash
+              - -c
+              args:
+                - |
+                  set -e
+                  export TPU_WORKER_ID=$JOBSET_JOB_INDEX
+                  unset TPU_VISIBLE_CHIPS
+
+                  echo "=== Installing runai-model-streamer[gcs] and pre-caching metadata from GCS on $HOSTNAME ==="
+                  pip install -q "runai-model-streamer[gcs]==0.16.1"
+                  python3 -c "from vllm.transformers_utils.runai_utils import ObjectStorageModel; uri = 'gs://${GCS_BUCKET}/Qwen/Qwen3-30B-A3B-FP8'; m = ObjectStorageModel(uri); m.pull_files(uri, ignore_pattern=['*.pt', '*.safetensors', '*.bin', '*.tensors', '*.pth']); print('Pulled metadata/tokenizer to', m.dir)"
+
+                  HEAD_ADDR="${JS_NAME}-decode-0-0.${JS_NAME}"
+
+                  if [ "$JOBSET_JOB_INDEX" = "0" ]; then
+                    echo "=== Node 0: Starting Ray Head on $HOSTNAME (port 6379, IP $POD_IP) ==="
+                    ray start --head --port=6379 --node-ip-address=$POD_IP --resources='{"TPU": 4}' --block &
+
+                    echo "Waiting for worker node to join Ray cluster (expecting 8.0 TPU total across 2 nodes)..."
+                    until ray status 2>/dev/null | grep -E -q "8(\.0)? TPU"; do
+                      echo "Waiting for worker to connect to Ray Head..."
+                      sleep 2
+                    done
+                    echo "Worker joined! Ray cluster status:"
+                    ray status
+
+                    echo "=== Starting vLLM Decode Server (Qwen3 30B FP8, DP=8, TP=1, Port 7200) ==="
+                    DECODE_ARGS=(
+                      gs://${GCS_BUCKET}/Qwen/Qwen3-30B-A3B-FP8
+                      --served-model-name=Qwen/Qwen3-30B-A3B-FP8
+                      --load-format=runai_streamer
+                      --enable-ep-weight-filter
+                      --tensor-parallel-size=1
+                      --data-parallel-size=8
+                      --data-parallel-size-local=4
+                      --data-parallel-backend=ray
+                      --data-parallel-address=$POD_IP
+                      --distributed-executor-backend=ray
+                      --enable-expert-parallel
+                      --max-model-len=18432
+                      --max-num-batched-tokens=2048
+                      --max-num-seqs=64
+                      --num-gpu-blocks-override=32
+                      --host=0.0.0.0
+                      --port=7200
+                      --async-scheduling
+                      --no-enable-prefix-caching
+                      --kv-cache-dtype=fp8
+                      --attention-backend=CUSTOM
+                      --block-size=8192
+                      --compilation-config '{"backend":"vllm_torchtpu.compilation.tpu_compiler.TpuCompilerAdaptor","compile_sizes":[8,16,32,64,2048],"inductor_compile_config":{"enable_auto_functionalized_v2":false,"size_asserts":false,"alignment_asserts":false,"scalar_asserts":false}}'
+                      --kv-transfer-config '{"kv_connector":"TPURaidenConnector","kv_connector_module_path":"vllm_torchtpu.distributed.kv_transfer.tpu_connector","kv_role":"kv_consumer","kv_port":14579}'
+                    )
+                    exec vllm serve "${DECODE_ARGS[@]}"
+                  else
+                    echo "=== Node 1: Starting Ray Worker on $HOSTNAME (IP $POD_IP) ==="
+                    until timeout 1 bash -c "cat < /dev/null > /dev/tcp/${HEAD_ADDR}/6379" 2>/dev/null; do
+                      echo "Waiting for Ray head at ${HEAD_ADDR}:6379..."
+                      sleep 2
+                    done
+                    echo "Ray head is reachable! Starting Ray worker..."
+                    sleep 3
+                    exec ray start --address="${HEAD_ADDR}:6379" --node-ip-address=$POD_IP --resources='{"TPU": 4}' --block
+                  fi
+
+              env:
+              - name: JS_NAME
+                valueFrom:
+                  fieldRef:
+                    fieldPath: metadata.labels['jobset.sigs.k8s.io/jobset-name']
+              - name: JOBSET_JOB_INDEX
+                valueFrom:
+                  fieldRef:
+                    fieldPath: metadata.labels['jobset.sigs.k8s.io/job-index']
+              - name: POD_IP
+                valueFrom:
+                  fieldRef:
+                    fieldPath: status.podIP
+              - name: TPU_MULTIHOST_BACKEND
+                value: "ray"
+              - name: RAY_EXPERIMENTAL_NOSET_TPU_VISIBLE_CHIPS
+                value: "1"
+              - name: RAY_ADDRESS
+                value: "127.0.0.1:6379"
+              - name: VLLM_ENGINE_READY_TIMEOUT_S
+                value: "14400"
+              - name: SKIP_MEGASCALE_PJRT_CLIENT
+                value: "true"
+              - name: USE_MOE_FUSED_EP_KERNEL
+                value: "1"
+              - name: RAGGED_GATHER_REDUCE_VERSION
+                value: "v3"
+              - name: USE_BATCHED_RPA_LONGCTX
+                value: "1"
+              - name: LIBTPU_INIT_ARGS
+                value: "--xla_tpu_use_minor_sharding_for_major_trivial_input=true --xla_tpu_enable_sparse_core_collective_offload_reduce_scatter=false --xla_tpu_ars_combiner_threshold_in_bytes=0 --xla_tpu_enable_async_collective_merger=false --xla_tpu_enable_diagnostic_coordinator=false --xla_enable_async_all_gather=true --xla_tpu_enable_sparse_core_collective_offload_all_gather=true --xla_tpu_sparse_core_all_gather_offload_min_size_in_bytes=262144"
+              # Raiden KV-transfer configuration (Decode / Consumer)
+              - name: TPU_KV_RESHARD_TRANSPORT
+                value: "raiden"
+              - name: TPU_RAIDEN_RESHARD_IMPL
+                value: "store"
+              - name: TPU_RAIDEN_ADVERTISE_HOST
+                valueFrom:
+                  fieldRef:
+                    fieldPath: status.podIP
+              - name: TPU_USE_RAIDEN_KV_CACHE_MANAGER
+                value: "1"
+              - name: TPU_RAIDEN_QWEN35_ADMISSION
+                value: "1"
+              - name: TPU_RAIDEN_TRANSFER_PARALLELISM
+                value: "1"
+              - name: TPU_VLLM_ENABLE_UNIFIED_BLOCK_POOL
+                value: "1"
+              volumeMounts:
+              - name: dshm
+                mountPath: /dev/shm
+              securityContext:
+                privileged: true
+                capabilities:
+                  add:
+                  - IPC_LOCK
+              ports:
+              - name: http
+                containerPort: 7200
+              - name: ray-gcs
+                containerPort: 6379
+              resources:
+                limits:
+                  google.com/tpu: "4"
+                requests:
+                  google.com/tpu: "4"
+            volumes:
+            - name: dshm
+              emptyDir:
+                medium: Memory
+
+  # ---------------------------------------------------------
+  # DISAGGREGATION PROXY (Coordinates Prefill -> Decode)
+  # ---------------------------------------------------------
+  - name: proxy
+    replicas: 1
+    template:
+      spec:
+        parallelism: 1
+        completions: 1
+        backoffLimit: 2
+        template:
+          spec:
+            containers:
+            - name: vllm-tpu-proxy
+              image: us-central1-docker.pkg.dev/cloud-ullm-inference-ci-cd/vllm-torchtpu/torchtpu-vllm-prod:nightly-20260922
+              imagePullPolicy: IfNotPresent
+              command:
+              - /bin/bash
+              - -c
+              args:
+              - |
+                set -e
+                exec python3 /root/torchtpu-vllm/examples/disagg/toy_proxy_server.py \
+                  --host 0.0.0.0 \
+                  --port 10000 \
+                  --prefiller-host "${JS_NAME}-prefill-0-0.${JS_NAME}" \
+                  --prefiller-port 8000 \
+                  --decoder-host "${JS_NAME}-decode-0-0.${JS_NAME}" \
+                  --decoder-port 7200
+              env:
+              - name: JS_NAME
+                valueFrom:
+                  fieldRef:
+                    fieldPath: metadata.labels['jobset.sigs.k8s.io/jobset-name']
+              ports:
+              - name: http
+                containerPort: 10000
+              resources:
+                requests: { cpu: "2", memory: "4Gi" }
+                limits: { cpu: "8", memory: "16Gi" }
+# [END hypercomputer_tpu_infer_qwen3_5_397b_multihost_v6e_server_yaml]
