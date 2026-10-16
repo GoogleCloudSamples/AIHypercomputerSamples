@@ -36,6 +36,12 @@ mkdir -p tmp
 cp examples/gke-tpu-v6e/gke-tpu-v6e-advanced.yaml tmp/
 # [END hypercomputer_tpu_sft_gcluster_copy_blueprint]
 
+# [START hypercomputer_tpu_sft_gcluster_update_blueprint]
+sed -i "s/- storage.objectViewer/- storage.admin/" tmp/gke-tpu-v6e-advanced.yaml
+sed -i "s/n2-standard-8/e2-standard-8/" tmp/gke-tpu-v6e-advanced.yaml
+sed -i '/system_node_pool_machine_type/a \      system_node_pool_zones: [$(vars.zone)]' tmp/gke-tpu-v6e-advanced.yaml
+# [END hypercomputer_tpu_sft_gcluster_update_blueprint]
+
 # [START hypercomputer_tpu_sft_gcluster_create_cluster]
 ./gcluster deploy tmp/gke-tpu-v6e-advanced.yaml \
     --vars "project_id=${PROJECT},deployment_name=${CLUSTER_NAME},region=${REGION},zone=${ZONE},num_slices=1,tpu_topology=4x8,authorized_cidr=0.0.0.0/0,reservation=${RESERVATION:-}" \
@@ -73,6 +79,10 @@ gcloud projects add-iam-policy-binding "${PROJECT}" --member="serviceAccount:${C
 ./gcluster job logs hf-to-mt --main-only -f
 # [END hypercomputer_tpu_sft_gcluster_convert_model_logs]
 
+# [START hypercomputer_tpu_sft_gcluster_verify_converted_model]
+gcloud storage ls "gs://${GCS_BUCKET}/${MODEL_NAME}/max-text-format/"
+# [END hypercomputer_tpu_sft_gcluster_verify_converted_model]
+
 # [START hypercomputer_tpu_sft_gcluster_train_logs]
 # Use the list command to check status
 ./gcluster job list
@@ -80,6 +90,10 @@ gcloud projects add-iam-policy-binding "${PROJECT}" --member="serviceAccount:${C
 # Check progress of the job (--main-only targets the coordinator pod (Job Index 0, Pod Index 0) to avoid duplicate logs from other workers)
 ./gcluster job logs sft --main-only -f
 # [END hypercomputer_tpu_sft_gcluster_train_logs]
+
+# [START hypercomputer_tpu_sft_gcluster_verify_training_checkpoints]
+gcloud storage ls "gs://${GCS_BUCKET}/${MODEL_NAME}/trained/sft/checkpoints/1000/model_params/"
+# [END hypercomputer_tpu_sft_gcluster_verify_training_checkpoints]
 
 # [START hypercomputer_tpu_sft_gcluster_convert_hf_logs]
 # Use the list command to check status
@@ -90,6 +104,10 @@ gcloud projects add-iam-policy-binding "${PROJECT}" --member="serviceAccount:${C
 
 # The trained model is now available in gs://${GCS_BUCKET}/${MODEL_NAME}/hf-trained/ 
 # [END hypercomputer_tpu_sft_gcluster_convert_hf_logs]
+
+# [START hypercomputer_tpu_sft_gcluster_verify_hf_weights]
+gcloud storage ls -l --readable-sizes "gs://${GCS_BUCKET}/${MODEL_NAME}/hf-trained/"
+# [END hypercomputer_tpu_sft_gcluster_verify_hf_weights]
 
 # [START hypercomputer_tpu_sft_gcluster_cleanup_storage_v2]
 ./gcluster destroy "${CLUSTER_NAME}" --robust
