@@ -16,6 +16,10 @@
 kubectl describe pod -n lws-system | grep -A 8 Events
 # [END hypercomputer_tpu_infer_qwen3_coder_check_lws]
 
+# [START hypercomputer_tpu_infer_qwen3_coder_download_manifest]
+curl -LO https://raw.githubusercontent.com/GoogleCloudSamples/AIHypercomputerSamples/main/tpu/inference/qwen3-coder/qwen3-coder-480b-multihost-disagg-v7x.yaml
+# [END hypercomputer_tpu_infer_qwen3_coder_download_manifest]
+
 # [START hypercomputer_tpu_infer_qwen3_coder_check_pods]
 kubectl get pods
 # [END hypercomputer_tpu_infer_qwen3_coder_check_pods]
