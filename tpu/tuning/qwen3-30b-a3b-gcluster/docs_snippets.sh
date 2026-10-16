@@ -17,9 +17,21 @@
 # This file contains the exact documentation snippets for checking logs,
 # containing placeholders like <pod suffix> that shouldn't be executed in CI.
 
+# [START hypercomputer_tpu_tune_qwen3_30b_rl_authenticate]
+gcloud auth login
+gcloud auth application-default login
+gcloud auth application-default set-quota-project "${PROJECT}"
+# [END hypercomputer_tpu_tune_qwen3_30b_rl_authenticate]
+
 # [START hypercomputer_tpu_tune_qwen3_30b_rl_copy_blueprint]
 cp examples/gke-tpu-v6e/gke-tpu-v6e-advanced.yaml .
 # [END hypercomputer_tpu_tune_qwen3_30b_rl_copy_blueprint]
+
+# [START hypercomputer_tpu_tune_qwen3_30b_rl_update_blueprint]
+sed -i "s/- storage.objectViewer/- storage.admin/" gke-tpu-v6e-advanced.yaml
+sed -i "s/n2-standard-8/e2-standard-8/" gke-tpu-v6e-advanced.yaml
+sed -i '/system_node_pool_machine_type/a \      system_node_pool_zones: [$(vars.zone)]' gke-tpu-v6e-advanced.yaml
+# [END hypercomputer_tpu_tune_qwen3_30b_rl_update_blueprint]
 
 # [START hypercomputer_tpu_tune_qwen3_30b_rl_create_cluster]
 ./gcluster deploy gke-tpu-v6e-advanced.yaml \
@@ -33,6 +45,12 @@ cp examples/gke-tpu-v6e/gke-tpu-v6e-advanced.yaml .
     --vars reservation="${RESERVATION:-}" \
     -l IGNORE --auto-approve -w
 # [END hypercomputer_tpu_tune_qwen3_30b_rl_create_cluster]
+
+# [START hypercomputer_tpu_tune_qwen3_30b_rl_get_credentials]
+gcloud container clusters get-credentials "${CLUSTER_NAME}" \
+    --location="${REGION}" \
+    --project="${PROJECT}"
+# [END hypercomputer_tpu_tune_qwen3_30b_rl_get_credentials]
 
 # [START hypercomputer_tpu_tune_qwen3_30b_rl_configure_defaults]
 # Configure gcluster Defaults
@@ -54,7 +72,7 @@ gcloud storage ls "gs://${GCS_BUCKET}/${MODEL_NAME}/max-text-format/"
 # [END hypercomputer_tpu_tune_qwen3_30b_rl_verify_converted_model]
 
 # [START hypercomputer_tpu_tune_qwen3_30b_rl_train_logs_v2]
-# Use the list command to check status
+# Use the list command to check status (initially shows "Suspended" briefly while the CPU node pool scales up)
 ./gcluster job list
 
 # Ensure kubectl credentials are configured
@@ -62,7 +80,12 @@ gcloud container clusters get-credentials "${CLUSTER_NAME}" \
     --location="${REGION}" \
     --project="${PROJECT}"
 
-# Check progress of the job
+# Wait for the Pathways head pod to be ready before streaming logs
+kubectl wait --for=condition=Ready pod \
+    -l jobset.sigs.k8s.io/replicatedjob-name=pathways-head \
+    --timeout=600s
+
+# Stream training logs (runs for 50 steps; wait for "Post RL Training: ... mean_reward=..." and job status Succeeded before converting to Hugging Face)
 kubectl logs -f \
     -l jobset.sigs.k8s.io/replicatedjob-name=pathways-head \
     -c workload-container

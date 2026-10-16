@@ -59,6 +59,10 @@ sed -i "s/- storage.objectViewer/- storage.admin/" "${BLUEPRINT_FILE}"
 ./gcluster job logs gemma4-hf-to-mt --main-only -f
 # [END hypercomputer_tpu_tune_gemma4_26b_rl_convert_model_logs]
 
+# [START hypercomputer_tpu_tune_gemma4_26b_rl_verify_converted_model]
+gcloud storage ls "gs://${GCS_BUCKET}/${MODEL_NAME}/max-text-format/"
+# [END hypercomputer_tpu_tune_gemma4_26b_rl_verify_converted_model]
+
 # [START hypercomputer_tpu_tune_gemma4_26b_rl_train_logs_v2]
 # Use the list command to check status (initially shows "Suspended" briefly while the CPU node pool scales up)
 ./gcluster job list
@@ -79,6 +83,10 @@ kubectl logs -f \
     -c workload-container
 # [END hypercomputer_tpu_tune_gemma4_26b_rl_train_logs_v2]
 
+# [START hypercomputer_tpu_tune_gemma4_26b_rl_verify_training_checkpoints]
+gcloud storage ls "gs://${GCS_BUCKET}/${MODEL_NAME}/trained/rl/checkpoints/actor/"
+# [END hypercomputer_tpu_tune_gemma4_26b_rl_verify_training_checkpoints]
+
 # [START hypercomputer_tpu_tune_gemma4_26b_rl_convert_hf_logs]
 # Use the list command to check status
 ./gcluster job list 
@@ -88,6 +96,10 @@ kubectl logs -f \
 
 # The trained model is now available in gs://${GCS_BUCKET}/${MODEL_NAME}/hf-trained/
 # [END hypercomputer_tpu_tune_gemma4_26b_rl_convert_hf_logs]
+
+# [START hypercomputer_tpu_tune_gemma4_26b_rl_verify_hf_weights]
+gcloud storage ls -l --readable-sizes "gs://${GCS_BUCKET}/${MODEL_NAME}/hf-trained/"
+# [END hypercomputer_tpu_tune_gemma4_26b_rl_verify_hf_weights]
 
 # [START hypercomputer_tpu_tune_gemma4_26b_rl_cleanup_storage_v2]
 ./gcluster destroy "${CLUSTER_NAME}" --auto-approve
