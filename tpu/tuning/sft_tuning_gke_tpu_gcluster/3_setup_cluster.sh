@@ -22,11 +22,14 @@ cp examples/gke-tpu-v6e/gke-tpu-v6e-advanced.yaml tmp/gke-tpu-v6e-advanced.yaml
 echo "[$(date)] ==================== Blueprint workspace prepared ====================="
 
 echo "[$(date)] ==================== Configuring blueprint... ===================="
-# This line can be uncommented if you need to use e2-standard-8 instead of n2-standard-8 due to capacity issues
-# sed -i "s/n2-standard-8/e2-standard-8/" tmp/gke-tpu-v6e-advanced.yaml
-
 # Grant the GKE Node Pool Service Account storage.admin access to resolve the GCS bucket not found error
 sed -i "s/- storage.objectViewer/- storage.admin/" tmp/gke-tpu-v6e-advanced.yaml
+
+# Change n2-standard-8 to e2-standard-8 to avoid GCE_STOCKOUT in some regions
+sed -i "s/n2-standard-8/e2-standard-8/" tmp/gke-tpu-v6e-advanced.yaml
+
+# Pin system node pool to a single zone to avoid cross-zone stockouts
+sed -i '/system_node_pool_machine_type/a \      system_node_pool_zones: [$(vars.zone)]' tmp/gke-tpu-v6e-advanced.yaml
 
 echo "[$(date)] ==================== Configuring IAM for default Compute SA... ===================="
 gcloud services enable compute.googleapis.com --project="${PROJECT}"
@@ -49,6 +52,11 @@ echo "[$(date)] ==================== Deploying cluster with gcluster... ========
 
 # Fetch GKE cluster credentials for kubectl
 gcloud container clusters get-credentials "${CLUSTER_NAME}" --location="${REGION}" --project="${PROJECT}"
+
+# Configure gcluster Defaults
+./gcluster job config set project "${PROJECT}"
+./gcluster job config set cluster "${CLUSTER_NAME}"
+./gcluster job config set location "${REGION}"
 
 # Configure docker for pulling images
 gcloud auth configure-docker gcr.io --quiet

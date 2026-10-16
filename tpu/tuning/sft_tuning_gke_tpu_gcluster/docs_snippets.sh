@@ -37,8 +37,11 @@ cp examples/gke-tpu-v6e/gke-tpu-v6e-advanced.yaml tmp/
 # [END hypercomputer_tpu_sft_gcluster_copy_blueprint]
 
 # [START hypercomputer_tpu_sft_gcluster_update_blueprint]
+# Grant the GKE Node Pool Service Account storage.admin access for checkpoint writes
 sed -i "s/- storage.objectViewer/- storage.admin/" tmp/gke-tpu-v6e-advanced.yaml
+# Change n2-standard-8 to e2-standard-8 to avoid GCE_STOCKOUT in some regions
 sed -i "s/n2-standard-8/e2-standard-8/" tmp/gke-tpu-v6e-advanced.yaml
+# Pin system node pool to a single zone to avoid cross-zone stockouts
 sed -i '/system_node_pool_machine_type/a \      system_node_pool_zones: [$(vars.zone)]' tmp/gke-tpu-v6e-advanced.yaml
 # [END hypercomputer_tpu_sft_gcluster_update_blueprint]
 
@@ -47,7 +50,7 @@ sed -i '/system_node_pool_machine_type/a \      system_node_pool_zones: [$(vars.
     --vars "project_id=${PROJECT},deployment_name=${CLUSTER_NAME},region=${REGION},zone=${ZONE},num_slices=1,tpu_topology=4x8,authorized_cidr=0.0.0.0/0,reservation=${RESERVATION:-}" \
     --download-dependencies \
     -l IGNORE \
-    -w
+    --auto-approve -w
 # [END hypercomputer_tpu_sft_gcluster_create_cluster]
 
 # [START hypercomputer_tpu_sft_gcluster_get_credentials]
@@ -110,11 +113,11 @@ gcloud storage ls -l --readable-sizes "gs://${GCS_BUCKET}/${MODEL_NAME}/hf-train
 # [END hypercomputer_tpu_sft_gcluster_verify_hf_weights]
 
 # [START hypercomputer_tpu_sft_gcluster_cleanup_storage_v2]
-./gcluster destroy "${CLUSTER_NAME}" --robust
+./gcluster destroy "${CLUSTER_NAME}" --robust --auto-approve
 gcloud storage rm -r "gs://${GCS_BUCKET}"
 
-# To delete the local deployment folder
-rm -rf .ghpc "${CLUSTER_NAME}"
+# To delete the local deployment folder and staged blueprint
+rm -rf .ghpc "${CLUSTER_NAME}" tmp
 # [END hypercomputer_tpu_sft_gcluster_cleanup_storage_v2]
 
 # [START hypercomputer_tpu_sft_gcluster_yaml_service_account]
