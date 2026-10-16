@@ -64,3 +64,11 @@ gcloud compute firewall-rules create "${NETWORK}-allow-internal" \
   --rules=tcp:0-65535,udp:0-65535,icmp \
   --source-ranges="192.168.0.0/16,10.4.0.0/14,10.0.32.0/20"
 # [END hypercomputer_tpu_infer_qwen3_5_397b_vpc_create]
+
+# [START hypercomputer_tpu_infer_qwen3_5_397b_fetch_server_manifest]
+curl -O https://raw.githubusercontent.com/GoogleCloudSamples/AIHypercomputerSamples/refs/heads/main/tpu/inference/qwen3-5-397b/qwen3_5_server.yaml
+# [END hypercomputer_tpu_infer_qwen3_5_397b_fetch_server_manifest]
+
+# [START hypercomputer_tpu_infer_qwen3_5_397b_fetch_benchmark_manifest]
+curl -O https://raw.githubusercontent.com/GoogleCloudSamples/AIHypercomputerSamples/refs/heads/main/tpu/inference/qwen3-5-397b/qwen3_5-benchmark-8k1k.yaml
+# [END hypercomputer_tpu_infer_qwen3_5_397b_fetch_benchmark_manifest]
