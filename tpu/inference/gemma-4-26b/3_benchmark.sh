@@ -16,43 +16,22 @@
 
 set -euo pipefail
 
-RESULT_DIR="benchmark-results"
-RESULT_FILE="gemma4-26b-benchmark.json"
+LEADER_POD="vllm-tpu-gemma4-26b-0"
 NUM_PROMPTS=250
+BENCHMARK_LOG="$(mktemp)"
+trap 'rm -f "${BENCHMARK_LOG}"' EXIT
 
-if ! command -v uv >/dev/null 2>&1; then
-  echo "Installing uv..."
-  curl -LsSf https://astral.sh/uv/install.sh | sh
-  source "${HOME}/.local/bin/env"
+echo "Waiting for the leader pod to be Ready..."
+if ! kubectl wait --for=condition=Ready --timeout=600s "pod/${LEADER_POD}"; then
+  echo "Error: leader pod ${LEADER_POD} is not Ready." >&2
+  kubectl describe pod "${LEADER_POD}"
+  exit 1
 fi
 
-kubectl port-forward service/llm-service 8000:8000 &
-PORT_FORWARD_PID=$!
-
-cleanup() {
-  kill "$PORT_FORWARD_PID" 2>/dev/null || true
-}
-trap cleanup EXIT
-
-echo "Waiting for port forwarding to be ready..."
-LIMIT=60
-count=0
-until curl -sf http://localhost:8000/health >/dev/null; do
-  if ! kill -0 "$PORT_FORWARD_PID" 2>/dev/null; then
-    echo "Error: Port forwarding failed to start or died unexpectedly." >&2
-    exit 1
-  fi
-  if [ "${count}" -ge "${LIMIT}" ]; then
-    echo "Error: timeout waiting for the model server health endpoint." >&2
-    exit 1
-  fi
-  sleep 1
-  count=$((count + 1))
-done
-
-echo "Running benchmark (the first run downloads vLLM into the uv cache)..."
+echo "Running benchmark inside the leader pod..."
+{
 # [START hypercomputer_tpu_infer_gemma4_26b_benchmark_run]
-uvx --python 3.12 --from "vllm[bench]==0.31.0" vllm bench serve \
+kubectl exec vllm-tpu-gemma4-26b-0 -- vllm bench serve \
   --backend openai-chat \
   --endpoint /v1/chat/completions \
   --model google/gemma-4-26B-A4B-it \
@@ -62,15 +41,13 @@ uvx --python 3.12 --from "vllm[bench]==0.31.0" vllm bench serve \
   --num-prompts 250 \
   --random-input-len 1024 \
   --random-output-len 1024 \
-  --max-concurrency 128 \
-  --save-result \
-  --result-dir benchmark-results \
-  --result-filename gemma4-26b-benchmark.json
+  --max-concurrency 128
 # [END hypercomputer_tpu_infer_gemma4_26b_benchmark_run]
+} 2>&1 | tee "${BENCHMARK_LOG}"
 
-COMPLETED=$(jq -r '.completed' "${RESULT_DIR}/${RESULT_FILE}")
-if [ "${COMPLETED}" -ne "${NUM_PROMPTS}" ]; then
-  echo "Benchmark failed: only ${COMPLETED}/${NUM_PROMPTS} requests completed." >&2
+COMPLETED=$(awk -F: '/^Successful requests:/ {gsub(/ /, "", $2); print $2}' "${BENCHMARK_LOG}")
+if [ "${COMPLETED:-0}" -ne "${NUM_PROMPTS}" ]; then
+  echo "Benchmark failed: only ${COMPLETED:-0}/${NUM_PROMPTS} requests completed." >&2
   exit 1
 fi
-echo "Benchmark succeeded: ${COMPLETED}/${NUM_PROMPTS} requests completed. Results: ${RESULT_DIR}/${RESULT_FILE}"
+echo "Benchmark succeeded: ${COMPLETED}/${NUM_PROMPTS} requests completed."
