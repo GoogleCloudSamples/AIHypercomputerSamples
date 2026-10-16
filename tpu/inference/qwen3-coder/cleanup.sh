@@ -18,18 +18,23 @@ set -euo pipefail
 kubectl delete -f qwen3-coder-480b-multihost-disagg-v7x.yaml --ignore-not-found
 # [END hypercomputer_tpu_infer_qwen3_coder_cleanup_workload]
 
+echo "Waiting for any running GKE cluster operations to finish..."
+while gcloud container operations list --project="${PROJECT_ID}" --location="${REGION}" --filter="status=RUNNING AND targetLink:${CLUSTER_NAME}" --format="value(name)" 2>/dev/null | grep -q .; do
+  sleep 10
+done
+
 # [START hypercomputer_tpu_infer_qwen3_coder_cleanup_cluster]
 gcloud container node-pools delete tpu7x-pool-0 \
     --cluster=${CLUSTER_NAME} \
     --location=${REGION} \
     --project=${PROJECT_ID} \
-    --quiet
+    --quiet || true
 
 gcloud container node-pools delete tpu7x-pool-1 \
     --cluster=${CLUSTER_NAME} \
     --location=${REGION} \
     --project=${PROJECT_ID} \
-    --quiet
+    --quiet || true
 
 gcloud container clusters delete ${CLUSTER_NAME} \
     --location=${REGION} \

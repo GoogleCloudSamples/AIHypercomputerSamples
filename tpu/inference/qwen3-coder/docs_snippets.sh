@@ -28,3 +28,16 @@ kubectl logs -f sglang-tpu-decode-0
 # [START hypercomputer_tpu_infer_qwen3_coder_port_forward]
 kubectl port-forward service/sglang-service 8000:8000
 # [END hypercomputer_tpu_infer_qwen3_coder_port_forward]
+
+# [START hypercomputer_tpu_infer_qwen3_coder_test_inference]
+curl -s -X POST http://localhost:8000/v1/chat/completions \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "Qwen/Qwen3-Coder-480B-A35B-Instruct-FP8",
+    "messages": [
+      {"role": "user", "content": "Explain quicksort in two sentences."}
+    ],
+    "max_tokens": 60,
+    "temperature": 0.0
+  }'
+# [END hypercomputer_tpu_infer_qwen3_coder_test_inference]

@@ -19,13 +19,17 @@ gcloud container clusters create $CLUSTER_NAME \
   --project=$PROJECT_ID \
   --location=$REGION \
   --machine-type=e2-standard-4
+# [END hypercomputer_tpu_infer_qwen3_coder_create_cluster]
 
+# [START hypercomputer_tpu_infer_qwen3_coder_create_workload_policy]
 gcloud compute resource-policies create workload-policy tpu7x-2x2x2-workload-policy \
     --type=HIGH_THROUGHPUT \
     --accelerator-topology=2x2x2 \
     --project=${PROJECT_ID} \
     --region=${REGION}
+# [END hypercomputer_tpu_infer_qwen3_coder_create_workload_policy]
 
+# [START hypercomputer_tpu_infer_qwen3_coder_create_nodepools]
 gcloud container node-pools create tpu7x-pool-0 \
     --cluster=$CLUSTER_NAME \
     --location=$REGION \
@@ -47,15 +51,19 @@ gcloud container node-pools create tpu7x-pool-1 \
     --reservation-affinity=specific \
     --reservation=$RESERVATION \
     --project=$PROJECT_ID
+# [END hypercomputer_tpu_infer_qwen3_coder_create_nodepools]
 
+# [START hypercomputer_tpu_infer_qwen3_coder_get_creds]
 gcloud container clusters get-credentials $CLUSTER_NAME --location=${REGION} --project=${PROJECT_ID}
-# [END hypercomputer_tpu_infer_qwen3_coder_create_cluster]
+# [END hypercomputer_tpu_infer_qwen3_coder_get_creds]
 
-# [START hypercomputer_tpu_infer_qwen3_coder_setup_workload]
+# [START hypercomputer_tpu_infer_qwen3_coder_create_secret]
 kubectl create secret generic hf-secret \
     --from-literal=hf_api_token=${HF_TOKEN}
+# [END hypercomputer_tpu_infer_qwen3_coder_create_secret]
 
+# [START hypercomputer_tpu_infer_qwen3_coder_install_lws]
 kubectl apply --server-side -k github.com/kubernetes-sigs/lws/config/default?ref=main
-# [END hypercomputer_tpu_infer_qwen3_coder_setup_workload]
+# [END hypercomputer_tpu_infer_qwen3_coder_install_lws]
 
 kubectl wait --for=condition=Available --timeout=300s deployment/lws-controller-manager -n lws-system
