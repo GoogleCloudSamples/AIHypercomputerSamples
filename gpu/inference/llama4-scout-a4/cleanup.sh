@@ -30,11 +30,13 @@ echo "Bucket:      gs://${GCS_BUCKET}"
 echo "Repository:  ${REPO_NAME}"
 echo "=============================================================================="
 
-read -p "Are you sure you want to delete ALL these resources? (y/N) " -n 1 -r
-echo
-if [[ ! $REPLY =~ ^[Yy]$ ]]; then
-    echo "Cleanup cancelled."
-    exit 0
+if [[ -t 0 ]]; then
+    read -p "Are you sure you want to delete ALL these resources? (y/N) " -n 1 -r
+    echo
+    if [[ ! $REPLY =~ ^[Yy]$ ]]; then
+        echo "Cleanup cancelled."
+        exit 0
+    fi
 fi
 
 echo "--------------------------------------------------------"
