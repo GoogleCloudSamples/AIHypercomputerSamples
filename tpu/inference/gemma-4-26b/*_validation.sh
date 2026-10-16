@@ -16,7 +16,7 @@
 
 set -euo pipefail
 
-kubectl port-forward service/llm-service 8000:8000 &
+kubectl port-forward service/vllm-service 8000:8000 &
 PORT_FORWARD_PID=$!
 
 cleanup() {

@@ -19,7 +19,7 @@ curl -LO https://raw.githubusercontent.com/GoogleCloudSamples/AIHypercomputerSam
 # [END hypercomputer_tpu_infer_gemma4_26b_download_manifest]
 
 # [START hypercomputer_tpu_infer_gemma4_26b_port_forward]
-kubectl port-forward service/llm-service 8000:8000
+kubectl port-forward service/vllm-service 8000:8000
 # [END hypercomputer_tpu_infer_gemma4_26b_port_forward]
 
 # [START hypercomputer_tpu_infer_gemma4_26b_text_request]

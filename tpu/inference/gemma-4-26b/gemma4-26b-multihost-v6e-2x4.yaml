@@ -192,7 +192,7 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: llm-service
+  name: vllm-service
 spec:
   selector:
     leaderworkerset.sigs.k8s.io/name: vllm-tpu-gemma4-26b
