@@ -72,7 +72,7 @@ spec:
             effect: "NoSchedule"
         containers:
           - name: sglang
-            image: us-central1-docker.pkg.dev/hdx-ext-uxr/test-images/sglang-torchtpu:latest
+            image: $SGLANG_IMAGE
             command:
               - /bin/bash
               - -c
@@ -235,7 +235,7 @@ spec:
             effect: "NoSchedule"
         containers:
           - name: sglang
-            image: us-central1-docker.pkg.dev/hdx-ext-uxr/test-images/sglang-torchtpu:latest
+            image: $SGLANG_IMAGE
             command:
               - /bin/bash
               - -c
@@ -358,7 +358,7 @@ spec:
     spec:
       containers:
         - name: router
-          image: us-central1-docker.pkg.dev/hdx-ext-uxr/test-images/sglang-torchtpu:latest
+          image: $SGLANG_IMAGE
           command:
             - python3
             - -m
