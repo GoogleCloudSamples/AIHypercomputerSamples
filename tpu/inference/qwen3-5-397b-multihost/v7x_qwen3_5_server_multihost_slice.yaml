@@ -99,7 +99,7 @@ spec:
                   unset TPU_VISIBLE_CHIPS
 
                   echo "=== Installing runai-model-streamer[gcs] and pre-caching metadata from GCS on $HOSTNAME ==="
-                  pip install -q "runai-model-streamer[gcs]"
+                  pip install -q "runai-model-streamer[gcs]==0.16.1"
                   python3 -c "from vllm.transformers_utils.runai_utils import ObjectStorageModel; uri = 'gs://${GCS_BUCKET}/Qwen/Qwen3.5-397B-A17B-FP8'; m = ObjectStorageModel(uri); m.pull_files(uri, ignore_pattern=['*.pt', '*.safetensors', '*.bin', '*.tensors', '*.pth']); print('Pulled metadata/tokenizer to', m.dir)"
 
                   HEAD_ADDR="${JS_NAME}-prefill-0-0.${JS_NAME}"
@@ -298,7 +298,7 @@ spec:
                   unset TPU_VISIBLE_CHIPS
 
                   echo "=== Installing runai-model-streamer[gcs] and pre-caching metadata from GCS on $HOSTNAME ==="
-                  pip install -q "runai-model-streamer[gcs]"
+                  pip install -q "runai-model-streamer[gcs]==0.16.1"
                   python3 -c "from vllm.transformers_utils.runai_utils import ObjectStorageModel; uri = 'gs://${GCS_BUCKET}/Qwen/Qwen3.5-397B-A17B-FP8'; m = ObjectStorageModel(uri); m.pull_files(uri, ignore_pattern=['*.pt', '*.safetensors', '*.bin', '*.tensors', '*.pth']); print('Pulled metadata/tokenizer to', m.dir)"
 
                   HEAD_ADDR="${JS_NAME}-decode-0-0.${JS_NAME}"

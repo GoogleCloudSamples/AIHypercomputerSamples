@@ -19,14 +19,14 @@ set -euo pipefail
 echo "[$(date)] ==================== Starting validation... ===================="
 
 JOBSET_NAME="vllm-qwen3-5-397b-pd-disagg-v7x"
-PROXY_POD="${JOBSET_NAME}-proxy-0-0"
+PROXY_JOB="job/${JOBSET_NAME}-proxy-0"
 BENCHMARK_JOB="vllm-qwen3-5-397b-pd-disagg-v7x-tester"
 
-echo "Verifying proxy pod ${PROXY_POD} is Ready..."
-kubectl wait --for=condition=Ready --timeout=600s "pod/${PROXY_POD}"
+echo "Verifying proxy pod for ${PROXY_JOB} is Ready..."
+kubectl wait --for=condition=Ready --timeout=600s pod -l "job-name=${JOBSET_NAME}-proxy-0"
 
-echo "Setting up port-forwarding to ${PROXY_POD} on port 10000..."
-kubectl port-forward "pod/${PROXY_POD}" 10000:10000 >/dev/null 2>&1 &
+echo "Setting up port-forwarding to ${PROXY_JOB} on port 10000..."
+kubectl port-forward "${PROXY_JOB}" 10000:10000 >/dev/null 2>&1 &
 PORT_FORWARD_PID=$!
 
 cleanup() {

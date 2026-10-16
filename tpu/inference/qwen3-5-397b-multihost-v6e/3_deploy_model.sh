@@ -68,21 +68,21 @@ cleanup_logs() {
 }
 trap cleanup_logs EXIT
 
-TIMEOUT=7200
-INTERVAL=15
-ELAPSED=0
-PREFILL_READY=false
-DECODE_READY=false
+timeout=7200
+interval=15
+elapsed=0
+prefill_ready=false
+decode_ready=false
 
-while [[ "${PREFILL_READY}" != "true" || "${DECODE_READY}" != "true" ]]; do
+while [[ "${prefill_ready}" != "true" || "${decode_ready}" != "true" ]]; do
   if [[ "$(kubectl get jobset "${JOBSET_NAME}" -o jsonpath='{.status.terminalState}' 2>/dev/null)" == "Failed" ]]; then
     echo "Error: JobSet ${JOBSET_NAME} entered Failed state!" >&2
     kubectl describe jobset "${JOBSET_NAME}" >&2 || true
     exit 1
   fi
 
-  if [[ "${ELAPSED}" -ge "${TIMEOUT}" ]]; then
-    echo "Error: Timed out after ${TIMEOUT}s waiting for prefill and decode vLLM servers to finish startup." >&2
+  if [[ "${elapsed}" -ge "${timeout}" ]]; then
+    echo "Error: Timed out after ${timeout}s waiting for prefill and decode vLLM servers to finish startup." >&2
     kubectl get pods -l "jobset.sigs.k8s.io/jobset-name=${JOBSET_NAME}" -o wide >&2 || true
     kubectl logs "job/${JOBSET_NAME}-prefill-0" --tail=100 >&2 || true
     kubectl logs "job/${JOBSET_NAME}-decode-0" --tail=100 >&2 || true
@@ -90,18 +90,18 @@ while [[ "${PREFILL_READY}" != "true" || "${DECODE_READY}" != "true" ]]; do
   fi
 
   if kubectl logs "job/${JOBSET_NAME}-prefill-0" --tail=200 2>/dev/null | grep -q "Application startup complete."; then
-    PREFILL_READY=true
+    prefill_ready=true
   fi
   if kubectl logs "job/${JOBSET_NAME}-decode-0" --tail=200 2>/dev/null | grep -q "Application startup complete."; then
-    DECODE_READY=true
+    decode_ready=true
   fi
 
-  if [[ "${PREFILL_READY}" == "true" && "${DECODE_READY}" == "true" ]]; then
+  if [[ "${prefill_ready}" == "true" && "${decode_ready}" == "true" ]]; then
     break
   fi
 
-  sleep "${INTERVAL}"
-  ELAPSED=$((ELAPSED + INTERVAL))
+  sleep "${interval}"
+  elapsed=$((elapsed + interval))
 done
 
 echo "[$(date)] ==================== Prefill, Decode, and Proxy servers are up and ready! ===================="
