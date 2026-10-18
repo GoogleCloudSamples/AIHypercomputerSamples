@@ -18,5 +18,5 @@ set -euo pipefail
 envsubst '$SGLANG_IMAGE' < qwen3-coder-480b-multihost-disagg-v7x.yaml | kubectl apply -f -
 # [END hypercomputer_tpu_infer_qwen3_coder_apply_manifest]
 
-kubectl wait --for=condition=Ready --timeout=5400s pod/sglang-tpu-prefill-0 pod/sglang-tpu-decode-0
+kubectl wait --for=condition=Available --timeout=5400s lws/sglang-tpu-prefill lws/sglang-tpu-decode
 kubectl wait --for=condition=Available --timeout=5400s deployment/sglang-router

@@ -28,13 +28,13 @@ gcloud container node-pools delete tpu7x-pool-0 \
     --cluster=${CLUSTER_NAME} \
     --location=${REGION} \
     --project=${PROJECT_ID} \
-    --quiet || true
+    --quiet
 
 gcloud container node-pools delete tpu7x-pool-1 \
     --cluster=${CLUSTER_NAME} \
     --location=${REGION} \
     --project=${PROJECT_ID} \
-    --quiet || true
+    --quiet
 
 gcloud container clusters delete ${CLUSTER_NAME} \
     --location=${REGION} \
