@@ -64,6 +64,6 @@ kubectl create secret generic hf-secret \
 
 # [START hypercomputer_tpu_infer_qwen3_coder_install_lws]
 kubectl apply --server-side -k github.com/kubernetes-sigs/lws/config/default?ref=main
-# [END hypercomputer_tpu_infer_qwen3_coder_install_lws]
-
+echo "Waiting for LWS controller to be ready..."
 kubectl wait --for=condition=Available --timeout=300s deployment/lws-controller-manager -n lws-system
+# [END hypercomputer_tpu_infer_qwen3_coder_install_lws]
