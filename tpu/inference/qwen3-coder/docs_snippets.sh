@@ -12,10 +12,6 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
-# [START hypercomputer_tpu_infer_qwen3_coder_check_lws]
-kubectl describe pod -n lws-system | grep -A 8 Events
-# [END hypercomputer_tpu_infer_qwen3_coder_check_lws]
-
 # [START hypercomputer_tpu_infer_qwen3_coder_download_manifest]
 curl -LO https://raw.githubusercontent.com/GoogleCloudSamples/AIHypercomputerSamples/main/tpu/inference/qwen3-coder/qwen3-coder-480b-multihost-disagg-v7x.yaml
 # [END hypercomputer_tpu_infer_qwen3_coder_download_manifest]
@@ -25,8 +21,10 @@ kubectl get pods
 # [END hypercomputer_tpu_infer_qwen3_coder_check_pods]
 
 # [START hypercomputer_tpu_infer_qwen3_coder_logs]
-kubectl logs -f sglang-tpu-prefill-0
-kubectl logs -f sglang-tpu-decode-0
+kubectl logs -f -l role=leader --prefix=true &
+LOG_PID=$!
+kubectl wait --for=condition=Ready --timeout=3600s pod -l role=leader
+kill "${LOG_PID}" 2>/dev/null || true
 # [END hypercomputer_tpu_infer_qwen3_coder_logs]
 
 # [START hypercomputer_tpu_infer_qwen3_coder_port_forward]
