@@ -19,5 +19,5 @@ export REGION="YOUR_REGION"
 export ZONE="YOUR_ZONE"
 export RESERVATION="YOUR_RESERVATION_NAME"
 export HF_TOKEN="YOUR_HF_TOKEN"
-export SGLANG_IMAGE="YOUR_SGLANG_TPU_IMAGE"
+export SGLANG_IMAGE="lmsysorg/sglang:v0.1.0-tpu"
 # [END hypercomputer_tpu_infer_qwen3_coder_env]
