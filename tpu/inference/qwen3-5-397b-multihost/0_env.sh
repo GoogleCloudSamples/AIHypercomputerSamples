@@ -31,14 +31,14 @@ gcloud config set billing/quota_project "${PROJECT_ID}"
 
 # Set USE_FLEX_START="true" (or leave RESERVATION_NAME empty / "YOUR_RESERVATION_NAME")
 # to provision the TPU v7x node pools using DWS Flex-Start with autoscaling instead of a reservation.
-export USE_FLEX_START="${USE_FLEX_START:-false}"
+export USE_FLEX_START="${USE_FLEX_START:-YOUR_USE_FLEX_START}"
 
 # Set USE_SPOT="true" to provision the TPU v7x node pools using Spot VMs.
-export USE_SPOT="${USE_SPOT:-false}"
+export USE_SPOT="${USE_SPOT:-YOUR_USE_SPOT}"
 
 # Timeout for waiting for the model download job to complete in 2_download_model.sh.
 # Default value is 7200s (2 hours) to account for downloading and uploading ~400GB of weights.
 export DOWNLOAD_TIMEOUT="YOUR_DOWNLOAD_TIMEOUT"
 
 # Set SKIP_BENCHMARK="true" to skip the 8k/1k benchmark step in 4_run_benchmark.sh.
-export SKIP_BENCHMARK="${SKIP_BENCHMARK:-false}"
+export SKIP_BENCHMARK="${SKIP_BENCHMARK:-YOUR_SKIP_BENCHMARK}"
