@@ -21,6 +21,10 @@ if [[ "${SKIP_BENCHMARK:-false}" == "true" ]]; then
   exit 0
 fi
 
+if [[ -z "${VLLM_IMAGE:-}" || "${VLLM_IMAGE}" == "YOUR_VLLM_IMAGE" ]]; then
+  export VLLM_IMAGE="us-central1-docker.pkg.dev/hdx-ext-uxr/test-images/torchtpu-vllm-prod:nightly-20260922"
+fi
+
 BENCHMARK_JOB="vllm-qwen3-30b-pd-disagg-v6e-tester"
 
 echo "[$(date)] ==================== Starting Qwen 3 30B PD-Disaggregation 8k/1k benchmark... ===================="

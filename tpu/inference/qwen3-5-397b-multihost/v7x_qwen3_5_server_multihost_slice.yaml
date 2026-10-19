@@ -87,7 +87,7 @@ spec:
                 fi
             containers:
             - name: vllm-tpu-prefill
-              image: us-central1-docker.pkg.dev/hdx-ext-uxr/test-images/torchtpu-vllm-prod:nightly-20260922
+              image: ${VLLM_IMAGE}
               imagePullPolicy: IfNotPresent
               command:
               - /bin/bash
@@ -286,7 +286,7 @@ spec:
                 fi
             containers:
             - name: vllm-tpu-decode
-              image: us-central1-docker.pkg.dev/hdx-ext-uxr/test-images/torchtpu-vllm-prod:nightly-20260922
+              image: ${VLLM_IMAGE}
               imagePullPolicy: IfNotPresent
               command:
               - /bin/bash
@@ -440,7 +440,7 @@ spec:
           spec:
             containers:
             - name: vllm-tpu-proxy
-              image: us-central1-docker.pkg.dev/hdx-ext-uxr/test-images/torchtpu-vllm-prod:nightly-20260922
+              image: ${VLLM_IMAGE}
               imagePullPolicy: IfNotPresent
               command:
               - /bin/bash

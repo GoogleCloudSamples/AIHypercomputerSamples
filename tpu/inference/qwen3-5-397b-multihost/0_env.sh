@@ -24,6 +24,7 @@ export NODE_POOL_NAME_1="np-1"
 export RESERVATION_NAME="YOUR_RESERVATION_NAME"
 export GCS_BUCKET="YOUR_GCS_BUCKET"
 export HF_TOKEN="YOUR_HF_TOKEN"
+export VLLM_IMAGE="YOUR_VLLM_IMAGE"
 
 gcloud config set project "${PROJECT_ID}"
 gcloud config set billing/quota_project "${PROJECT_ID}"

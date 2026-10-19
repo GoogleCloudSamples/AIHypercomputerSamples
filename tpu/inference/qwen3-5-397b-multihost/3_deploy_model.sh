@@ -16,6 +16,10 @@
 
 set -euo pipefail
 
+if [[ -z "${VLLM_IMAGE:-}" || "${VLLM_IMAGE}" == "YOUR_VLLM_IMAGE" ]]; then
+  export VLLM_IMAGE="us-central1-docker.pkg.dev/hdx-ext-uxr/test-images/torchtpu-vllm-prod:nightly-20260805"
+fi
+
 JOBSET_NAME="vllm-qwen3-5-397b-pd-disagg-v7x"
 
 echo "[$(date)] ==================== Deploying the vLLM Qwen 3.5 397B PD-Disaggregated server JobSet... ===================="
