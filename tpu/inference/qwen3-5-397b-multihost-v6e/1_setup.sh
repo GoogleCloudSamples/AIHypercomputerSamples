@@ -1,0 +1,86 @@
+#!/bin/bash
+#
+#  Copyright 2026 Google LLC
+#
+#  Licensed under the Apache License, Version 2.0 (the "License");
+#  you may not use this file except in compliance with the License.
+#  You may obtain a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+#  Unless required by applicable law or agreed to in writing, software
+#  distributed under the License is distributed on an "AS IS" BASIS,
+#  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#  See the License for the specific language governing permissions and
+#  limitations under the License.
+
+set -euo pipefail
+
+echo "[$(date)] ==================== Creating GKE Standard cluster ${CLUSTER_NAME}... ===================="
+if ! gcloud container clusters describe "${CLUSTER_NAME}" --location="${REGION}" --project="${PROJECT_ID}" >/dev/null 2>&1; then
+  # [START hypercomputer_tpu_infer_qwen3_5_397b_multihost_v6e_cluster_create]
+  gcloud container clusters create "${CLUSTER_NAME}" \
+      --project="${PROJECT_ID}" \
+      --location="${REGION}" \
+      --node-locations="${ZONE}" \
+      --machine-type="e2-standard-4" \
+      --workload-pool="${PROJECT_ID}.svc.id.goog"
+  # [END hypercomputer_tpu_infer_qwen3_5_397b_multihost_v6e_cluster_create]
+else
+  echo "Cluster ${CLUSTER_NAME} already exists."
+fi
+
+echo "Verifying cluster status..."
+STATUS=$(gcloud container clusters describe "${CLUSTER_NAME}" --location="${REGION}" --project="${PROJECT_ID}" --format="value(status)")
+
+if [[ "${STATUS}" == "RUNNING" ]]; then
+  echo "[$(date)] Cluster ${CLUSTER_NAME} is RUNNING and ready for node pool creation."
+else
+  echo "[$(date)] Warning: Cluster is in '${STATUS}' state." >&2
+  exit 1
+fi
+
+echo "[$(date)] ==================== Creating TPU v6e node pools ${NODE_POOL_NAME_0} and ${NODE_POOL_NAME_1} (Reservation: ${RESERVATION_NAME})... ===================="
+# [START hypercomputer_tpu_infer_qwen3_5_397b_multihost_v6e_nodepool_create_reservation]
+gcloud container node-pools create "${NODE_POOL_NAME_0}" \
+    --project="${PROJECT_ID}" \
+    --location="${REGION}" \
+    --cluster="${CLUSTER_NAME}" \
+    --node-locations="${ZONE}" \
+    --machine-type="${MACHINE_TYPE}" \
+    --tpu-topology=2x4 \
+    --num-nodes=2 \
+    --reservation-affinity=specific \
+    --reservation="${RESERVATION_NAME}"
+
+gcloud container node-pools create "${NODE_POOL_NAME_1}" \
+    --project="${PROJECT_ID}" \
+    --location="${REGION}" \
+    --cluster="${CLUSTER_NAME}" \
+    --node-locations="${ZONE}" \
+    --machine-type="${MACHINE_TYPE}" \
+    --tpu-topology=2x4 \
+    --num-nodes=2 \
+    --reservation-affinity=specific \
+    --reservation="${RESERVATION_NAME}"
+# [END hypercomputer_tpu_infer_qwen3_5_397b_multihost_v6e_nodepool_create_reservation]
+
+echo "[$(date)] ==================== Getting cluster credentials... ===================="
+# [START hypercomputer_tpu_infer_qwen3_5_397b_multihost_v6e_cluster_get_creds]
+gcloud container clusters get-credentials "${CLUSTER_NAME}" \
+    --location="${REGION}" \
+    --project="${PROJECT_ID}"
+# [END hypercomputer_tpu_infer_qwen3_5_397b_multihost_v6e_cluster_get_creds]
+
+echo "[$(date)] ==================== Creating hf-secret secret... ===================="
+# [START hypercomputer_tpu_infer_qwen3_5_397b_multihost_v6e_secret_create]
+kubectl create secret generic hf-secret \
+    --from-literal=hf_api_token="${HF_TOKEN}" \
+    --dry-run=client -o yaml | kubectl apply -f -
+# [END hypercomputer_tpu_infer_qwen3_5_397b_multihost_v6e_secret_create]
+
+echo "[$(date)] ==================== Installing JobSet CRD... ===================="
+# [START hypercomputer_tpu_infer_qwen3_5_397b_multihost_v6e_jobset_install]
+kubectl apply --server-side -f https://github.com/kubernetes-sigs/jobset/releases/download/v0.12.0/manifests.yaml
+kubectl wait --for=condition=Available --timeout=300s deployment/jobset-controller-manager -n jobset-system
+# [END hypercomputer_tpu_infer_qwen3_5_397b_multihost_v6e_jobset_install]
