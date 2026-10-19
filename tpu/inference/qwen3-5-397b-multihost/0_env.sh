@@ -30,10 +30,6 @@ gcloud config set project "${PROJECT_ID}"
 gcloud config set billing/quota_project "${PROJECT_ID}"
 # [END hypercomputer_tpu_infer_qwen3_5_397b_multihost_env]
 
-# Set USE_SPOT="true" (or leave RESERVATION_NAME empty / "YOUR_RESERVATION_NAME")
-# to provision the TPU v7x node pools using Spot VMs instead of a reservation.
-export USE_SPOT="${USE_SPOT:-YOUR_USE_SPOT}"
-
 # Timeout for waiting for the model download job to complete in 2_download_model.sh.
 # Default value is 7200s (2 hours) to account for downloading and uploading ~400GB of weights.
 export DOWNLOAD_TIMEOUT="YOUR_DOWNLOAD_TIMEOUT"
