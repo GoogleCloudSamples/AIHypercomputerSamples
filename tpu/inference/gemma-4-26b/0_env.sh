@@ -22,7 +22,7 @@ export ZONE="YOUR_ZONE"
 export CLUSTER_NAME="YOUR_CLUSTER_NAME"
 export HF_TOKEN="YOUR_HF_TOKEN"
 export NODE_POOL_NAME="tpuv6e-pool"
-export VLLM_IMAGE="YOUR_VLLM_TPU_IMAGE"
+export VLLM_IMAGE="vllm/vllm-torchtpu:v0.29.0"
 
 gcloud config set project "${PROJECT_ID}"
 gcloud config set billing/quota_project "${PROJECT_ID}"
