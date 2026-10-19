@@ -49,3 +49,33 @@ curl -O https://raw.githubusercontent.com/GoogleCloudSamples/AIHypercomputerSamp
 # [START hypercomputer_tpu_infer_qwen3_5_397b_multihost_curl_benchmark_yaml]
 curl -O https://raw.githubusercontent.com/GoogleCloudSamples/AIHypercomputerSamples/main/tpu/inference/qwen3-5-397b-multihost/v7x_qwen3_5_benchmark_multihost_slice.yaml
 # [END hypercomputer_tpu_infer_qwen3_5_397b_multihost_curl_benchmark_yaml]
+
+# [START hypercomputer_tpu_infer_qwen3_5_397b_multihost_nodepool_create_flex_start]
+gcloud container node-pools create "${NODE_POOL_NAME_0}" \
+    --cluster="${CLUSTER_NAME}" \
+    --machine-type="${MACHINE_TYPE}" \
+    --placement-policy="${WORKLOAD_POLICY_NAME}" \
+    --location="${REGION}" \
+    --node-locations="${ZONE}" \
+    --project="${PROJECT_ID}" \
+    --reservation-affinity=none \
+    --enable-autoscaling \
+    --num-nodes=0 \
+    --min-nodes=0 \
+    --max-nodes=2 \
+    --flex-start
+
+gcloud container node-pools create "${NODE_POOL_NAME_1}" \
+    --cluster="${CLUSTER_NAME}" \
+    --machine-type="${MACHINE_TYPE}" \
+    --placement-policy="${WORKLOAD_POLICY_NAME}" \
+    --location="${REGION}" \
+    --node-locations="${ZONE}" \
+    --project="${PROJECT_ID}" \
+    --reservation-affinity=none \
+    --enable-autoscaling \
+    --num-nodes=0 \
+    --min-nodes=0 \
+    --max-nodes=2 \
+    --flex-start
+# [END hypercomputer_tpu_infer_qwen3_5_397b_multihost_nodepool_create_flex_start]

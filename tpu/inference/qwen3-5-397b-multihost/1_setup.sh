@@ -78,7 +78,7 @@ if [[ -n "${RESERVATION_NAME:-}" && "${RESERVATION_NAME}" != "YOUR_RESERVATION_N
       --reservation-affinity=specific \
       --reservation="${RESERVATION_NAME}"
   # [END hypercomputer_tpu_infer_qwen3_5_397b_multihost_nodepool_create_reservation]
-elif [[ "${USE_SPOT:-false}" == "true" ]]; then
+else
   echo "[$(date)] ==================== Creating TPU v7x node pools ${NODE_POOL_NAME_0} and ${NODE_POOL_NAME_1} (Spot VMs)... ===================="
   # [START hypercomputer_tpu_infer_qwen3_5_397b_multihost_nodepool_create_spot]
   gcloud container node-pools create "${NODE_POOL_NAME_0}" \
@@ -101,37 +101,6 @@ elif [[ "${USE_SPOT:-false}" == "true" ]]; then
       --num-nodes=2 \
       --spot
   # [END hypercomputer_tpu_infer_qwen3_5_397b_multihost_nodepool_create_spot]
-else
-  echo "[$(date)] ==================== Creating TPU v7x node pools ${NODE_POOL_NAME_0} and ${NODE_POOL_NAME_1} (Flex-Start)... ===================="
-  # [START hypercomputer_tpu_infer_qwen3_5_397b_multihost_nodepool_create_flex_start]
-  gcloud container node-pools create "${NODE_POOL_NAME_0}" \
-      --cluster="${CLUSTER_NAME}" \
-      --machine-type="${MACHINE_TYPE}" \
-      --placement-policy="${WORKLOAD_POLICY_NAME}" \
-      --location="${REGION}" \
-      --node-locations="${ZONE}" \
-      --project="${PROJECT_ID}" \
-      --reservation-affinity=none \
-      --enable-autoscaling \
-      --num-nodes=0 \
-      --min-nodes=0 \
-      --max-nodes=2 \
-      --flex-start
-
-  gcloud container node-pools create "${NODE_POOL_NAME_1}" \
-      --cluster="${CLUSTER_NAME}" \
-      --machine-type="${MACHINE_TYPE}" \
-      --placement-policy="${WORKLOAD_POLICY_NAME}" \
-      --location="${REGION}" \
-      --node-locations="${ZONE}" \
-      --project="${PROJECT_ID}" \
-      --reservation-affinity=none \
-      --enable-autoscaling \
-      --num-nodes=0 \
-      --min-nodes=0 \
-      --max-nodes=2 \
-      --flex-start
-  # [END hypercomputer_tpu_infer_qwen3_5_397b_multihost_nodepool_create_flex_start]
 fi
 
 echo "[$(date)] ==================== Getting cluster credentials... ===================="

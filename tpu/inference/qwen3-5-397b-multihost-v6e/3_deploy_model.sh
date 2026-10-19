@@ -20,7 +20,7 @@ JOBSET_NAME="vllm-qwen3-30b-pd-disagg-v6e"
 
 echo "[$(date)] ==================== Deploying the vLLM Qwen 3 30B PD-Disaggregated server JobSet... ===================="
 for i in {1..12}; do
-  if envsubst '$GCS_BUCKET' < v6e_qwen3_server_multi.yaml | kubectl apply -f -; then
+  if envsubst '$GCS_BUCKET' < v6e_qwen3_server_multihost_slice.yaml | kubectl apply -f -; then
     break
   fi
   echo "JobSet webhook not ready yet, retrying in 5 seconds..."

@@ -17,11 +17,11 @@
 set -euo pipefail
 
 echo "[$(date)] ==================== Deleting Kubernetes workloads and secrets... ===================="
-kubectl delete -f v6e_qwen3_benchmark_multi.yaml --ignore-not-found || true
+kubectl delete -f v6e_qwen3_benchmark_multihost_slice.yaml --ignore-not-found || true
 kubectl delete job download-qwen3 --ignore-not-found || true
 
 # [START hypercomputer_tpu_infer_qwen3_5_397b_multihost_v6e_deploy_cleanup]
-kubectl delete -f v6e_qwen3_server_multi.yaml --ignore-not-found || true
+kubectl delete -f v6e_qwen3_server_multihost_slice.yaml --ignore-not-found || true
 kubectl delete secret hf-secret --ignore-not-found || true
 # [END hypercomputer_tpu_infer_qwen3_5_397b_multihost_v6e_deploy_cleanup]
 

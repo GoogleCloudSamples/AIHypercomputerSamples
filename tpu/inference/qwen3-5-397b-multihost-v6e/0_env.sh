@@ -28,13 +28,6 @@ gcloud config set project "${PROJECT_ID}"
 gcloud config set billing/quota_project "${PROJECT_ID}"
 # [END hypercomputer_tpu_infer_qwen3_5_397b_multihost_v6e_env]
 
-# Set USE_FLEX_START="true" (or leave RESERVATION_NAME empty / "YOUR_RESERVATION_NAME")
-# to provision the TPU v6e node pools using DWS Flex-Start with autoscaling instead of a reservation.
-export USE_FLEX_START="${USE_FLEX_START:-YOUR_USE_FLEX_START}"
-
-# Set USE_SPOT="true" to provision the TPU v6e node pools using Spot VMs.
-export USE_SPOT="${USE_SPOT:-YOUR_USE_SPOT}"
-
 # Timeout for waiting for the model download job to complete in 2_download_model.sh.
 # Default value is 3600s (1 hour) to account for downloading and uploading the model weights.
 export DOWNLOAD_TIMEOUT="YOUR_DOWNLOAD_TIMEOUT"
