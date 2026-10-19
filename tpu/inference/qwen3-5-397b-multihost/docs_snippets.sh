@@ -17,8 +17,7 @@ gcloud storage ls "gs://${GCS_BUCKET}/Qwen/Qwen3.5-397B-A17B-FP8/*.safetensors" 
 # [END hypercomputer_tpu_infer_qwen3_5_397b_multihost_count_shards]
 
 # [START hypercomputer_tpu_infer_qwen3_5_397b_multihost_deploy]
-sed -i "s/<GCS_BUCKET>/${GCS_BUCKET}/g" v7x_qwen3_5_server_multihost_slice.yaml
-kubectl apply -f v7x_qwen3_5_server_multihost_slice.yaml
+envsubst '${GCS_BUCKET}' < "v7x_qwen3_5_server_multihost_slice.yaml" | kubectl apply -f -
 # [END hypercomputer_tpu_infer_qwen3_5_397b_multihost_deploy]
 
 # [START hypercomputer_tpu_infer_qwen3_5_397b_multihost_download_logs]
@@ -35,5 +34,18 @@ kubectl logs -l jobset.sigs.k8s.io/replicatedjob-name=decode -f --tail=-1
 # [END hypercomputer_tpu_infer_qwen3_5_397b_multihost_server_logs]
 
 # [START hypercomputer_tpu_infer_qwen3_5_397b_multihost_benchmark_logs]
+kubectl wait --for=condition=Ready pod -l job-name=vllm-qwen3-5-397b-pd-disagg-v7x-tester --timeout=300s
 kubectl logs -f job/vllm-qwen3-5-397b-pd-disagg-v7x-tester
 # [END hypercomputer_tpu_infer_qwen3_5_397b_multihost_benchmark_logs]
+
+# [START hypercomputer_tpu_infer_qwen3_5_397b_multihost_curl_download_job_yaml]
+curl -O https://raw.githubusercontent.com/GoogleCloudSamples/AIHypercomputerSamples/main/tpu/inference/qwen3-5-397b-multihost/download_model.yaml
+# [END hypercomputer_tpu_infer_qwen3_5_397b_multihost_curl_download_job_yaml]
+
+# [START hypercomputer_tpu_infer_qwen3_5_397b_multihost_curl_server_yaml]
+curl -O https://raw.githubusercontent.com/GoogleCloudSamples/AIHypercomputerSamples/main/tpu/inference/qwen3-5-397b-multihost/v7x_qwen3_5_server_multihost_slice.yaml
+# [END hypercomputer_tpu_infer_qwen3_5_397b_multihost_curl_server_yaml]
+
+# [START hypercomputer_tpu_infer_qwen3_5_397b_multihost_curl_benchmark_yaml]
+curl -O https://raw.githubusercontent.com/GoogleCloudSamples/AIHypercomputerSamples/main/tpu/inference/qwen3-5-397b-multihost/v7x_qwen3_5_benchmark_multihost_slice.yaml
+# [END hypercomputer_tpu_infer_qwen3_5_397b_multihost_curl_benchmark_yaml]
