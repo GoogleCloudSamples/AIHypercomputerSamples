@@ -17,7 +17,7 @@
 set -euo pipefail
 
 if [[ -z "${VLLM_IMAGE:-}" || "${VLLM_IMAGE}" == "YOUR_VLLM_TPU_IMAGE" ]]; then
-  export VLLM_IMAGE="us-central1-docker.pkg.dev/cloud-ullm-inference-ci-cd/vllm-torchtpu/torchtpu-vllm-prod:nightly-20260805"
+  export VLLM_IMAGE="us-central1-docker.pkg.dev/hdx-ext-uxr/test-images/torchtpu-vllm-prod:nightly-20260805"
 fi
 
 echo "[$(date)] ==================== Deploying the vLLM Qwen 3.5 397B server... ===================="
