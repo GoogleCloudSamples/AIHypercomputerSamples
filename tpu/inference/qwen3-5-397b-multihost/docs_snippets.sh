@@ -17,7 +17,7 @@ gcloud storage ls "gs://${GCS_BUCKET}/Qwen/Qwen3.5-397B-A17B-FP8/*.safetensors" 
 # [END hypercomputer_tpu_infer_qwen3_5_397b_multihost_count_shards]
 
 # [START hypercomputer_tpu_infer_qwen3_5_397b_multihost_deploy]
-envsubst '${GCS_BUCKET}' < "v7x_qwen3_5_server_multihost_slice.yaml" | kubectl apply -f -
+envsubst '${GCS_BUCKET} ${VLLM_IMAGE}' < "v7x_qwen3_5_server_multihost_slice.yaml" | kubectl apply -f -
 # [END hypercomputer_tpu_infer_qwen3_5_397b_multihost_deploy]
 
 # [START hypercomputer_tpu_infer_qwen3_5_397b_multihost_download_logs]

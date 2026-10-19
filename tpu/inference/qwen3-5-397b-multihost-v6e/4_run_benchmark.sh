@@ -29,7 +29,7 @@ BENCHMARK_JOB="vllm-qwen3-30b-pd-disagg-v6e-tester"
 
 echo "[$(date)] ==================== Starting Qwen 3 30B PD-Disaggregation 8k/1k benchmark... ===================="
 # [START hypercomputer_tpu_infer_qwen3_5_397b_multihost_v6e_benchmark_apply]
-kubectl apply -f v6e_qwen3_benchmark_multihost_slice.yaml
+envsubst '${VLLM_IMAGE}' < v6e_qwen3_benchmark_multihost_slice.yaml | kubectl apply -f -
 # [END hypercomputer_tpu_infer_qwen3_5_397b_multihost_v6e_benchmark_apply]
 
 echo "Waiting for benchmark pod to be created and start running..."
