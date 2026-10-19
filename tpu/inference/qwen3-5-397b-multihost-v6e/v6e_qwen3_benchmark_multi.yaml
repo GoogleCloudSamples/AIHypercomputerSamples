@@ -26,7 +26,7 @@ spec:
       restartPolicy: Never
       containers:
       - name: vllm-test
-        image: us-central1-docker.pkg.dev/cloud-ullm-inference-ci-cd/vllm-torchtpu/torchtpu-vllm-prod:nightly-20260922
+        image: us-central1-docker.pkg.dev/hdx-ext-uxr/test-images/torchtpu-vllm-prod:nightly-20260922
         imagePullPolicy: IfNotPresent
         resources:
           requests: { cpu: "1", memory: "4Gi" }
