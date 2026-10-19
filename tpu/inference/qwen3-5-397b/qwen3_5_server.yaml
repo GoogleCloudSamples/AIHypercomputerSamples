@@ -101,6 +101,8 @@ spec:
           value: "1"
         - name: TPU_MOE_SKIP_PADDED_TOKENS
           value: "1"
+        - name: VLLM_CACHE_ROOT
+          value: "/data/vllm_cache"
         - name: VLLM_TORCH_COMPILE_CACHE_DIR
           value: "/data/torch_compile_cache"
         - name: XLA_CACHE_DIR

@@ -57,7 +57,7 @@ RESPONSE=$(curl -s http://127.0.0.1:8000/v1/chat/completions \
         "messages": [
             {"role": "user", "content": "Hello! Tell me a joke."}
         ],
-        "max_tokens": 100,
+        "max_tokens": 512,
         "temperature": 0.7
     }')
 

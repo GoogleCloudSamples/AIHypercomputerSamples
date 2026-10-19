@@ -51,7 +51,7 @@ curl http://localhost:8000/v1/chat/completions \
         "messages": [
             {"role": "user", "content": "Hello! Tell me a joke."}
         ],
-        "max_tokens": 100,
+        "max_tokens": 512,
         "temperature": 0.7
     }' | jq .
 # [END hypercomputer_tpu_infer_qwen3_5_397b_interact]
