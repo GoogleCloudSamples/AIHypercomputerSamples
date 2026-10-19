@@ -22,14 +22,15 @@ if [[ "${SKIP_BENCHMARK:-false}" == "true" ]]; then
 fi
 
 if [[ -z "${VLLM_IMAGE:-}" || "${VLLM_IMAGE}" == "YOUR_VLLM_IMAGE" ]]; then
-  export VLLM_IMAGE="us-central1-docker.pkg.dev/hdx-ext-uxr/test-images/torchtpu-vllm-prod:nightly-20260922"
+  echo "Error: set VLLM_IMAGE in 0_env.sh to a vLLM TPU image." >&2
+  exit 1
 fi
 
 BENCHMARK_JOB="vllm-qwen3-5-397b-pd-disagg-v7x-tester"
 
 echo "[$(date)] ==================== Starting Qwen 3.5 397B PD-Disaggregation 8k/1k benchmark... ===================="
 # [START hypercomputer_tpu_infer_qwen3_5_397b_multihost_benchmark_apply]
-kubectl apply -f v7x_qwen3_5_benchmark_multihost_slice.yaml
+envsubst '${VLLM_IMAGE}' < v7x_qwen3_5_benchmark_multihost_slice.yaml | kubectl apply -f -
 # [END hypercomputer_tpu_infer_qwen3_5_397b_multihost_benchmark_apply]
 
 echo "Waiting for benchmark pod to be created and start running..."

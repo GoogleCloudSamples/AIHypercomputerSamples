@@ -17,14 +17,15 @@
 set -euo pipefail
 
 if [[ -z "${VLLM_IMAGE:-}" || "${VLLM_IMAGE}" == "YOUR_VLLM_IMAGE" ]]; then
-  export VLLM_IMAGE="us-central1-docker.pkg.dev/hdx-ext-uxr/test-images/torchtpu-vllm-prod:nightly-20260805"
+  echo "Error: set VLLM_IMAGE in 0_env.sh to a vLLM TPU image." >&2
+  exit 1
 fi
 
 JOBSET_NAME="vllm-qwen3-30b-pd-disagg-v6e"
 
 echo "[$(date)] ==================== Deploying the vLLM Qwen 3 30B PD-Disaggregated server JobSet... ===================="
 for i in {1..12}; do
-  if envsubst '$GCS_BUCKET' < v6e_qwen3_server_multihost_slice.yaml | kubectl apply -f -; then
+  if envsubst '${GCS_BUCKET} ${VLLM_IMAGE}' < v6e_qwen3_server_multihost_slice.yaml | kubectl apply -f -; then
     break
   fi
   echo "JobSet webhook not ready yet, retrying in 5 seconds..."
