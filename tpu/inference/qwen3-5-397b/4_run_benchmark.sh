@@ -22,7 +22,7 @@ if [[ "${SKIP_BENCHMARK:-false}" == "true" ]]; then
 fi
 
 if [[ -z "${VLLM_IMAGE:-}" || "${VLLM_IMAGE}" == "YOUR_VLLM_TPU_IMAGE" ]]; then
-  export VLLM_IMAGE="us-central1-docker.pkg.dev/hdx-ext-uxr/test-images/torchtpu-vllm-prod:nightly-20260805"
+  export VLLM_IMAGE="vllm/vllm-torchtpu:v0.29.0@sha256:3976ccc1a69ffd361e0a7d2831fe317f6b685636014f426321a39ae02f8da0dc"
 fi
 
 echo "[$(date)] ==================== Starting Qwen 3.5 397B 8k/1k benchmark... ===================="
