@@ -22,7 +22,7 @@ if [[ "${SKIP_BENCHMARK:-false}" == "true" ]]; then
 fi
 
 if [[ -z "${VLLM_IMAGE:-}" || "${VLLM_IMAGE}" == "YOUR_VLLM_IMAGE" ]]; then
-  export VLLM_IMAGE="us-central1-docker.pkg.dev/hdx-ext-uxr/test-images/torchtpu-vllm-prod:nightly-20260922"
+  export VLLM_IMAGE="us-central1-docker.pkg.dev/hdx-ext-uxr/test-images/torchtpu-vllm-prod:nightly-20260805"
 fi
 
 BENCHMARK_JOB="vllm-qwen3-5-397b-pd-disagg-v7x-tester"
