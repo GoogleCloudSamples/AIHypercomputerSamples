@@ -24,7 +24,6 @@ export GCS_BUCKET="YOUR_BUCKET_NAME"
 export HF_TOKEN="YOUR_HF_TOKEN"
 export CLUSTER_TOOLKIT_VERSION="v1.104.0"
 export DYNAMO_RELEASE_VERSION="1.5.0"
-export STATIC_NODE_COUNT=2
 
 gcloud config set project "${PROJECT_ID}"
 gcloud config set billing/quota_project "${PROJECT_ID}"
@@ -36,6 +35,3 @@ if [[ "${CLUSTER_NAME}" == pkb-*-cluster ]]; then
 elif [[ ${#CLUSTER_NAME} -gt 20 && "${CLUSTER_NAME}" != "YOUR_CLUSTER_NAME" ]]; then
   export CLUSTER_NAME="${CLUSTER_NAME:0:20}"
 fi
-
-# Set SKIP_BENCHMARK="true" to skip the benchmark step in 4_run_benchmark.sh.
-export SKIP_BENCHMARK="${SKIP_BENCHMARK:-false}"

@@ -18,28 +18,28 @@ set -euo pipefail
 
 echo "[$(date)] ==================== Setting up port forwarding to svc/llama3-405b-a4-disagg-frontend... ===================="
 kubectl port-forward svc/llama3-405b-a4-disagg-frontend 8000:8000 >/dev/null 2>&1 &
-PORT_FORWARD_PID=$!
+port_forward_pid=$!
 
 cleanup() {
-  kill "${PORT_FORWARD_PID}" 2>/dev/null || true
+  kill "${port_forward_pid}" 2>/dev/null || true
 }
 trap cleanup EXIT
 
 echo "Waiting for port forwarding to be ready..."
-TIMEOUT=120
-INTERVAL=2
-ELAPSED=0
+timeout=120
+interval=2
+elapsed=0
 until curl -s http://localhost:8000/health >/dev/null || curl -s http://localhost:8000/v1/models >/dev/null; do
-  if ! kill -0 "${PORT_FORWARD_PID}" 2>/dev/null; then
+  if ! kill -0 "${port_forward_pid}" 2>/dev/null; then
     echo "Error: Port forwarding failed to start or died unexpectedly." >&2
     exit 1
   fi
-  if [[ "${ELAPSED}" -ge "${TIMEOUT}" ]]; then
+  if [[ "${elapsed}" -ge "${timeout}" ]]; then
     echo "Error: Timeout waiting for port forwarding to be ready." >&2
     exit 1
   fi
-  sleep "${INTERVAL}"
-  ELAPSED=$((ELAPSED + INTERVAL))
+  sleep "${interval}"
+  elapsed=$((elapsed + interval))
 done
 
 echo "[$(date)] ==================== Sending chat completion request to Llama 3.1 405B... ===================="

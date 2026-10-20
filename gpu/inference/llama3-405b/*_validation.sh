@@ -18,28 +18,28 @@ set -euo pipefail
 
 echo "[$(date)] ==================== Starting validation... ===================="
 
-FRONTEND_POD=$(kubectl get pod -l 'nvidia.com/dynamo-component-type=frontend' -o jsonpath='{.items[0].metadata.name}')
-echo "Waiting for frontend pod ${FRONTEND_POD} to be Ready..."
-kubectl wait --for=condition=Ready "pod/${FRONTEND_POD}" --timeout=1800s
+frontend_pod=$(kubectl get pod -l 'nvidia.com/dynamo-component-type=frontend' -o jsonpath='{.items[0].metadata.name}')
+echo "Waiting for frontend pod ${frontend_pod} to be Ready..."
+kubectl wait --for=condition=Ready "pod/${frontend_pod}" --timeout=1800s
 
 echo "Setting up port-forwarding to svc/llama3-405b-a4-disagg-frontend on port 8000..."
 kubectl port-forward svc/llama3-405b-a4-disagg-frontend 8000:8000 >/dev/null 2>&1 &
-PORT_FORWARD_PID=$!
+port_forward_pid=$!
 
 cleanup() {
-  kill "${PORT_FORWARD_PID}" 2>/dev/null || true
+  kill "${port_forward_pid}" 2>/dev/null || true
 }
 trap cleanup EXIT
 
 echo "Polling endpoint readiness..."
-LIMIT=300
+limit=300
 count=0
 until curl -s http://127.0.0.1:8000/health >/dev/null || curl -s http://127.0.0.1:8000/v1/models >/dev/null; do
-  if [[ "${count}" -ge "${LIMIT}" ]]; then
+  if [[ "${count}" -ge "${limit}" ]]; then
     echo "Timeout waiting for model endpoint to become healthy." >&2
     exit 1
   fi
-  if ! kill -0 "${PORT_FORWARD_PID}" 2>/dev/null; then
+  if ! kill -0 "${port_forward_pid}" 2>/dev/null; then
     echo "Error: Port forwarding failed to start or died unexpectedly." >&2
     exit 1
   fi
@@ -48,7 +48,7 @@ until curl -s http://127.0.0.1:8000/health >/dev/null || curl -s http://127.0.0.
 done
 
 echo "Executing test query to nvidia/Llama-3.1-405B-Instruct-FP8..."
-RESPONSE=$(curl -s http://127.0.0.1:8000/v1/chat/completions \
+response=$(curl -s http://127.0.0.1:8000/v1/chat/completions \
   -X POST \
   -H "Content-Type: application/json" \
   -d '{
@@ -58,11 +58,11 @@ RESPONSE=$(curl -s http://127.0.0.1:8000/v1/chat/completions \
   }')
 
 echo "Verifying JSON completion structure..."
-if echo "${RESPONSE}" | grep -q '"object": *"chat.completion"'; then
+if echo "${response}" | grep -q '"object": *"chat.completion"'; then
   echo "Chat completion validation succeeded!"
 else
   echo "Validation Failed! Expected chat.completion JSON structure. Response was:" >&2
-  echo "${RESPONSE}" >&2
+  echo "${response}" >&2
   exit 1
 fi
 

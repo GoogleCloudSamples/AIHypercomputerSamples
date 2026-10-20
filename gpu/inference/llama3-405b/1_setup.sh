@@ -21,18 +21,6 @@ if ! command -v helm >/dev/null 2>&1; then
   curl -fsSL https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
 fi
 
-echo "[$(date)] ==================== Enabling required Google Cloud APIs... ===================="
-# [START hypercomputer_gpu_infer_llama3_405b_enable_apis]
-gcloud services enable \
-    container.googleapis.com \
-    compute.googleapis.com \
-    storage.googleapis.com \
-    iam.googleapis.com \
-    cloudresourcemanager.googleapis.com \
-    serviceusage.googleapis.com \
-    --project="${PROJECT_ID}"
-# [END hypercomputer_gpu_infer_llama3_405b_enable_apis]
-
 echo "[$(date)] ==================== Installing Cluster Toolkit... ===================="
 if [[ ! -x "cluster-toolkit/gcluster" ]]; then
   # [START hypercomputer_gpu_infer_llama3_405b_install_cluster_toolkit]
@@ -45,7 +33,7 @@ else
   echo "Cluster Toolkit already downloaded in ./cluster-toolkit."
 fi
 
-echo "[$(date)] ==================== Creating Terraform state GCS bucket gs://${GCS_BUCKET}... ===================="
+echo "[$(date)] ==================== Creating Terraform state GCS bucket... ===================="
 if ! gcloud storage buckets describe "gs://${GCS_BUCKET}" --project="${PROJECT_ID}" >/dev/null 2>&1; then
   # [START hypercomputer_gpu_infer_llama3_405b_create_tf_bucket]
   gcloud storage buckets create "gs://${GCS_BUCKET}" \
@@ -72,7 +60,7 @@ vars:
   deployment_name: ${CLUSTER_NAME}
   region: ${REGION}
   zone: ${ZONE}
-  static_node_count: ${STATIC_NODE_COUNT:-2}
+  static_node_count: 2
   authorized_cidr: 0.0.0.0/0
   reservation: ${RESERVATION_NAME}
 EOF
