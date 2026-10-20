@@ -1,0 +1,248 @@
+# Copyright 2026 Google LLC
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+# [START hypercomputer_gpu_infer_qwen38_2t_manifest_local_ssd]
+apiVersion: nvidia.com/v1beta1
+kind: DynamoGraphDeployment
+metadata:
+  name: qwen3-8-2-4t-a4-disagg
+spec:
+  backendFramework: sglang
+  env:
+  - name: HF_TOKEN
+    valueFrom:
+      secretKeyRef:
+        name: hf-secret
+        key: hf_api_token
+  - name: HF_HOME
+    value: /root/.cache/huggingface
+  - name: GLOO_SOCKET_IFNAME
+    value: eth0
+  - name: NCCL_SOCKET_IFNAME
+    value: eth0
+  components:
+  - name: frontend
+    type: frontend
+    replicas: 1
+    podTemplate:
+      spec:
+        containers:
+        - name: main
+          image: nvcr.io/nvidia/ai-dynamo/sglang-runtime:1.5.0
+          imagePullPolicy: IfNotPresent
+          command:
+          - python3
+          - -m
+          - dynamo.frontend
+          args:
+          - --dyn-chat-processor
+          - sglang
+          - --reasoning-parser
+          - qwen3
+          - --tool-call-parser
+          - qwen3_coder
+          - --router-mode
+          - kv
+          - --router-kv-events
+          - --trust-remote-code
+          - --http-port
+          - "8000"
+          ports:
+          - containerPort: 8000
+            name: http
+          volumeMounts:
+          - name: hf-cache
+            mountPath: /root/.cache/huggingface
+        volumes:
+        - name: hf-cache
+          hostPath:
+            path: /mnt/stateful_partition/kube-ephemeral-ssd/hf-cache
+            type: DirectoryOrCreate
+
+  - name: prefill
+    type: prefill
+    replicas: 1
+    multinode:
+      nodeCount: 2
+    podTemplate:
+      metadata:
+        annotations:
+          networking.gke.io/default-interface: eth0
+      spec:
+        nodeSelector:
+          cloud.google.com/gke-accelerator: nvidia-b200
+        tolerations:
+        - key: nvidia.com/gpu
+          operator: Exists
+          effect: NoSchedule
+        resourceClaims:
+        - name: rdma
+          resourceClaimTemplateName: default-rdma
+        containers:
+        - name: main
+          image: nvcr.io/nvidia/ai-dynamo/sglang-runtime:1.5.0
+          imagePullPolicy: IfNotPresent
+          workingDir: /workspace
+          command:
+          - /bin/bash
+          - -lc
+          args:
+          - |
+            if [[ -f /usr/local/gib/scripts/set_nccl_env.sh ]]; then
+              source /usr/local/gib/scripts/set_nccl_env.sh
+            fi
+            exec python3 -m dynamo.sglang \
+              --model-path nvidia/Qwen3.8-2.4T-A95B-NVFP4 \
+              --served-model-name nvidia/Qwen3.8-2.4T-A95B-NVFP4 \
+              --trust-remote-code \
+              --skip-tokenizer-init \
+              --tensor-parallel-size 16 \
+              --context-length 262144 \
+              --mem-fraction-static 0.85 \
+              --max-running-requests 512 \
+              --chunked-prefill-size 8192 \
+              --max-prefill-tokens 8192 \
+              --page-size 64 \
+              --attention-backend trtllm_mha \
+              --linear-attn-prefill-backend flashinfer \
+              --linear-attn-decode-backend flashinfer \
+              --moe-runner-backend flashinfer_trtllm \
+              --moe-a2a-backend none \
+              --mamba-ssm-dtype bfloat16 \
+              --mamba-radix-cache-strategy extra_buffer \
+              --weight-loader-prefetch-checkpoints \
+              --weight-loader-prefetch-num-threads 4 \
+              --watchdog-timeout 7200 \
+              --host 0.0.0.0 \
+              --disaggregation-mode prefill \
+              --disaggregation-transfer-backend nixl \
+              --disaggregation-bootstrap-port 30001 \
+              --kv-events-config '{"publisher":"zmq","topic":"kv-events","endpoint":"tcp://*:5571"}'
+          securityContext:
+            privileged: true
+          resources:
+            requests:
+              nvidia.com/gpu: "8"
+            limits:
+              nvidia.com/gpu: "8"
+            claims:
+            - name: rdma
+          volumeMounts:
+          - name: hf-cache
+            mountPath: /root/.cache/huggingface
+          - name: gib
+            mountPath: /usr/local/gib
+          - name: dshm
+            mountPath: /dev/shm
+        volumes:
+        - name: hf-cache
+          hostPath:
+            path: /mnt/stateful_partition/kube-ephemeral-ssd/hf-cache
+            type: DirectoryOrCreate
+        - name: gib
+          hostPath:
+            path: /home/kubernetes/bin/gib
+        - name: dshm
+          emptyDir:
+            medium: Memory
+            sizeLimit: 250Gi
+
+  - name: decode
+    type: decode
+    replicas: 1
+    multinode:
+      nodeCount: 2
+    podTemplate:
+      metadata:
+        annotations:
+          networking.gke.io/default-interface: eth0
+      spec:
+        nodeSelector:
+          cloud.google.com/gke-accelerator: nvidia-b200
+        tolerations:
+        - key: nvidia.com/gpu
+          operator: Exists
+          effect: NoSchedule
+        resourceClaims:
+        - name: rdma
+          resourceClaimTemplateName: default-rdma
+        containers:
+        - name: main
+          image: nvcr.io/nvidia/ai-dynamo/sglang-runtime:1.5.0
+          imagePullPolicy: IfNotPresent
+          workingDir: /workspace
+          command:
+          - /bin/bash
+          - -lc
+          args:
+          - |
+            if [[ -f /usr/local/gib/scripts/set_nccl_env.sh ]]; then
+              source /usr/local/gib/scripts/set_nccl_env.sh
+            fi
+            exec python3 -m dynamo.sglang \
+              --model-path nvidia/Qwen3.8-2.4T-A95B-NVFP4 \
+              --served-model-name nvidia/Qwen3.8-2.4T-A95B-NVFP4 \
+              --trust-remote-code \
+              --skip-tokenizer-init \
+              --tensor-parallel-size 16 \
+              --context-length 262144 \
+              --mem-fraction-static 0.90 \
+              --max-running-requests 512 \
+              --chunked-prefill-size 8192 \
+              --max-prefill-tokens 8192 \
+              --page-size 64 \
+              --attention-backend trtllm_mha \
+              --linear-attn-prefill-backend flashinfer \
+              --linear-attn-decode-backend flashinfer \
+              --moe-runner-backend flashinfer_trtllm \
+              --moe-a2a-backend none \
+              --mamba-ssm-dtype bfloat16 \
+              --mamba-radix-cache-strategy extra_buffer \
+              --weight-loader-prefetch-checkpoints \
+              --weight-loader-prefetch-num-threads 4 \
+              --watchdog-timeout 7200 \
+              --host 0.0.0.0 \
+              --disaggregation-mode decode \
+              --disaggregation-transfer-backend nixl \
+              --disaggregation-bootstrap-port 30001 \
+              --kv-events-config '{"publisher":"zmq","topic":"kv-events","endpoint":"tcp://*:5571"}'
+          securityContext:
+            privileged: true
+          resources:
+            requests:
+              nvidia.com/gpu: "8"
+            limits:
+              nvidia.com/gpu: "8"
+            claims:
+            - name: rdma
+          volumeMounts:
+          - name: hf-cache
+            mountPath: /root/.cache/huggingface
+          - name: gib
+            mountPath: /usr/local/gib
+          - name: dshm
+            mountPath: /dev/shm
+        volumes:
+        - name: hf-cache
+          hostPath:
+            path: /mnt/stateful_partition/kube-ephemeral-ssd/hf-cache
+            type: DirectoryOrCreate
+        - name: gib
+          hostPath:
+            path: /home/kubernetes/bin/gib
+        - name: dshm
+          emptyDir:
+            medium: Memory
+            sizeLimit: 250Gi
+# [END hypercomputer_gpu_infer_qwen38_2t_manifest_local_ssd]
