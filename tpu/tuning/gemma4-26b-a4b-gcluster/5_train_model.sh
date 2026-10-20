@@ -21,11 +21,11 @@ echo "[$(date)] ==================== Submitting Training Workload... ===========
 ./gcluster job submit \
   --name="gemma4-training" \
   --num-slices=1 \
-  --image="${CLOUD_IMAGE_NAME}" \
-  --compute-type="${COMPUTE_TYPE}" \
-  --topology="${TOPOLOGY}" \
+  --image="${CLOUD_IMAGE_NAME:?}" \
+  --compute-type="${COMPUTE_TYPE:?}" \
+  --topology="${TOPOLOGY:?}" \
   --pathways \
-  --pathways-gcs-location="gs://${GCS_BUCKET}/pathways/" \
+  --pathways-gcs-location="gs://${GCS_BUCKET:?}/pathways/" \
   --gke-ttl-after-finished="24h" \
   --restarts=0 \
   --env="GRPC_DNS_RESOLVER=native" \
@@ -42,11 +42,11 @@ echo "[$(date)] ==================== Submitting Training Workload... ===========
     JAX_PLATFORMS=proxy,cpu ENABLE_PATHWAYS_PERSISTENCE=1 \
     python3 -m maxtext.trainers.post_train.rl.train_rl \
     run_name=rl \
-    base_output_directory=gs://${GCS_BUCKET}/${MODEL_NAME}/trained/ \
-    model_name=${MODEL_NAME} \
+    base_output_directory=gs://${GCS_BUCKET:?}/${MODEL_NAME:?}/trained/ \
+    model_name=${MODEL_NAME:?} \
     scan_layers=False \
-    load_parameters_path=gs://${GCS_BUCKET}/${MODEL_NAME}/max-text-format/0/items/ \
-    hf_access_token=${HF_TOKEN} \
+    load_parameters_path=gs://${GCS_BUCKET:?}/${MODEL_NAME:?}/max-text-format/0/items/ \
+    hf_access_token=${HF_TOKEN:?} \
     data_template_path=maxtext/examples/chat_templates/openmathinstruct2_rl.json \
     num_batches=50 \
     batch_size=4 \
@@ -78,7 +78,7 @@ echo "[$(date)] ==================== Submitting Training Workload... ===========
     rl.reshard_chunk_size=4 \
     debug=True \
     vllm_hf_overrides='{\"architectures\": [\"MaxTextForCausalLM\"]}' \
-    vllm_additional_config=\"{'maxtext_config': {'model_name': '${MODEL_NAME}', 'model_call_mode': 'inference', 'enable_dp_attention': false, 'allow_split_physical_axes': true, 'use_ragged_sort': false, 'ragged_gather_reduce_fallback': true, 'prefuse_moe_weights': true, 'weight_dtype': 'bfloat16'}}\""
+    vllm_additional_config=\"{'maxtext_config': {'model_name': '${MODEL_NAME:?}', 'model_call_mode': 'inference', 'enable_dp_attention': false, 'allow_split_physical_axes': true, 'use_ragged_sort': false, 'ragged_gather_reduce_fallback': true, 'prefuse_moe_weights': true, 'weight_dtype': 'bfloat16'}}\""
 # [END hypercomputer_tpu_tune_gemma4_26b_rl_train]
 echo "[$(date)] ==================== Training Workload submitted. ===================="
 

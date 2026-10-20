@@ -31,35 +31,35 @@ sed -i "s/- storage.objectViewer/- storage.admin/" "${BLUEPRINT_FILE}"
 
 echo "[$(date)] ==================== Configuring IAM for default Compute SA... ===================="
 # Ensure Compute API is enabled so the default Compute Service Account exists
-gcloud services enable compute.googleapis.com --project="$PROJECT"
+gcloud services enable compute.googleapis.com --project="${PROJECT:?}"
 
-PROJECT_NUMBER=$(gcloud projects describe "$PROJECT" --format="value(projectNumber)")
+PROJECT_NUMBER=$(gcloud projects describe "${PROJECT:?}" --format="value(projectNumber)")
 COMPUTE_SA="${PROJECT_NUMBER}-compute@developer.gserviceaccount.com"
 
 for role in roles/storage.objectViewer roles/logging.logWriter roles/artifactregistry.writer; do
-  gcloud projects add-iam-policy-binding "$PROJECT" \
+  gcloud projects add-iam-policy-binding "${PROJECT:?}" \
     --member="serviceAccount:${COMPUTE_SA}" \
     --role="$role" --quiet
 done
 
 echo "[$(date)] ==================== Deploying cluster with gcluster... ===================="
 ./gcluster deploy "${BLUEPRINT_FILE}" \
-    --vars "project_id=${PROJECT},deployment_name=${CLUSTER_NAME},region=${REGION},zone=${ZONE},num_slices=${CLUSTER_NODEPOOL_COUNT},tpu_topology=${TOPOLOGY},authorized_cidr=0.0.0.0/0,reservation=${RESERVATION:-}" \
+    --vars "project_id=${PROJECT:?},deployment_name=${CLUSTER_NAME:?},region=${REGION:?},zone=${ZONE:?},num_slices=${CLUSTER_NODEPOOL_COUNT:?},tpu_topology=${TOPOLOGY:?},authorized_cidr=0.0.0.0/0,reservation=${RESERVATION:-}" \
     --download-dependencies \
     -l IGNORE --auto-approve -w
 
 # Fetch GKE cluster credentials for kubectl
-gcloud container clusters get-credentials ${CLUSTER_NAME} --location=${REGION} --project=${PROJECT}
+gcloud container clusters get-credentials "${CLUSTER_NAME:?}" --location="${REGION:?}" --project="${PROJECT:?}"
 
 # Configure gcluster Defaults
-./gcluster job config set project "${PROJECT}"
-./gcluster job config set cluster "${CLUSTER_NAME}"
-./gcluster job config set location "${REGION}"
+./gcluster job config set project "${PROJECT:?}"
+./gcluster job config set cluster "${CLUSTER_NAME:?}"
+./gcluster job config set location "${REGION:?}"
 
 # Configure docker and IAM for the service accounts created by cluster-toolkit
 gcloud auth configure-docker gcr.io --quiet
-gcloud auth configure-docker ${REGION}-docker.pkg.dev --quiet
-gcloud projects add-iam-policy-binding $PROJECT --member="serviceAccount:${CLUSTER_NAME}-gke-wl-sa@${PROJECT}.iam.gserviceaccount.com" --role="roles/storage.admin" --quiet
-gcloud projects add-iam-policy-binding $PROJECT --member="serviceAccount:${CLUSTER_NAME}-gke-np-sa@${PROJECT}.iam.gserviceaccount.com" --role="roles/storage.admin" --quiet
+gcloud auth configure-docker "${REGION:?}-docker.pkg.dev" --quiet
+gcloud projects add-iam-policy-binding "${PROJECT:?}" --member="serviceAccount:${CLUSTER_NAME:?}-gke-wl-sa@${PROJECT:?}.iam.gserviceaccount.com" --role="roles/storage.admin" --quiet
+gcloud projects add-iam-policy-binding "${PROJECT:?}" --member="serviceAccount:${CLUSTER_NAME:?}-gke-np-sa@${PROJECT:?}.iam.gserviceaccount.com" --role="roles/storage.admin" --quiet
 
 echo "[$(date)] ==================== Cluster deployment completed. ===================="

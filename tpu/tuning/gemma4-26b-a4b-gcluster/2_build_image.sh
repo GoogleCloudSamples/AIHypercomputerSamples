@@ -20,7 +20,7 @@ echo "[$(date)] ==================== Build started. ===================="
 
 echo "[$(date)] ==================== Creating Cloud Storage bucket... ===================="
 # [START hypercomputer_tpu_tune_gemma4_26b_rl_create_bucket]
-gcloud storage buckets create "gs://${GCS_BUCKET}" --project="${PROJECT}" --location="${REGION}" || true
+gcloud storage buckets create "gs://${GCS_BUCKET:?}" --project="${PROJECT:?}" --location="${REGION:?}" || true
 # [END hypercomputer_tpu_tune_gemma4_26b_rl_create_bucket]
 echo "[$(date)] ==================== Cloud Storage bucket created. ===================="
 
