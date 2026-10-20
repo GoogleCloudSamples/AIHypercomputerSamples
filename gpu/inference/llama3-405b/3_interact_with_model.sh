@@ -29,7 +29,7 @@ echo "Waiting for port forwarding to be ready..."
 timeout=120
 interval=2
 elapsed=0
-until curl -s http://localhost:8000/health >/dev/null || curl -s http://localhost:8000/v1/models >/dev/null; do
+until curl -s http://127.0.0.1:8000/health >/dev/null || curl -s http://127.0.0.1:8000/v1/models >/dev/null; do
   if ! kill -0 "${port_forward_pid}" 2>/dev/null; then
     echo "Error: Port forwarding failed to start or died unexpectedly." >&2
     exit 1
@@ -44,7 +44,7 @@ done
 
 echo "[$(date)] ==================== Sending chat completion request to Llama 3.1 405B... ===================="
 # [START hypercomputer_gpu_infer_llama3_405b_interact]
-curl http://localhost:8000/v1/chat/completions \
+curl http://127.0.0.1:8000/v1/chat/completions \
   -H "Content-Type: application/json" \
   -d '{
     "model": "nvidia/Llama-3.1-405B-Instruct-FP8",

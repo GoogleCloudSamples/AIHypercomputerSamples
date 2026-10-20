@@ -30,8 +30,11 @@ gcloud config set billing/quota_project "${PROJECT_ID}"
 # [END hypercomputer_gpu_infer_llama3_405b_env]
 
 # Ensure CLUSTER_NAME is <= 20 chars so service account IDs (${CLUSTER_NAME}-gke-np-sa) stay <= 30 chars
-if [[ "${CLUSTER_NAME}" == pkb-*-cluster ]]; then
-  export CLUSTER_NAME="${CLUSTER_NAME%-cluster}"
-elif [[ ${#CLUSTER_NAME} -gt 20 && "${CLUSTER_NAME}" != "YOUR_CLUSTER_NAME" ]]; then
-  export CLUSTER_NAME="${CLUSTER_NAME:0:20}"
+case "${CLUSTER_NAME}" in
+  pkb-*-cluster)
+    export CLUSTER_NAME="${CLUSTER_NAME%-cluster}"
+    ;;
+esac
+if [ "${#CLUSTER_NAME}" -gt 20 ]; then
+  export CLUSTER_NAME="$(printf '%.20s' "${CLUSTER_NAME}")"
 fi

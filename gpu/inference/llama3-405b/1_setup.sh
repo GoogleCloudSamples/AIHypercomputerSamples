@@ -16,6 +16,24 @@
 
 set -euo pipefail
 
+# Define version
+terraform_version="1.12.2"
+install_temp_dir="/tmp/bin_dependencies"
+mkdir -p "${install_temp_dir}"
+
+# Install Terraform
+if ! command -v terraform >/dev/null 2>&1; then
+  echo "[$(date)] Installing Terraform..."
+  curl -f -s -L \
+    -o "${install_temp_dir}/terraform.zip" \
+    "https://releases.hashicorp.com/terraform/${terraform_version}/terraform_${terraform_version}_linux_amd64.zip"
+  python3 -m zipfile -e "${install_temp_dir}/terraform.zip" "${install_temp_dir}"
+  sudo mv "${install_temp_dir}/terraform" /usr/local/bin/
+  sudo chmod +x /usr/local/bin/terraform
+  rm -f "${install_temp_dir}/terraform.zip"
+fi
+
+# Install Helm
 if ! command -v helm >/dev/null 2>&1; then
   echo "[$(date)] Installing Helm..."
   curl -fsSL https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
@@ -62,7 +80,10 @@ vars:
   zone: ${ZONE}
   static_node_count: 2
   authorized_cidr: 0.0.0.0/0
-  reservation: ${RESERVATION_NAME}
+  reservation_affinity:
+    consume_reservation_type: SPECIFIC_RESERVATION
+    specific_reservations:
+    - name: ${RESERVATION_NAME}
 EOF
 # [END hypercomputer_gpu_infer_llama3_405b_configure_blueprint]
 
@@ -101,6 +122,8 @@ helm upgrade --install kai-scheduler ./dynamo-platform/charts/kai-scheduler \
     --set scheduler.args.default-staleness-grace-period="-1s" \
     --set topologyMigration.enabled=false
 
+kubectl wait --for=condition=Available deployment/kai-operator --timeout=120s
+until kubectl get deployment/queue-controller >/dev/null 2>&1; do sleep 2; done
 kubectl wait --for=condition=Available deployment/queue-controller --timeout=120s
 
 helm upgrade --install dynamo-platform ./dynamo-platform \

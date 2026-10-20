@@ -25,8 +25,10 @@ echo "Waiting for Llama 3.1 405B frontend, prefill, and decode pods to be create
 timeout=600
 elapsed=0
 while true; do
-  pods=$(kubectl get pods --no-headers -o custom-columns=":metadata.name" 2>/dev/null | grep "^llama3-405b-a4-disagg" || true)
-  if echo "${pods}" | grep -q "frontend" && echo "${pods}" | grep -q "prefill" && echo "${pods}" | grep -q "decode"; then
+  frontend_pod=$(kubectl get pods -l "nvidia.com/dynamo-component-type=frontend" -o jsonpath='{.items[0].metadata.name}' 2>/dev/null || true)
+  prefill_pod=$(kubectl get pods -l "nvidia.com/dynamo-sub-component-type=prefill" -o jsonpath='{.items[0].metadata.name}' 2>/dev/null || true)
+  decode_pod=$(kubectl get pods -l "nvidia.com/dynamo-sub-component-type=decode" -o jsonpath='{.items[0].metadata.name}' 2>/dev/null || true)
+  if [[ -n "${frontend_pod}" && -n "${prefill_pod}" && -n "${decode_pod}" ]]; then
     break
   fi
   if [[ "${elapsed}" -ge "${timeout}" ]]; then
@@ -37,10 +39,6 @@ while true; do
   sleep 5
   elapsed=$((elapsed + 5))
 done
-
-frontend_pod=$(kubectl get pods --no-headers -o custom-columns=":metadata.name" | grep "^llama3-405b-a4-disagg.*frontend" | head -n 1)
-prefill_pod=$(kubectl get pods --no-headers -o custom-columns=":metadata.name" | grep "^llama3-405b-a4-disagg.*prefill" | head -n 1)
-decode_pod=$(kubectl get pods --no-headers -o custom-columns=":metadata.name" | grep "^llama3-405b-a4-disagg.*decode" | head -n 1)
 
 echo "Created pods:"
 echo "  Frontend: ${frontend_pod}"
