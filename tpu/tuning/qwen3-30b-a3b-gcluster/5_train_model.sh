@@ -48,9 +48,9 @@ echo "[$(date)] ==================== Submitting Training Workload... ===========
     JAX_PLATFORMS=proxy,cpu ENABLE_PATHWAYS_PERSISTENCE=1 \
     python3 -m maxtext.trainers.post_train.rl.train_rl \
     run_name=rl \
-    base_output_directory=gs://${GCS_BUCKET:?}/${MODEL_NAME:?}/trained/ \
-    model_name=${MODEL_NAME:?} \
-    load_parameters_path=gs://${GCS_BUCKET:?}/${MODEL_NAME:?}/max-text-format/0/items/ \
+    base_output_directory=gs://${GCS_BUCKET}/${MODEL_NAME:?}/trained/ \
+    model_name=${MODEL_NAME} \
+    load_parameters_path=gs://${GCS_BUCKET}/${MODEL_NAME}/max-text-format/0/items/ \
     hf_access_token=${HF_TOKEN:?} \
     data_template_path=maxtext/examples/chat_templates/openmathinstruct2_rl.json \
     num_batches=50 \
@@ -84,7 +84,7 @@ echo "[$(date)] ==================== Submitting Training Workload... ===========
     rl.reshard_chunk_size=4 \
     debug=True \
     vllm_hf_overrides='{\"architectures\": [\"MaxTextForCausalLM\"]}' \
-    vllm_additional_config=\"{'maxtext_config': {'model_name': '${MODEL_NAME:?}', 'model_call_mode': 'inference', 'enable_dp_attention': false, 'allow_split_physical_axes': true, 'use_ragged_sort': false, 'ragged_gather_reduce_fallback': true, 'prefuse_moe_weights': true, 'weight_dtype': 'bfloat16'}}\""
+    vllm_additional_config=\"{'maxtext_config': {'model_name': '${MODEL_NAME}', 'model_call_mode': 'inference', 'enable_dp_attention': false, 'allow_split_physical_axes': true, 'use_ragged_sort': false, 'ragged_gather_reduce_fallback': true, 'prefuse_moe_weights': true, 'weight_dtype': 'bfloat16'}}\""
 # [END hypercomputer_tpu_tune_qwen3_30b_rl_train]
 echo "[$(date)] ==================== Training Workload submitted. ===================="
 

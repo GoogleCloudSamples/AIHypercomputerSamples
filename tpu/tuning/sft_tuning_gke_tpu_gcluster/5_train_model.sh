@@ -27,8 +27,8 @@ echo "[$(date)] ==================== Submitting Training Workload... ===========
       python3 -m maxtext.trainers.post_train.sft.train_sft \
       run_name=sft \
       base_output_directory=gs://${GCS_BUCKET:?}/${MODEL_NAME:?}/trained/ \
-      model_name=${MODEL_NAME:?} \
-      load_parameters_path=gs://${GCS_BUCKET:?}/${MODEL_NAME:?}/max-text-format/0/items/ \
+      model_name=${MODEL_NAME} \
+      load_parameters_path=gs://${GCS_BUCKET}/${MODEL_NAME}/max-text-format/0/items/ \
       hf_access_token=${HF_TOKEN:?} \
       dataset_type=hf \
       hf_path=HuggingFaceH4/ultrachat_200k \

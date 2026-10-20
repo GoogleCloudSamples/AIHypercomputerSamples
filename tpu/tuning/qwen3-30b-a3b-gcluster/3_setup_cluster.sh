@@ -41,8 +41,8 @@ gcloud container clusters get-credentials "${CLUSTER_NAME:?}" --location="${REGI
 # [START hypercomputer_tpu_tune_qwen3_30b_rl_configure_docker]
 gcloud auth configure-docker gcr.io --quiet
 gcloud auth configure-docker "${REGION:?}-docker.pkg.dev" --quiet
-gcloud projects add-iam-policy-binding "${PROJECT:?}" --member="serviceAccount:${CLUSTER_NAME:?}-gke-wl-sa@${PROJECT:?}.iam.gserviceaccount.com" --role="roles/storage.admin" --quiet
-gcloud projects add-iam-policy-binding "${PROJECT:?}" --member="serviceAccount:${CLUSTER_NAME:?}-gke-np-sa@${PROJECT:?}.iam.gserviceaccount.com" --role="roles/storage.admin" --quiet
+gcloud projects add-iam-policy-binding "${PROJECT:?}" --member="serviceAccount:${CLUSTER_NAME:?}-gke-wl-sa@${PROJECT}.iam.gserviceaccount.com" --role="roles/storage.admin" --quiet
+gcloud projects add-iam-policy-binding "${PROJECT:?}" --member="serviceAccount:${CLUSTER_NAME:?}-gke-np-sa@${PROJECT}.iam.gserviceaccount.com" --role="roles/storage.admin" --quiet
 # [END hypercomputer_tpu_tune_qwen3_30b_rl_configure_docker]
 
 echo "Waiting for any pending cluster operations to complete..."

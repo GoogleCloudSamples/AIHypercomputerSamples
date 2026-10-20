@@ -34,7 +34,7 @@ echo "[$(date)] ==================== Submitting Model Conversion Workload... ===
   model_name=${MODEL_NAME:?} \
   hf_access_token=${HF_TOKEN:?} \
   --hf_model_path='Qwen/Qwen3-30B-A3B-Instruct-2507' \
-  base_output_directory=gs://${GCS_BUCKET:?}/${MODEL_NAME:?}/max-text-format/ \
+  base_output_directory=gs://${GCS_BUCKET:?}/${MODEL_NAME}/max-text-format/ \
   scan_layers=True \
   use_multimodal=False \
   skip_jax_distributed_system=true \

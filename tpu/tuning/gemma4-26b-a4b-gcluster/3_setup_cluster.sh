@@ -59,7 +59,7 @@ gcloud container clusters get-credentials "${CLUSTER_NAME:?}" --location="${REGI
 # Configure docker and IAM for the service accounts created by cluster-toolkit
 gcloud auth configure-docker gcr.io --quiet
 gcloud auth configure-docker "${REGION:?}-docker.pkg.dev" --quiet
-gcloud projects add-iam-policy-binding "${PROJECT:?}" --member="serviceAccount:${CLUSTER_NAME:?}-gke-wl-sa@${PROJECT:?}.iam.gserviceaccount.com" --role="roles/storage.admin" --quiet
-gcloud projects add-iam-policy-binding "${PROJECT:?}" --member="serviceAccount:${CLUSTER_NAME:?}-gke-np-sa@${PROJECT:?}.iam.gserviceaccount.com" --role="roles/storage.admin" --quiet
+gcloud projects add-iam-policy-binding "${PROJECT:?}" --member="serviceAccount:${CLUSTER_NAME:?}-gke-wl-sa@${PROJECT}.iam.gserviceaccount.com" --role="roles/storage.admin" --quiet
+gcloud projects add-iam-policy-binding "${PROJECT:?}" --member="serviceAccount:${CLUSTER_NAME:?}-gke-np-sa@${PROJECT}.iam.gserviceaccount.com" --role="roles/storage.admin" --quiet
 
 echo "[$(date)] ==================== Cluster deployment completed. ===================="

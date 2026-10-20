@@ -63,7 +63,7 @@ gcloud auth configure-docker gcr.io --quiet
 gcloud auth configure-docker "${REGION:?}-docker.pkg.dev" --quiet
 
 # Grant storage.admin to GKE service accounts
-gcloud projects add-iam-policy-binding "${PROJECT:?}" --member="serviceAccount:${CLUSTER_NAME:?}-gke-wl-sa@${PROJECT:?}.iam.gserviceaccount.com" --role="roles/storage.admin" --quiet || true
-gcloud projects add-iam-policy-binding "${PROJECT:?}" --member="serviceAccount:${CLUSTER_NAME:?}-gke-np-sa@${PROJECT:?}.iam.gserviceaccount.com" --role="roles/storage.admin" --quiet || true
+gcloud projects add-iam-policy-binding "${PROJECT:?}" --member="serviceAccount:${CLUSTER_NAME:?}-gke-wl-sa@${PROJECT}.iam.gserviceaccount.com" --role="roles/storage.admin" --quiet || true
+gcloud projects add-iam-policy-binding "${PROJECT:?}" --member="serviceAccount:${CLUSTER_NAME:?}-gke-np-sa@${PROJECT}.iam.gserviceaccount.com" --role="roles/storage.admin" --quiet || true
 
 echo "[$(date)] ==================== Cluster deployment completed. ===================="

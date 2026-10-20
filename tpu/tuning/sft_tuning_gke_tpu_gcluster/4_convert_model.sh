@@ -27,7 +27,7 @@ echo "[$(date)] ==================== Submitting Model Conversion Workload... ===
       python3 -m maxtext.checkpoint_conversion.to_maxtext \
         model_name=${MODEL_NAME:?} \
         hf_access_token=${HF_TOKEN:?} \
-        base_output_directory=gs://${GCS_BUCKET:?}/${MODEL_NAME:?}/max-text-format/ \
+        base_output_directory=gs://${GCS_BUCKET:?}/${MODEL_NAME}/max-text-format/ \
         scan_layers=True \
         use_multimodal=False \
         skip_jax_distributed_system=true \

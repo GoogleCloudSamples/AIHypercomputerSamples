@@ -63,8 +63,8 @@ gcloud auth configure-docker "${REGION:?}-docker.pkg.dev" --quiet
 # [END hypercomputer_tpu_sft_gcluster_configure_docker]
 
 # [START hypercomputer_tpu_sft_gcluster_iam_storage_admin]
-gcloud projects add-iam-policy-binding "${PROJECT:?}" --member="serviceAccount:${CLUSTER_NAME:?}-gke-wl-sa@${PROJECT:?}.iam.gserviceaccount.com" --role="roles/storage.admin" --quiet || true
-gcloud projects add-iam-policy-binding "${PROJECT:?}" --member="serviceAccount:${CLUSTER_NAME:?}-gke-np-sa@${PROJECT:?}.iam.gserviceaccount.com" --role="roles/storage.admin" --quiet || true
+gcloud projects add-iam-policy-binding "${PROJECT:?}" --member="serviceAccount:${CLUSTER_NAME:?}-gke-wl-sa@${PROJECT}.iam.gserviceaccount.com" --role="roles/storage.admin" --quiet || true
+gcloud projects add-iam-policy-binding "${PROJECT:?}" --member="serviceAccount:${CLUSTER_NAME:?}-gke-np-sa@${PROJECT}.iam.gserviceaccount.com" --role="roles/storage.admin" --quiet || true
 # [END hypercomputer_tpu_sft_gcluster_iam_storage_admin]
 
 # [START hypercomputer_tpu_sft_gcluster_configure_defaults]
