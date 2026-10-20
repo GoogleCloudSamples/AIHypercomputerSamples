@@ -21,16 +21,16 @@ echo "[$(date)] ==================== Submitting Model Conversion Workload... ===
 ./gcluster job submit \
   --name="gemma4-hf-to-mt" \
   --num-slices=1 \
-  --image="${CLOUD_IMAGE_NAME}" \
-  --compute-type="${COMPUTE_TYPE}" \
-  --topology="${TOPOLOGY}" \
+  --image="${CLOUD_IMAGE_NAME:?}" \
+  --compute-type="${COMPUTE_TYPE:?}" \
+  --topology="${TOPOLOGY:?}" \
   --await-job-completion \
   --command="[ \"\$JOB_COMPLETION_INDEX\" != \"0\" ] || \
     python3 -m maxtext.checkpoint_conversion.to_maxtext \
-    model_name=${MODEL_NAME} \
-    hf_access_token=${HF_TOKEN} \
+    model_name=${MODEL_NAME:?} \
+    hf_access_token=${HF_TOKEN:?} \
     --hf_model_path='google/gemma-4-26b-a4b-it' \
-    base_output_directory=gs://${GCS_BUCKET}/${MODEL_NAME}/max-text-format/ \
+    base_output_directory=gs://${GCS_BUCKET:?}/${MODEL_NAME}/max-text-format/ \
     scan_layers=False \
     use_multimodal=False \
     skip_jax_distributed_system=true \

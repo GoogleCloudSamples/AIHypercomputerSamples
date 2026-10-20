@@ -20,10 +20,10 @@
 # [START hypercomputer_tpu_tune_gemma4_26b_rl_authenticate]
 gcloud auth login
 gcloud auth application-default login --no-launch-browser
-gcloud auth application-default set-quota-project "${PROJECT}"
+gcloud auth application-default set-quota-project "${PROJECT:?}"
 
 gcloud auth configure-docker gcr.io --quiet
-gcloud auth configure-docker ${REGION}-docker.pkg.dev --quiet
+gcloud auth configure-docker "${REGION:?}-docker.pkg.dev" --quiet
 # [END hypercomputer_tpu_tune_gemma4_26b_rl_authenticate]
 
 # [START hypercomputer_tpu_tune_gemma4_26b_rl_create_cluster]
@@ -40,15 +40,15 @@ sed -i '/system_node_pool_machine_type/a \      system_node_pool_zones: [$(vars.
 sed -i "s/- storage.objectViewer/- storage.admin/" "${BLUEPRINT_FILE}"
 
 ./gcluster deploy "${BLUEPRINT_FILE}" \
-    --vars "project_id=${PROJECT},deployment_name=${CLUSTER_NAME},region=${REGION},zone=${ZONE},num_slices=${CLUSTER_NODEPOOL_COUNT},tpu_topology=${TOPOLOGY},authorized_cidr=0.0.0.0/0,reservation=${RESERVATION:-}" \
+    --vars "project_id=${PROJECT:?},deployment_name=${CLUSTER_NAME:?},region=${REGION:?},zone=${ZONE:?},num_slices=${CLUSTER_NODEPOOL_COUNT:?},tpu_topology=${TOPOLOGY:?},authorized_cidr=0.0.0.0/0,reservation=${RESERVATION:-}" \
     -l IGNORE --auto-approve -w
 # [END hypercomputer_tpu_tune_gemma4_26b_rl_create_cluster]
 
 # [START hypercomputer_tpu_tune_gemma4_26b_rl_configure_defaults]
 # Configure gcluster Defaults
-./gcluster job config set project "${PROJECT}"
-./gcluster job config set cluster "${CLUSTER_NAME}"
-./gcluster job config set location "${REGION}"
+./gcluster job config set project "${PROJECT:?}"
+./gcluster job config set cluster "${CLUSTER_NAME:?}"
+./gcluster job config set location "${REGION:?}"
 # [END hypercomputer_tpu_tune_gemma4_26b_rl_configure_defaults]
 
 # [START hypercomputer_tpu_tune_gemma4_26b_rl_convert_model_logs]
@@ -60,7 +60,7 @@ sed -i "s/- storage.objectViewer/- storage.admin/" "${BLUEPRINT_FILE}"
 # [END hypercomputer_tpu_tune_gemma4_26b_rl_convert_model_logs]
 
 # [START hypercomputer_tpu_tune_gemma4_26b_rl_verify_converted_model]
-gcloud storage ls "gs://${GCS_BUCKET}/${MODEL_NAME}/max-text-format/"
+gcloud storage ls "gs://${GCS_BUCKET:?}/${MODEL_NAME:?}/max-text-format/"
 # [END hypercomputer_tpu_tune_gemma4_26b_rl_verify_converted_model]
 
 # [START hypercomputer_tpu_tune_gemma4_26b_rl_train_logs_v2]
@@ -68,9 +68,9 @@ gcloud storage ls "gs://${GCS_BUCKET}/${MODEL_NAME}/max-text-format/"
 ./gcluster job list
 
 # Ensure kubectl is configured
-gcloud container clusters get-credentials "${CLUSTER_NAME}" \
-  --location="${REGION}" \
-  --project="${PROJECT}"
+gcloud container clusters get-credentials "${CLUSTER_NAME:?}" \
+  --location="${REGION:?}" \
+  --project="${PROJECT:?}"
 
 # Wait for the Pathways head pod to be ready before streaming logs
 kubectl wait --for=condition=Ready pod \
@@ -84,7 +84,7 @@ kubectl logs -f \
 # [END hypercomputer_tpu_tune_gemma4_26b_rl_train_logs_v2]
 
 # [START hypercomputer_tpu_tune_gemma4_26b_rl_verify_training_checkpoints]
-gcloud storage ls "gs://${GCS_BUCKET}/${MODEL_NAME}/trained/rl/checkpoints/actor/"
+gcloud storage ls "gs://${GCS_BUCKET:?}/${MODEL_NAME:?}/trained/rl/checkpoints/actor/"
 # [END hypercomputer_tpu_tune_gemma4_26b_rl_verify_training_checkpoints]
 
 # [START hypercomputer_tpu_tune_gemma4_26b_rl_convert_hf_logs]
@@ -98,15 +98,15 @@ gcloud storage ls "gs://${GCS_BUCKET}/${MODEL_NAME}/trained/rl/checkpoints/actor
 # [END hypercomputer_tpu_tune_gemma4_26b_rl_convert_hf_logs]
 
 # [START hypercomputer_tpu_tune_gemma4_26b_rl_verify_hf_weights]
-gcloud storage ls -l --readable-sizes "gs://${GCS_BUCKET}/${MODEL_NAME}/hf-trained/"
+gcloud storage ls -l --readable-sizes "gs://${GCS_BUCKET:?}/${MODEL_NAME:?}/hf-trained/"
 # [END hypercomputer_tpu_tune_gemma4_26b_rl_verify_hf_weights]
 
 # [START hypercomputer_tpu_tune_gemma4_26b_rl_cleanup_storage_v2]
-./gcluster destroy "${CLUSTER_NAME}" --auto-approve
-gcloud storage rm -r "gs://${GCS_BUCKET}"
+./gcluster destroy "${CLUSTER_NAME:?}" --auto-approve
+gcloud storage rm -r "gs://${GCS_BUCKET:?}"
 
 # To delete the local deployment folder
-rm -rf .ghpc "${CLUSTER_NAME}"
+rm -rf .ghpc "${CLUSTER_NAME:?}"
 # [END hypercomputer_tpu_tune_gemma4_26b_rl_cleanup_storage_v2]
 
 # [START hypercomputer_tpu_tune_gemma4_26b_rl_yaml_service_account]

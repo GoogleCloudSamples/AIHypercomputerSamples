@@ -19,15 +19,15 @@ set -euo pipefail
 echo "[$(date)] ==================== Submitting Model Conversion Workload... ===================="
 # [START hypercomputer_tpu_sft_gcluster_convert_model]
 ./gcluster job submit --name hf-to-mt \
-    --compute-type "${TPU_TYPE}" \
+    --compute-type "${TPU_TYPE:?}" \
     --num-slices 1 \
-    --image "${CLOUD_IMAGE_NAME}" \
+    --image "${CLOUD_IMAGE_NAME:?}" \
     --await-job-completion \
     --command "[ \"\$JOB_COMPLETION_INDEX\" != \"0\" ] || \
       python3 -m maxtext.checkpoint_conversion.to_maxtext \
-        model_name=${MODEL_NAME} \
-        hf_access_token=${HF_TOKEN} \
-        base_output_directory=gs://${GCS_BUCKET}/${MODEL_NAME}/max-text-format/ \
+        model_name=${MODEL_NAME:?} \
+        hf_access_token=${HF_TOKEN:?} \
+        base_output_directory=gs://${GCS_BUCKET:?}/${MODEL_NAME}/max-text-format/ \
         scan_layers=True \
         use_multimodal=False \
         skip_jax_distributed_system=true \

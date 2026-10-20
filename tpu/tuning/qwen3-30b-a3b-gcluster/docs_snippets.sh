@@ -20,7 +20,7 @@
 # [START hypercomputer_tpu_tune_qwen3_30b_rl_authenticate]
 gcloud auth login
 gcloud auth application-default login
-gcloud auth application-default set-quota-project "${PROJECT}"
+gcloud auth application-default set-quota-project "${PROJECT:?}"
 # [END hypercomputer_tpu_tune_qwen3_30b_rl_authenticate]
 
 # [START hypercomputer_tpu_tune_qwen3_30b_rl_copy_blueprint]
@@ -35,28 +35,28 @@ sed -i '/system_node_pool_machine_type/a \      system_node_pool_zones: [$(vars.
 
 # [START hypercomputer_tpu_tune_qwen3_30b_rl_create_cluster]
 ./gcluster deploy gke-tpu-v6e-advanced.yaml \
-    --vars project_id="${PROJECT}" \
-    --vars deployment_name="${CLUSTER_NAME}" \
-    --vars region="${REGION}" \
-    --vars zone="${ZONE}" \
-    --vars num_slices="${CLUSTER_NODEPOOL_COUNT}" \
-    --vars tpu_topology="${TOPOLOGY}" \
+    --vars project_id="${PROJECT:?}" \
+    --vars deployment_name="${CLUSTER_NAME:?}" \
+    --vars region="${REGION:?}" \
+    --vars zone="${ZONE:?}" \
+    --vars num_slices="${CLUSTER_NODEPOOL_COUNT:?}" \
+    --vars tpu_topology="${TOPOLOGY:?}" \
     --vars authorized_cidr="0.0.0.0/0" \
     --vars reservation="${RESERVATION:-}" \
     -l IGNORE --auto-approve -w
 # [END hypercomputer_tpu_tune_qwen3_30b_rl_create_cluster]
 
 # [START hypercomputer_tpu_tune_qwen3_30b_rl_get_credentials]
-gcloud container clusters get-credentials "${CLUSTER_NAME}" \
-    --location="${REGION}" \
-    --project="${PROJECT}"
+gcloud container clusters get-credentials "${CLUSTER_NAME:?}" \
+    --location="${REGION:?}" \
+    --project="${PROJECT:?}"
 # [END hypercomputer_tpu_tune_qwen3_30b_rl_get_credentials]
 
 # [START hypercomputer_tpu_tune_qwen3_30b_rl_configure_defaults]
 # Configure gcluster Defaults
-./gcluster job config set project "${PROJECT}"
-./gcluster job config set cluster "${CLUSTER_NAME}"
-./gcluster job config set location "${REGION}"
+./gcluster job config set project "${PROJECT:?}"
+./gcluster job config set cluster "${CLUSTER_NAME:?}"
+./gcluster job config set location "${REGION:?}"
 # [END hypercomputer_tpu_tune_qwen3_30b_rl_configure_defaults]
 
 # [START hypercomputer_tpu_tune_qwen3_30b_rl_convert_model_logs]
@@ -68,7 +68,7 @@ gcloud container clusters get-credentials "${CLUSTER_NAME}" \
 # [END hypercomputer_tpu_tune_qwen3_30b_rl_convert_model_logs]
 
 # [START hypercomputer_tpu_tune_qwen3_30b_rl_verify_converted_model]
-gcloud storage ls "gs://${GCS_BUCKET}/${MODEL_NAME}/max-text-format/"
+gcloud storage ls "gs://${GCS_BUCKET:?}/${MODEL_NAME:?}/max-text-format/"
 # [END hypercomputer_tpu_tune_qwen3_30b_rl_verify_converted_model]
 
 # [START hypercomputer_tpu_tune_qwen3_30b_rl_train_logs_v2]
@@ -76,9 +76,9 @@ gcloud storage ls "gs://${GCS_BUCKET}/${MODEL_NAME}/max-text-format/"
 ./gcluster job list
 
 # Ensure kubectl credentials are configured
-gcloud container clusters get-credentials "${CLUSTER_NAME}" \
-    --location="${REGION}" \
-    --project="${PROJECT}"
+gcloud container clusters get-credentials "${CLUSTER_NAME:?}" \
+    --location="${REGION:?}" \
+    --project="${PROJECT:?}"
 
 # Wait for the Pathways head pod to be ready before streaming logs
 kubectl wait --for=condition=Ready pod \
@@ -92,7 +92,7 @@ kubectl logs -f \
 # [END hypercomputer_tpu_tune_qwen3_30b_rl_train_logs_v2]
 
 # [START hypercomputer_tpu_tune_qwen3_30b_rl_verify_training_checkpoints]
-gcloud storage ls "gs://${GCS_BUCKET}/${MODEL_NAME}/trained/rl/checkpoints/actor/"
+gcloud storage ls "gs://${GCS_BUCKET:?}/${MODEL_NAME:?}/trained/rl/checkpoints/actor/"
 # [END hypercomputer_tpu_tune_qwen3_30b_rl_verify_training_checkpoints]
 
 # [START hypercomputer_tpu_tune_qwen3_30b_rl_convert_hf_logs]
@@ -105,15 +105,15 @@ gcloud storage ls "gs://${GCS_BUCKET}/${MODEL_NAME}/trained/rl/checkpoints/actor
 # [END hypercomputer_tpu_tune_qwen3_30b_rl_convert_hf_logs]
 
 # [START hypercomputer_tpu_tune_qwen3_30b_rl_verify_hf_weights]
-gcloud storage ls -l --readable-sizes "gs://${GCS_BUCKET}/${MODEL_NAME}/hf-trained/"
+gcloud storage ls -l --readable-sizes "gs://${GCS_BUCKET:?}/${MODEL_NAME:?}/hf-trained/"
 # [END hypercomputer_tpu_tune_qwen3_30b_rl_verify_hf_weights]
 
 # [START hypercomputer_tpu_tune_qwen3_30b_rl_cleanup_storage_v2]
-./gcluster destroy "${CLUSTER_NAME}"
-gcloud storage rm -r "gs://${GCS_BUCKET}"
+./gcluster destroy "${CLUSTER_NAME:?}"
+gcloud storage rm -r "gs://${GCS_BUCKET:?}"
 
 # To delete the local deployment folder and copied blueprint
-rm -rf .ghpc "${CLUSTER_NAME}" gke-tpu-v6e-advanced.yaml
+rm -rf .ghpc "${CLUSTER_NAME:?}" gke-tpu-v6e-advanced.yaml
 # [END hypercomputer_tpu_tune_qwen3_30b_rl_cleanup_storage_v2]
 
 # [START hypercomputer_tpu_tune_qwen3_30b_rl_yaml_service_account]

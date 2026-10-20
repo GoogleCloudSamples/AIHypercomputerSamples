@@ -25,11 +25,11 @@ echo "[$(date)] ==================== Submitting Training Workload... ===========
 ./gcluster job submit \
   --name="qwen-rl" \
   --num-slices=1 \
-  --image="${CLOUD_IMAGE_NAME}" \
-  --compute-type="${COMPUTE_TYPE}" \
-  --topology="${TOPOLOGY}" \
+  --image="${CLOUD_IMAGE_NAME:?}" \
+  --compute-type="${COMPUTE_TYPE:?}" \
+  --topology="${TOPOLOGY:?}" \
   --pathways \
-  --pathways-gcs-location="gs://${GCS_BUCKET}/pathways/" \
+  --pathways-gcs-location="gs://${GCS_BUCKET:?}/pathways/" \
   --gke-ttl-after-finished="24h" \
   --restarts=0 \
   --env="GRPC_DNS_RESOLVER=native" \
@@ -48,10 +48,10 @@ echo "[$(date)] ==================== Submitting Training Workload... ===========
     JAX_PLATFORMS=proxy,cpu ENABLE_PATHWAYS_PERSISTENCE=1 \
     python3 -m maxtext.trainers.post_train.rl.train_rl \
     run_name=rl \
-    base_output_directory=gs://${GCS_BUCKET}/${MODEL_NAME}/trained/ \
+    base_output_directory=gs://${GCS_BUCKET}/${MODEL_NAME:?}/trained/ \
     model_name=${MODEL_NAME} \
     load_parameters_path=gs://${GCS_BUCKET}/${MODEL_NAME}/max-text-format/0/items/ \
-    hf_access_token=${HF_TOKEN} \
+    hf_access_token=${HF_TOKEN:?} \
     data_template_path=maxtext/examples/chat_templates/openmathinstruct2_rl.json \
     num_batches=50 \
     num_test_batches=0 \

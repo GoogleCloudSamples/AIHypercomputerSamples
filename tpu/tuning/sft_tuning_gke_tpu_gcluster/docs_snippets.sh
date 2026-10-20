@@ -19,13 +19,13 @@
 
 
 # [START hypercomputer_tpu_sft_gcluster_iam_compute_sa]
-gcloud services enable compute.googleapis.com --project="${PROJECT}"
+gcloud services enable compute.googleapis.com --project="${PROJECT:?}"
 
-PROJECT_NUMBER=$(gcloud projects describe "${PROJECT}" --format="value(projectNumber)")
+PROJECT_NUMBER=$(gcloud projects describe "${PROJECT:?}" --format="value(projectNumber)")
 BUILD_SA="${PROJECT_NUMBER}-compute@developer.gserviceaccount.com"
 
 for role in roles/storage.objectViewer roles/logging.logWriter roles/artifactregistry.writer; do
-  gcloud projects add-iam-policy-binding "${PROJECT}" \
+  gcloud projects add-iam-policy-binding "${PROJECT:?}" \
     --member="serviceAccount:${BUILD_SA}" \
     --role="${role}" --quiet > /dev/null
 done
@@ -47,31 +47,31 @@ sed -i '/system_node_pool_machine_type/a \      system_node_pool_zones: [$(vars.
 
 # [START hypercomputer_tpu_sft_gcluster_create_cluster]
 ./gcluster deploy tmp/gke-tpu-v6e-advanced.yaml \
-    --vars "project_id=${PROJECT},deployment_name=${CLUSTER_NAME},region=${REGION},zone=${ZONE},num_slices=1,tpu_topology=4x8,authorized_cidr=0.0.0.0/0,reservation=${RESERVATION:-}" \
+    --vars "project_id=${PROJECT:?},deployment_name=${CLUSTER_NAME:?},region=${REGION:?},zone=${ZONE:?},num_slices=1,tpu_topology=4x8,authorized_cidr=0.0.0.0/0,reservation=${RESERVATION:-}" \
     --download-dependencies \
     -l IGNORE \
     --auto-approve -w
 # [END hypercomputer_tpu_sft_gcluster_create_cluster]
 
 # [START hypercomputer_tpu_sft_gcluster_get_credentials]
-gcloud container clusters get-credentials "${CLUSTER_NAME}" --location="${REGION}" --project="${PROJECT}"
+gcloud container clusters get-credentials "${CLUSTER_NAME:?}" --location="${REGION:?}" --project="${PROJECT:?}"
 # [END hypercomputer_tpu_sft_gcluster_get_credentials]
 
 # [START hypercomputer_tpu_sft_gcluster_configure_docker]
 gcloud auth configure-docker gcr.io --quiet
-gcloud auth configure-docker "${REGION}-docker.pkg.dev" --quiet
+gcloud auth configure-docker "${REGION:?}-docker.pkg.dev" --quiet
 # [END hypercomputer_tpu_sft_gcluster_configure_docker]
 
 # [START hypercomputer_tpu_sft_gcluster_iam_storage_admin]
-gcloud projects add-iam-policy-binding "${PROJECT}" --member="serviceAccount:${CLUSTER_NAME}-gke-wl-sa@${PROJECT}.iam.gserviceaccount.com" --role="roles/storage.admin" --quiet || true
-gcloud projects add-iam-policy-binding "${PROJECT}" --member="serviceAccount:${CLUSTER_NAME}-gke-np-sa@${PROJECT}.iam.gserviceaccount.com" --role="roles/storage.admin" --quiet || true
+gcloud projects add-iam-policy-binding "${PROJECT:?}" --member="serviceAccount:${CLUSTER_NAME:?}-gke-wl-sa@${PROJECT}.iam.gserviceaccount.com" --role="roles/storage.admin" --quiet || true
+gcloud projects add-iam-policy-binding "${PROJECT:?}" --member="serviceAccount:${CLUSTER_NAME:?}-gke-np-sa@${PROJECT}.iam.gserviceaccount.com" --role="roles/storage.admin" --quiet || true
 # [END hypercomputer_tpu_sft_gcluster_iam_storage_admin]
 
 # [START hypercomputer_tpu_sft_gcluster_configure_defaults]
 # Configure gcluster Defaults
-./gcluster job config set project "${PROJECT}"
-./gcluster job config set cluster "${CLUSTER_NAME}"
-./gcluster job config set location "${REGION}"
+./gcluster job config set project "${PROJECT:?}"
+./gcluster job config set cluster "${CLUSTER_NAME:?}"
+./gcluster job config set location "${REGION:?}"
 # [END hypercomputer_tpu_sft_gcluster_configure_defaults]
 
 # [START hypercomputer_tpu_sft_gcluster_convert_model_logs]
@@ -83,7 +83,7 @@ gcloud projects add-iam-policy-binding "${PROJECT}" --member="serviceAccount:${C
 # [END hypercomputer_tpu_sft_gcluster_convert_model_logs]
 
 # [START hypercomputer_tpu_sft_gcluster_verify_converted_model]
-gcloud storage ls "gs://${GCS_BUCKET}/${MODEL_NAME}/max-text-format/"
+gcloud storage ls "gs://${GCS_BUCKET:?}/${MODEL_NAME:?}/max-text-format/"
 # [END hypercomputer_tpu_sft_gcluster_verify_converted_model]
 
 # [START hypercomputer_tpu_sft_gcluster_train_logs]
@@ -95,7 +95,7 @@ gcloud storage ls "gs://${GCS_BUCKET}/${MODEL_NAME}/max-text-format/"
 # [END hypercomputer_tpu_sft_gcluster_train_logs]
 
 # [START hypercomputer_tpu_sft_gcluster_verify_training_checkpoints]
-gcloud storage ls "gs://${GCS_BUCKET}/${MODEL_NAME}/trained/sft/checkpoints/1000/model_params/"
+gcloud storage ls "gs://${GCS_BUCKET:?}/${MODEL_NAME:?}/trained/sft/checkpoints/1000/model_params/"
 # [END hypercomputer_tpu_sft_gcluster_verify_training_checkpoints]
 
 # [START hypercomputer_tpu_sft_gcluster_convert_hf_logs]
@@ -109,15 +109,15 @@ gcloud storage ls "gs://${GCS_BUCKET}/${MODEL_NAME}/trained/sft/checkpoints/1000
 # [END hypercomputer_tpu_sft_gcluster_convert_hf_logs]
 
 # [START hypercomputer_tpu_sft_gcluster_verify_hf_weights]
-gcloud storage ls -l --readable-sizes "gs://${GCS_BUCKET}/${MODEL_NAME}/hf-trained/"
+gcloud storage ls -l --readable-sizes "gs://${GCS_BUCKET:?}/${MODEL_NAME:?}/hf-trained/"
 # [END hypercomputer_tpu_sft_gcluster_verify_hf_weights]
 
 # [START hypercomputer_tpu_sft_gcluster_cleanup_storage_v2]
-./gcluster destroy "${CLUSTER_NAME}" --robust --auto-approve
-gcloud storage rm -r "gs://${GCS_BUCKET}"
+./gcluster destroy "${CLUSTER_NAME:?}" --robust --auto-approve
+gcloud storage rm -r "gs://${GCS_BUCKET:?}"
 
 # To delete the local deployment folder and staged blueprint
-rm -rf .ghpc "${CLUSTER_NAME}" tmp
+rm -rf .ghpc "${CLUSTER_NAME:?}" tmp
 # [END hypercomputer_tpu_sft_gcluster_cleanup_storage_v2]
 
 # [START hypercomputer_tpu_sft_gcluster_yaml_service_account]

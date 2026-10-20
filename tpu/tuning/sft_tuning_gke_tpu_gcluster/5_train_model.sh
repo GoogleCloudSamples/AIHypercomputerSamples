@@ -19,17 +19,17 @@ set -euo pipefail
 echo "[$(date)] ==================== Submitting Training Workload... ===================="
 # [START hypercomputer_tpu_sft_gcluster_train]
 ./gcluster job submit --name sft \
-    --compute-type "${TPU_TYPE}" \
+    --compute-type "${TPU_TYPE:?}" \
     --num-slices 1 \
-    --image "${CLOUD_IMAGE_NAME}" \
+    --image "${CLOUD_IMAGE_NAME:?}" \
     --await-job-completion \
     --command "JAX_PLATFORMS=tpu,cpu ENABLE_PJRT_COMPATIBILITY=true JAX_TRACEBACK_FILTERING=off LIBTPU_INIT_ARGS=' --xla_tpu_scoped_vmem_limit_kib=61440 --xla_tpu_bf16_emission_mode=NATIVE_EMISSION --xla_tpu_enable_sparse_core_collective_offload_all_reduce=true --xla_tpu_use_single_sparse_core_for_all_gather_offload=true ' \
       python3 -m maxtext.trainers.post_train.sft.train_sft \
       run_name=sft \
-      base_output_directory=gs://${GCS_BUCKET}/${MODEL_NAME}/trained/ \
+      base_output_directory=gs://${GCS_BUCKET:?}/${MODEL_NAME:?}/trained/ \
       model_name=${MODEL_NAME} \
       load_parameters_path=gs://${GCS_BUCKET}/${MODEL_NAME}/max-text-format/0/items/ \
-      hf_access_token=${HF_TOKEN} \
+      hf_access_token=${HF_TOKEN:?} \
       dataset_type=hf \
       hf_path=HuggingFaceH4/ultrachat_200k \
       per_device_batch_size=1 steps=1000 \
