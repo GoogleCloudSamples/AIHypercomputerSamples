@@ -22,8 +22,7 @@ if [[ "${SKIP_BENCHMARK:-false}" == "true" ]]; then
 fi
 
 if [[ -z "${VLLM_IMAGE:-}" || "${VLLM_IMAGE}" == "YOUR_VLLM_IMAGE" ]]; then
-  echo "Error: set VLLM_IMAGE in 0_env.sh to a vLLM TPU image." >&2
-  exit 1
+  export VLLM_IMAGE="vllm/vllm-torchtpu:v0.29.0@sha256:3976ccc1a69ffd361e0a7d2831fe317f6b685636014f426321a39ae02f8da0dc"
 fi
 
 BENCHMARK_JOB="vllm-qwen3-5-397b-pd-disagg-v7x-tester"
