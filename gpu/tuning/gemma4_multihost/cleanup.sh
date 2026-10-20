@@ -27,3 +27,14 @@ gcloud artifacts repositories delete gemma \
     --location="${ARTIFACT_REPO_LOCATION}" \
     --quiet || true
 echo "[$(date)] ==================== Artifact Registry deleted. ===================="
+
+HF_USERNAME="$(curl -sSf -H "Authorization: Bearer ${HF_TOKEN}" \
+    https://huggingface.co/api/whoami-v2 \
+    | python3 -c "import json, sys; print(json.load(sys.stdin)['name'])" \
+    2>/dev/null)" || true
+if [[ -n "${HF_USERNAME:-}" ]] && curl -sSf -o /dev/null -X DELETE "https://huggingface.co/api/models/${HF_USERNAME}/gemma-31b-text-to-sql" -H "Authorization: Bearer ${HF_TOKEN}"; then
+    echo "[$(date)] ==================== Hugging Face model repo deleted. ===================="
+else
+    echo "[$(date)] WARNING: could not delete Hugging Face model repo" \
+        "gemma-31b-text-to-sql (already deleted or invalid HF_TOKEN)."
+fi
