@@ -55,6 +55,6 @@ kubectl apply --server-side \
     -f https://github.com/kubernetes-sigs/jobset/releases/download/v0.12.0/manifests.yaml
 
 # Wait for JobSet controller webhook to become ready to prevent intermittent failures during deploy
-kubectl rollout status deployment/jobset-controller-manager -n jobset-system --timeout=180s
+kubectl rollout status deployment/jobset-controller-manager -n jobset-system --timeout=600s
 # [END hypercomputer_gpu_tune_gemma4_multihost_gke_install_jobset]
 echo "[$(date)] ==================== JobSet CRDs installed. ===================="
