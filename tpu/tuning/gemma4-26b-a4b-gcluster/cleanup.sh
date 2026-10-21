@@ -124,5 +124,5 @@ for bucket in $(gcloud storage buckets list --project="${PROJECT}" --format="val
   gcloud storage rm -r "gs://${bucket}" || echo "Warning: Failed to delete bucket gs://${bucket}"
 done
 
-rm -rf .ghpc "${CLUSTER_NAME}" gcluster examples community gcluster_bundle_linux_amd64.tgz
+rm -rf .ghpc "${CLUSTER_NAME}" gcluster examples community cluster-toolkit gcluster_bundle_linux_amd64.tgz
 echo "[$(date)] ==================== Resources cleaned up. ===================="
