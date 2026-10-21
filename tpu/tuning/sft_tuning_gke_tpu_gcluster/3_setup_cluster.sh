@@ -67,3 +67,16 @@ gcloud projects add-iam-policy-binding "${PROJECT:?}" --member="serviceAccount:$
 gcloud projects add-iam-policy-binding "${PROJECT:?}" --member="serviceAccount:${CLUSTER_NAME:?}-gke-np-sa@${PROJECT}.iam.gserviceaccount.com" --role="roles/storage.admin" --quiet || true
 
 echo "[$(date)] ==================== Cluster deployment completed. ===================="
+
+echo "[$(date)] ==================== Waiting for controllers rollouts ===================="
+# Wait for deployments to exist before checking rollout status to avoid race conditions
+for i in {1..30}; do
+  if kubectl get deployment/jobset-controller -n jobset-system &>/dev/null && \
+     kubectl get deployment/kueue-controller-manager -n kueue-system &>/dev/null; then
+    break
+  fi
+  sleep 2
+done
+
+kubectl rollout status deployment/jobset-controller -n jobset-system --timeout=180s
+kubectl rollout status deployment/kueue-controller-manager -n kueue-system --timeout=180s

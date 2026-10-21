@@ -18,7 +18,7 @@
 export PROJECT="YOUR_PROJECT_ID"
 export REGION="YOUR_REGION"
 export ZONE="YOUR_ZONE"
-export CLUSTER_NAME="gke-tpu-v6e"
+export CLUSTER_NAME="YOUR_CLUSTER_NAME"
 export GCS_BUCKET="YOUR_BUCKET_NAME"
 export CLOUD_IMAGE_NAME="us-docker.pkg.dev/cloud-tpu-images/maxtext-images/tpu_post_training:0.2.4"
 export TPU_TYPE="v6e-32"
