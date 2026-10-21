@@ -4,11 +4,7 @@ This code sample is intended for AI/ML engineers and demonstrates how to run Gem
 
 Note: This sample doesn’t demonstrate how to prepare a dataset or serve the model in production.
 
-## Architecture and Workload
-
-This sample uses the Google Cloud Cluster Toolkit to provision a Slurm cluster with A4 High GPU (a4-highgpu-8g) compute nodes. It uses a Google Cloud Storage bucket for dataset and model checkpoints, and Filestore for shared cluster storage. The workload is distributed with Accelerate and PyTorch FSDP using a Slurm `sbatch` job.
-
-The sample includes the following scripts:
+This sample uses the Google Cloud Cluster Toolkit to provision a Slurm cluster with A4 High GPU (a4-highgpu-8g) compute nodes. It uses a Google Cloud Storage bucket for dataset and model checkpoints, and Filestore for shared cluster storage. The workload is distributed with Accelerate and PyTorch FSDP using a Slurm `sbatch` job. The sample includes the following files:
 
 * `0_env.sh`: Configures environment variables such as the project ID, region, and Hugging Face token.
 * `1_deploy_cluster.sh`: Uses the Google Cloud Cluster Toolkit to deploy the Slurm cluster, GCS bucket, and Filestore.

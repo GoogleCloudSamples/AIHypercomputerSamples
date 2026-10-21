@@ -1,10 +1,10 @@
 # Serve Llama 4 Scout on a GKE cluster
 
-This sample provides a set of scripts to serve the Llama 4 Scout model on Google Kubernetes Engine (GKE) for inference. It is intended for machine learning engineers and developers looking to deploy large language models on Google Cloud.
+This code sample is intended for AI/ML engineers and demonstrates how to serve the Llama 4 Scout model on a Google Kubernetes Engine (GKE) cluster for inference.
 
-The workload deploys a vLLM inference server on a GKE cluster equipped with NVIDIA GPUs. The deployment uses Kubernetes configurations to provision the model and serve it using an exposed service.
+Note: This sample doesn’t demonstrate how to fine-tune the model or configure VPC networks from scratch.
 
-The sample includes the following files:
+The scripts in this directory deploy the infrastructure and run the AI/ML workload on AI Hypercomputer. The workload deploys a vLLM inference server on a GKE cluster equipped with NVIDIA GPUs, using Kubernetes configurations to provision the model and serve it using an exposed service. The sample includes the following files:
 
 * `0_env.sh`: Contains the starting environment variables.
 * `1_setup_cluster.sh`: Sets up the cluster.

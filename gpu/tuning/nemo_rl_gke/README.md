@@ -4,11 +4,7 @@ This code sample is intended for AI/ML engineers and demonstrates how to run NeM
 
 Note: This sample doesn’t demonstrate how to prepare a dataset or serve the model in production.
 
-## Architecture and Workload
-
-This sample provisions a GKE cluster with a Ray cluster on top of it to orchestrate the distributed reinforcement learning workload. It uses GPU-enabled Virtual Machines (e.g., A3 or A4 instances), a Google Cloud Storage bucket, and a VPC network for communication. The NeMo framework is used within the Ray cluster for model training.
-
-The sample includes the following scripts:
+This sample provisions a GKE cluster with a Ray cluster on top of it to orchestrate the distributed reinforcement learning workload. It uses GPU-enabled Virtual Machines (e.g., A3 or A4 instances), a Google Cloud Storage bucket, and a VPC network for communication. The NeMo framework is used within the Ray cluster for model training. The sample includes the following files:
 
 * `0_env.sh`: Configures starting environment variables (project ID, cluster name, zone, etc.).
 * `1_create_vpc_network.sh`: Creates the custom VPC network and firewall rules for the cluster.

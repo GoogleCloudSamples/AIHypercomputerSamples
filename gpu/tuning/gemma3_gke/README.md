@@ -4,11 +4,7 @@ This code sample is intended for AI/ML engineers and demonstrates how to run Gem
 
 Note: This sample doesn’t demonstrate how to prepare a dataset or serve the model in production.
 
-## Architecture and Workload
-
-This sample provisions a GKE cluster with GPU node pools to run the fine-tuning workload. The workload uses PyTorch and Accelerate with FSDP, orchestrated as a Kubernetes Job. It uses Artifact Registry for the container image and Google Cloud Storage for checkpoints and data.
-
-The sample includes the following scripts:
+This sample provisions a GKE cluster with GPU node pools to run the fine-tuning workload. The workload uses PyTorch and Accelerate with FSDP, orchestrated as a Kubernetes Job. It uses Artifact Registry for the container image and Google Cloud Storage for checkpoints and data. The sample includes the following files:
 
 * `0_env.sh`: Configures starting environment variables (project ID, cluster name, token).
 * `1_setup_cluster.sh`: Provisions the GKE cluster, configures node pools, sets up secrets, and prepares the Kubernetes environment.

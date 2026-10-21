@@ -4,11 +4,7 @@ This code sample is intended for AI/ML engineers and demonstrates how to run inf
 
 Note: This sample doesn’t demonstrate how to serve the model in production or configure VPC networks from scratch.
 
-## Architecture
-
-The sample provisions a single Cloud TPU v6e-8 using a TPU VM architecture. The inference and benchmark scripts execute directly on the provisioned TPU VM.
-
-The scripts in this directory deploy the infrastructure and run the AI/ML workload on AI Hypercomputer. The sample includes the following files:
+The scripts in this directory deploy the infrastructure and run the AI/ML workload on AI Hypercomputer. The sample provisions a single Cloud TPU v6e-8 using a TPU VM architecture, and the inference and benchmark scripts execute directly on the provisioned TPU VM. The sample includes the following files:
 
 * `0_env.sh`: Contains the starting environment variables, such as the project ID, zone, and Hugging Face token.
 * `1_setup.sh`: Sets up the required infrastructure and environment.

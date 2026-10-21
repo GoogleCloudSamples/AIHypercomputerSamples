@@ -4,11 +4,7 @@ This code sample is intended for AI/ML engineers and demonstrates how to run Mix
 
 Note: This sample doesn’t demonstrate how to prepare a dataset or serve the model in production.
 
-## Architecture and Workload
-
-This sample provisions a Slurm cluster using the Google Cloud Cluster Toolkit. The architecture uses A4 High GPU (a4-highgpu-8g) instances for the compute nodes, a Google Cloud Storage bucket for storage, and Filestore for shared cluster storage. The workload distributes fine-tuning across the GPUs using a Slurm `sbatch` script.
-
-The sample includes the following scripts:
+This sample provisions a Slurm cluster using the Google Cloud Cluster Toolkit. The architecture uses A4 High GPU (a4-highgpu-8g) instances for the compute nodes, a Google Cloud Storage bucket for storage, and Filestore for shared cluster storage. The workload distributes fine-tuning across the GPUs using a Slurm `sbatch` script. The sample includes the following files:
 
 * `0_env.sh`: Configures environment variables, including the project ID, zone, and Hugging Face token.
 * `1_deploy_cluster.sh`: Uses the Google Cloud Cluster Toolkit to deploy the Slurm cluster infrastructure and storage.

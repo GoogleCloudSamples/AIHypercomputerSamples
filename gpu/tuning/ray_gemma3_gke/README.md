@@ -4,11 +4,7 @@ This code sample is intended for AI/ML engineers and demonstrates how to run Gem
 
 Note: This sample doesn’t demonstrate how to prepare a dataset or serve the model in production.
 
-## Architecture and Workload
-
-This sample provisions a GKE cluster and deploys a Ray cluster on top to manage distributed fine-tuning of the Gemma 3 model. It uses GPU-enabled Virtual Machines for the compute nodes and Google Cloud Storage for datasets and checkpointing.
-
-The sample includes the following scripts:
+This sample provisions a GKE cluster and deploys a Ray cluster on top to manage distributed fine-tuning of the Gemma 3 model. It uses GPU-enabled Virtual Machines for the compute nodes and Google Cloud Storage for datasets and checkpointing. The sample includes the following files:
 
 * `0_env.sh`: Configures environment variables (project ID, cluster name, token).
 * `1_setup.sh`: Provisions the GKE cluster, configures the node pools, sets up necessary secrets, and deploys the Ray cluster environment.

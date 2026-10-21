@@ -4,11 +4,7 @@ This code sample is intended for AI/ML engineers and demonstrates how to run mul
 
 Note: This sample doesn’t demonstrate how to prepare a dataset or serve the model in production.
 
-## Architecture and Workload
-
-This sample provisions a GKE cluster with GPU node pools to run a distributed fine-tuning workload. The workload uses PyTorch Fully Sharded Data Parallel (FSDP) and Accelerate, orchestrated as a Kubernetes Job using JobSet. It utilizes Google Cloud Storage for storing model artifacts and checkpoints.
-
-The sample includes the following scripts:
+This sample provisions a GKE cluster with GPU node pools to run a distributed fine-tuning workload. The workload uses PyTorch Fully Sharded Data Parallel (FSDP) and Accelerate, orchestrated as a Kubernetes Job using JobSet. It utilizes Google Cloud Storage for storing model artifacts and checkpoints. The sample includes the following files:
 
 * `0_env.sh`: Configures environment variables such as the project ID, cluster name, and Hugging Face token.
 * `1_setup_cluster.sh`: Provisions the GKE cluster, configures node pools, sets up secrets, and installs necessary Kubernetes components like JobSet.

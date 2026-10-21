@@ -4,11 +4,7 @@ This code sample is intended for AI/ML engineers and demonstrates how to run Qwe
 
 Note: This sample doesn’t demonstrate how to prepare a dataset or serve the model in production.
 
-## Architecture and Workload
-
-This sample provisions a Slurm cluster using the Google Cloud Cluster Toolkit. It uses A4 High GPU (a4-highgpu-8g) VMs for the compute nodes, a Google Cloud Storage bucket for storing datasets and model checkpoints, and Filestore for high-performance shared storage across the cluster. The workload is distributed with Accelerate and PyTorch FSDP using a Slurm `sbatch` job.
-
-The sample includes the following scripts:
+This sample provisions a Slurm cluster using the Google Cloud Cluster Toolkit. It uses A4 High GPU (a4-highgpu-8g) VMs for the compute nodes, a Google Cloud Storage bucket for storing datasets and model checkpoints, and Filestore for high-performance shared storage across the cluster. The workload is distributed with Accelerate and PyTorch FSDP using a Slurm `sbatch` job. The sample includes the following files:
 
 * `0_env.sh`: Sets up environment variables, including your project ID, region, zone, and Hugging Face token.
 * `1_deploy_cluster.sh`: Uses the Google Cloud Cluster Toolkit to provision the Slurm cluster infrastructure, networking, GCS buckets, and Filestore.

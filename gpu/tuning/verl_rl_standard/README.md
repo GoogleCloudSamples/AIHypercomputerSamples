@@ -4,11 +4,7 @@ This code sample is intended for AI/ML engineers and demonstrates how to run vER
 
 Note: This sample doesn’t demonstrate how to prepare a dataset or serve the model in production.
 
-## Architecture and Workload
-
-This sample provisions a GKE Standard cluster to run a distributed reinforcement learning workload with vERL. The architecture utilizes GPU-enabled Virtual Machines (e.g., C2 Standard instances) and a Ray cluster running on top of GKE. It configures custom VPC networking and uses Google Cloud Storage for datasets and checkpoints.
-
-The sample includes the following scripts:
+This sample provisions a GKE Standard cluster to run a distributed reinforcement learning workload with vERL. The architecture utilizes GPU-enabled Virtual Machines (e.g., C2 Standard instances) and a Ray cluster running on top of GKE. It configures custom VPC networking and uses Google Cloud Storage for datasets and checkpoints. The sample includes the following files:
 
 * `0_env.sh`: Configures starting environment variables (project ID, zone, token).
 * `1_setup_network.sh`: Provisions the custom VPC network and firewall rules.
