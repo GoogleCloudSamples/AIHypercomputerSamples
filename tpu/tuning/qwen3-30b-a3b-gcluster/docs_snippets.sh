@@ -109,7 +109,7 @@ gcloud storage ls -l --readable-sizes "gs://${GCS_BUCKET:?}/${MODEL_NAME:?}/hf-t
 # [END hypercomputer_tpu_tune_qwen3_30b_rl_verify_hf_weights]
 
 # [START hypercomputer_tpu_tune_qwen3_30b_rl_cleanup_storage_v2]
-./gcluster destroy "${CLUSTER_NAME:?}"
+./gcluster destroy "${CLUSTER_NAME:?}" --auto-approve
 gcloud storage rm -r "gs://${GCS_BUCKET:?}"
 
 # To delete the local deployment folder and copied blueprint
