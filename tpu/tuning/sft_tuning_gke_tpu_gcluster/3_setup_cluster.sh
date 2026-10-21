@@ -67,3 +67,7 @@ gcloud projects add-iam-policy-binding "${PROJECT:?}" --member="serviceAccount:$
 gcloud projects add-iam-policy-binding "${PROJECT:?}" --member="serviceAccount:${CLUSTER_NAME:?}-gke-np-sa@${PROJECT}.iam.gserviceaccount.com" --role="roles/storage.admin" --quiet || true
 
 echo "[$(date)] ==================== Cluster deployment completed. ===================="
+
+echo "[$(date)] ==================== Waiting for controllers rollouts ===================="
+kubectl rollout status deployment/jobset-controller -n jobset-system --timeout=180s
+kubectl rollout status deployment/kueue-controller-manager -n kueue-system --timeout=180s
