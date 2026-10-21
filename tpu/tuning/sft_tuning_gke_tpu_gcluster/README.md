@@ -81,9 +81,21 @@ To execute this sample, follow these steps:
 
 To verify that the workload ran successfully:
 
-1. Check the training logs for the completion status and final loss.
-   
-2. You should see output indicating the training completed successfully.
+1. Check the status and logs of the training job:
+
+   ```bash
+   ./gcluster job list
+   ./gcluster job logs sft --main-only -f
+   ```
+
+2. Verify that the coordinator logs output progress for each step (`completed step: <step>, seconds: ..., TFLOP/s/device: ..., loss: ...`) and `./gcluster job list` shows the status of `sft` as `Succeeded`.
+
+3. Verify that the training checkpoints and converted Hugging Face model files are generated in your Cloud Storage bucket:
+
+   ```bash
+   gcloud storage ls "gs://${GCS_BUCKET}/${MODEL_NAME}/trained/sft/checkpoints/1000/model_params/"
+   gcloud storage ls "gs://${GCS_BUCKET}/${MODEL_NAME}/hf-trained/"
+   ```
 
 ## Clean up
 

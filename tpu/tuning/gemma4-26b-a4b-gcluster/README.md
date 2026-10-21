@@ -75,8 +75,21 @@ To execute this sample, follow these steps:
 
 To verify that the workload ran successfully:
 
-1. Check the logs of the training job.
-2. You should see an output indicating success and the final training loss.
+1. Check the status and logs of the training job:
+
+   ```bash
+   ./gcluster job list
+   kubectl logs -f -l job-name=gemma4-training-pathways-head-0 -c workload-container
+   ```
+
+2. Verify that the logs output `Post RL Training: ... mean_reward=...` and `./gcluster job list` shows the status of `gemma4-training` as `Succeeded`.
+
+3. Verify that the training checkpoints and converted Hugging Face model files are generated in your Cloud Storage bucket:
+
+   ```bash
+   gcloud storage ls "gs://${GCS_BUCKET}/${MODEL_NAME}/trained/rl/checkpoints/actor/"
+   gcloud storage ls "gs://${GCS_BUCKET}/${MODEL_NAME}/hf-trained/"
+   ```
 
 ## Clean up
 
