@@ -4,11 +4,11 @@ This code sample is intended for AI/ML engineers and demonstrates how to run vER
 
 Note: This sample doesn’t demonstrate how to prepare a dataset or serve the model in production.
 
-This sample provisions a fully managed GKE Autopilot cluster to run a distributed reinforcement learning workload with vERL. It sets up a Ray cluster over GKE, utilizing Dynamic Resource Allocation (DraNet) and GPU instances (e.g., C2 machine family) for computation. Storage is handled using Google Cloud Storage and Persistent Volumes. The sample includes the following files:
+This sample provisions a fully managed GKE Autopilot cluster to run a distributed reinforcement learning workload with vERL. It sets up a Ray cluster over GKE, utilizing Dynamic Resource Allocation (DraNet) and GPU instances (e.g., C2 machine family) for computation. Storage is handled using Cloud Storage and Persistent Volumes. The sample includes the following files:
 
 * `0_env.sh`: Configures starting environment variables (project ID, region, cluster name).
 * `1_setup_cluster.sh`: Provisions the GKE Autopilot cluster.
-* `2_setup_storage.sh`: Prepares the required storage (e.g., GCS Fuse or persistent volumes).
+* `2_setup_storage.sh`: Prepares the required storage (e.g., Cloud Storage FUSE or persistent volumes).
 * `3_setup_dranet.sh`: Configures DraNet for optimized network performance.
 * `4_prepare_data.sh`: Prepares and downloads the dataset for training.
 * `5_deploy_workload.sh`: Deploys the vERL training workload and Ray cluster to GKE.
@@ -23,7 +23,7 @@ Before you run this sample, ensure you have the following:
 
 * A Google Cloud project with billing enabled. Running this sample provisions billable Google Cloud resources including:
   - Google Kubernetes Engine (GKE) Autopilot cluster and GPU compute resources
-  - Persistent disks and Google Cloud Storage buckets
+  - Persistent disks and Cloud Storage buckets
   
   You are billed for these resources for the time that they are running. To avoid incurring charges, delete the resources when you have finished running the sample.
 * Quota for the required hardware in your chosen region.

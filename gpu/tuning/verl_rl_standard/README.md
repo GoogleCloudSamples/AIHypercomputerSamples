@@ -4,13 +4,13 @@ This code sample is intended for AI/ML engineers and demonstrates how to run vER
 
 Note: This sample doesn’t demonstrate how to prepare a dataset or serve the model in production.
 
-This sample provisions a GKE Standard cluster to run a distributed reinforcement learning workload with vERL. The architecture utilizes GPU-enabled Virtual Machines (e.g., C2 Standard instances) and a Ray cluster running on top of GKE. It configures custom VPC networking and uses Google Cloud Storage for datasets and checkpoints. The sample includes the following files:
+This sample provisions a GKE Standard cluster to run a distributed reinforcement learning workload with vERL. The architecture utilizes GPU-enabled Virtual Machines (e.g., C2 Standard instances) and a Ray cluster running on top of GKE. It configures custom VPC networking and uses Cloud Storage for datasets and checkpoints. The sample includes the following files:
 
 * `0_env.sh`: Configures starting environment variables (project ID, zone, token).
 * `1_setup_network.sh`: Provisions the custom VPC network and firewall rules.
 * `2_setup_cluster.sh`: Creates the GKE Standard cluster with the required machine types and GPU accelerators.
 * `3_setup_network_mappings.sh`: Configures the necessary networking mappings.
-* `4_setup_storage.sh`: Configures storage such as GCS Fuse for the workload.
+* `4_setup_storage.sh`: Configures storage such as Cloud Storage FUSE for the workload.
 * `5_prepare_data.sh`: Prepares the training data.
 * `6_deploy_workload.sh`: Deploys the Ray cluster and the vERL reinforcement learning job.
 * `7_run_job.sh`: Triggers and monitors the execution of the training job.
@@ -25,7 +25,7 @@ Before you run this sample, ensure you have the following:
 * A Google Cloud project with billing enabled. Running this sample provisions billable Google Cloud resources including:
   - Google Kubernetes Engine (GKE) cluster and GPU Virtual Machines (e.g., c2-standard-16)
   - VPC network, Cloud NAT, and IP addresses
-  - Persistent disks and Google Cloud Storage buckets
+  - Persistent disks and Cloud Storage buckets
   
   You are billed for these resources for the time that they are running. To avoid incurring charges, delete the resources when you have finished running the sample.
 * Quota for the required hardware in your chosen region.

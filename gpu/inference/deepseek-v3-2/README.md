@@ -27,13 +27,13 @@ Before you run this sample, ensure you have the following:
 * A Google Cloud project with billing enabled. Running this sample provisions billable Google Cloud resources including:
   - GKE clusters
   - Compute Engine instances with NVIDIA GPUs
-  - Google Cloud Storage buckets (if used for model storage)
+  - Cloud Storage buckets (if used for model storage)
   - Network egress and load balancing
   
   You are billed for these resources for the time that they are running. To avoid incurring charges, delete the resources when you have finished running the sample.
 * Sufficient quota for NVIDIA GPUs (e.g., 8 GPUs per node) and standard compute resources in your chosen region.
   
-* A Hugging Face token (if the model requires authentication), the gcloud and kubectl CLI tools installed, and appropriate IAM permissions for GKE and GCS.
+* A Hugging Face token (if the model requires authentication), the gcloud and kubectl CLI tools installed, and appropriate IAM permissions for GKE and Cloud Storage.
 
 ## Run the sample
 
