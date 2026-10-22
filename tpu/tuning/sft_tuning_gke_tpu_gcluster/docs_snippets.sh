@@ -57,6 +57,18 @@ sed -i '/system_node_pool_machine_type/a \      system_node_pool_zones: [$(vars.
 gcloud container clusters get-credentials "${CLUSTER_NAME:?}" --location="${REGION:?}" --project="${PROJECT:?}"
 # [END hypercomputer_tpu_sft_gcluster_get_credentials]
 
+
+# [START hypercomputer_tpu_sft_gcluster_configure_auth]
+gcloud auth login
+gcloud auth application-default login --no-launch-browser
+gcloud config set project "${PROJECT:?}"
+gcloud auth application-default set-quota-project "${PROJECT:?}"
+
+gcloud auth configure-docker gcr.io --quiet
+gcloud auth configure-docker "${REGION:?}-docker.pkg.dev" --quiet
+# [END hypercomputer_tpu_sft_gcluster_configure_auth]
+
+# to be replaced by hypercomputer_tpu_sft_gcluster_configure_auth
 # [START hypercomputer_tpu_sft_gcluster_configure_docker]
 gcloud auth configure-docker gcr.io --quiet
 gcloud auth configure-docker "${REGION:?}-docker.pkg.dev" --quiet
