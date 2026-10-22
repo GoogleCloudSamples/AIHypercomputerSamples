@@ -109,7 +109,7 @@ kubectl create secret generic hf-secret \
 echo "[$(date)] ==================== Installing KAI Scheduler and Dynamo Platform... ===================="
 # [START hypercomputer_gpu_infer_qwen38_2t_install_dynamo]
 RELEASE_VERSION="${DYNAMO_RELEASE_VERSION:-1.5.0}"
-helm fetch "https://helm.ngc.nvidia.com/nvidia/ai-dynamo/charts/dynamo-platform-${RELEASE_VERSION}.tgz"
+helm pull "https://helm.ngc.nvidia.com/nvidia/ai-dynamo/charts/dynamo-platform-${RELEASE_VERSION}.tgz"
 tar -zxf "dynamo-platform-${RELEASE_VERSION}.tgz"
 
 helm upgrade --install kai-scheduler ./dynamo-platform/charts/kai-scheduler \
