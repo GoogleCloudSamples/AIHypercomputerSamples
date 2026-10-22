@@ -19,8 +19,6 @@ export PROJECT_ID="YOUR_PROJECT_ID"
 export REGION="YOUR_REGION"
 export ZONE="YOUR_ZONE"
 export CLUSTER_NAME="YOUR_CLUSTER_NAME"
-# To target a specific reservation block, use:
-# <reservation-name>/reservationBlocks/<reservation-block-name>
 export RESERVATION_NAME="YOUR_RESERVATION_NAME"
 export HF_TOKEN="YOUR_HF_TOKEN"
 export MODEL_BUCKET="YOUR_GCS_BUCKET"
