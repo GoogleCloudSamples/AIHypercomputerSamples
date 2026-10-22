@@ -11,7 +11,7 @@ The scripts in this directory deploy the infrastructure and run the AI/ML worklo
 * `2_run_script.sh`: Submits the fine-tuning workload.
 * `*_validation.sh`: Validates the workload ran successfully.
 * `cleanup.sh`: Terminates all created resources.
-* `run_on_vm.sh`: Script to run the workload on a VM.
+* `run_on_vm.sh`: Runs the workload on a VM.
 
 For the complete step-by-step tutorial of how to use this sample, see the official Google Cloud documentation: [Run supervised fine-tuning on a TPU VM by using MaxText](https://docs.cloud.google.com/ai-hypercomputer/docs/tutorials/tpu/run-sft-v6e-8-tpu-vm-maxtext).
 

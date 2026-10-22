@@ -13,9 +13,9 @@ The scripts in this directory deploy the infrastructure and run the AI/ML worklo
 * `4_interract_with_model.sh`: Interacts with the deployed model.
 * `*_validation.sh`: Validates the workload.
 * `cleanup.sh`: Terminates all created resources.
-* `deepseek-download-job.yaml`: Job configuration.
-* `docs_snippets.sh`: Documentation snippets.
-* `vllm-deepseek3-1-base.yaml`: Model configuration.
+* `deepseek-download-job.yaml`: Configures the job.
+* `docs_snippets.sh`: Contains documentation snippets.
+* `vllm-deepseek3-1-base.yaml`: Configures the model.
 
 For the complete step-by-step tutorial of how to use this sample, see the official Google Cloud documentation: [Use vLLM on GKE to run inference with DeepSeek-V3.1-Base](https://docs.cloud.google.com/ai-hypercomputer/docs/tutorials/gpu/deepseek-vllm-inference).
 

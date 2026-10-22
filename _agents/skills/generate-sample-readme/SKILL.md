@@ -16,7 +16,7 @@ Use your file tools to locate and read the contents of `sample_template/README.m
 - **Determine Infrastructure**: Identify if the sample uses "GKE Autopilot", "GKE cluster with TPUs", or a cluster provisioned using "Google Cloud Cluster Toolkit" (for example, uses the `gcluster` command).
 - **Identify the Model**: Find the model name being used.
 - **Determine Billable Resources**: Resources usually include Google Kubernetes Engine (GKE), Compute Engine (GPUs/TPUs), and Cloud Storage (always use the official name "Cloud Storage" or "Cloud Storage FUSE", not "Google Cloud Storage" or "GCS").
-- **List the Steps**: Create a sequential list of all relevant `.sh` and `.yaml` scripts (using their exact filenames in the directory) and a short description of what they do.
+- **List the Steps**: Create a sequential list of all relevant `.sh` and `.yaml` scripts (using their exact filenames in the directory) and a short description of what they do. Start each file description with a present-tense verb (for example, "Configures the job.", "Contains documentation snippets.", "Configures the model.").
 - **Determine Verification Steps**: Identify the exact verification script (`./*_validation.sh`) or commands from `docs_snippets.sh` (such as `gcluster job logs`, `kubectl logs`, or `gcloud storage ls`) and expected log outputs.
 
 ## Step 3: Ask the User for the Tutorial Link
@@ -32,6 +32,7 @@ Use your file tools to locate and read the contents of `sample_template/README.m
 - Do NOT add extra sections or headings that are not in `sample_template/README.md` (such as `## Tutorial`, `## Architecture and Workload`, `## Architecture`, or `## Overview`). Keep all architecture details, the file list, and the tutorial link in the introduction section directly under the main `#` title.
 - Under `## Verify the results`, always provide concrete verification commands and expected outputs rather than generic instructions like "Check the logs of the training job."
 - Follow the [Google Developer Documentation Style Guide](https://developers.google.com/style/word-list):
+  - Start every file description in the bulleted file list with a present-tense verb (for example, "Configures the job." instead of "Job configuration.").
   - Use "for example" or "such as" instead of "e.g.", and avoid "etc." and "i.e.".
   - Use "using" instead of "via".
   - Always use the official product name "Cloud Storage" (or "Cloud Storage FUSE"), not "Google Cloud Storage" or "GCS".

@@ -12,10 +12,10 @@ The scripts in this directory deploy the infrastructure and run the AI/ML worklo
 * `3_interact_with_model.sh`: Interacts with the deployed model.
 * `*_validation.sh`: Validates the workload.
 * `cleanup.sh`: Terminates all created resources.
-* `docs_snippets.sh`: Documentation snippets.
-* `metadata.yaml`: Metadata file.
-* `qwen3-235b-deploy.yaml`: Model deployment configuration.
-* `qwen3-model-loader.yaml`: Model loader configuration.
+* `docs_snippets.sh`: Contains documentation snippets.
+* `metadata.yaml`: Defines the sample metadata.
+* `qwen3-235b-deploy.yaml`: Configures the model deployment.
+* `qwen3-model-loader.yaml`: Configures the model loader.
 
 For the complete step-by-step tutorial of how to use this sample, see the official Google Cloud documentation: [Use vLLM on GKE to run inference with Qwen3](https://docs.cloud.google.com/ai-hypercomputer/docs/tutorials/gpu/qwen3-vllm-inference).
 

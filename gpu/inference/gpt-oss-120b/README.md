@@ -13,9 +13,9 @@ The scripts in this directory deploy the infrastructure and run the AI/ML worklo
 * `4_interract_with_model.sh`: Interacts with the deployed model.
 * `*_validation.sh`: Validates the workload.
 * `cleanup.sh`: Terminates all created resources.
-* `docs_snippets.sh`: Documentation snippets.
-* `gpt-download-job.yaml`: Job configuration.
-* `vllm-gpt-oss-120b.yaml`: Model configuration.
+* `docs_snippets.sh`: Contains documentation snippets.
+* `gpt-download-job.yaml`: Configures the job.
+* `vllm-gpt-oss-120b.yaml`: Configures the model.
 
 For the complete step-by-step tutorial of how to use this sample, see the official Google Cloud documentation: [Use vLLM on GKE to run inference with gpt-oss-120b](https://docs.cloud.google.com/ai-hypercomputer/docs/tutorials/gpu/gpt-oss-vllm-inference).
 
