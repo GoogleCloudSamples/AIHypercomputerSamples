@@ -56,6 +56,11 @@ gcloud container clusters get-credentials ${CLUSTER_NAME} \
 if ! gcloud container node-pools describe gpu-pool --cluster=${CLUSTER_NAME} --location=${CONTROL_PLANE_REGION} --project=${PROJECT_ID} >/dev/null 2>&1; then
   echo "Creating GPU node pool gpu-pool..."
 
+  if [[ "${NODEPOOL_TIMEOUT:-YOUR_NODEPOOL_TIMEOUT}" == "YOUR_NODEPOOL_TIMEOUT" ]]; then
+    NODEPOOL_TIMEOUT="3600"
+  fi
+
+  set +e
   # [START hypercomputer_gpu_train_ray_verl_std_create_nodepool]
   RESERVATION_ARGS=("--reservation-affinity=none")
   if [ -n "${RESERVATION:-}" ]; then
@@ -80,6 +85,35 @@ if ! gcloud container node-pools describe gpu-pool --cluster=${CLUSTER_NAME} --l
       --additional-node-network="network=${RDMA_NETWORK_PREFIX}-net,subnetwork=${RDMA_NETWORK_PREFIX}-sub-7" \
       --project="${PROJECT_ID}"
   # [END hypercomputer_gpu_train_ray_verl_std_create_nodepool]
+  NODEPOOL_CREATE_RC=$?
+  set -e
+
+  if [ "${NODEPOOL_CREATE_RC}" -ne 0 ]; then
+    OPERATION_ID=$(gcloud container operations list \
+        --location="${CONTROL_PLANE_REGION}" \
+        --project="${PROJECT_ID}" \
+        --filter="operationType=CREATE_NODE_POOL AND status=RUNNING AND targetLink~${CLUSTER_NAME}/nodePools/gpu-pool" \
+        --format="value(name)" | head -n 1)
+    if [ -n "${OPERATION_ID}" ]; then
+      echo "Node pool creation operation ${OPERATION_ID} is still running; waiting up to ${NODEPOOL_TIMEOUT}s..."
+      if ! timeout "${NODEPOOL_TIMEOUT}" bash -c '
+        while [[ "$(gcloud container operations describe "'"${OPERATION_ID}"'" --location="'"${CONTROL_PLANE_REGION}"'" --project="'"${PROJECT_ID}"'" --format="value(status)")" == "RUNNING" ]]; do
+          sleep 15
+        done
+      '; then
+        echo "Error: Nodepool creation timed out after ${NODEPOOL_TIMEOUT} seconds."
+        gcloud container operations describe "${OPERATION_ID}" \
+            --location="${CONTROL_PLANE_REGION}" \
+            --project="${PROJECT_ID}" || true
+        exit 1
+      fi
+    fi
+  fi
+
+  if [[ "$(gcloud container node-pools describe gpu-pool --cluster="${CLUSTER_NAME}" --location="${CONTROL_PLANE_REGION}" --project="${PROJECT_ID}" --format="value(status)" 2>/dev/null)" != "RUNNING" ]]; then
+    echo "Error: gpu-pool failed to reach RUNNING state."
+    exit 1
+  fi
 else
   echo "Node pool gpu-pool already exists."
 fi
