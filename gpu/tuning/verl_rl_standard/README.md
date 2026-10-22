@@ -4,7 +4,7 @@ This code sample is intended for AI/ML engineers and demonstrates how to run vER
 
 Note: This sample doesn’t demonstrate how to prepare a dataset or serve the model in production.
 
-This sample provisions a GKE Standard cluster to run a distributed reinforcement learning workload with vERL. The architecture utilizes GPU-enabled Virtual Machines (e.g., C2 Standard instances) and a Ray cluster running on top of GKE. It configures custom VPC networking and uses Cloud Storage for datasets and checkpoints. The sample includes the following files:
+This sample provisions a GKE Standard cluster to run a distributed reinforcement learning workload with vERL. The architecture utilizes GPU-enabled Virtual Machines (for example, C2 Standard instances) and a Ray cluster running on top of GKE. It configures custom VPC networking and uses Cloud Storage for datasets and checkpoints. The sample includes the following files:
 
 * `0_env.sh`: Configures starting environment variables (project ID, zone, token).
 * `1_setup_network.sh`: Provisions the custom VPC network and firewall rules.
@@ -23,7 +23,7 @@ For the complete step-by-step tutorial of how to use this sample, see the offici
 Before you run this sample, ensure you have the following:
 
 * A Google Cloud project with billing enabled. Running this sample provisions billable Google Cloud resources including:
-  - Google Kubernetes Engine (GKE) cluster and GPU Virtual Machines (e.g., c2-standard-16)
+  - Google Kubernetes Engine (GKE) cluster and GPU Virtual Machines (for example, c2-standard-16)
   - VPC network, Cloud NAT, and IP addresses
   - Persistent disks and Cloud Storage buckets
   
@@ -35,7 +35,7 @@ Before you run this sample, ensure you have the following:
 
 To execute this sample, follow these steps:
 
-1. Open `0_env.sh` and update the environment variables (e.g., `PROJECT_ID`, `ZONE`, and `HF_TOKEN`).
+1. Open `0_env.sh` and update the environment variables (for example, `PROJECT_ID`, `ZONE`, and `HF_TOKEN`).
    
    ```bash
    source 0_env.sh

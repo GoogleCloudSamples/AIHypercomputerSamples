@@ -4,11 +4,11 @@ This code sample is intended for AI/ML engineers and demonstrates how to run vER
 
 Note: This sample doesn’t demonstrate how to prepare a dataset or serve the model in production.
 
-This sample provisions a fully managed GKE Autopilot cluster to run a distributed reinforcement learning workload with vERL. It sets up a Ray cluster over GKE, utilizing Dynamic Resource Allocation (DraNet) and GPU instances (e.g., C2 machine family) for computation. Storage is handled using Cloud Storage and Persistent Volumes. The sample includes the following files:
+This sample provisions a fully managed GKE Autopilot cluster to run a distributed reinforcement learning workload with vERL. It sets up a Ray cluster over GKE, utilizing Dynamic Resource Allocation (DraNet) and GPU instances (for example, C2 machine family) for computation. Storage is handled using Cloud Storage and Persistent Volumes. The sample includes the following files:
 
 * `0_env.sh`: Configures starting environment variables (project ID, region, cluster name).
 * `1_setup_cluster.sh`: Provisions the GKE Autopilot cluster.
-* `2_setup_storage.sh`: Prepares the required storage (e.g., Cloud Storage FUSE or persistent volumes).
+* `2_setup_storage.sh`: Prepares the required storage (for example, Cloud Storage FUSE or persistent volumes).
 * `3_setup_dranet.sh`: Configures DraNet for optimized network performance.
 * `4_prepare_data.sh`: Prepares and downloads the dataset for training.
 * `5_deploy_workload.sh`: Deploys the vERL training workload and Ray cluster to GKE.
@@ -33,7 +33,7 @@ Before you run this sample, ensure you have the following:
 
 To execute this sample, follow these steps:
 
-1. Open `0_env.sh` and update the environment variables (e.g., `PROJECT_ID`, `ZONE`, and `HF_TOKEN`).
+1. Open `0_env.sh` and update the environment variables (for example, `PROJECT_ID`, `ZONE`, and `HF_TOKEN`).
    
    ```bash
    source 0_env.sh

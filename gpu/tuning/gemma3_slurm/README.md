@@ -18,7 +18,7 @@ For the complete step-by-step tutorial of how to use this sample, see the offici
 Before you run this sample, ensure you have the following:
 
 * A Google Cloud project with billing enabled. Running this sample provisions billable Google Cloud resources including:
-  - A4 High GPU Virtual Machines (e.g., a4-highgpu-8g)
+  - A4 High GPU Virtual Machines (for example, a4-highgpu-8g)
   - Cloud Storage buckets
   - Filestore for shared cluster storage
   
@@ -30,7 +30,7 @@ Before you run this sample, ensure you have the following:
 
 To execute this sample, follow these steps:
 
-1. Open `0_env.sh` and update the environment variables (e.g., `PROJECT_ID`, `ZONE`, and `HF_TOKEN`).
+1. Open `0_env.sh` and update the environment variables (for example, `PROJECT_ID`, `ZONE`, and `HF_TOKEN`).
    
    ```bash
    source 0_env.sh
