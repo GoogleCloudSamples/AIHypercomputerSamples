@@ -66,6 +66,10 @@ fi
 # 5. Delete GKE Cluster and Wait for Managed Instance Groups to vanish
 echo "Deleting GKE Cluster ${CLUSTER_NAME}..."
 if gcloud container clusters describe ${CLUSTER_NAME} --location=${CONTROL_PLANE_REGION} --project=${PROJECT_ID} >/dev/null 2>&1; then
+  for op in $(gcloud container operations list --location=${CONTROL_PLANE_REGION} --project=${PROJECT_ID} --filter="status=RUNNING AND targetLink~clusters/${CLUSTER_NAME}" --format="value(name)" 2>/dev/null); do
+    echo "Waiting for active GKE operation ${op} to finish before deleting cluster..."
+    gcloud container operations wait "${op}" --location=${CONTROL_PLANE_REGION} --project=${PROJECT_ID} || true
+  done
   # [START hypercomputer_gpu_train_ray_verl_std_delete_cluster]
   gcloud container clusters delete ${CLUSTER_NAME} --location=${CONTROL_PLANE_REGION} --project=${PROJECT_ID} --quiet || true
   # [END hypercomputer_gpu_train_ray_verl_std_delete_cluster]
