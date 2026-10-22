@@ -1,0 +1,327 @@
+# Copyright 2026 Google LLC
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+# [START hypercomputer_gpu_infer_llama3_405b_manifest]
+# ==============================================================================
+# Single-Host Disaggregated Serving of Llama 3.1 405B FP8 on GKE
+# using NVIDIA Dynamo Platform (v1.5.0) and SGLang on GPU A4 (2 x a4-highgpu-8g)
+# Topology: 1-node Prefill (8 x B200, TP=8) + 1-node Decode (8 x B200, TP=8)
+# ==============================================================================
+apiVersion: resource.k8s.io/v1
+kind: ResourceClaimTemplate
+metadata:
+  name: all-mrdma
+spec:
+  spec:
+    devices:
+      requests:
+        - name: req-mrdma
+          exactly:
+            deviceClassName: mrdma.google.com
+            allocationMode: All
+---
+apiVersion: nvidia.com/v1alpha1
+kind: DynamoGraphDeployment
+metadata:
+  name: llama3-405b-a4-disagg
+  annotations:
+    nvidia.com/enable-grove: "true"
+spec:
+  backendFramework: sglang
+  services:
+    # --------------------------------------------------------------------------
+    # FRONTEND: Dynamo OpenAI-Compatible Router (`python3 -m dynamo.frontend`)
+    # --------------------------------------------------------------------------
+    Frontend:
+      componentType: frontend
+      replicas: 1
+      resources:
+        requests:
+          cpu: "8"
+          memory: "32Gi"
+        limits:
+          cpu: "8"
+          memory: "32Gi"
+      extraPodSpec:
+        tolerations:
+          - key: "nvidia.com/gpu"
+            operator: "Exists"
+            effect: "NoSchedule"
+        mainContainer:
+          image: nvcr.io/nvidia/ai-dynamo/sglang-runtime:1.5.0
+          command: ["/bin/bash", "-c"]
+          args:
+            - |
+              set -ex
+              exec python3 -m dynamo.frontend --http-port 8000
+
+    # --------------------------------------------------------------------------
+    # PREFILL WORKER: 1 x GPU A4 (`a4-highgpu-8g`, 8 x B200 GPUs, TP=8)
+    # --------------------------------------------------------------------------
+    Prefill:
+      componentType: worker
+      subComponentType: prefill
+      replicas: 1
+      livenessProbe:
+        httpGet:
+          path: /live
+          port: system
+        initialDelaySeconds: 600
+        periodSeconds: 60
+        timeoutSeconds: 30
+        failureThreshold: 60
+      readinessProbe:
+        httpGet:
+          path: /health
+          port: system
+        initialDelaySeconds: 120
+        periodSeconds: 30
+        timeoutSeconds: 30
+        failureThreshold: 60
+      sharedMemory:
+        size: 128Gi
+      resources:
+        requests:
+          gpu: "8"
+          cpu: "128"
+          memory: "1500Gi"
+        limits:
+          gpu: "8"
+          cpu: "128"
+          memory: "2000Gi"
+      envs:
+        - name: MODEL_PATH
+          value: "nvidia/Llama-3.1-405B-Instruct-FP8"
+        - name: HF_HOME
+          value: "/data"
+        - name: HF_TOKEN
+          valueFrom:
+            secretKeyRef:
+              name: hf-secret
+              key: hf_api_token
+              optional: true
+        - name: DYN_SYSTEM_ENABLED
+          value: "true"
+        - name: DYN_SYSTEM_USE_ENDPOINT_HEALTH_STATUS
+          value: "[\"generate\"]"
+        - name: DYN_SYSTEM_PORT
+          value: "9090"
+        - name: LD_LIBRARY_PATH
+          value: "/usr/local/gib/lib64:/usr/local/nvidia/lib64"
+        - name: GLOO_SOCKET_IFNAME
+          value: "eth0"
+        - name: WITH_NVIDIA_PEERMEM
+          value: "0"
+        # Xet CAS downloads returned unretried 429s; plain HTTP downloads back off on 429.
+        - name: HF_HUB_DISABLE_XET
+          value: "1"
+      extraPodSpec:
+        resourceClaims:
+          - name: rdma
+            resourceClaimTemplateName: all-mrdma
+        nodeSelector:
+          cloud.google.com/gke-accelerator: nvidia-b200
+          cloud.google.com/gke-gpu: "true"
+          kubernetes.io/arch: amd64
+        tolerations:
+          - key: "nvidia.com/gpu"
+            operator: "Exists"
+            effect: "NoSchedule"
+          - key: "kubernetes.io/arch"
+            operator: "Equal"
+            value: "amd64"
+            effect: "NoSchedule"
+        mainContainer:
+          image: nvcr.io/nvidia/ai-dynamo/sglang-runtime:1.5.0
+          resources:
+            claims:
+              - name: rdma
+          startupProbe:
+            httpGet:
+              path: /live
+              port: system
+            initialDelaySeconds: 120
+            periodSeconds: 30
+            timeoutSeconds: 10
+            failureThreshold: 120
+          command: ["/bin/bash", "-c"]
+          args:
+            - |
+              set -ex
+              if [ -f /usr/local/gib/scripts/set_nccl_env.sh ]; then
+                . /usr/local/gib/scripts/set_nccl_env.sh
+              fi
+
+              # Pre-download with huggingface_hub, which backs off on HTTP 429s. Dynamo's built-in
+              # downloader (ModelExpress) aborts on the first 429 and skips fetching if weights are cached.
+              echo "=== [Dynamo Prefill Worker] Ensuring weights are cached in ${HF_HOME:-/data} ==="
+              python3 -c "import os; from huggingface_hub import snapshot_download; snapshot_download(os.environ['MODEL_PATH'], max_workers=16)"
+              # --host 0.0.0.0 is required so MooncakeKVBootstrapServer binds to 0.0.0.0:30001 instead of 127.0.0.1:30001.
+              echo "=== [Dynamo Prefill Worker] Launching dynamo.sglang ==="
+              exec python3 -m dynamo.sglang \
+                --model-path "${MODEL_PATH}" \
+                --host 0.0.0.0 \
+                --disaggregation-mode prefill \
+                --disaggregation-bootstrap-port 30001 \
+                --tensor-parallel-size 8 \
+                --kv-cache-dtype fp8_e4m3 \
+                --context-length 16384 \
+                --mem-fraction-static 0.85 \
+                --enable-metrics
+          volumeMounts:
+            - name: library-dir-host
+              mountPath: /usr/local/nvidia
+            - name: gib
+              mountPath: /usr/local/gib
+            - name: data-volume
+              mountPath: /data
+        volumes:
+          - name: library-dir-host
+            hostPath:
+              path: /home/kubernetes/bin/nvidia
+          - name: gib
+            hostPath:
+              path: /home/kubernetes/bin/gib
+          - name: data-volume
+            emptyDir: {}
+
+    # --------------------------------------------------------------------------
+    # DECODE WORKER: 1 x GPU A4 (`a4-highgpu-8g`, 8 x B200 GPUs, TP=8)
+    # --------------------------------------------------------------------------
+    Decode:
+      componentType: worker
+      subComponentType: decode
+      replicas: 1
+      livenessProbe:
+        httpGet:
+          path: /live
+          port: system
+        initialDelaySeconds: 600
+        periodSeconds: 60
+        timeoutSeconds: 30
+        failureThreshold: 60
+      readinessProbe:
+        httpGet:
+          path: /health
+          port: system
+        initialDelaySeconds: 120
+        periodSeconds: 30
+        timeoutSeconds: 30
+        failureThreshold: 60
+      sharedMemory:
+        size: 128Gi
+      resources:
+        requests:
+          gpu: "8"
+          cpu: "128"
+          memory: "1500Gi"
+        limits:
+          gpu: "8"
+          cpu: "128"
+          memory: "2000Gi"
+      envs:
+        - name: MODEL_PATH
+          value: "nvidia/Llama-3.1-405B-Instruct-FP8"
+        - name: HF_HOME
+          value: "/data"
+        - name: HF_TOKEN
+          valueFrom:
+            secretKeyRef:
+              name: hf-secret
+              key: hf_api_token
+              optional: true
+        - name: DYN_SYSTEM_ENABLED
+          value: "true"
+        - name: DYN_SYSTEM_USE_ENDPOINT_HEALTH_STATUS
+          value: "[\"generate\"]"
+        - name: DYN_SYSTEM_PORT
+          value: "9090"
+        - name: LD_LIBRARY_PATH
+          value: "/usr/local/gib/lib64:/usr/local/nvidia/lib64"
+        - name: GLOO_SOCKET_IFNAME
+          value: "eth0"
+        - name: WITH_NVIDIA_PEERMEM
+          value: "0"
+        # Xet CAS downloads returned unretried 429s; plain HTTP downloads back off on 429.
+        - name: HF_HUB_DISABLE_XET
+          value: "1"
+      extraPodSpec:
+        resourceClaims:
+          - name: rdma
+            resourceClaimTemplateName: all-mrdma
+        nodeSelector:
+          cloud.google.com/gke-accelerator: nvidia-b200
+          cloud.google.com/gke-gpu: "true"
+          kubernetes.io/arch: amd64
+        tolerations:
+          - key: "nvidia.com/gpu"
+            operator: "Exists"
+            effect: "NoSchedule"
+          - key: "kubernetes.io/arch"
+            operator: "Equal"
+            value: "amd64"
+            effect: "NoSchedule"
+        mainContainer:
+          image: nvcr.io/nvidia/ai-dynamo/sglang-runtime:1.5.0
+          resources:
+            claims:
+              - name: rdma
+          startupProbe:
+            httpGet:
+              path: /live
+              port: system
+            initialDelaySeconds: 120
+            periodSeconds: 30
+            timeoutSeconds: 10
+            failureThreshold: 120
+          command: ["/bin/bash", "-c"]
+          args:
+            - |
+              set -ex
+              if [ -f /usr/local/gib/scripts/set_nccl_env.sh ]; then
+                . /usr/local/gib/scripts/set_nccl_env.sh
+              fi
+
+              # Pre-download with huggingface_hub, which backs off on HTTP 429s. Dynamo's built-in
+              # downloader (ModelExpress) aborts on the first 429 and skips fetching if weights are cached.
+              echo "=== [Dynamo Decode Worker] Ensuring weights are cached in ${HF_HOME:-/data} ==="
+              python3 -c "import os; from huggingface_hub import snapshot_download; snapshot_download(os.environ['MODEL_PATH'], max_workers=16)"
+              echo "=== [Dynamo Decode Worker] Launching dynamo.sglang ==="
+              exec python3 -m dynamo.sglang \
+                --model-path "${MODEL_PATH}" \
+                --host 0.0.0.0 \
+                --disaggregation-mode decode \
+                --disaggregation-bootstrap-port 30001 \
+                --tensor-parallel-size 8 \
+                --kv-cache-dtype fp8_e4m3 \
+                --context-length 16384 \
+                --mem-fraction-static 0.85 \
+                --enable-metrics
+          volumeMounts:
+            - name: library-dir-host
+              mountPath: /usr/local/nvidia
+            - name: gib
+              mountPath: /usr/local/gib
+            - name: data-volume
+              mountPath: /data
+        volumes:
+          - name: library-dir-host
+            hostPath:
+              path: /home/kubernetes/bin/nvidia
+          - name: gib
+            hostPath:
+              path: /home/kubernetes/bin/gib
+          - name: data-volume
+            emptyDir: {}
+# [END hypercomputer_gpu_infer_llama3_405b_manifest]
