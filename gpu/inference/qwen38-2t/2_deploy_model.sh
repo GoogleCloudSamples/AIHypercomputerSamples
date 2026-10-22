@@ -16,30 +16,21 @@
 
 set -euo pipefail
 
-if [[ "${USE_GCSFUSE:-false}" == "true" ]]; then
-  MANIFEST="qwen3.8-2.4t-nvfp4-multihost-a4-gcsfuse.yaml"
-  if [[ ! -f "${MANIFEST}" ]]; then
-    echo "Error: Workload manifest '${MANIFEST}' not found in $(pwd)." >&2
-    exit 1
-  fi
-  if [[ -z "${WEIGHTS_BUCKET:-}" || "${WEIGHTS_BUCKET}" == "YOUR_WEIGHTS_BUCKET_NAME" ]]; then
-    WEIGHTS_BUCKET="${GCS_BUCKET}-weights"
-  fi
-  echo "[$(date)] ==================== Deploying Qwen 3.8 2.4T multihost server (Option B: GCSFuse)... ===================="
-  # [START hypercomputer_gpu_infer_qwen38_2t_deploy_gcsfuse]
-  sed "s/<BUCKET_NAME>/${WEIGHTS_BUCKET}/g" qwen3.8-2.4t-nvfp4-multihost-a4-gcsfuse.yaml | kubectl apply -f -
-  # [END hypercomputer_gpu_infer_qwen38_2t_deploy_gcsfuse]
-else
-  MANIFEST="qwen3.8-2.4t-nvfp4-multihost-a4.yaml"
-  if [[ ! -f "${MANIFEST}" ]]; then
-    echo "Error: Workload manifest '${MANIFEST}' not found in $(pwd)." >&2
-    exit 1
-  fi
-  echo "[$(date)] ==================== Deploying Qwen 3.8 2.4T multihost server (Option A: Local SSD)... ===================="
-  # [START hypercomputer_gpu_infer_qwen38_2t_deploy_local_ssd]
-  kubectl apply -f qwen3.8-2.4t-nvfp4-multihost-a4.yaml
-  # [END hypercomputer_gpu_infer_qwen38_2t_deploy_local_ssd]
+if kubectl get dynamographdeployment qwen3-8-2-4t-a4-disagg >/dev/null 2>&1; then
+  echo "Deleting existing DynamoGraphDeployment qwen3-8-2-4t-a4-disagg before redeploying..."
+  kubectl delete dynamographdeployment qwen3-8-2-4t-a4-disagg --ignore-not-found
+  kubectl wait --for=delete pod -l nvidia.com/dynamo-graph-deployment-name=qwen3-8-2-4t-a4-disagg --timeout=300s 2>/dev/null || true
 fi
+
+MANIFEST="qwen3.8-2.4t-nvfp4-multihost-a4.yaml"
+if [[ ! -f "${MANIFEST}" ]]; then
+  echo "Error: Workload manifest '${MANIFEST}' not found in $(pwd)." >&2
+  exit 1
+fi
+echo "[$(date)] ==================== Deploying Qwen 3.8 2.4T multihost server... ===================="
+# [START hypercomputer_gpu_infer_qwen38_2t_deploy]
+kubectl apply -f qwen3.8-2.4t-nvfp4-multihost-a4.yaml
+# [END hypercomputer_gpu_infer_qwen38_2t_deploy]
 
 echo "Waiting for Qwen 3.8 2.4T frontend, prefill, and decode pods to be created..."
 TIMEOUT=600

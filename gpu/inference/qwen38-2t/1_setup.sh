@@ -74,7 +74,10 @@ vars:
   zone: ${ZONE}
   static_node_count: ${STATIC_NODE_COUNT:-4}
   authorized_cidr: 0.0.0.0/0
-  reservation: ${RESERVATION_NAME}
+  reservation_affinity:
+    consume_reservation_type: SPECIFIC_RESERVATION
+    specific_reservations:
+    - name: ${RESERVATION_NAME}
 EOF
 # [END hypercomputer_gpu_infer_qwen38_2t_configure_blueprint]
 
@@ -113,6 +116,8 @@ helm upgrade --install kai-scheduler ./dynamo-platform/charts/kai-scheduler \
     --set scheduler.args.default-staleness-grace-period="-1s" \
     --set topologyMigration.enabled=false
 
+kubectl wait --for=condition=Available deployment/kai-operator --timeout=120s
+until kubectl get deployment/queue-controller >/dev/null 2>&1; do sleep 2; done
 kubectl wait --for=condition=Available deployment/queue-controller --timeout=120s
 
 helm upgrade --install dynamo-platform ./dynamo-platform \

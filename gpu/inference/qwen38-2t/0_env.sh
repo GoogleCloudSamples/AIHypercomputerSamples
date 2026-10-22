@@ -21,7 +21,6 @@ export ZONE="YOUR_ZONE"
 export CLUSTER_NAME="YOUR_CLUSTER_NAME"
 export RESERVATION_NAME="YOUR_RESERVATION_NAME"
 export GCS_BUCKET="YOUR_BUCKET_NAME"
-export WEIGHTS_BUCKET="YOUR_WEIGHTS_BUCKET_NAME"
 export HF_TOKEN="YOUR_HF_TOKEN"
 export CLUSTER_TOOLKIT_VERSION="v1.104.0"
 export DYNAMO_RELEASE_VERSION="1.5.0"
@@ -38,9 +37,5 @@ elif [[ ${#CLUSTER_NAME} -gt 20 && "${CLUSTER_NAME}" != "YOUR_CLUSTER_NAME" ]]; 
   export CLUSTER_NAME="${CLUSTER_NAME:0:20}"
 fi
 
-# Set USE_GCSFUSE="true" to use Option B (pre-stage weights to GCS bucket and mount via GCSFuse).
-# Default is "false" (Option A: download weights from Hugging Face to local SSD on each node).
-export USE_GCSFUSE="${USE_GCSFUSE:-false}"
-
-# Set SKIP_BENCHMARK="true" to skip the benchmark step in 5_run_benchmark.sh.
+# Set SKIP_BENCHMARK="true" to skip the benchmark step in 4_run_benchmark.sh.
 export SKIP_BENCHMARK="${SKIP_BENCHMARK:-false}"

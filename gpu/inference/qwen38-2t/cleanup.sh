@@ -19,8 +19,6 @@ set -uo pipefail
 echo "[$(date)] ==================== Deleting Kubernetes workloads, Helm releases, and secrets... ===================="
 # [START hypercomputer_gpu_infer_qwen38_2t_deploy_cleanup]
 kubectl delete -f qwen3.8-2.4t-nvfp4-multihost-a4.yaml --ignore-not-found || true
-kubectl delete -f qwen3.8-2.4t-nvfp4-multihost-a4-gcsfuse.yaml --ignore-not-found || true
-kubectl delete job qwen3-8-2-4t-stage-weights --ignore-not-found || true
 helm uninstall dynamo-platform kai-scheduler 2>/dev/null || true
 kubectl delete secret hf-secret --ignore-not-found || true
 # [END hypercomputer_gpu_infer_qwen38_2t_deploy_cleanup]
@@ -114,7 +112,7 @@ for sa_prefix in gke-wl-sa gke-np-sa; do
 done
 
 echo "[$(date)] ==================== Deleting storage and local artifacts... ===================="
-for bucket in $(gcloud storage buckets list --project="${PROJECT_ID}" --format="value(name)" 2>/dev/null | grep -E "^(training-data|checkpoint-data)-${CLUSTER_NAME}-|^${GCS_BUCKET:-NONE}$|^${WEIGHTS_BUCKET:-NONE}$" || true); do
+for bucket in $(gcloud storage buckets list --project="${PROJECT_ID}" --format="value(name)" 2>/dev/null | grep -E "^(training-data|checkpoint-data)-${CLUSTER_NAME}-|^${GCS_BUCKET:-NONE}$" || true); do
   echo "Deleting Cloud Storage bucket gs://${bucket}..."
   gcloud storage rm -r "gs://${bucket}" || echo "Warning: Failed to delete bucket gs://${bucket}"
 done

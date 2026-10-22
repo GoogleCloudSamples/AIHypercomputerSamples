@@ -31,10 +31,10 @@ cleanup() {
 }
 trap cleanup EXIT
 
-echo "Polling endpoint readiness..."
+echo "Polling endpoint and model registration readiness..."
 LIMIT=300
 count=0
-until curl -s http://127.0.0.1:8000/health >/dev/null || curl -s http://127.0.0.1:8000/v1/models >/dev/null; do
+until curl -sf http://127.0.0.1:8000/v1/models | grep -q "Qwen3.8-2.4T-A95B-NVFP4"; do
   if [[ "${count}" -ge "${LIMIT}" ]]; then
     echo "Timeout waiting for model endpoint to become healthy." >&2
     exit 1
