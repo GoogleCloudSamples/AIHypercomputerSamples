@@ -18,44 +18,48 @@ set -euo pipefail
 
 echo "[$(date)] ==================== Setting up port forwarding to svc/qwen3-8-2-4t-a4-disagg-frontend... ===================="
 kubectl port-forward svc/qwen3-8-2-4t-a4-disagg-frontend 8000:8000 >/dev/null 2>&1 &
-PORT_FORWARD_PID=$!
+port_forward_pid=$!
 
 cleanup() {
-  kill "${PORT_FORWARD_PID}" 2>/dev/null || true
+  kill "${port_forward_pid}" 2>/dev/null || true
 }
 trap cleanup EXIT
 
 echo "Waiting for port forwarding and model registration to be ready..."
-TIMEOUT=600
-INTERVAL=2
-ELAPSED=0
-until curl -sf http://localhost:8000/v1/models | grep -q "Qwen3.8-2.4T-A95B-NVFP4"; do
-  if ! kill -0 "${PORT_FORWARD_PID}" 2>/dev/null; then
+timeout=600
+interval=2
+elapsed=0
+until curl -sf http://127.0.0.1:8000/v1/models | grep -q "Qwen3.8-2.4T-A95B-NVFP4"; do
+  if ! kill -0 "${port_forward_pid}" 2>/dev/null; then
     echo "Error: Port forwarding failed to start or died unexpectedly." >&2
     exit 1
   fi
-  if [[ "${ELAPSED}" -ge "${TIMEOUT}" ]]; then
-    echo "Error: Timeout waiting for model to be registered on /v1/models." >&2
+  if [[ "${elapsed}" -ge "${timeout}" ]]; then
+    echo "Error: Timeout waiting for port forwarding to be ready." >&2
     exit 1
   fi
-  sleep "${INTERVAL}"
-  ELAPSED=$((ELAPSED + INTERVAL))
+  sleep "${interval}"
+  elapsed=$((elapsed + interval))
 done
 
 echo "[$(date)] ==================== Sending chat completion request to Qwen 3.8 2.4T... ===================="
-# [START hypercomputer_gpu_infer_qwen38_2t_interact]
-REQUEST_PAYLOAD='{
+echo "=== Request ==="
+cat << 'EOF' | jq .
+{
   "model": "nvidia/Qwen3.8-2.4T-A95B-NVFP4",
   "messages": [{"role": "user", "content": "Explain KV-cache disaggregation in one sentence."}],
   "max_tokens": 64
-}'
-echo "=== Request ==="
-echo "${REQUEST_PAYLOAD}" | jq .
+}
+EOF
 
 echo "=== Response ==="
-RESPONSE=$(curl -sf http://localhost:8000/v1/chat/completions \
+# [START hypercomputer_gpu_infer_qwen38_2t_interact]
+curl -s http://127.0.0.1:8000/v1/chat/completions \
   -H "Content-Type: application/json" \
-  -d "${REQUEST_PAYLOAD}")
-echo "${RESPONSE}" | jq .
+  -d '{
+    "model": "nvidia/Qwen3.8-2.4T-A95B-NVFP4",
+    "messages": [{"role": "user", "content": "Explain KV-cache disaggregation in one sentence."}],
+    "max_tokens": 64
+  }' | jq .
 # [END hypercomputer_gpu_infer_qwen38_2t_interact]
 echo "[$(date)] ==================== Interaction with the model finished. ===================="

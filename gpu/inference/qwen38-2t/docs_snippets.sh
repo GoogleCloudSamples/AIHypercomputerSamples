@@ -19,9 +19,9 @@ gcloud auth login
 gcloud auth application-default login
 # [END hypercomputer_gpu_infer_qwen38_2t_auth]
 
-# [START hypercomputer_gpu_infer_qwen38_2t_fetch_manifests]
+# [START hypercomputer_gpu_infer_qwen38_2t_fetch_manifest]
 curl -O https://raw.githubusercontent.com/GoogleCloudSamples/AIHypercomputerSamples/refs/heads/main/gpu/inference/qwen38-2t/qwen3.8-2.4t-nvfp4-multihost-a4.yaml
-# [END hypercomputer_gpu_infer_qwen38_2t_fetch_manifests]
+# [END hypercomputer_gpu_infer_qwen38_2t_fetch_manifest]
 
 # [START hypercomputer_gpu_infer_qwen38_2t_server_logs]
 kubectl get pods

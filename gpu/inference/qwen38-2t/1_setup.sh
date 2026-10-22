@@ -16,22 +16,28 @@
 
 set -euo pipefail
 
+# Define version
+terraform_version="1.12.2"
+install_temp_dir="/tmp/bin_dependencies"
+mkdir -p "${install_temp_dir}"
+
+# Install Terraform
+if ! command -v terraform >/dev/null 2>&1; then
+  echo "[$(date)] Installing Terraform..."
+  curl -f -s -L \
+    -o "${install_temp_dir}/terraform.zip" \
+    "https://releases.hashicorp.com/terraform/${terraform_version}/terraform_${terraform_version}_linux_amd64.zip"
+  python3 -m zipfile -e "${install_temp_dir}/terraform.zip" "${install_temp_dir}"
+  sudo mv "${install_temp_dir}/terraform" /usr/local/bin/
+  sudo chmod +x /usr/local/bin/terraform
+  rm -f "${install_temp_dir}/terraform.zip"
+fi
+
+# Install Helm
 if ! command -v helm >/dev/null 2>&1; then
   echo "[$(date)] Installing Helm..."
   curl -fsSL https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
 fi
-
-echo "[$(date)] ==================== Enabling required Google Cloud APIs... ===================="
-# [START hypercomputer_gpu_infer_qwen38_2t_enable_apis]
-gcloud services enable \
-    container.googleapis.com \
-    compute.googleapis.com \
-    storage.googleapis.com \
-    iam.googleapis.com \
-    cloudresourcemanager.googleapis.com \
-    serviceusage.googleapis.com \
-    --project="${PROJECT_ID}"
-# [END hypercomputer_gpu_infer_qwen38_2t_enable_apis]
 
 echo "[$(date)] ==================== Installing Cluster Toolkit... ===================="
 if [[ ! -x "cluster-toolkit/gcluster" ]]; then
@@ -45,7 +51,7 @@ else
   echo "Cluster Toolkit already downloaded in ./cluster-toolkit."
 fi
 
-echo "[$(date)] ==================== Creating Terraform state GCS bucket gs://${GCS_BUCKET}... ===================="
+echo "[$(date)] ==================== Creating Terraform state GCS bucket... ===================="
 if ! gcloud storage buckets describe "gs://${GCS_BUCKET}" --project="${PROJECT_ID}" >/dev/null 2>&1; then
   # [START hypercomputer_gpu_infer_qwen38_2t_create_tf_bucket]
   gcloud storage buckets create "gs://${GCS_BUCKET}" \
@@ -72,7 +78,7 @@ vars:
   deployment_name: ${CLUSTER_NAME}
   region: ${REGION}
   zone: ${ZONE}
-  static_node_count: ${STATIC_NODE_COUNT:-4}
+  static_node_count: 4
   authorized_cidr: 0.0.0.0/0
   reservation_affinity:
     consume_reservation_type: SPECIFIC_RESERVATION
