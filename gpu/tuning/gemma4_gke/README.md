@@ -27,7 +27,7 @@ Before you run this sample, ensure you have the following:
   You are billed for these resources for the time that they are running. To avoid incurring charges, delete the resources when you have finished running the sample.
 * Quota for A4 VMs in your chosen region.
   
-* A valid Hugging Face token (HF_TOKEN) with access to the `google/gemma-4-31B-it` model.
+* A valid Hugging Face token (`HF_TOKEN`) with access to the `google/gemma-4-31B-it` model.
 
 ## Run the sample
 

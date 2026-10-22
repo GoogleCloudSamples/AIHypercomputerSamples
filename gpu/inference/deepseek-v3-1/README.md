@@ -32,7 +32,7 @@ Before you run this sample, ensure you have the following:
   You are billed for these resources for the time that they are running. To avoid incurring charges, delete the resources when you have finished running the sample.
 * Sufficient quota for NVIDIA GPUs (for example, 8 GPUs per node) and standard compute resources in your chosen region.
   
-* A Hugging Face token (if the model requires authentication), the gcloud and kubectl CLI tools installed, and appropriate IAM permissions for GKE and Cloud Storage.
+* A Hugging Face token (if the model requires authentication), the `gcloud` and `kubectl` CLI tools installed, and appropriate IAM permissions for GKE and Cloud Storage.
 
 ## Run the sample
 
