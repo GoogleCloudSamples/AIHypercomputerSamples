@@ -49,18 +49,21 @@ fi
 
 echo "Configuring the Cluster Toolkit deployment file..."
 # [START hypercomputer_gpu_infer_deepseek_r1_deployment_configure]
-STATIC_NODES="2"
-AUTHORIZED_CIDR="0.0.0.0/0"
-sed -i -E \
-  -e "s|^([[:space:]]*)#*[[:space:]]*(bucket:)[[:space:]]*.*|\1\2 ${TERRAFORM_BUCKET}|" \
-  -e "s|^([[:space:]]*)#*[[:space:]]*(project_id:)[[:space:]]*.*|\1\2 ${PROJECT_ID}|" \
-  -e "s|^([[:space:]]*)#*[[:space:]]*(deployment_name:)[[:space:]]*.*|\1\2 ${CLUSTER_NAME}|" \
-  -e "s|^([[:space:]]*)#*[[:space:]]*(region:)[[:space:]]*.*|\1\2 ${REGION}|" \
-  -e "s|^([[:space:]]*)#*[[:space:]]*(zone:)[[:space:]]*.*|\1\2 ${ZONE}|" \
-  -e "s|^([[:space:]]*)#*[[:space:]]*(static_node_count:)[[:space:]]*.*|\1\2 ${STATIC_NODES}|" \
-  -e "s|^([[:space:]]*)#*[[:space:]]*(authorized_cidr:)[[:space:]]*.*|\1\2 ${AUTHORIZED_CIDR}|" \
-  -e "s|^([[:space:]]*)#*[[:space:]]*(reservation:)[[:space:]]*.*|\1\2 ${RESERVATION_NAME}|" \
-  examples/gke-a4/gke-a4-deployment.yaml
+cat <<EOF > examples/gke-a4/gke-a4-deployment.yaml
+terraform_backend_defaults:
+  type: gcs
+  configuration:
+    bucket: ${TERRAFORM_BUCKET}
+
+vars:
+  project_id: ${PROJECT_ID}
+  deployment_name: ${CLUSTER_NAME}
+  region: ${REGION}
+  zone: ${ZONE}
+  static_node_count: 2
+  authorized_cidr: 0.0.0.0/0
+  reservation: ${RESERVATION_NAME}
+EOF
 # [END hypercomputer_gpu_infer_deepseek_r1_deployment_configure]
 
 echo "Deploying the cluster (this takes ~30-45 minutes)..."

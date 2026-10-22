@@ -94,7 +94,7 @@ trap 'kill "${LOG_PID}" 2>/dev/null || true' EXIT
 LIMIT=540
 count=0
 while true; do
-  CONDITIONS=$(kubectl get job "${JOB_NAME}" -o jsonpath='{.status.conditions[?(@.status=="True")].type}')
+  CONDITIONS=$(kubectl get job "${JOB_NAME}" -o jsonpath='{.status.conditions[?(@.status=="True")].type}' 2>/dev/null || true)
   if [[ "${CONDITIONS}" == *Complete* ]]; then
     break
   fi
@@ -112,7 +112,7 @@ while true; do
 done
 echo "Model download job completed."
 
-SHARDS=$(gcloud storage ls "gs://${MODEL_BUCKET}/DeepSeek-R1/*.safetensors" | wc -l)
+SHARDS=$( (gcloud storage ls "gs://${MODEL_BUCKET}/DeepSeek-R1/*.safetensors" 2>/dev/null || true) | wc -l | tr -d ' ')
 if [ "${SHARDS}" -ne "${EXPECTED_SHARDS}" ]; then
   echo "Error: found ${SHARDS}/${EXPECTED_SHARDS} safetensors shards in gs://${MODEL_BUCKET}/DeepSeek-R1." >&2
   exit 1

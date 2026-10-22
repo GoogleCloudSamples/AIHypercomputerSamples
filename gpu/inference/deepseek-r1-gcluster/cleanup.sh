@@ -36,7 +36,7 @@ cleanup_anp_firewalls() {
       --filter="network ~ gke-anp-${CLUSTER_HASH}" --format="value(name)" 2>/dev/null || true)
   if [ -n "${rules}" ]; then
     echo "Deleting firewall rules attached to the ANP networks of ${CLUSTER_NAME}..."
-    echo "${rules}" | xargs -r gcloud compute firewall-rules delete --project="${PROJECT_ID}" --quiet || true
+    echo "${rules}" | xargs gcloud compute firewall-rules delete --project="${PROJECT_ID}" --quiet || true
   fi
 }
 
@@ -82,9 +82,11 @@ fi
 # Remove ANP networks left behind if GKE could not delete them.
 if [ -n "${CLUSTER_HASH}" ]; then
   cleanup_anp_firewalls
-  gcloud compute networks list --project="${PROJECT_ID}" \
-      --filter="name ~ gke-anp-${CLUSTER_HASH}" --format="value(name)" 2>/dev/null \
-    | xargs -r gcloud compute networks delete --project="${PROJECT_ID}" --quiet || true
+  ANP_NETWORKS=$(gcloud compute networks list --project="${PROJECT_ID}" \
+      --filter="name ~ gke-anp-${CLUSTER_HASH}" --format="value(name)" 2>/dev/null || true)
+  if [ -n "${ANP_NETWORKS}" ]; then
+    echo "${ANP_NETWORKS}" | xargs gcloud compute networks delete --project="${PROJECT_ID}" --quiet || true
+  fi
 fi
 
 if gcloud storage buckets describe "gs://${TERRAFORM_BUCKET}" --project="${PROJECT_ID}" >/dev/null 2>&1; then
