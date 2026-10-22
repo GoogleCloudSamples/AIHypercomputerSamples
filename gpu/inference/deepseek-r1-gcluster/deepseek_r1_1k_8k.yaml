@@ -1,0 +1,61 @@
+# [START hypercomputer_gpu_infer_deepseek_r1_benchmark_1k_8k_yaml]
+apiVersion: v1
+kind: Pod
+metadata:
+  name: vllm-bench-1k-8k
+  namespace: default
+  labels:
+    app: vllm-bench
+  annotations:
+    gke-gcsfuse/volumes: "true"
+spec:
+  restartPolicy: Never
+  tolerations:
+  - operator: Exists
+  containers:
+  - name: benchmark
+    image: docker.io/vllm/vllm-openai@sha256:61fc8a896b0a4fbbbdc063bc4b0dbc25ce98e02b5050c24aeb7830ac02039b14
+    imagePullPolicy: IfNotPresent
+    env:
+    - name: PYTHONUNBUFFERED
+      value: "1"
+    - name: HF_TOKEN
+      valueFrom:
+        secretKeyRef:
+          name: hf-secret
+          key: hf_api_token
+    command: ["/bin/bash", "-c"]
+    args:
+    - |
+      set -e
+      echo "=== Benchmark: Input 1k (1024) / Output 8k (8192) [1280 Prompts, Concurrency 128] ==="
+      vllm bench serve \
+        --backend openai \
+        --base-url http://vllm-r1-leader:8080 \
+        --model deepseek-ai/DeepSeek-R1 \
+        --tokenizer /models/DeepSeek-R1 \
+        --dataset-name random \
+        --random-input-len 1024 \
+        --random-output-len 8192 \
+        --random-range-ratio 0.0 \
+        --num-prompts 1280 \
+        --max-concurrency 128 \
+        --request-rate inf \
+        --ready-check-timeout-sec 0 \
+        --trust-remote-code
+    resources:
+      requests:
+        cpu: "8"
+        memory: 16Gi
+    volumeMounts:
+    - mountPath: /models
+      name: model-volume
+      readOnly: true
+  volumes:
+  - name: model-volume
+    csi:
+      driver: gcsfuse.csi.storage.gke.io
+      volumeAttributes:
+        bucketName: $MODEL_BUCKET
+        mountOptions: implicit-dirs
+# [END hypercomputer_gpu_infer_deepseek_r1_benchmark_1k_8k_yaml]
