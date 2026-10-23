@@ -1,10 +1,10 @@
-# vERL RL on GKE Standard
+# verl RL on GKE Standard
 
-This code sample is intended for AI/ML engineers and demonstrates how to run vERL reinforcement learning using a Google Kubernetes Engine (GKE) Standard cluster.
+This code sample is intended for AI/ML engineers and demonstrates how to run verl reinforcement learning using a Google Kubernetes Engine (GKE) Standard cluster.
 
 Note: This sample doesn’t demonstrate how to prepare a dataset or serve the model in production.
 
-This sample provisions a GKE Standard cluster to run a distributed reinforcement learning workload with vERL. The architecture utilizes GPU-enabled Virtual Machines (for example, C2 Standard instances) and a Ray cluster running on top of GKE. It configures custom Virtual Private Cloud (VPC) networking and uses Cloud Storage for datasets and checkpoints. The sample includes the following files:
+This sample provisions a GKE Standard cluster to run a distributed reinforcement learning workload with verl. The architecture utilizes GPU-enabled Virtual Machines (for example, C2 Standard instances) and a Ray cluster running on top of GKE. It configures custom Virtual Private Cloud (VPC) networking and uses Cloud Storage for datasets and checkpoints. The sample includes the following files:
 
 * `0_env.sh`: Configures starting environment variables (project ID, zone, token).
 * `1_setup_network.sh`: Provisions the custom VPC network and firewall rules.
@@ -12,7 +12,7 @@ This sample provisions a GKE Standard cluster to run a distributed reinforcement
 * `3_setup_network_mappings.sh`: Configures the necessary networking mappings.
 * `4_setup_storage.sh`: Configures storage such as Cloud Storage FUSE for the workload.
 * `5_prepare_data.sh`: Prepares the training data.
-* `6_deploy_workload.sh`: Deploys the Ray cluster and the vERL reinforcement learning job.
+* `6_deploy_workload.sh`: Deploys the Ray cluster and the verl reinforcement learning job.
 * `7_run_job.sh`: Triggers and monitors the execution of the training job.
 * `cleanup.sh`: Deletes the GKE cluster, network resources, and all associated infrastructure.
 

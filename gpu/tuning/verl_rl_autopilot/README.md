@@ -1,17 +1,17 @@
-# vERL RL on GKE Autopilot
+# verl RL on GKE Autopilot
 
-This code sample is intended for AI/ML engineers and demonstrates how to run vERL reinforcement learning using a Google Kubernetes Engine (GKE) Autopilot cluster.
+This code sample is intended for AI/ML engineers and demonstrates how to run verl reinforcement learning using a Google Kubernetes Engine (GKE) Autopilot cluster.
 
 Note: This sample doesn’t demonstrate how to prepare a dataset or serve the model in production.
 
-This sample provisions a fully managed GKE Autopilot cluster to run a distributed reinforcement learning workload with vERL. It sets up a Ray cluster over GKE, utilizing Dynamic Resource Allocation (DRANET) and GPU instances (for example, C2 machine family) for computation. Storage is handled using Cloud Storage and Persistent Volumes. The sample includes the following files:
+This sample provisions a fully managed GKE Autopilot cluster to run a distributed reinforcement learning workload with verl. It sets up a Ray cluster over GKE, utilizing Dynamic Resource Allocation (DRANET) and GPU instances (for example, C2 machine family) for computation. Storage is handled using Cloud Storage and Persistent Volumes. The sample includes the following files:
 
 * `0_env.sh`: Configures starting environment variables (project ID, region, cluster name).
 * `1_setup_cluster.sh`: Provisions the GKE Autopilot cluster.
 * `2_setup_storage.sh`: Prepares the required storage (for example, Cloud Storage FUSE or persistent volumes).
 * `3_setup_dranet.sh`: Configures DRANET for optimized network performance.
 * `4_prepare_data.sh`: Prepares and downloads the dataset for training.
-* `5_deploy_workload.sh`: Deploys the vERL training workload and Ray cluster to GKE.
+* `5_deploy_workload.sh`: Deploys the verl training workload and Ray cluster to GKE.
 * `6_run_job.sh`: Triggers and monitors the reinforcement learning job.
 * `cleanup.sh`: Deletes the GKE cluster and removes all related resources.
 
