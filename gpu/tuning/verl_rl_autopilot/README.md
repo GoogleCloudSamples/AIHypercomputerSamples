@@ -4,12 +4,12 @@ This code sample is intended for AI/ML engineers and demonstrates how to run vER
 
 Note: This sample doesn’t demonstrate how to prepare a dataset or serve the model in production.
 
-This sample provisions a fully managed GKE Autopilot cluster to run a distributed reinforcement learning workload with vERL. It sets up a Ray cluster over GKE, utilizing Dynamic Resource Allocation (DraNet) and GPU instances (for example, C2 machine family) for computation. Storage is handled using Cloud Storage and Persistent Volumes. The sample includes the following files:
+This sample provisions a fully managed GKE Autopilot cluster to run a distributed reinforcement learning workload with vERL. It sets up a Ray cluster over GKE, utilizing Dynamic Resource Allocation (DRANET) and GPU instances (for example, C2 machine family) for computation. Storage is handled using Cloud Storage and Persistent Volumes. The sample includes the following files:
 
 * `0_env.sh`: Configures starting environment variables (project ID, region, cluster name).
 * `1_setup_cluster.sh`: Provisions the GKE Autopilot cluster.
 * `2_setup_storage.sh`: Prepares the required storage (for example, Cloud Storage FUSE or persistent volumes).
-* `3_setup_dranet.sh`: Configures DraNet for optimized network performance.
+* `3_setup_dranet.sh`: Configures DRANET for optimized network performance.
 * `4_prepare_data.sh`: Prepares and downloads the dataset for training.
 * `5_deploy_workload.sh`: Deploys the vERL training workload and Ray cluster to GKE.
 * `6_run_job.sh`: Triggers and monitors the reinforcement learning job.

@@ -37,7 +37,7 @@ Use your file tools to locate and read the contents of `sample_template/README.m
   - Expand abbreviations on their first use in the document body—such as "Google Kubernetes Engine (GKE)", "Virtual Private Cloud (VPC)", "Identity and Access Management (IAM)", "Fully Sharded Data Parallel (FSDP)", and "Supervised Fine-Tuning (SFT)"—and use the abbreviation on subsequent mentions.
   - Use "for example" or "such as" instead of "e.g.", and avoid "etc." and "i.e.".
   - Use "using" instead of "via".
-  - Always use the official product names "Cloud Storage" (or "Cloud Storage FUSE", not "Google Cloud Storage" or "GCS") and "Cluster Toolkit" (not "Google Cloud Cluster Toolkit").
+  - Always use the official product names "Cloud Storage" (or "Cloud Storage FUSE", not "Google Cloud Storage" or "GCS"), "Cluster Toolkit" (not "Google Cloud Cluster Toolkit"), and "DRANET" (not "DraNet").
   - Wrap all CLI tools, commands, and environment variable names (such as `gcloud`, `kubectl`, `gcluster`, `cluster-toolkit`, and `HF_TOKEN`) in backticks.
 - Replace the `*TUTORIAL_TITLE*` and `*[Link to official AI Hypercomputer tutorial on Google Cloud]*` placeholders with the actual title and link. Remove any other unneeded generic placeholders from the "Additional resources" section.
 - Use the `write_to_file` tool to save the generated content to `README.md` inside the target sample's directory.
