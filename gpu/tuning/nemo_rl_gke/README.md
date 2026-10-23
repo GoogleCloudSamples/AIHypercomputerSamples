@@ -9,7 +9,7 @@ This sample provisions a GKE cluster with a Ray cluster on top of it to orchestr
 * `0_env.sh`: Configures starting environment variables, such as the project ID, cluster name, and zone.
 * `1_create_vpc_network.sh`: Creates the custom VPC network and firewall rules for the cluster.
 * `2_create_cluster.sh`: Provisions the GKE cluster with the required machine types and node pools.
-* `3_prepare_storage.sh`: Configures the necessary Persistent Volumes (for example, Lustre or Cloud Storage FUSE).
+* `3_prepare_storage.sh`: Configures the necessary Persistent Volumes (for example, Google Cloud Managed Lustre or Cloud Storage FUSE).
 * `4_deploy_ray_cluster.sh`: Deploys the Ray cluster custom resources on GKE.
 * `5_launch_job.sh`: Submits the NeMo reinforcement learning job to the Ray cluster.
 * `6_monitor_job.sh`: Tails the logs and monitors the status of the running job.
@@ -23,7 +23,7 @@ Before you run this sample, ensure you have the following:
 
 * A Google Cloud project with billing enabled. Running this sample provisions billable Google Cloud resources including:
   - GKE cluster and GPU Virtual Machines
-  - Persistent disks and Cloud Storage buckets
+  - Managed Lustre, persistent disks, and Cloud Storage buckets
   - Cloud NAT and VPC network resources
   
   You are billed for these resources for the time that they are running. To avoid incurring charges, delete the resources when you have finished running the sample.
