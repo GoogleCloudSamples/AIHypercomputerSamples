@@ -1,7 +1,113 @@
-# Scale Reinforcement Learning with veRL on GKE Standard
+# verl RL on GKE Standard
 
-This set of scripts demonstrates the full end-to-end implementation of a model use case featured in our official Google Cloud documentation:
+This code sample is intended for AI/ML engineers and demonstrates how to run verl Reinforcement Learning (RL) using a Google Kubernetes Engine (GKE) Standard cluster.
 
-* [Scale reinforcement learning workloads with veRL on GKE](https://docs.cloud.google.com/kubernetes-engine/docs/tutorials/scaling-rl-verl-gke)
+Note: This sample doesn’t demonstrate how to prepare a dataset or serve the model in production.
 
-This sample demonstrates how to scale Reinforcement Learning (RL) workloads using veRL on a GKE Standard cluster.
+This sample provisions a GKE Standard cluster to run a distributed RL workload with verl. The architecture utilizes GPU-enabled Virtual Machines (VMs) (for example, A4 or A3 Ultra instances) and a Ray cluster running on top of GKE. It configures custom Virtual Private Cloud (VPC) networking and uses Cloud Storage for datasets and checkpoints. The sample includes the following files:
+
+* `0_env.sh`: Configures starting environment variables (project ID, zone, token).
+* `1_setup_network.sh`: Provisions the custom VPC network and firewall rules.
+* `2_setup_cluster.sh`: Creates the GKE Standard cluster with the required machine types and GPU accelerators.
+* `3_setup_network_mappings.sh`: Configures the necessary networking mappings.
+* `4_setup_storage.sh`: Configures storage such as Cloud Storage FUSE for the workload.
+* `5_prepare_data.sh`: Prepares the training data.
+* `6_deploy_workload.sh`: Deploys the Ray cluster and the verl RL job.
+* `7_run_job.sh`: Triggers and monitors the execution of the training job.
+* `*_validation.sh`: Validates that the RL workload ran successfully.
+* `cleanup.sh`: Deletes the GKE cluster, network resources, and all associated infrastructure.
+
+For the complete step-by-step tutorial of how to use this sample, see the official Google Cloud documentation: [Fine-tune and scale reinforcement learning with verl on GKE](https://docs.cloud.google.com/kubernetes-engine/docs/tutorials/scaling-rl-verl-gke).
+
+## Before you begin
+
+Before you run this sample, ensure you have the following:
+
+* A Google Cloud project with billing enabled. Running this sample provisions billable Google Cloud resources including:
+  - GKE cluster, GPU VMs (`a4-highgpu-8g` or `a3-ultragpu-8g`), and CPU VMs (`c2-standard-16`)
+  - VPC network, Cloud NAT, and IP addresses
+  - Persistent disks and Cloud Storage buckets
+  
+  You are billed for these resources for the time that they are running. To avoid incurring charges, delete the resources when you have finished running the sample.
+* Quota and an active Compute Engine reservation (`RESERVATION`) for 2 `a4-highgpu-8g` VMs (16 NVIDIA B200 GPUs across 2 nodes) or 2 `a3-ultragpu-8g` VMs (16 NVIDIA H200 GPUs across 2 nodes) and `c2-standard-16` CPU VMs in your chosen region.
+* A valid Hugging Face token (`HF_TOKEN`) with access to the `Qwen/Qwen2.5-32B-Instruct` model.
+* The `gcloud`, `kubectl`, `envsubst`, and `python3` (with `venv` and `pip3` to install `ray[default]`) CLI tools installed.
+* Identity and Access Management (IAM) permissions to create VPC networks and firewall rules, GKE clusters and node pools, Cloud Storage buckets, and Workload Identity IAM policy bindings (`roles/storage.objectAdmin`).
+
+## Run the sample
+
+To execute this sample, follow these steps:
+
+1. Open `0_env.sh` and update the `PROJECT_ID`, `REGION`, `ZONE`, `RESERVATION`, and `HF_TOKEN` variables.
+   
+   ```bash
+   source 0_env.sh
+   ```
+
+2. Run `./1_setup_network.sh`:
+   
+   ```bash
+   ./1_setup_network.sh
+   ```
+
+3. Run `./2_setup_cluster.sh`:
+   
+   ```bash
+   ./2_setup_cluster.sh
+   ```
+
+4. Run `./3_setup_network_mappings.sh`:
+   
+   ```bash
+   ./3_setup_network_mappings.sh
+   ```
+
+5. Run `./4_setup_storage.sh`:
+   
+   ```bash
+   ./4_setup_storage.sh
+   ```
+
+6. Run `./5_prepare_data.sh`:
+   
+   ```bash
+   ./5_prepare_data.sh
+   ```
+
+7. Run `./6_deploy_workload.sh`:
+   
+   ```bash
+   ./6_deploy_workload.sh
+   ```
+
+8. Run `./7_run_job.sh`:
+   
+   ```bash
+   ./7_run_job.sh
+   ```
+
+## Verify the results
+
+To verify that the workload ran successfully:
+
+1. Run the validation script to check the output logs:
+
+   ```bash
+   ./*_validation.sh
+   ```
+
+2. You should see an output indicating validation passed.
+
+## Clean up
+
+To clean up the resources created by this sample:
+
+1. Terminate the cluster and clean up the workspace:
+
+   ```bash
+   ./cleanup.sh
+   ```
+  
+## Additional resources
+  
+* [Fine-tune and scale reinforcement learning with verl on GKE](https://docs.cloud.google.com/kubernetes-engine/docs/tutorials/scaling-rl-verl-gke)

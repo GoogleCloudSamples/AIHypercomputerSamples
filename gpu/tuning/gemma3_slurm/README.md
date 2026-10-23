@@ -1,12 +1,78 @@
-# Fine-tune Gemma 3 on an A4 Slurm cluster
+# Fine-tune Gemma 3 on a Slurm cluster
 
-This repository contains code samples and scripts from the AI Hypercomputer documentation.
+This code sample is intended for AI/ML engineers and demonstrates how to run Gemma 3 fine-tuning using a Slurm cluster on Google Cloud.
 
-## Tutorial
+Note: This sample doesn’t demonstrate how to prepare a dataset or serve the model in production.
 
-For a step-by-step guide on how to use these files, please refer to the official tutorial:
-*   **[Fine-tune Gemma 3 on an A4 Slurm cluster](https://docs.cloud.google.com/ai-hypercomputer/docs/tutorials/gpu/gemma-3-slurm-cluster)**
+This sample uses Cluster Toolkit to provision a Slurm cluster with A4 High GPU (`a4-highgpu-8g`) compute nodes. It uses a Cloud Storage bucket for dataset and model checkpoints, and Filestore for shared cluster storage. The workload is distributed with Accelerate and PyTorch Fully Sharded Data Parallel (FSDP) using a Slurm `sbatch` job. The sample includes the following files:
 
-## Overview
+* `0_env.sh`: Configures environment variables such as the project ID, region, and Hugging Face token.
+* `1_deploy_cluster.sh`: Uses Cluster Toolkit to deploy the Slurm cluster, Cloud Storage bucket, and Filestore.
+* `2_run_job.sh`: Submits the `sbatch` job to the Slurm cluster to execute the Gemma 3 fine-tuning workload.
+* `*_validation.sh`: Validates that the fine-tuning workload ran successfully.
+* `cleanup.sh`: Terminates the cluster and cleans up all created resources.
 
-This sample demonstrates how to fine-tune a Gemma 3 12B large language model (LLM) on a multi-node Slurm cluster that uses two A4 virtual machine (VM) instances. For efficient multi-node training, it uses the Hugging Face Accelerate library with Fully Sharded Data Parallel (FSDP).
+For the complete step-by-step tutorial of how to use this sample, see the official Google Cloud documentation: [Fine-tune Gemma 3 on an A4 Slurm cluster](https://docs.cloud.google.com/ai-hypercomputer/docs/tutorials/gpu/gemma-3-slurm-cluster).
+
+## Before you begin
+
+Before you run this sample, ensure you have the following:
+
+* A Google Cloud project with billing enabled. Running this sample provisions billable Google Cloud resources including:
+  - Compute Engine A4 (`a4-highgpu-8g`) Virtual Machines (VMs)
+  - Cloud Storage buckets
+  - Filestore for shared cluster storage
+  
+  You are billed for these resources for the time that they are running. To avoid incurring charges, delete the resources when you have finished running the sample.
+* Quota and an active Compute Engine reservation (`RESERVATION_URL`) for 2 `a4-highgpu-8g` VMs (16 NVIDIA B200 GPUs total) in your chosen region.
+* A valid Hugging Face token (`HF_TOKEN`) with access to the `google/gemma-3-12b-pt` model.
+* The `gcloud`, `curl`, and `tar` CLI tools installed (`1_deploy_cluster.sh` downloads the Cluster Toolkit `gcluster` binary automatically).
+* Identity and Access Management (IAM) permissions to create Compute Engine instances and firewall rules, Filestore instances, and Cloud Storage buckets.
+
+## Run the sample
+
+To execute this sample, follow these steps:
+
+1. Open `0_env.sh` and update the `PROJECT_ID`, `ZONE`, `RESERVATION_URL`, `HF_TOKEN`, and `MODEL_ID` variables.
+   
+   ```bash
+   source 0_env.sh
+   ```
+
+2. Run `./1_deploy_cluster.sh`:
+   
+   ```bash
+   ./1_deploy_cluster.sh
+   ```
+
+3. Run `./2_run_job.sh`:
+   
+   ```bash
+   ./2_run_job.sh
+   ```
+
+## Verify the results
+
+To verify that the workload ran successfully:
+
+1. Run the validation script to check the output logs:
+
+   ```bash
+   ./*_validation.sh
+   ```
+
+2. You should see an output indicating validation passed.
+
+## Clean up
+
+To clean up the resources created by this sample:
+
+1. Terminate the cluster and clean up the workspace:
+
+   ```bash
+   ./cleanup.sh
+   ```
+  
+## Additional resources
+  
+* [Fine-tune Gemma 3 on an A4 Slurm cluster](https://docs.cloud.google.com/ai-hypercomputer/docs/tutorials/gpu/gemma-3-slurm-cluster)
