@@ -24,7 +24,7 @@ Before you run this sample, ensure you have the following:
   - Cloud Storage
 
   You are billed for these resources for the time that they are running. To avoid incurring charges, delete the resources when you have finished running the sample.
-* Quota for TPUs in your chosen region.
+* Quota for Cloud TPU `v6e-8` (8 TPU v6e chips) in your chosen region.
 * A valid Hugging Face token (`HF_TOKEN`) with access to the Gemma 3 model.
 * Necessary Identity and Access Management (IAM) permissions.
 
