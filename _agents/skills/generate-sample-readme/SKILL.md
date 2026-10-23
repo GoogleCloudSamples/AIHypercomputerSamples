@@ -30,6 +30,7 @@ Use your file tools to locate and read the contents of `sample_template/README.m
 ## Step 5: Generate and Write the README
 - Generate the README content by mapping the extracted sample details, the tutorial URL, and the tutorial title into the exact structure you read from the template in Step 1.
 - Do NOT add extra sections or headings that are not in `sample_template/README.md` (such as `## Tutorial`, `## Architecture and Workload`, `## Architecture`, or `## Overview`). Keep all architecture details, the file list, and the tutorial link in the introduction section directly under the main `#` title.
+- Under `## Before you begin`, list each prerequisite (such as a Hugging Face token, installed CLI tools like `gcloud` and `kubectl`, and required Identity and Access Management (IAM) permissions) as a separate bullet point rather than combining them into a single sentence.
 - Under `## Verify the results`, always provide concrete verification commands and expected outputs rather than generic instructions like "Check the logs of the training job."
 - Follow the [Google Developer Documentation Style Guide](https://developers.google.com/style/word-list):
   - Start every file description in the bulleted file list with a present-tense verb (for example, "Configures the job." instead of "Job configuration.").
