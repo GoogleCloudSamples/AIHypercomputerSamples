@@ -25,9 +25,11 @@ echo "Waiting for Llama 3.1 405B frontend, prefill, and decode pods to be create
 timeout=600
 elapsed=0
 while true; do
-  frontend_pod=$(kubectl get pods -l "nvidia.com/dynamo-component-type=frontend" -o jsonpath='{.items[0].metadata.name}' 2>/dev/null || true)
-  prefill_pod=$(kubectl get pods -l "nvidia.com/dynamo-sub-component-type=prefill" -o jsonpath='{.items[0].metadata.name}' 2>/dev/null || true)
-  decode_pod=$(kubectl get pods -l "nvidia.com/dynamo-sub-component-type=decode" -o jsonpath='{.items[0].metadata.name}' 2>/dev/null || true)
+  # [START hypercomputer_gpu_infer_llama3_405b_pods_definition]
+  frontend_pod=$(kubectl get pods -l "nvidia.com/dynamo-component-type=frontend" -o jsonpath='{.items[*].metadata.name}')
+  prefill_pod=$(kubectl get pods -l "nvidia.com/dynamo-sub-component-type=prefill" -o jsonpath='{.items[*].metadata.name}')
+  decode_pod=$(kubectl get pods -l "nvidia.com/dynamo-sub-component-type=decode" -o jsonpath='{.items[*].metadata.name}')
+  # [END hypercomputer_gpu_infer_llama3_405b_pods_definition]
   if [[ -n "${frontend_pod}" && -n "${prefill_pod}" && -n "${decode_pod}" ]]; then
     break
   fi
