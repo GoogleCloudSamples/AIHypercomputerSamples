@@ -1,0 +1,326 @@
+# Copyright 2026 Google LLC
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+# [START hypercomputer_gpu_infer_qwen38_2t_manifest]
+# ==============================================================================
+# Multihost Disaggregated Serving of Qwen3.8-2.4T-A95B (NVFP4 MoE) on GKE
+# using NVIDIA Dynamo Platform (v1.5.0) and SGLang on GPU A4 (4 x a4-highgpu-8g)
+# ==============================================================================
+apiVersion: resource.k8s.io/v1
+kind: ResourceClaimTemplate
+metadata:
+  name: all-mrdma
+spec:
+  spec:
+    devices:
+      requests:
+        - name: req-mrdma
+          exactly:
+            deviceClassName: mrdma.google.com
+            allocationMode: All
+---
+apiVersion: nvidia.com/v1alpha1
+kind: DynamoGraphDeployment
+metadata:
+  name: qwen3-8-2-4t-a4-disagg
+  annotations:
+    nvidia.com/enable-grove: "true"
+spec:
+  backendFramework: sglang
+  services:
+    # --------------------------------------------------------------------------
+    # FRONTEND: Dynamo OpenAI-Compatible Router (`python3 -m dynamo.frontend`)
+    # --------------------------------------------------------------------------
+    Frontend:
+      componentType: frontend
+      replicas: 1
+      resources:
+        requests:
+          cpu: "8"
+          memory: "32Gi"
+        limits:
+          cpu: "8"
+          memory: "32Gi"
+      extraPodSpec:
+        tolerations:
+          - key: "nvidia.com/gpu"
+            operator: "Exists"
+            effect: "NoSchedule"
+        mainContainer:
+          image: nvcr.io/nvidia/ai-dynamo/sglang-runtime:1.5.0
+          command: ["/bin/bash", "-c"]
+          args:
+            - |
+              set -ex
+              exec python3 -m dynamo.frontend --http-port 8000
+
+    # --------------------------------------------------------------------------
+    # PREFILL WORKER: 2 x GPU A4 (`a4-highgpu-8g`, 16 x B200 GPUs, TP=16, EP=16)
+    # --------------------------------------------------------------------------
+    Prefill:
+      componentType: worker
+      subComponentType: prefill
+      replicas: 1
+      multinode:
+        nodeCount: 2
+      livenessProbe:
+        httpGet:
+          path: /live
+          port: system
+        periodSeconds: 60
+        timeoutSeconds: 30
+        failureThreshold: 60
+      readinessProbe:
+        httpGet:
+          path: /health
+          port: system
+        initialDelaySeconds: 120
+        periodSeconds: 30
+        timeoutSeconds: 30
+        failureThreshold: 60
+      sharedMemory:
+        size: 128Gi
+      resources:
+        requests:
+          gpu: "8"
+          cpu: "128"
+          memory: "1500Gi"
+        limits:
+          gpu: "8"
+          cpu: "128"
+          memory: "2000Gi"
+      envs:
+        - name: MODEL_PATH
+          value: "nvidia/Qwen3.8-2.4T-A95B-NVFP4"
+        - name: HF_HOME
+          value: "/data"
+        - name: HF_TOKEN
+          valueFrom:
+            secretKeyRef:
+              name: hf-secret
+              key: hf_api_token
+              optional: true
+        - name: HF_HUB_DISABLE_XET
+          value: "1"
+        - name: DYN_SYSTEM_PORT
+          value: "9090"
+        - name: LD_LIBRARY_PATH
+          value: "/usr/local/gib/lib64:/usr/local/nvidia/lib64"
+        - name: GLOO_SOCKET_IFNAME
+          value: "eth0"
+        - name: NCCL_ALGO
+          value: "Ring,Tree"
+        - name: WITH_NVIDIA_PEERMEM
+          value: "0"
+      extraPodSpec:
+        resourceClaims:
+          - name: rdma
+            resourceClaimTemplateName: all-mrdma
+        nodeSelector:
+          cloud.google.com/gke-accelerator: nvidia-b200
+        tolerations:
+          - key: "nvidia.com/gpu"
+            operator: "Exists"
+            effect: "NoSchedule"
+        mainContainer:
+          image: nvcr.io/nvidia/ai-dynamo/sglang-runtime:1.5.0
+          securityContext:
+            runAsUser: 0
+          resources:
+            claims:
+              - name: rdma
+          startupProbe:
+            httpGet:
+              path: /live
+              port: system
+            initialDelaySeconds: 120
+            periodSeconds: 30
+            timeoutSeconds: 10
+            failureThreshold: 180
+          command: ["/bin/bash", "-c"]
+          args:
+            - |
+              set -ex
+              if [ -f /usr/local/gib/scripts/set_nccl_env.sh ]; then
+                . /usr/local/gib/scripts/set_nccl_env.sh
+              fi
+
+              echo "=== [Dynamo Prefill Worker] Ensuring weights are cached in ${HF_HOME:-/data} ==="
+              python3 -c "import os; from huggingface_hub import snapshot_download; snapshot_download(os.environ['MODEL_PATH'], max_workers=16)"
+
+              echo "=== [Dynamo Prefill Worker] Launching dynamo.sglang ==="
+              exec python3 -m dynamo.sglang \
+                --dist-init-addr "${GROVE_PCSG_NAME}-${GROVE_PCSG_INDEX}-prefill-ldr-0.${GROVE_HEADLESS_SERVICE}.:29500" \
+                --model-path "${MODEL_PATH}" \
+                --host 0.0.0.0 \
+                --disaggregation-mode prefill \
+                --disaggregation-bootstrap-port 30001 \
+                --tensor-parallel-size 16 \
+                --ep-size 16 \
+                --moe-runner-backend flashinfer_trtllm \
+                --attention-backend triton \
+                --disable-flashinfer-autotune \
+                --nnodes 2 \
+                --kv-cache-dtype fp8_e4m3 \
+                --context-length 16384 \
+                --mem-fraction-static 0.85 \
+                --enable-metrics
+          volumeMounts:
+            - name: library-dir-host
+              mountPath: /usr/local/nvidia
+            - name: gib
+              mountPath: /usr/local/gib
+            - name: data-volume
+              mountPath: /data
+        volumes:
+          - name: library-dir-host
+            hostPath:
+              path: /home/kubernetes/bin/nvidia
+          - name: gib
+            hostPath:
+              path: /home/kubernetes/bin/gib
+          - name: data-volume
+            hostPath:
+              path: /var/lib/kubelet/hf-cache
+              type: DirectoryOrCreate
+
+    # --------------------------------------------------------------------------
+    # DECODE WORKER: 2 x GPU A4 (`a4-highgpu-8g`, 16 x B200 GPUs, TP=16, EP=16)
+    # --------------------------------------------------------------------------
+    Decode:
+      componentType: worker
+      subComponentType: decode
+      replicas: 1
+      multinode:
+        nodeCount: 2
+      livenessProbe:
+        httpGet:
+          path: /live
+          port: system
+        periodSeconds: 60
+        timeoutSeconds: 30
+        failureThreshold: 60
+      readinessProbe:
+        httpGet:
+          path: /health
+          port: system
+        initialDelaySeconds: 120
+        periodSeconds: 30
+        timeoutSeconds: 30
+        failureThreshold: 60
+      sharedMemory:
+        size: 128Gi
+      resources:
+        requests:
+          gpu: "8"
+          cpu: "128"
+          memory: "1500Gi"
+        limits:
+          gpu: "8"
+          cpu: "128"
+          memory: "2000Gi"
+      envs:
+        - name: MODEL_PATH
+          value: "nvidia/Qwen3.8-2.4T-A95B-NVFP4"
+        - name: HF_HOME
+          value: "/data"
+        - name: HF_TOKEN
+          valueFrom:
+            secretKeyRef:
+              name: hf-secret
+              key: hf_api_token
+              optional: true
+        - name: HF_HUB_DISABLE_XET
+          value: "1"
+        - name: DYN_SYSTEM_PORT
+          value: "9090"
+        - name: LD_LIBRARY_PATH
+          value: "/usr/local/gib/lib64:/usr/local/nvidia/lib64"
+        - name: GLOO_SOCKET_IFNAME
+          value: "eth0"
+        - name: NCCL_ALGO
+          value: "Ring,Tree"
+        - name: WITH_NVIDIA_PEERMEM
+          value: "0"
+      extraPodSpec:
+        resourceClaims:
+          - name: rdma
+            resourceClaimTemplateName: all-mrdma
+        nodeSelector:
+          cloud.google.com/gke-accelerator: nvidia-b200
+        tolerations:
+          - key: "nvidia.com/gpu"
+            operator: "Exists"
+            effect: "NoSchedule"
+        mainContainer:
+          image: nvcr.io/nvidia/ai-dynamo/sglang-runtime:1.5.0
+          securityContext:
+            runAsUser: 0
+          resources:
+            claims:
+              - name: rdma
+          startupProbe:
+            httpGet:
+              path: /live
+              port: system
+            initialDelaySeconds: 120
+            periodSeconds: 30
+            timeoutSeconds: 10
+            failureThreshold: 180
+          command: ["/bin/bash", "-c"]
+          args:
+            - |
+              set -ex
+              if [ -f /usr/local/gib/scripts/set_nccl_env.sh ]; then
+                . /usr/local/gib/scripts/set_nccl_env.sh
+              fi
+
+              echo "=== [Dynamo Decode Worker] Ensuring weights are cached in ${HF_HOME:-/data} ==="
+              python3 -c "import os; from huggingface_hub import snapshot_download; snapshot_download(os.environ['MODEL_PATH'], max_workers=16)"
+
+              echo "=== [Dynamo Decode Worker] Launching dynamo.sglang ==="
+              exec python3 -m dynamo.sglang \
+                --dist-init-addr "${GROVE_PCSG_NAME}-${GROVE_PCSG_INDEX}-decode-ldr-0.${GROVE_HEADLESS_SERVICE}.:29500" \
+                --model-path "${MODEL_PATH}" \
+                --host 0.0.0.0 \
+                --disaggregation-mode decode \
+                --disaggregation-bootstrap-port 30001 \
+                --tensor-parallel-size 16 \
+                --ep-size 16 \
+                --moe-runner-backend flashinfer_trtllm \
+                --attention-backend triton \
+                --nnodes 2 \
+                --kv-cache-dtype fp8_e4m3 \
+                --context-length 16384 \
+                --mem-fraction-static 0.85 \
+                --enable-metrics
+          volumeMounts:
+            - name: library-dir-host
+              mountPath: /usr/local/nvidia
+            - name: gib
+              mountPath: /usr/local/gib
+            - name: data-volume
+              mountPath: /data
+        volumes:
+          - name: library-dir-host
+            hostPath:
+              path: /home/kubernetes/bin/nvidia
+          - name: gib
+            hostPath:
+              path: /home/kubernetes/bin/gib
+          - name: data-volume
+            hostPath:
+              path: /var/lib/kubelet/hf-cache
+              type: DirectoryOrCreate
+# [END hypercomputer_gpu_infer_qwen38_2t_manifest]
