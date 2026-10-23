@@ -1,10 +1,10 @@
 # verl RL on GKE Autopilot
 
-This code sample is intended for AI/ML engineers and demonstrates how to run verl reinforcement learning using a Google Kubernetes Engine (GKE) Autopilot cluster.
+This code sample is intended for AI/ML engineers and demonstrates how to run verl Reinforcement Learning (RL) using a Google Kubernetes Engine (GKE) Autopilot cluster.
 
 Note: This sample doesn’t demonstrate how to prepare a dataset or serve the model in production.
 
-This sample provisions a fully managed GKE Autopilot cluster to run a distributed reinforcement learning workload with verl. It sets up a Ray cluster over GKE, utilizing Dynamic Resource Allocation (DRANET) and GPU instances (for example, C2 machine family) for computation. Storage is handled using Cloud Storage and Persistent Volumes. The sample includes the following files:
+This sample provisions a fully managed GKE Autopilot cluster to run a distributed RL workload with verl. It sets up a Ray cluster over GKE, utilizing Dynamic Resource Allocation (DRANET) and GPU Virtual Machines (VMs) (for example, A4 or A3 Ultra instances) for computation. Storage is handled using Cloud Storage and Persistent Volumes. The sample includes the following files:
 
 * `0_env.sh`: Configures starting environment variables (project ID, region, cluster name).
 * `1_setup_cluster.sh`: Provisions the GKE Autopilot cluster.
@@ -12,7 +12,8 @@ This sample provisions a fully managed GKE Autopilot cluster to run a distribute
 * `3_setup_dranet.sh`: Configures DRANET for optimized network performance.
 * `4_prepare_data.sh`: Prepares and downloads the dataset for training.
 * `5_deploy_workload.sh`: Deploys the verl training workload and Ray cluster to GKE.
-* `6_run_job.sh`: Triggers and monitors the reinforcement learning job.
+* `6_run_job.sh`: Triggers and monitors the RL job.
+* `*_validation.sh`: Validates that the RL workload ran successfully.
 * `cleanup.sh`: Deletes the GKE cluster and removes all related resources.
 
 For the complete step-by-step tutorial of how to use this sample, see the official Google Cloud documentation: [Fine-tune and scale reinforcement learning with verl on GKE](https://docs.cloud.google.com/kubernetes-engine/docs/tutorials/scaling-rl-verl-gke).
@@ -35,7 +36,7 @@ Before you run this sample, ensure you have the following:
 
 To execute this sample, follow these steps:
 
-1. Open `0_env.sh` and update the environment variables (for example, `PROJECT_ID`, `ZONE`, and `HF_TOKEN`).
+1. Open `0_env.sh` and update the `PROJECT_ID`, `REGION`, `RESERVATION`, and `HF_TOKEN` variables.
    
    ```bash
    source 0_env.sh

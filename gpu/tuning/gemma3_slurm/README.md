@@ -4,11 +4,12 @@ This code sample is intended for AI/ML engineers and demonstrates how to run Gem
 
 Note: This sample doesn’t demonstrate how to prepare a dataset or serve the model in production.
 
-This sample uses Cluster Toolkit to provision a Slurm cluster with A4 High GPU (a4-highgpu-8g) compute nodes. It uses a Cloud Storage bucket for dataset and model checkpoints, and Filestore for shared cluster storage. The workload is distributed with Accelerate and PyTorch Fully Sharded Data Parallel (FSDP) using a Slurm `sbatch` job. The sample includes the following files:
+This sample uses Cluster Toolkit to provision a Slurm cluster with A4 High GPU (`a4-highgpu-8g`) compute nodes. It uses a Cloud Storage bucket for dataset and model checkpoints, and Filestore for shared cluster storage. The workload is distributed with Accelerate and PyTorch Fully Sharded Data Parallel (FSDP) using a Slurm `sbatch` job. The sample includes the following files:
 
 * `0_env.sh`: Configures environment variables such as the project ID, region, and Hugging Face token.
 * `1_deploy_cluster.sh`: Uses Cluster Toolkit to deploy the Slurm cluster, Cloud Storage bucket, and Filestore.
 * `2_run_job.sh`: Submits the `sbatch` job to the Slurm cluster to execute the Gemma 3 fine-tuning workload.
+* `*_validation.sh`: Validates that the fine-tuning workload ran successfully.
 * `cleanup.sh`: Terminates the cluster and cleans up all created resources.
 
 For the complete step-by-step tutorial of how to use this sample, see the official Google Cloud documentation: [Fine-tune Gemma 3 on an A4 Slurm cluster](https://docs.cloud.google.com/ai-hypercomputer/docs/tutorials/gpu/gemma-3-slurm-cluster).
@@ -18,7 +19,7 @@ For the complete step-by-step tutorial of how to use this sample, see the offici
 Before you run this sample, ensure you have the following:
 
 * A Google Cloud project with billing enabled. Running this sample provisions billable Google Cloud resources including:
-  - A4 High GPU Virtual Machines (for example, a4-highgpu-8g)
+  - Compute Engine A4 (`a4-highgpu-8g`) Virtual Machines (VMs)
   - Cloud Storage buckets
   - Filestore for shared cluster storage
   
@@ -32,7 +33,7 @@ Before you run this sample, ensure you have the following:
 
 To execute this sample, follow these steps:
 
-1. Open `0_env.sh` and update the environment variables (for example, `PROJECT_ID`, `ZONE`, and `HF_TOKEN`).
+1. Open `0_env.sh` and update the `PROJECT_ID`, `ZONE`, `RESERVATION_URL`, `HF_TOKEN`, and `MODEL_ID` variables.
    
    ```bash
    source 0_env.sh

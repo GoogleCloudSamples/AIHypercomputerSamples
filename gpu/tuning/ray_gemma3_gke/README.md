@@ -4,11 +4,12 @@ This code sample is intended for AI/ML engineers and demonstrates how to run Gem
 
 Note: This sample doesn’t demonstrate how to prepare a dataset or serve the model in production.
 
-This sample provisions a GKE cluster and deploys a Ray cluster on top to manage distributed fine-tuning of the Gemma 3 model. It uses GPU-enabled Virtual Machines for the compute nodes and Cloud Storage for datasets and checkpointing. The sample includes the following files:
+This sample provisions a GKE cluster and deploys a Ray cluster on top to manage distributed fine-tuning of the Gemma 3 model. It uses GPU-enabled Virtual Machines (VMs) for the compute nodes and Cloud Storage for datasets and checkpointing. The sample includes the following files:
 
 * `0_env.sh`: Configures environment variables (project ID, cluster name, token).
 * `1_setup.sh`: Provisions the GKE cluster, configures the node pools, sets up necessary secrets, and deploys the Ray cluster environment.
 * `2_deploy_model.sh`: Submits the fine-tuning workload to the Ray cluster and initiates the training job.
+* `*_validation.sh`: Validates that the fine-tuning workload ran successfully.
 * `cleanup.sh`: Deletes the GKE cluster, the Ray environment, and all associated Google Cloud resources.
 
 For the complete step-by-step tutorial of how to use this sample, see the official Google Cloud documentation: [Use Ray to fine-tune Gemma 3 for vision tasks on GKE](https://docs.cloud.google.com/ai-hypercomputer/docs/tutorials/gpu/use-ray-fine-tune-gemma-vision-task-gke).
@@ -18,7 +19,7 @@ For the complete step-by-step tutorial of how to use this sample, see the offici
 Before you run this sample, ensure you have the following:
 
 * A Google Cloud project with billing enabled. Running this sample provisions billable Google Cloud resources including:
-  - GKE cluster and GPU Virtual Machines
+  - GKE cluster and GPU VMs
   - Cloud Storage buckets
   - Persistent disks
   
@@ -32,7 +33,7 @@ Before you run this sample, ensure you have the following:
 
 To execute this sample, follow these steps:
 
-1. Open `0_env.sh` and update the environment variables (for example, `PROJECT_ID`, `ZONE`, and `HF_TOKEN`).
+1. Open `0_env.sh` and update the `PROJECT_ID`, `REGION`, `ZONE`, `RESERVATION`, and `HF_TOKEN` variables.
    
    ```bash
    source 0_env.sh

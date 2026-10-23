@@ -1,10 +1,10 @@
 # verl RL on GKE Standard
 
-This code sample is intended for AI/ML engineers and demonstrates how to run verl reinforcement learning using a Google Kubernetes Engine (GKE) Standard cluster.
+This code sample is intended for AI/ML engineers and demonstrates how to run verl Reinforcement Learning (RL) using a Google Kubernetes Engine (GKE) Standard cluster.
 
 Note: This sample doesn’t demonstrate how to prepare a dataset or serve the model in production.
 
-This sample provisions a GKE Standard cluster to run a distributed reinforcement learning workload with verl. The architecture utilizes GPU-enabled Virtual Machines (for example, C2 Standard instances) and a Ray cluster running on top of GKE. It configures custom Virtual Private Cloud (VPC) networking and uses Cloud Storage for datasets and checkpoints. The sample includes the following files:
+This sample provisions a GKE Standard cluster to run a distributed RL workload with verl. The architecture utilizes GPU-enabled Virtual Machines (VMs) (for example, A4 or A3 Ultra instances) and a Ray cluster running on top of GKE. It configures custom Virtual Private Cloud (VPC) networking and uses Cloud Storage for datasets and checkpoints. The sample includes the following files:
 
 * `0_env.sh`: Configures starting environment variables (project ID, zone, token).
 * `1_setup_network.sh`: Provisions the custom VPC network and firewall rules.
@@ -12,8 +12,9 @@ This sample provisions a GKE Standard cluster to run a distributed reinforcement
 * `3_setup_network_mappings.sh`: Configures the necessary networking mappings.
 * `4_setup_storage.sh`: Configures storage such as Cloud Storage FUSE for the workload.
 * `5_prepare_data.sh`: Prepares the training data.
-* `6_deploy_workload.sh`: Deploys the Ray cluster and the verl reinforcement learning job.
+* `6_deploy_workload.sh`: Deploys the Ray cluster and the verl RL job.
 * `7_run_job.sh`: Triggers and monitors the execution of the training job.
+* `*_validation.sh`: Validates that the RL workload ran successfully.
 * `cleanup.sh`: Deletes the GKE cluster, network resources, and all associated infrastructure.
 
 For the complete step-by-step tutorial of how to use this sample, see the official Google Cloud documentation: [Fine-tune and scale reinforcement learning with verl on GKE](https://docs.cloud.google.com/kubernetes-engine/docs/tutorials/scaling-rl-verl-gke).
@@ -23,7 +24,7 @@ For the complete step-by-step tutorial of how to use this sample, see the offici
 Before you run this sample, ensure you have the following:
 
 * A Google Cloud project with billing enabled. Running this sample provisions billable Google Cloud resources including:
-  - GKE cluster and GPU Virtual Machines (for example, c2-standard-16)
+  - GKE cluster, GPU VMs (`a4-highgpu-8g` or `a3-ultragpu-8g`), and CPU VMs (`c2-standard-16`)
   - VPC network, Cloud NAT, and IP addresses
   - Persistent disks and Cloud Storage buckets
   
@@ -37,7 +38,7 @@ Before you run this sample, ensure you have the following:
 
 To execute this sample, follow these steps:
 
-1. Open `0_env.sh` and update the environment variables (for example, `PROJECT_ID`, `ZONE`, and `HF_TOKEN`).
+1. Open `0_env.sh` and update the `PROJECT_ID`, `REGION`, `ZONE`, `RESERVATION`, and `HF_TOKEN` variables.
    
    ```bash
    source 0_env.sh

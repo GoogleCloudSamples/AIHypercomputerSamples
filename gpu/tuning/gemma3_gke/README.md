@@ -9,6 +9,7 @@ This sample provisions a GKE cluster with GPU node pools to run the fine-tuning 
 * `0_env.sh`: Configures starting environment variables (project ID, cluster name, token).
 * `1_setup_cluster.sh`: Provisions the GKE cluster, configures node pools, sets up secrets, and prepares the Kubernetes environment.
 * `2_build_and_deploy.sh`: Builds the container image, pushes it to Artifact Registry, and deploys the fine-tuning Job.
+* `*_validation.sh`: Validates that the fine-tuning workload ran successfully.
 * `cleanup.sh`: Deletes the GKE cluster and cleans up all created resources.
 
 For the complete step-by-step tutorial of how to use this sample, see the official Google Cloud documentation: [Fine-tune Gemma 3 on an A4 GKE cluster](https://docs.cloud.google.com/ai-hypercomputer/docs/tutorials/gpu/gemma3-finetune-a4-gke-cluster).
@@ -18,7 +19,7 @@ For the complete step-by-step tutorial of how to use this sample, see the offici
 Before you run this sample, ensure you have the following:
 
 * A Google Cloud project with billing enabled. Running this sample provisions billable Google Cloud resources including:
-  - GKE Autopilot cluster and Compute Engine A4 VMs (`a4-highgpu-8g` with 8 NVIDIA B200 GPUs)
+  - GKE Autopilot cluster and Compute Engine A4 Virtual Machines (VMs) (`a4-highgpu-8g` with 8 NVIDIA B200 GPUs)
   - Cloud Build
   - Artifact Registry for storing container images
   
@@ -32,7 +33,7 @@ Before you run this sample, ensure you have the following:
 
 To execute this sample, follow these steps:
 
-1. Open `0_env.sh` and update the environment variables (for example, `PROJECT_ID`, `ZONE`, and `HF_TOKEN`).
+1. Open `0_env.sh` and update the `PROJECT_ID`, `CLUSTER_NAME`, `CLUSTER_REGION`, `RESERVATION`, `HF_TOKEN`, and `ARTIFACT_REPO_LOCATION` variables.
    
    ```bash
    source 0_env.sh

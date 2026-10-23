@@ -34,10 +34,10 @@ Use your file tools to locate and read the contents of `sample_template/README.m
 - Under `## Verify the results`, always provide concrete verification commands and expected outputs rather than generic instructions like "Check the logs of the training job."
 - Follow the [Google Developer Documentation Style Guide](https://developers.google.com/style/word-list):
   - Start every file description in the bulleted file list with a present-tense verb (for example, "Configures the job." instead of "Job configuration.").
-  - Expand abbreviations on their first use in the document body—such as "Google Kubernetes Engine (GKE)", "Virtual Private Cloud (VPC)", "Identity and Access Management (IAM)", "Fully Sharded Data Parallel (FSDP)", and "Supervised Fine-Tuning (SFT)"—and use the abbreviation on subsequent mentions.
+  - Expand abbreviations on their first use in the document body—such as "Google Kubernetes Engine (GKE)", "Virtual Private Cloud (VPC)", "Identity and Access Management (IAM)", "Virtual Machine (VM)", "Fully Sharded Data Parallel (FSDP)", "Supervised Fine-Tuning (SFT)", and "Reinforcement Learning (RL)"—and use the abbreviation on subsequent mentions.
   - Use "for example" or "such as" instead of "e.g.", and avoid "etc." and "i.e.".
   - Use "using" instead of "via".
   - Always use the official product and framework names "Cloud Storage" (or "Cloud Storage FUSE", not "Google Cloud Storage" or "GCS"), "Cluster Toolkit" (not "Google Cloud Cluster Toolkit"), "DRANET" (not "DraNet"), "verl" (not "veRL" or "vERL"), and "Google Cloud Managed Lustre" on first mention followed by "Managed Lustre" on subsequent mentions (not "Lustre").
-  - Wrap all CLI tools, commands, and environment variable names (such as `gcloud`, `kubectl`, `gcluster`, `cluster-toolkit`, and `HF_TOKEN`) in backticks.
+  - Wrap all CLI tools, commands, machine/TPU types, and environment variable names (such as `gcloud`, `kubectl`, `gcluster`, `cluster-toolkit`, `a4-highgpu-8g`, `v6e-8`, and `HF_TOKEN`) in backticks.
 - Replace the `*TUTORIAL_TITLE*` and `*[Link to official AI Hypercomputer tutorial on Google Cloud]*` placeholders with the actual title and link. Remove any other unneeded generic placeholders from the "Additional resources" section.
 - Use the `write_to_file` tool to save the generated content to `README.md` inside the target sample's directory.

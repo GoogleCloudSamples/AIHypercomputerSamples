@@ -1,6 +1,6 @@
 # Fine-tune Gemma 4 on an A4 GKE cluster
 
-This code sample is intended for AI/ML engineers and demonstrates how to fine-tune the Gemma 4 (31B) model by using a Google Kubernetes Engine (GKE) Autopilot cluster that is deployed on A4 VMs (NVIDIA B200 GPUs) on Google Cloud.
+This code sample is intended for AI/ML engineers and demonstrates how to fine-tune the Gemma 4 (31B) model by using a Google Kubernetes Engine (GKE) Autopilot cluster that is deployed on A4 Virtual Machines (VMs) (NVIDIA B200 GPUs) on Google Cloud.
 
 Note: This sample doesn't demonstrate how to prepare a dataset or serve the model in production.
 

@@ -23,7 +23,7 @@ Before you run this sample, ensure you have the following:
 
 * A Google Cloud project with billing enabled. Running this sample provisions billable Google Cloud resources including:
   - GKE Autopilot cluster
-  - Compute Engine A4 VMs (`a4-highgpu-8g` with 8 NVIDIA B200 GPUs)
+  - Compute Engine A4 Virtual Machines (VMs) (`a4-highgpu-8g` with 8 NVIDIA B200 GPUs)
   - Network egress and load balancing
   
   You are billed for these resources for the time that they are running. To avoid incurring charges, delete the resources when you have finished running the sample.

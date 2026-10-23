@@ -28,7 +28,7 @@ Before you run this sample, ensure you have the following:
   - Network egress and load balancing
   
   You are billed for these resources for the time that they are running. To avoid incurring charges, delete the resources when you have finished running the sample.
-* Quota and an active Compute Engine reservation (`RESERVATION`) for A4 VMs (`a4-highgpu-8g`, 8 NVIDIA B200 GPUs per node) and `e2-standard-4` CPU VMs in your chosen region.
+* Quota and an active Compute Engine reservation (`RESERVATION`) for A4 Virtual Machines (VMs) (`a4-highgpu-8g`, 8 NVIDIA B200 GPUs per node) and `e2-standard-4` CPU VMs in your chosen region.
 * A valid Hugging Face token (`HF_TOKEN`) with access to the `meta-llama/Llama-4-Scout-17B-16E-Instruct` model.
 * The `gcloud`, `kubectl`, `helm`, and `git` CLI tools installed.
 * Identity and Access Management (IAM) permissions to enable Google Cloud APIs, create GKE clusters and node pools, create Cloud Storage buckets and bind IAM policies (`roles/storage.objectAdmin`), create Artifact Registry repositories, and submit Cloud Build jobs.

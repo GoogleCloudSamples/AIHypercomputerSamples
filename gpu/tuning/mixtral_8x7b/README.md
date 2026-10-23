@@ -4,11 +4,12 @@ This code sample is intended for AI/ML engineers and demonstrates how to run Mix
 
 Note: This sample doesn’t demonstrate how to prepare a dataset or serve the model in production.
 
-This sample provisions a Slurm cluster using Cluster Toolkit. The architecture uses A4 High GPU (a4-highgpu-8g) instances for the compute nodes, a Cloud Storage bucket for storage, and Filestore for shared cluster storage. The workload distributes fine-tuning across the GPUs using a Slurm `sbatch` script. The sample includes the following files:
+This sample provisions a Slurm cluster using Cluster Toolkit. The architecture uses A4 High GPU (`a4-highgpu-8g`) instances for the compute nodes, a Cloud Storage bucket for storage, and Filestore for shared cluster storage. The workload distributes fine-tuning across the GPUs using a Slurm `sbatch` script. The sample includes the following files:
 
 * `0_env.sh`: Configures environment variables, including the project ID, zone, and Hugging Face token.
 * `1_deploy_cluster.sh`: Uses Cluster Toolkit to deploy the Slurm cluster infrastructure and storage.
 * `2_run_job.sh`: Submits the `sbatch` job to distribute the fine-tuning workload across the cluster.
+* `*_validation.sh`: Validates that the fine-tuning workload ran successfully.
 * `cleanup.sh`: Deletes the Slurm cluster and all associated resources.
 
 For the complete step-by-step tutorial of how to use this sample, see the official Google Cloud documentation: [Use FSDP to fine-tune Mixtral-8x7B on an A4 Slurm cluster](https://docs.cloud.google.com/ai-hypercomputer/docs/tutorials/gpu/fsdp-mixtral-8x7b).
@@ -18,7 +19,7 @@ For the complete step-by-step tutorial of how to use this sample, see the offici
 Before you run this sample, ensure you have the following:
 
 * A Google Cloud project with billing enabled. Running this sample provisions billable Google Cloud resources including:
-  - A4 High GPU Virtual Machines (for example, a4-highgpu-8g)
+  - Compute Engine A4 (`a4-highgpu-8g`) Virtual Machines (VMs)
   - Cloud Storage buckets
   - Filestore for shared cluster storage
   
@@ -32,7 +33,7 @@ Before you run this sample, ensure you have the following:
 
 To execute this sample, follow these steps:
 
-1. Open `0_env.sh` and update the environment variables (for example, `PROJECT_ID`, `ZONE`, and `HF_TOKEN`).
+1. Open `0_env.sh` and update the `PROJECT_ID`, `ZONE`, `RESERVATION_NAME`, and `HF_TOKEN` variables.
    
    ```bash
    source 0_env.sh

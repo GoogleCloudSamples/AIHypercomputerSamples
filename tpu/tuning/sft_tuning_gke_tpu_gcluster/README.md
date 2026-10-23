@@ -4,7 +4,7 @@ This code sample is intended for AI/ML engineers and demonstrates how to perform
 
 Note: This sample doesn't demonstrate how to prepare a dataset or serve the model in production.
 
-The scripts in this directory deploy the infrastructure and run the AI/ML workload on AI Hypercomputer. The sample includes the following files:
+The scripts in this directory deploy the infrastructure and run the AI/ML workload on AI Hypercomputer. The sample uses Cluster Toolkit to provision a GKE cluster with a `v6e-32` TPU node pool and an `n2-standard-8` CPU node pool. It converts the model format, runs the SFT workload using MaxText, and converts the trained model back to Hugging Face format. The sample includes the following files:
 
 * `0_env.sh`: Contains the starting environment variables.
 * `1_prerequisites.sh`: Installs prerequisites and Cluster Toolkit.
@@ -22,12 +22,13 @@ For the complete step-by-step tutorial of how to use this sample, see the offici
 Before you run this sample, ensure you have the following:
 
 * A Google Cloud project with billing enabled. Running this sample provisions billable Google Cloud resources including:
-  - GKE
-  - Compute Engine (TPUs)
+  - GKE cluster
+  - Compute Engine (Cloud TPU `v6e-32` and CPU `n2-standard-8` node pools)
   - Cloud Storage
-  
+  - Artifact Registry
+
   You are billed for these resources for the time that they are running. To avoid incurring charges, delete the resources when you have finished running the sample.
-* Quota and an active reservation (`RESERVATION`) for Cloud TPU `v6e-32` (32 TPU v6e chips) in your chosen zone.
+* Quota and an active reservation (`RESERVATION`) for Cloud TPU `v6e-32` (32 TPU v6e chips) and `n2-standard-8` CPU Virtual Machines (VMs) in your chosen zone.
 * A valid Hugging Face token (`HF_TOKEN`) with access to the `google/gemma-4-31b` (`gemma4-31b`) model.
 * The `gcloud`, `kubectl`, `docker`, `wget`, and `tar` CLI tools installed (`1_prerequisites.sh` downloads the Cluster Toolkit `gcluster` binary automatically).
 * Identity and Access Management (IAM) permissions to enable Google Cloud APIs, create GKE clusters, create Cloud Storage buckets, and bind project IAM roles (`roles/storage.admin`, `roles/storage.objectViewer`, `roles/logging.logWriter`, and `roles/artifactregistry.writer`).
