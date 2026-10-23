@@ -4,7 +4,7 @@ This code sample is intended for AI/ML engineers and demonstrates how to run Gem
 
 Note: This sample doesn’t demonstrate how to prepare a dataset or serve the model in production.
 
-This sample provisions a GKE cluster with GPU node pools to run the fine-tuning workload. The workload uses PyTorch and Accelerate with FSDP, orchestrated as a Kubernetes Job. It uses Artifact Registry for the container image and Cloud Storage for checkpoints and data. The sample includes the following files:
+This sample provisions a GKE cluster with GPU node pools to run the fine-tuning workload. The workload uses PyTorch and Accelerate with Fully Sharded Data Parallel (FSDP), orchestrated as a Kubernetes Job. It uses Artifact Registry for the container image and Cloud Storage for checkpoints and data. The sample includes the following files:
 
 * `0_env.sh`: Configures starting environment variables (project ID, cluster name, token).
 * `1_setup_cluster.sh`: Provisions the GKE cluster, configures node pools, sets up secrets, and prepares the Kubernetes environment.
@@ -18,13 +18,13 @@ For the complete step-by-step tutorial of how to use this sample, see the offici
 Before you run this sample, ensure you have the following:
 
 * A Google Cloud project with billing enabled. Running this sample provisions billable Google Cloud resources including:
-  - Google Kubernetes Engine (GKE) cluster and GPU Virtual Machines
+  - GKE cluster and GPU Virtual Machines
   - Artifact Registry for storing container images
   - Cloud Storage buckets
   
   You are billed for these resources for the time that they are running. To avoid incurring charges, delete the resources when you have finished running the sample.
 * Quota for the required hardware in your chosen region.
-* Specific prerequisites, such as Hugging Face tokens, IAM permissions, or installed tools like `cluster-toolkit` or `kubectl`, depending on the environment.
+* Specific prerequisites, such as Hugging Face tokens, Identity and Access Management (IAM) permissions, or installed tools like `cluster-toolkit` or `kubectl`, depending on the environment.
 
 ## Run the sample
 

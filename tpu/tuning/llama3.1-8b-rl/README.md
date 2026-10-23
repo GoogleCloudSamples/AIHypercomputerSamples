@@ -25,7 +25,7 @@ Before you run this sample, ensure you have the following:
 
   You are billed for these resources for the time that they are running. To avoid incurring charges, delete the resources when you have finished running the sample.
 * Quota for TPUs in your chosen region.
-* A valid Hugging Face token (`HF_TOKEN`) with access to the Llama 3.1 model, and necessary IAM permissions.
+* A valid Hugging Face token (`HF_TOKEN`) with access to the Llama 3.1 model, and necessary Identity and Access Management (IAM) permissions.
 
 ## Run the sample
 

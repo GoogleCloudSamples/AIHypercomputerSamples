@@ -4,7 +4,7 @@ This code sample is intended for AI/ML engineers and demonstrates how to run vER
 
 Note: This sample doesn’t demonstrate how to prepare a dataset or serve the model in production.
 
-This sample provisions a GKE Standard cluster to run a distributed reinforcement learning workload with vERL. The architecture utilizes GPU-enabled Virtual Machines (for example, C2 Standard instances) and a Ray cluster running on top of GKE. It configures custom VPC networking and uses Cloud Storage for datasets and checkpoints. The sample includes the following files:
+This sample provisions a GKE Standard cluster to run a distributed reinforcement learning workload with vERL. The architecture utilizes GPU-enabled Virtual Machines (for example, C2 Standard instances) and a Ray cluster running on top of GKE. It configures custom Virtual Private Cloud (VPC) networking and uses Cloud Storage for datasets and checkpoints. The sample includes the following files:
 
 * `0_env.sh`: Configures starting environment variables (project ID, zone, token).
 * `1_setup_network.sh`: Provisions the custom VPC network and firewall rules.
@@ -23,13 +23,13 @@ For the complete step-by-step tutorial of how to use this sample, see the offici
 Before you run this sample, ensure you have the following:
 
 * A Google Cloud project with billing enabled. Running this sample provisions billable Google Cloud resources including:
-  - Google Kubernetes Engine (GKE) cluster and GPU Virtual Machines (for example, c2-standard-16)
+  - GKE cluster and GPU Virtual Machines (for example, c2-standard-16)
   - VPC network, Cloud NAT, and IP addresses
   - Persistent disks and Cloud Storage buckets
   
   You are billed for these resources for the time that they are running. To avoid incurring charges, delete the resources when you have finished running the sample.
 * Quota for the required hardware in your chosen region.
-* Specific prerequisites, such as Hugging Face tokens, IAM permissions, or installed tools like `cluster-toolkit` or `kubectl`, depending on the environment.
+* Specific prerequisites, such as Hugging Face tokens, Identity and Access Management (IAM) permissions, or installed tools like `cluster-toolkit` or `kubectl`, depending on the environment.
 
 ## Run the sample
 

@@ -22,12 +22,12 @@ For the complete step-by-step tutorial of how to use this sample, see the offici
 Before you run this sample, ensure you have the following:
 
 * A Google Cloud project with billing enabled. Running this sample provisions billable Google Cloud resources including:
-  - Google Kubernetes Engine (GKE) Autopilot cluster and GPU compute resources
+  - GKE Autopilot cluster and GPU compute resources
   - Persistent disks and Cloud Storage buckets
   
   You are billed for these resources for the time that they are running. To avoid incurring charges, delete the resources when you have finished running the sample.
 * Quota for the required hardware in your chosen region.
-* Specific prerequisites, such as Hugging Face tokens, IAM permissions, or installed tools like `cluster-toolkit` or `kubectl`, depending on the environment.
+* Specific prerequisites, such as Hugging Face tokens, Identity and Access Management (IAM) permissions, or installed tools like `cluster-toolkit` or `kubectl`, depending on the environment.
 
 ## Run the sample
 

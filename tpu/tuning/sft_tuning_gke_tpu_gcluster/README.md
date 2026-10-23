@@ -1,6 +1,6 @@
 # SFT Tuning on a TPU GKE cluster
 
-This code sample is intended for AI/ML engineers and demonstrates how to perform SFT (Supervised Fine-Tuning) on a GKE cluster with TPUs, provisioned using the Google Cloud Cluster Toolkit.
+This code sample is intended for AI/ML engineers and demonstrates how to perform Supervised Fine-Tuning (SFT) on a Google Kubernetes Engine (GKE) cluster with TPUs, provisioned using the Google Cloud Cluster Toolkit.
 
 Note: This sample doesn't demonstrate how to prepare a dataset or serve the model in production.
 
@@ -22,7 +22,7 @@ For the complete step-by-step tutorial of how to use this sample, see the offici
 Before you run this sample, ensure you have the following:
 
 * A Google Cloud project with billing enabled. Running this sample provisions billable Google Cloud resources including:
-  - Google Kubernetes Engine (GKE)
+  - GKE
   - Compute Engine (TPUs)
   - Cloud Storage
   

@@ -1,10 +1,10 @@
 # Fine-tune Gemma 4 on an A4 GKE cluster
 
-This code sample is intended for AI/ML engineers and demonstrates how to fine-tune the Gemma 4 (31B) model by using a GKE Autopilot cluster that is deployed on A4 VMs (NVIDIA B200 GPUs) on Google Cloud.
+This code sample is intended for AI/ML engineers and demonstrates how to fine-tune the Gemma 4 (31B) model by using a Google Kubernetes Engine (GKE) Autopilot cluster that is deployed on A4 VMs (NVIDIA B200 GPUs) on Google Cloud.
 
 Note: This sample doesn't demonstrate how to prepare a dataset or serve the model in production.
 
-The scripts in this directory deploy the infrastructure and run the AI/ML workload on AI Hypercomputer. The sample creates a GKE Autopilot cluster, builds a custom Docker image for fine-tuning using Accelerate and FSDP, and submits it as a Kubernetes Job. The sample includes the following files:
+The scripts in this directory deploy the infrastructure and run the AI/ML workload on AI Hypercomputer. The sample creates a GKE Autopilot cluster, builds a custom Docker image for fine-tuning using Accelerate and Fully Sharded Data Parallel (FSDP), and submits it as a Kubernetes Job. The sample includes the following files:
 
 * `0_env.sh`: Contains the starting environment variables, such as the project ID, cluster region, and Hugging Face token.
 * `1_setup_cluster.sh`: Creates the GKE Autopilot cluster, fetches credentials, creates a Kubernetes Secret for the Hugging Face token, and provisions an Artifact Registry repository.
@@ -19,7 +19,7 @@ For the complete step-by-step tutorial of how to use this sample, see the offici
 Before you run this sample, ensure you have the following:
 
 * A Google Cloud project with billing enabled. Running this sample provisions billable Google Cloud resources including:
-  - Google Kubernetes Engine (GKE Autopilot)
+  - GKE Autopilot
   - Compute Engine (A4 VMs with NVIDIA B200 GPUs)
   - Cloud Build
   - Artifact Registry

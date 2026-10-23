@@ -4,7 +4,7 @@ This code sample is intended for AI/ML engineers and demonstrates how to run NeM
 
 Note: This sample doesn’t demonstrate how to prepare a dataset or serve the model in production.
 
-This sample provisions a GKE cluster with a Ray cluster on top of it to orchestrate the distributed reinforcement learning workload. It uses GPU-enabled Virtual Machines (for example, A3 or A4 instances), a Cloud Storage bucket, and a VPC network for communication. The NeMo framework is used within the Ray cluster for model training. The sample includes the following files:
+This sample provisions a GKE cluster with a Ray cluster on top of it to orchestrate the distributed reinforcement learning workload. It uses GPU-enabled Virtual Machines (for example, A3 or A4 instances), a Cloud Storage bucket, and a Virtual Private Cloud (VPC) network for communication. The NeMo framework is used within the Ray cluster for model training. The sample includes the following files:
 
 * `0_env.sh`: Configures starting environment variables, such as the project ID, cluster name, and zone.
 * `1_create_vpc_network.sh`: Creates the custom VPC network and firewall rules for the cluster.
@@ -22,13 +22,13 @@ For the complete step-by-step tutorial of how to use this sample, see the offici
 Before you run this sample, ensure you have the following:
 
 * A Google Cloud project with billing enabled. Running this sample provisions billable Google Cloud resources including:
-  - Google Kubernetes Engine (GKE) cluster and GPU Virtual Machines
+  - GKE cluster and GPU Virtual Machines
   - Persistent disks and Cloud Storage buckets
   - Cloud NAT and VPC network resources
   
   You are billed for these resources for the time that they are running. To avoid incurring charges, delete the resources when you have finished running the sample.
 * Quota for the required hardware in your chosen region.
-* Specific prerequisites, such as Hugging Face tokens, IAM permissions, or installed tools like `cluster-toolkit` or `kubectl`, depending on the environment.
+* Specific prerequisites, such as Hugging Face tokens, Identity and Access Management (IAM) permissions, or installed tools like `cluster-toolkit` or `kubectl`, depending on the environment.
 
 ## Run the sample
 

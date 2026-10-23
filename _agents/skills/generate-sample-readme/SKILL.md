@@ -33,6 +33,7 @@ Use your file tools to locate and read the contents of `sample_template/README.m
 - Under `## Verify the results`, always provide concrete verification commands and expected outputs rather than generic instructions like "Check the logs of the training job."
 - Follow the [Google Developer Documentation Style Guide](https://developers.google.com/style/word-list):
   - Start every file description in the bulleted file list with a present-tense verb (for example, "Configures the job." instead of "Job configuration.").
+  - Expand abbreviations on their first use in the document body—such as "Google Kubernetes Engine (GKE)", "Virtual Private Cloud (VPC)", "Identity and Access Management (IAM)", "Fully Sharded Data Parallel (FSDP)", and "Supervised Fine-Tuning (SFT)"—and use the abbreviation on subsequent mentions.
   - Use "for example" or "such as" instead of "e.g.", and avoid "etc." and "i.e.".
   - Use "using" instead of "via".
   - Always use the official product name "Cloud Storage" (or "Cloud Storage FUSE"), not "Google Cloud Storage" or "GCS".

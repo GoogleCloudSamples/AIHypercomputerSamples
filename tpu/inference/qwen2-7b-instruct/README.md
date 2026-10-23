@@ -2,7 +2,7 @@
 
 This code sample is intended for AI/ML engineers and demonstrates how to run inference and benchmark workloads with the Qwen2 7B Instruct model on Google Cloud TPUs (v6e).
 
-Note: This sample doesn’t demonstrate how to serve the model in production or configure VPC networks from scratch.
+Note: This sample doesn’t demonstrate how to serve the model in production or configure Virtual Private Cloud (VPC) networks from scratch.
 
 The scripts in this directory deploy the infrastructure and run the AI/ML workload on AI Hypercomputer. The sample provisions a single Cloud TPU v6e-8 using a TPU VM architecture, and the inference and benchmark scripts execute directly on the provisioned TPU VM. The sample includes the following files:
 
@@ -25,7 +25,7 @@ Before you run this sample, ensure you have the following:
 
   You are billed for these resources for the time that they are running. To avoid incurring charges, delete the resources when you have finished running the sample.
 * Quota for TPUs in your chosen region.
-* A valid Hugging Face token (`HF_TOKEN`) with access to the model, and necessary IAM permissions.
+* A valid Hugging Face token (`HF_TOKEN`) with access to the model, and necessary Identity and Access Management (IAM) permissions.
 
 ## Run the sample
 

@@ -2,7 +2,7 @@
 
 This code sample is intended for AI/ML engineers and demonstrates how to serve the GPT-OSS 120B model on a Google Kubernetes Engine (GKE) cluster for inference.
 
-Note: This sample doesn’t demonstrate how to fine-tune the model or configure VPC networks from scratch.
+Note: This sample doesn’t demonstrate how to fine-tune the model or configure Virtual Private Cloud (VPC) networks from scratch.
 
 The scripts in this directory deploy the infrastructure and run the AI/ML workload on AI Hypercomputer. The workload deploys a vLLM inference server on a GKE cluster equipped with NVIDIA GPUs, using Kubernetes configurations to provision the model and serve it using an exposed service. The sample includes the following files:
 
@@ -32,7 +32,7 @@ Before you run this sample, ensure you have the following:
   You are billed for these resources for the time that they are running. To avoid incurring charges, delete the resources when you have finished running the sample.
 * Sufficient quota for NVIDIA GPUs (for example, 8 GPUs per node) and standard compute resources in your chosen region.
   
-* A Hugging Face token (if the model requires authentication), the `gcloud` and `kubectl` CLI tools installed, and appropriate IAM permissions for GKE and Cloud Storage.
+* A Hugging Face token (if the model requires authentication), the `gcloud` and `kubectl` CLI tools installed, and appropriate Identity and Access Management (IAM) permissions for GKE and Cloud Storage.
 
 ## Run the sample
 
