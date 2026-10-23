@@ -22,17 +22,16 @@ For the complete step-by-step tutorial of how to use this sample, see the offici
 Before you run this sample, ensure you have the following:
 
 * A Google Cloud project with billing enabled. Running this sample provisions billable Google Cloud resources including:
-  - GKE clusters
-  - Compute Engine instances with NVIDIA GPUs
-  - Cloud Storage buckets (if used for model storage)
+  - GKE Standard cluster (`e2-standard-4` system node pool and `g4-standard-384` GPU node pool with 8 NVIDIA RTX PRO 6000 GPUs and 32 Local SSDs)
+  - Cloud Storage bucket
+  - Artifact Registry repository and Cloud Build
   - Network egress and load balancing
   
   You are billed for these resources for the time that they are running. To avoid incurring charges, delete the resources when you have finished running the sample.
-* Sufficient quota for NVIDIA GPUs (for example, 8 GPUs per node) and standard compute resources in your chosen region.
-  
-* A Hugging Face token (if the model requires authentication).
-* The `gcloud` and `kubectl` CLI tools installed.
-* Appropriate Identity and Access Management (IAM) permissions for GKE and Cloud Storage.
+* Quota and an active Compute Engine reservation (`RESERVATION`) for G4 VMs (`g4-standard-384`, 8 NVIDIA RTX PRO 6000 GPUs and 32 Local SSDs per node) and `e2-standard-4` CPU VMs in your chosen region.
+* A valid Hugging Face token (`HF_TOKEN`) with access to the `meta-llama/Llama-4-Scout-17B-16E-Instruct` model.
+* The `gcloud`, `kubectl`, `helm`, and `git` CLI tools installed.
+* Identity and Access Management (IAM) permissions to enable Google Cloud APIs, create GKE clusters and node pools, create Cloud Storage buckets and bind IAM policies (`roles/storage.objectAdmin`), create Artifact Registry repositories, and submit Cloud Build jobs.
 
 ## Run the sample
 

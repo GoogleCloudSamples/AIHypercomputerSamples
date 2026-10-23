@@ -20,13 +20,13 @@ For the complete step-by-step tutorial of how to use this sample, see the offici
 Before you run this sample, ensure you have the following:
 
 * A Google Cloud project with billing enabled. Running this sample provisions billable Google Cloud resources including:
-  - Compute Engine (Cloud TPU v6e-8 using TPU VM)
-  - Cloud Storage
+  - Compute Engine (Cloud TPU `v6e-8` using TPU VM)
 
   You are billed for these resources for the time that they are running. To avoid incurring charges, delete the resources when you have finished running the sample.
-* Quota for Cloud TPU `v6e-8` (8 TPU v6e chips) in your chosen region.
-* A valid Hugging Face token (`HF_TOKEN`) with access to the model.
-* Necessary Identity and Access Management (IAM) permissions.
+* Quota and an active reservation (`RESERVATION`) for Cloud TPU `v6e-8` (8 TPU v6e chips) in your chosen zone.
+* A valid Hugging Face token (`HF_TOKEN`) with access to the `Qwen/Qwen2-7B-Instruct` model.
+* The `gcloud` CLI tool (with `alpha` components enabled) installed.
+* Identity and Access Management (IAM) permissions to create and manage Cloud TPU VMs (`gcloud compute tpus tpu-vm`).
 
 ## Run the sample
 

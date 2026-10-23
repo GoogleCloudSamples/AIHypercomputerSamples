@@ -27,9 +27,10 @@ Before you run this sample, ensure you have the following:
   - Cloud Storage
   
   You are billed for these resources for the time that they are running. To avoid incurring charges, delete the resources when you have finished running the sample.
-* Quota for Cloud TPU `v6e-32` (32 TPU v6e chips) in your chosen region.
-  
-* A valid Hugging Face token (`HF_TOKEN`) with access to the required model.
+* Quota and an active reservation (`RESERVATION`) for Cloud TPU `v6e-32` (32 TPU v6e chips) in your chosen zone.
+* A valid Hugging Face token (`HF_TOKEN`) with access to the `google/gemma-4-31b` (`gemma4-31b`) model.
+* The `gcloud`, `kubectl`, `docker`, `wget`, and `tar` CLI tools installed (`1_prerequisites.sh` downloads the Cluster Toolkit `gcluster` binary automatically).
+* Identity and Access Management (IAM) permissions to enable Google Cloud APIs, create GKE clusters, create Cloud Storage buckets, and bind project IAM roles (`roles/storage.admin`, `roles/storage.objectViewer`, `roles/logging.logWriter`, and `roles/artifactregistry.writer`).
 
 ## Run the sample
 

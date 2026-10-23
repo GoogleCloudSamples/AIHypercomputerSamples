@@ -24,17 +24,17 @@ For the complete step-by-step tutorial of how to use this sample, see the offici
 Before you run this sample, ensure you have the following:
 
 * A Google Cloud project with billing enabled. Running this sample provisions billable Google Cloud resources including:
-  - GKE clusters
-  - Compute Engine instances with NVIDIA GPUs
-  - Cloud Storage buckets (if used for model storage)
+  - GKE Autopilot cluster
+  - Compute Engine A4 VMs (`a4-highgpu-8g` with 8 NVIDIA B200 GPUs)
+  - Cloud Storage bucket
   - Network egress and load balancing
   
   You are billed for these resources for the time that they are running. To avoid incurring charges, delete the resources when you have finished running the sample.
-* Sufficient quota for NVIDIA GPUs (for example, 8 GPUs per node) and standard compute resources in your chosen region.
-  
-* A Hugging Face token (if the model requires authentication).
-* The `gcloud` and `kubectl` CLI tools installed.
-* Appropriate Identity and Access Management (IAM) permissions for GKE and Cloud Storage.
+* Quota and an active Compute Engine reservation (`RESERVATION_URL`) for A4 VMs (`a4-highgpu-8g`, 8 NVIDIA B200 GPUs per node) in your chosen region.
+* An existing VPC network (`NETWORK`) and subnetwork (`SUBNETWORK`).
+* A valid Hugging Face token (`HUGGING_FACE_TOKEN`) with access to the `deepseek-ai/DeepSeek-V3.1-Base` model.
+* The `gcloud`, `kubectl`, and `envsubst` CLI tools installed.
+* Identity and Access Management (IAM) permissions to create GKE clusters, create Cloud Storage buckets, and manage bucket IAM policy bindings (`roles/storage.objectAdmin`).
 
 ## Run the sample
 

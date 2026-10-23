@@ -23,8 +23,10 @@ Before you run this sample, ensure you have the following:
   - Persistent disks
   
   You are billed for these resources for the time that they are running. To avoid incurring charges, delete the resources when you have finished running the sample.
-* Quota for A4 VMs (`a4-highgpu-8g`, 16 NVIDIA B200 GPUs across 2 nodes) in your chosen region.
-* Specific prerequisites, such as Hugging Face tokens, Identity and Access Management (IAM) permissions, or installed tools like `cluster-toolkit` or `kubectl`, depending on the environment.
+* Quota and an active Compute Engine reservation (`RESERVATION`) for 2 `a4-highgpu-8g` VMs (16 NVIDIA B200 GPUs across 2 nodes) in your chosen region.
+* A valid Hugging Face token (`HF_TOKEN`) with access to the `google/gemma-3-4b-it` model.
+* The `gcloud`, `kubectl`, and `envsubst` CLI tools installed.
+* Identity and Access Management (IAM) permissions to create GKE clusters, create Cloud Storage buckets, create IAM service accounts, and bind IAM policies (`roles/storage.admin` and `roles/iam.workloadIdentityUser`).
 
 ## Run the sample
 

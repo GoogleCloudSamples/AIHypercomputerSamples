@@ -18,13 +18,15 @@ For the complete step-by-step tutorial of how to use this sample, see the offici
 Before you run this sample, ensure you have the following:
 
 * A Google Cloud project with billing enabled. Running this sample provisions billable Google Cloud resources including:
-  - GKE cluster and GPU Virtual Machines
+  - GKE Autopilot cluster and Compute Engine A4 VMs (`a4-highgpu-8g` with 8 NVIDIA B200 GPUs per node)
+  - Cloud Build
   - Artifact Registry for storing container images
-  - Persistent disks and Cloud Storage buckets
   
   You are billed for these resources for the time that they are running. To avoid incurring charges, delete the resources when you have finished running the sample.
-* Quota for A4 VMs (`a4-highgpu-8g`, 8 NVIDIA B200 GPUs per node) in your chosen region.
-* Specific prerequisites, such as Hugging Face tokens, Identity and Access Management (IAM) permissions, or installed tools like `cluster-toolkit` or `kubectl`, depending on the environment.
+* Quota and an active Compute Engine reservation (`RESERVATION`) for A4 VMs (`a4-highgpu-8g`, 8 NVIDIA B200 GPUs per node) in your chosen region.
+* A valid Hugging Face token (`HF_TOKEN`) with access to the `google/gemma-3-12b-pt` model.
+* The `gcloud`, `kubectl`, and `envsubst` CLI tools installed.
+* Identity and Access Management (IAM) permissions to create GKE clusters, create Artifact Registry repositories, and submit Cloud Build builds.
 
 ## Run the sample
 

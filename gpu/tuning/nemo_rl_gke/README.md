@@ -27,8 +27,10 @@ Before you run this sample, ensure you have the following:
   - Cloud NAT and VPC network resources
   
   You are billed for these resources for the time that they are running. To avoid incurring charges, delete the resources when you have finished running the sample.
-* Quota for A4 VMs (`a4-highgpu-8g`, 8 NVIDIA B200 GPUs per node), `n2-highmem-16` CPU VMs, and Managed Lustre capacity (at least 18,000 GiB) in your chosen region.
-* Specific prerequisites, such as Hugging Face tokens, Identity and Access Management (IAM) permissions, or installed tools like `cluster-toolkit` or `kubectl`, depending on the environment.
+* Quota and an active Compute Engine reservation (`RESERVATION`) for A4 VMs (`a4-highgpu-8g`, 8 NVIDIA B200 GPUs per node) or A3 Ultra VMs (`a3-ultragpu-8g`, 8 NVIDIA H200 GPUs per node), `n2-highmem-16` CPU VMs, and Managed Lustre capacity (at least 18,000 GiB) in your chosen region.
+* A valid Hugging Face token (`HF_TOKEN`) with access to the `google/gemma-3-27b-it` model, and a Weights & Biases API key (`WANDB_API_KEY`).
+* The `gcloud`, `kubectl`, `helm`, `git`, and `envsubst` CLI tools installed (`4_deploy_ray_cluster.sh` also installs the `kubectl ray` plugin).
+* Identity and Access Management (IAM) permissions to create VPC networks and peering connections, GKE clusters and node pools, and Managed Lustre instances.
 
 ## Run the sample
 

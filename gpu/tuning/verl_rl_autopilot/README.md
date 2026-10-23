@@ -26,8 +26,10 @@ Before you run this sample, ensure you have the following:
   - Persistent disks and Cloud Storage buckets
   
   You are billed for these resources for the time that they are running. To avoid incurring charges, delete the resources when you have finished running the sample.
-* Quota for A4 VMs (`a4-highgpu-8g`, 8 NVIDIA B200 GPUs per node) in your chosen region.
-* Specific prerequisites, such as Hugging Face tokens, Identity and Access Management (IAM) permissions, or installed tools like `cluster-toolkit` or `kubectl`, depending on the environment.
+* Quota and an active Compute Engine reservation (`RESERVATION`) for 2 `a4-highgpu-8g` VMs (16 NVIDIA B200 GPUs across 2 nodes) or 2 `a3-ultragpu-8g` VMs (16 NVIDIA H200 GPUs across 2 nodes) in your chosen region.
+* A valid Hugging Face token (`HF_TOKEN`) with access to the `Qwen/Qwen2.5-32B-Instruct` model.
+* The `gcloud`, `kubectl`, `envsubst`, and `python3` (with `venv` and `pip3` to install `ray[default]`) CLI tools installed.
+* Identity and Access Management (IAM) permissions to create GKE clusters, create Cloud Storage buckets, and bind Workload Identity IAM policies (`roles/storage.objectAdmin`).
 
 ## Run the sample
 

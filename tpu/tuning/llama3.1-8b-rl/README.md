@@ -20,13 +20,13 @@ For the complete step-by-step tutorial of how to use this sample, see the offici
 Before you run this sample, ensure you have the following:
 
 * A Google Cloud project with billing enabled. Running this sample provisions billable Google Cloud resources including:
-  - Compute Engine (Cloud TPU v6e-8 using TPU VM)
-  - Cloud Storage
+  - Compute Engine (`ct6e-standard-8t` Cloud TPU `v6e-8` VM)
 
   You are billed for these resources for the time that they are running. To avoid incurring charges, delete the resources when you have finished running the sample.
-* Quota for Cloud TPU `v6e-8` (8 TPU v6e chips) in your chosen region.
-* A valid Hugging Face token (`HF_TOKEN`) with access to the Llama 3.1 model.
-* Necessary Identity and Access Management (IAM) permissions.
+* Quota and an active reservation (`RESERVATION`) for Cloud TPU `v6e-8` (`ct6e-standard-8t`, 8 TPU v6e chips) in your chosen zone.
+* A valid Hugging Face token (`HF_TOKEN`) with access to the `meta-llama/Llama-3.1-8B-Instruct` (`llama3.1-8b-Instruct`) model.
+* The `gcloud` CLI tool installed.
+* Identity and Access Management (IAM) permissions to create and SSH into Compute Engine TPU VM instances.
 
 ## Run the sample
 
