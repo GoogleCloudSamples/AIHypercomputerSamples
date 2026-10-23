@@ -13,7 +13,7 @@ Use your file tools to locate and read the contents of `sample_template/README.m
 
 ## Step 2: Analyze the Sample Directory
 - Read the `.sh` files in the directory (especially `0_env.sh`, setup/execution scripts, `*_validation.sh`, and `docs_snippets.sh`).
-- **Determine Infrastructure**: Identify if the sample uses "GKE Autopilot", "GKE cluster with TPUs", or a cluster provisioned using "Google Cloud Cluster Toolkit" (for example, uses the `gcluster` command).
+- **Determine Infrastructure**: Identify if the sample uses "GKE Autopilot", "GKE cluster with TPUs", or a cluster provisioned using "Cluster Toolkit" (for example, uses the `gcluster` command).
 - **Identify the Model**: Find the model name being used.
 - **Determine Billable Resources**: Resources usually include Google Kubernetes Engine (GKE), Compute Engine (GPUs/TPUs), and Cloud Storage (always use the official name "Cloud Storage" or "Cloud Storage FUSE", not "Google Cloud Storage" or "GCS").
 - **List the Steps**: Create a sequential list of all relevant `.sh` and `.yaml` scripts (using their exact filenames in the directory) and a short description of what they do. Start each file description with a present-tense verb (for example, "Configures the job.", "Contains documentation snippets.", "Configures the model.").
@@ -37,7 +37,7 @@ Use your file tools to locate and read the contents of `sample_template/README.m
   - Expand abbreviations on their first use in the document body—such as "Google Kubernetes Engine (GKE)", "Virtual Private Cloud (VPC)", "Identity and Access Management (IAM)", "Fully Sharded Data Parallel (FSDP)", and "Supervised Fine-Tuning (SFT)"—and use the abbreviation on subsequent mentions.
   - Use "for example" or "such as" instead of "e.g.", and avoid "etc." and "i.e.".
   - Use "using" instead of "via".
-  - Always use the official product name "Cloud Storage" (or "Cloud Storage FUSE"), not "Google Cloud Storage" or "GCS".
+  - Always use the official product names "Cloud Storage" (or "Cloud Storage FUSE", not "Google Cloud Storage" or "GCS") and "Cluster Toolkit" (not "Google Cloud Cluster Toolkit").
   - Wrap all CLI tools, commands, and environment variable names (such as `gcloud`, `kubectl`, `gcluster`, `cluster-toolkit`, and `HF_TOKEN`) in backticks.
 - Replace the `*TUTORIAL_TITLE*` and `*[Link to official AI Hypercomputer tutorial on Google Cloud]*` placeholders with the actual title and link. Remove any other unneeded generic placeholders from the "Additional resources" section.
 - Use the `write_to_file` tool to save the generated content to `README.md` inside the target sample's directory.

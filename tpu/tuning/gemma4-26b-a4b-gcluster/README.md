@@ -4,7 +4,7 @@ This code sample is intended for AI/ML engineers and demonstrates how to fine-tu
 
 Note: This sample doesn’t demonstrate how to prepare a dataset or serve the model in production.
 
-The scripts in this directory deploy the infrastructure and run the AI/ML workload on AI Hypercomputer. The sample uses the Google Cloud Cluster Toolkit to provision a GKE cluster with a v6e-64 TPU node pool and a c4d-standard-96 CPU node pool. It converts the model format, runs the supervised fine-tuning workload using MaxText, and converts the trained model back to Hugging Face format. The sample includes the following files:
+The scripts in this directory deploy the infrastructure and run the AI/ML workload on AI Hypercomputer. The sample uses Cluster Toolkit to provision a GKE cluster with a v6e-64 TPU node pool and a c4d-standard-96 CPU node pool. It converts the model format, runs the supervised fine-tuning workload using MaxText, and converts the trained model back to Hugging Face format. The sample includes the following files:
 
 * `0_env.sh`: Contains the starting environment variables.
 * `1_prerequisites.sh`: Installs required prerequisites.
