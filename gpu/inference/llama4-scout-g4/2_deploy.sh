@@ -49,7 +49,7 @@ fi
 # 2. Create G4 node pool with 8x RTX Pro 6000 GPUs
 if gcloud container node-pools describe "$NODE_POOL_NAME" --cluster "$CLUSTER_NAME" --region "$CLUSTER_REGION" --project "$PROJECT_ID" >/dev/null 2>&1; then
     echo "✓ Node pool '$NODE_POOL_NAME' already exists."
-elif [[ -n "${RESERVATION:-}" && "${RESERVATION}" != "YOUR_RESERVATION_NAME" && "${RESERVATION}" != "none" ]]; then
+elif [[ -n "${RESERVATION:-}" && "${RESERVATION}" != "YOUR_RESERVATION_NAME" ]]; then
     echo "Creating node pool with 8x RTX Pro 6000 GPUs (G4) and 32x Local SSDs..."
 # [START hypercomputer_gpu_infer_llama4scout_g4_gpu_node_pool_create]
     gcloud container node-pools create "${NODE_POOL_NAME}" \
