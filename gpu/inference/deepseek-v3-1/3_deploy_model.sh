@@ -21,7 +21,13 @@ envsubst < vllm-deepseek3-1-base.yaml | kubectl apply -f -
 
 echo "Deploying the model and tracking progress..."
 # [START hypercomputer_gpu_infer_deepseek31_deploy_wait]
-kubectl wait \
+if ! kubectl wait \
   --for=condition=Available \
-  --timeout=7200s deployment/deepseek3-1-deploy
+  --timeout=7200s deployment/deepseek3-1-deploy; then
+  echo "Deployment timed out. Dumping diagnostic logs:"
+  kubectl describe deployment/deepseek3-1-deploy
+  kubectl get pods -o wide
+  kubectl logs -l app=deepseek
+  exit 1
+fi
 # [END hypercomputer_gpu_infer_deepseek31_deploy_wait]
