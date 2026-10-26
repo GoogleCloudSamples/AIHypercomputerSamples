@@ -20,7 +20,7 @@ spec:
     spec:
       containers:
       - name: vllm-inference
-        image: us-docker.pkg.dev/vertex-ai/vertex-vision-model-garden-dockers/pytorch-vllm-serve:model-garden.pytorch-vllm-serve-release_20251126.00_p0
+        image: us-docker.pkg.dev/vertex-ai/vertex-vision-model-garden-dockers/pytorch-vllm-serve:20260713_0916_RC01
         resources:
           requests:
             cpu: "10"

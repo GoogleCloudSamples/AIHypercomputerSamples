@@ -25,9 +25,9 @@ if ! kubectl wait \
   --for=condition=Available \
   --timeout=7200s deployment/deepseek3-1-deploy; then
   echo "Deployment timed out. Dumping diagnostic logs:"
-  kubectl describe deployment/deepseek3-1-deploy
-  kubectl get pods -o wide
-  kubectl logs -l app=deepseek
+  kubectl describe deployment/deepseek3-1-deploy || true
+  kubectl get pods -o wide || true
+  kubectl logs -l app=deepseek || true
   exit 1
 fi
 # [END hypercomputer_gpu_infer_deepseek31_deploy_wait]
