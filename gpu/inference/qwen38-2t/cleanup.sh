@@ -18,8 +18,9 @@ set -uo pipefail
 
 echo "[$(date)] ==================== Deleting Kubernetes workloads, Helm releases, and secrets... ===================="
 # [START hypercomputer_gpu_infer_qwen38_2t_deploy_cleanup]
-kubectl delete -f qwen3.8-2.4t-nvfp4-multihost-a4.yaml --ignore-not-found || true
+kubectl delete -f qwen3.8-2.4t-nvfp4-multihost-a4-gcsfuse.yaml --ignore-not-found || true
 # [END hypercomputer_gpu_infer_qwen38_2t_deploy_cleanup]
+kubectl delete job qwen3-8-2-4t-stage-weights --ignore-not-found || true
 
 # [START hypercomputer_gpu_infer_qwen38_2t_dynamo_cleanup]
 helm uninstall dynamo-platform kai-scheduler || true

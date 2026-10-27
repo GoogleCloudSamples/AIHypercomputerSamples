@@ -16,9 +16,36 @@
 
 set -euo pipefail
 
+echo "[$(date)] ==================== Configuring GCS bucket gs://${GCS_BUCKET} for model weights... ===================="
+if ! gcloud storage buckets describe "gs://${GCS_BUCKET}" --project="${PROJECT_ID}" >/dev/null 2>&1; then
+  gcloud storage buckets create "gs://${GCS_BUCKET}" \
+      --default-storage-class=STANDARD \
+      --project="${PROJECT_ID}" \
+      --location="${REGION}" \
+      --uniform-bucket-level-access
+fi
+
+# [START hypercomputer_gpu_infer_qwen38_2t_create_weights_bucket]
+GSA=$(kubectl get sa workload-identity-k8s-sa -o jsonpath='{.metadata.annotations.iam\.gke\.io/gcp-service-account}')
+gcloud storage buckets add-iam-policy-binding "gs://${GCS_BUCKET}" \
+    --member="serviceAccount:${GSA}" \
+    --role="roles/storage.objectUser"
+# [END hypercomputer_gpu_infer_qwen38_2t_create_weights_bucket]
+
+echo "[$(date)] ==================== Staging Qwen 3.8 2.4T model weights to gs://${GCS_BUCKET}... ===================="
+kubectl delete job qwen3-8-2-4t-stage-weights --ignore-not-found >/dev/null 2>&1 || true
+
+# [START hypercomputer_gpu_infer_qwen38_2t_stage_weights]
+sed "s|<BUCKET_NAME>|${GCS_BUCKET}|g" qwen3.8-2.4t-nvfp4-stage-weights-job.yaml | kubectl apply -f -
+
+kubectl wait --for=condition=complete job/qwen3-8-2-4t-stage-weights --timeout=2h
+
+kubectl delete job qwen3-8-2-4t-stage-weights
+# [END hypercomputer_gpu_infer_qwen38_2t_stage_weights]
+
 echo "[$(date)] ==================== Deploying Qwen 3.8 2.4T multihost PD-disaggregated server... ===================="
 # [START hypercomputer_gpu_infer_qwen38_2t_deploy]
-kubectl apply -f qwen3.8-2.4t-nvfp4-multihost-a4.yaml
+sed "s|<BUCKET_NAME>|${GCS_BUCKET}|g" qwen3.8-2.4t-nvfp4-multihost-a4-gcsfuse.yaml | kubectl apply -f -
 # [END hypercomputer_gpu_infer_qwen38_2t_deploy]
 
 echo "Waiting for Qwen 3.8 2.4T frontend, prefill, and decode pods to be created..."
@@ -38,9 +65,11 @@ while true; do
   elapsed=$((elapsed + 5))
 done
 
+# [START hypercomputer_gpu_infer_qwen38_2t_pods_definition]
 frontend_pod=$(kubectl get pods --no-headers -o custom-columns=":metadata.name" | grep "^qwen3-8-2-4t-a4-disagg.*frontend" | head -n 1)
 prefill_ldr_pod=$(kubectl get pods --no-headers -o custom-columns=":metadata.name" | grep "^qwen3-8-2-4t-a4-disagg.*prefill-ldr" | head -n 1)
 decode_ldr_pod=$(kubectl get pods --no-headers -o custom-columns=":metadata.name" | grep "^qwen3-8-2-4t-a4-disagg.*decode-ldr" | head -n 1)
+# [END hypercomputer_gpu_infer_qwen38_2t_pods_definition]
 
 echo "Created leader/frontend pods:"
 echo "  Frontend:    ${frontend_pod}"

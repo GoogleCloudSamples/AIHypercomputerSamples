@@ -74,6 +74,9 @@ spec:
       replicas: 1
       multinode:
         nodeCount: 2
+      extraPodMetadata:
+        annotations:
+          gke-gcsfuse/volumes: "true"
       livenessProbe:
         httpGet:
           path: /live
@@ -102,17 +105,7 @@ spec:
           memory: "2000Gi"
       envs:
         - name: MODEL_PATH
-          value: "nvidia/Qwen3.8-2.4T-A95B-NVFP4"
-        - name: HF_HOME
-          value: "/data"
-        - name: HF_TOKEN
-          valueFrom:
-            secretKeyRef:
-              name: hf-secret
-              key: hf_api_token
-              optional: true
-        - name: HF_HUB_DISABLE_XET
-          value: "1"
+          value: "/model-weights/hf_models/models--nvidia--qwen3_8-2_4t-a95b-nvfp4"
         - name: DYN_SYSTEM_PORT
           value: "9090"
         - name: LD_LIBRARY_PATH
@@ -124,6 +117,7 @@ spec:
         - name: WITH_NVIDIA_PEERMEM
           value: "0"
       extraPodSpec:
+        serviceAccountName: workload-identity-k8s-sa
         resourceClaims:
           - name: rdma
             resourceClaimTemplateName: all-mrdma
@@ -135,8 +129,6 @@ spec:
             effect: "NoSchedule"
         mainContainer:
           image: nvcr.io/nvidia/ai-dynamo/sglang-runtime:1.5.0
-          securityContext:
-            runAsUser: 0
           resources:
             claims:
               - name: rdma
@@ -147,7 +139,7 @@ spec:
             initialDelaySeconds: 120
             periodSeconds: 30
             timeoutSeconds: 10
-            failureThreshold: 180
+            failureThreshold: 120
           command: ["/bin/bash", "-c"]
           args:
             - |
@@ -156,13 +148,11 @@ spec:
                 . /usr/local/gib/scripts/set_nccl_env.sh
               fi
 
-              echo "=== [Dynamo Prefill Worker] Ensuring weights are cached in ${HF_HOME:-/data} ==="
-              python3 -c "import os; from huggingface_hub import snapshot_download; snapshot_download(os.environ['MODEL_PATH'], max_workers=16)"
-
               echo "=== [Dynamo Prefill Worker] Launching dynamo.sglang ==="
               exec python3 -m dynamo.sglang \
                 --dist-init-addr "${GROVE_PCSG_NAME}-${GROVE_PCSG_INDEX}-prefill-ldr-0.${GROVE_HEADLESS_SERVICE}.:29500" \
                 --model-path "${MODEL_PATH}" \
+                --served-model-name "nvidia/Qwen3.8-2.4T-A95B-NVFP4" \
                 --host 0.0.0.0 \
                 --disaggregation-mode prefill \
                 --disaggregation-bootstrap-port 30001 \
@@ -181,8 +171,9 @@ spec:
               mountPath: /usr/local/nvidia
             - name: gib
               mountPath: /usr/local/gib
-            - name: data-volume
-              mountPath: /data
+            - name: gcs-model-dir
+              mountPath: /model-weights
+              readOnly: true
         volumes:
           - name: library-dir-host
             hostPath:
@@ -190,10 +181,13 @@ spec:
           - name: gib
             hostPath:
               path: /home/kubernetes/bin/gib
-          - name: data-volume
-            hostPath:
-              path: /var/lib/kubelet/hf-cache
-              type: DirectoryOrCreate
+          - name: gcs-model-dir
+            csi:
+              driver: gcsfuse.csi.storage.gke.io
+              readOnly: true
+              volumeAttributes:
+                bucketName: <BUCKET_NAME>
+                mountOptions: "implicit-dirs,file-cache:max-size-mb:-1"
 
     # --------------------------------------------------------------------------
     # DECODE WORKER: 2 x GPU A4 (`a4-highgpu-8g`, 16 x B200 GPUs, TP=16, EP=16)
@@ -204,6 +198,9 @@ spec:
       replicas: 1
       multinode:
         nodeCount: 2
+      extraPodMetadata:
+        annotations:
+          gke-gcsfuse/volumes: "true"
       livenessProbe:
         httpGet:
           path: /live
@@ -232,17 +229,7 @@ spec:
           memory: "2000Gi"
       envs:
         - name: MODEL_PATH
-          value: "nvidia/Qwen3.8-2.4T-A95B-NVFP4"
-        - name: HF_HOME
-          value: "/data"
-        - name: HF_TOKEN
-          valueFrom:
-            secretKeyRef:
-              name: hf-secret
-              key: hf_api_token
-              optional: true
-        - name: HF_HUB_DISABLE_XET
-          value: "1"
+          value: "/model-weights/hf_models/models--nvidia--qwen3_8-2_4t-a95b-nvfp4"
         - name: DYN_SYSTEM_PORT
           value: "9090"
         - name: LD_LIBRARY_PATH
@@ -254,6 +241,7 @@ spec:
         - name: WITH_NVIDIA_PEERMEM
           value: "0"
       extraPodSpec:
+        serviceAccountName: workload-identity-k8s-sa
         resourceClaims:
           - name: rdma
             resourceClaimTemplateName: all-mrdma
@@ -265,8 +253,6 @@ spec:
             effect: "NoSchedule"
         mainContainer:
           image: nvcr.io/nvidia/ai-dynamo/sglang-runtime:1.5.0
-          securityContext:
-            runAsUser: 0
           resources:
             claims:
               - name: rdma
@@ -277,7 +263,7 @@ spec:
             initialDelaySeconds: 120
             periodSeconds: 30
             timeoutSeconds: 10
-            failureThreshold: 180
+            failureThreshold: 120
           command: ["/bin/bash", "-c"]
           args:
             - |
@@ -286,13 +272,11 @@ spec:
                 . /usr/local/gib/scripts/set_nccl_env.sh
               fi
 
-              echo "=== [Dynamo Decode Worker] Ensuring weights are cached in ${HF_HOME:-/data} ==="
-              python3 -c "import os; from huggingface_hub import snapshot_download; snapshot_download(os.environ['MODEL_PATH'], max_workers=16)"
-
               echo "=== [Dynamo Decode Worker] Launching dynamo.sglang ==="
               exec python3 -m dynamo.sglang \
                 --dist-init-addr "${GROVE_PCSG_NAME}-${GROVE_PCSG_INDEX}-decode-ldr-0.${GROVE_HEADLESS_SERVICE}.:29500" \
                 --model-path "${MODEL_PATH}" \
+                --served-model-name "nvidia/Qwen3.8-2.4T-A95B-NVFP4" \
                 --host 0.0.0.0 \
                 --disaggregation-mode decode \
                 --disaggregation-bootstrap-port 30001 \
@@ -310,8 +294,9 @@ spec:
               mountPath: /usr/local/nvidia
             - name: gib
               mountPath: /usr/local/gib
-            - name: data-volume
-              mountPath: /data
+            - name: gcs-model-dir
+              mountPath: /model-weights
+              readOnly: true
         volumes:
           - name: library-dir-host
             hostPath:
@@ -319,8 +304,11 @@ spec:
           - name: gib
             hostPath:
               path: /home/kubernetes/bin/gib
-          - name: data-volume
-            hostPath:
-              path: /var/lib/kubelet/hf-cache
-              type: DirectoryOrCreate
+          - name: gcs-model-dir
+            csi:
+              driver: gcsfuse.csi.storage.gke.io
+              readOnly: true
+              volumeAttributes:
+                bucketName: <BUCKET_NAME>
+                mountOptions: "implicit-dirs,file-cache:max-size-mb:-1"
 # [END hypercomputer_gpu_infer_qwen38_2t_manifest]
