@@ -42,10 +42,9 @@ cleanup_anp_firewalls() {
 
 # [START hypercomputer_gpu_infer_deepseek_r1_workload_cleanup]
 envsubst '$MODEL_BUCKET' < deepseek_r1_8k_1k.yaml | kubectl delete -f - --ignore-not-found || true
-envsubst '$MODEL_BUCKET' < deepseek_r1_1k_1k.yaml | kubectl delete -f - --ignore-not-found || true
-envsubst '$MODEL_BUCKET' < deepseek_r1_1k_8k.yaml | kubectl delete -f - --ignore-not-found || true
 envsubst '$MODEL_BUCKET' < deepseek_r1_server.yaml | kubectl delete -f - --ignore-not-found || true
 kubectl delete job download-deepseek-r1 --ignore-not-found || true
+kubectl wait --for=delete pod -l app=vllm-r1 --timeout=120s || true
 kubectl delete secret hf-secret --ignore-not-found || true
 # [END hypercomputer_gpu_infer_deepseek_r1_workload_cleanup]
 

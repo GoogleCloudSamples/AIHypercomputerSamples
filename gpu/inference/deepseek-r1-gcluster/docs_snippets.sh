@@ -14,12 +14,15 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
+# [START hypercomputer_gpu_infer_deepseek_r1_auth]
+gcloud auth login
+gcloud auth application-default login
+# [END hypercomputer_gpu_infer_deepseek_r1_auth]
+
 # [START hypercomputer_gpu_infer_deepseek_r1_download_manifests]
 curl -LO https://raw.githubusercontent.com/GoogleCloudSamples/AIHypercomputerSamples/main/gpu/inference/deepseek-r1-gcluster/download_model.yaml
 curl -LO https://raw.githubusercontent.com/GoogleCloudSamples/AIHypercomputerSamples/main/gpu/inference/deepseek-r1-gcluster/deepseek_r1_server.yaml
 curl -LO https://raw.githubusercontent.com/GoogleCloudSamples/AIHypercomputerSamples/main/gpu/inference/deepseek-r1-gcluster/deepseek_r1_8k_1k.yaml
-curl -LO https://raw.githubusercontent.com/GoogleCloudSamples/AIHypercomputerSamples/main/gpu/inference/deepseek-r1-gcluster/deepseek_r1_1k_1k.yaml
-curl -LO https://raw.githubusercontent.com/GoogleCloudSamples/AIHypercomputerSamples/main/gpu/inference/deepseek-r1-gcluster/deepseek_r1_1k_8k.yaml
 # [END hypercomputer_gpu_infer_deepseek_r1_download_manifests]
 
 # [START hypercomputer_gpu_infer_deepseek_r1_toolkit_help]
@@ -64,13 +67,3 @@ curl http://localhost:8080/v1/chat/completions \
 kubectl wait --for=condition=Ready pod/vllm-bench-8k-1k --timeout=120s
 kubectl logs -f vllm-bench-8k-1k -c benchmark
 # [END hypercomputer_gpu_infer_deepseek_r1_benchmark_8k_1k_logs]
-
-# [START hypercomputer_gpu_infer_deepseek_r1_benchmark_1k_1k_logs]
-kubectl wait --for=condition=Ready pod/vllm-bench-1k-1k --timeout=120s
-kubectl logs -f vllm-bench-1k-1k -c benchmark
-# [END hypercomputer_gpu_infer_deepseek_r1_benchmark_1k_1k_logs]
-
-# [START hypercomputer_gpu_infer_deepseek_r1_benchmark_1k_8k_logs]
-kubectl wait --for=condition=Ready pod/vllm-bench-1k-8k --timeout=120s
-kubectl logs -f vllm-bench-1k-8k -c benchmark
-# [END hypercomputer_gpu_infer_deepseek_r1_benchmark_1k_8k_logs]

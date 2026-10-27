@@ -23,7 +23,7 @@ export RESERVATION_NAME="YOUR_RESERVATION_NAME"
 export HF_TOKEN="YOUR_HF_TOKEN"
 export MODEL_BUCKET="YOUR_GCS_BUCKET"
 export TERRAFORM_BUCKET="${MODEL_BUCKET}-tf-state"
-export CLUSTER_TOOLKIT_VERSION="v1.103.0"
+export CLUSTER_TOOLKIT_VERSION="v1.104.0"
 
 gcloud config set project "${PROJECT_ID}"
 gcloud config set billing/quota_project "${PROJECT_ID}"

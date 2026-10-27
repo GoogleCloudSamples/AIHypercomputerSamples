@@ -80,18 +80,4 @@ envsubst '$MODEL_BUCKET' < deepseek_r1_8k_1k.yaml | kubectl apply -f -
 # [END hypercomputer_gpu_infer_deepseek_r1_benchmark_8k_1k_run]
 wait_for_benchmark vllm-bench-8k-1k
 
-echo "Running the 1k/1k benchmark..."
-prepare_benchmark vllm-bench-1k-1k
-# [START hypercomputer_gpu_infer_deepseek_r1_benchmark_1k_1k_run]
-envsubst '$MODEL_BUCKET' < deepseek_r1_1k_1k.yaml | kubectl apply -f -
-# [END hypercomputer_gpu_infer_deepseek_r1_benchmark_1k_1k_run]
-wait_for_benchmark vllm-bench-1k-1k
-
-echo "Running the 1k/8k benchmark..."
-prepare_benchmark vllm-bench-1k-8k
-# [START hypercomputer_gpu_infer_deepseek_r1_benchmark_1k_8k_run]
-envsubst '$MODEL_BUCKET' < deepseek_r1_1k_8k.yaml | kubectl apply -f -
-# [END hypercomputer_gpu_infer_deepseek_r1_benchmark_1k_8k_run]
-wait_for_benchmark vllm-bench-1k-8k
-
-echo "All benchmarks succeeded."
+echo "Benchmark succeeded."
