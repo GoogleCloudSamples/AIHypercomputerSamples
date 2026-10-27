@@ -20,7 +20,14 @@ envsubst < vllm-3-27b-it.yaml | kubectl apply -f -
 
 echo "Deploying the model and tracking progress..."
 # [START hypercomputer_gpu_infer_gemma3_deploy_wait]
-kubectl wait \
+if ! kubectl wait \
     --for=condition=Available \
-    --timeout=1800s deployment/vllm-gemma-deployment
+    --timeout=3600s deployment/vllm-gemma-deployment; then
+  echo "Deployment timed out. Fetching diagnostic information..."
+  kubectl describe deployment/vllm-gemma-deployment || true
+  kubectl describe pods -l app=gemma-server || true
+  kubectl logs -l app=gemma-server --tail=200 || true
+  kubectl logs -l app=gemma-server --previous --tail=200 || true
+  exit 1
+fi
 # [END hypercomputer_gpu_infer_gemma3_deploy_wait]
