@@ -62,7 +62,10 @@ vars:
   zone: ${ZONE}
   static_node_count: 2
   authorized_cidr: 0.0.0.0/0
-  reservation: ${RESERVATION_NAME}
+  reservation_affinity:
+    consume_reservation_type: SPECIFIC_RESERVATION
+    specific_reservations:
+    - name: ${RESERVATION_NAME}
 EOF
 # [END hypercomputer_gpu_infer_deepseek_r1_deployment_configure]
 
