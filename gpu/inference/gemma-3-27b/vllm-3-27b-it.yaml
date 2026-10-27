@@ -4,7 +4,7 @@ kind: Deployment
 metadata:
   name: vllm-gemma-deployment
 spec:
-  progressDeadlineSeconds: 900
+  progressDeadlineSeconds: 3600
   replicas: 1
   selector:
     matchLabels:
@@ -50,17 +50,21 @@ spec:
         volumeMounts:
         - mountPath: /dev/shm
           name: dshm
+        startupProbe:
+          httpGet:
+            path: /health
+            port: 8000
+          failureThreshold: 360
+          periodSeconds: 10
         livenessProbe:
           httpGet:
             path: /health
             port: 8000
-          initialDelaySeconds: 720
           periodSeconds: 10
         readinessProbe:
           httpGet:
             path: /health
             port: 8000
-          initialDelaySeconds: 720
           periodSeconds: 5
       volumes:
       - name: dshm
