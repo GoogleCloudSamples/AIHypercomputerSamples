@@ -30,6 +30,36 @@ spec:
             deviceClassName: mrdma.google.com
             allocationMode: All
 ---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: dynamo-workload-identity-discovery-role
+  namespace: default
+rules:
+  - apiGroups: [""]
+    resources: ["endpoints", "pods"]
+    verbs: ["get", "list", "watch"]
+  - apiGroups: ["discovery.k8s.io"]
+    resources: ["endpointslices"]
+    verbs: ["get", "list", "watch"]
+  - apiGroups: ["nvidia.com"]
+    resources: ["dynamoworkermetadatas"]
+    verbs: ["create", "get", "list", "watch", "update", "patch", "delete"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: dynamo-workload-identity-discovery-binding
+  namespace: default
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: dynamo-workload-identity-discovery-role
+subjects:
+  - kind: ServiceAccount
+    name: workload-identity-k8s-sa
+    namespace: default
+---
 apiVersion: nvidia.com/v1alpha1
 kind: DynamoGraphDeployment
 metadata:
@@ -118,6 +148,7 @@ spec:
           value: "0"
       extraPodSpec:
         serviceAccountName: workload-identity-k8s-sa
+        automountServiceAccountToken: true
         resourceClaims:
           - name: rdma
             resourceClaimTemplateName: all-mrdma
@@ -242,6 +273,7 @@ spec:
           value: "0"
       extraPodSpec:
         serviceAccountName: workload-identity-k8s-sa
+        automountServiceAccountToken: true
         resourceClaims:
           - name: rdma
             resourceClaimTemplateName: all-mrdma
