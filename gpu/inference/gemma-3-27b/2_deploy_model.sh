@@ -24,9 +24,10 @@ if ! kubectl wait \
     --for=condition=Available \
     --timeout=3600s deployment/vllm-gemma-deployment; then
   echo "Deployment timed out. Fetching diagnostic information..."
-  kubectl describe deployment/vllm-gemma-deployment
-  kubectl describe pods -l app=gemma-server
-  kubectl logs -l app=gemma-server
+  kubectl describe deployment/vllm-gemma-deployment || true
+  kubectl describe pods -l app=gemma-server || true
+  kubectl logs -l app=gemma-server --tail=200 || true
+  kubectl logs -l app=gemma-server --previous --tail=200 || true
   exit 1
 fi
 # [END hypercomputer_gpu_infer_gemma3_deploy_wait]
