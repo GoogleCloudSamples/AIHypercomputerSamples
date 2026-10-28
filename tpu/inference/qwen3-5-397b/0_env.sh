@@ -16,12 +16,12 @@
 export TPU_TYPE="${TPU_TYPE:-v7x}"
 
 if [[ "${TPU_TYPE}" == "v6e" ]]; then
+export TPU_TYPE="v6e"
 # [START hypercomputer_tpu_infer_qwen3_5_397b_env_v6]
 export PROJECT_ID="YOUR_PROJECT_ID"
 export REGION="YOUR_REGION"
 export ZONE="YOUR_ZONE"
 export CLUSTER_NAME="YOUR_CLUSTER_NAME"
-export TPU_TYPE="v6e"
 export MACHINE_TYPE="ct6e-standard-4t"
 export NODE_POOL_NAME="np-0"
 export RESERVATION_NAME="YOUR_RESERVATION_NAME"
@@ -34,12 +34,12 @@ gcloud config set project "${PROJECT_ID}"
 gcloud config set billing/quota_project "${PROJECT_ID}"
 # [END hypercomputer_tpu_infer_qwen3_5_397b_env_v6]
 else
+export TPU_TYPE="v7x"
 # [START hypercomputer_tpu_infer_qwen3_5_397b_env]
 export PROJECT_ID="YOUR_PROJECT_ID"
 export REGION="YOUR_REGION"
 export ZONE="YOUR_ZONE"
 export CLUSTER_NAME="YOUR_CLUSTER_NAME"
-export TPU_TYPE="v7x"
 export MACHINE_TYPE="tpu7x-standard-4t"
 export NODE_POOL_NAME="np-0"
 export RESERVATION_NAME="YOUR_RESERVATION_NAME"
