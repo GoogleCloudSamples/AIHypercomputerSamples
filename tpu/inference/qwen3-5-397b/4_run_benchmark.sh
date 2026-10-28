@@ -25,6 +25,16 @@ if [[ -z "${VLLM_IMAGE:-}" || "${VLLM_IMAGE}" == "YOUR_VLLM_TPU_IMAGE" ]]; then
   export VLLM_IMAGE="vllm/vllm-torchtpu:v0.29.0@sha256:3976ccc1a69ffd361e0a7d2831fe317f6b685636014f426321a39ae02f8da0dc"
 fi
 
+if [[ "${TPU_TYPE:-v7x}" == "v6e" ]]; then
+  MODEL_NAME="${MODEL_NAME:-Qwen/Qwen3-30B-A3B-FP8}"
+  BENCHMARK_MANIFEST="${BENCHMARK_MANIFEST:-qwen3-benchmark-8k1k.yaml}"
+  BENCHMARK_POD="${BENCHMARK_POD:-qwen3-bench-8k1k}"
+else
+  MODEL_NAME="${MODEL_NAME:-Qwen/Qwen3.5-397B-A17B-FP8}"
+  BENCHMARK_MANIFEST="${BENCHMARK_MANIFEST:-qwen3_5-benchmark-8k1k.yaml}"
+  BENCHMARK_POD="${BENCHMARK_POD:-qwen3-5-bench-8k1k}"
+fi
+
 echo "[$(date)] ==================== Starting ${MODEL_NAME} 8k/1k benchmark (${BENCHMARK_MANIFEST})... ===================="
 kubectl delete pod "${BENCHMARK_POD}" --ignore-not-found
 

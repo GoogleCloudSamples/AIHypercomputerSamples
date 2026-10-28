@@ -18,6 +18,18 @@ set -euo pipefail
 
 echo "[$(date)] ==================== Starting validation... ===================="
 
+if [[ "${TPU_TYPE:-v7x}" == "v6e" ]]; then
+  DEPLOYMENT_NAME="${DEPLOYMENT_NAME:-vllm-qwen3}"
+  SERVICE_NAME="${SERVICE_NAME:-vllm-qwen3-service}"
+  MODEL_NAME="${MODEL_NAME:-Qwen/Qwen3-30B-A3B-FP8}"
+  BENCHMARK_POD="${BENCHMARK_POD:-qwen3-bench-8k1k}"
+else
+  DEPLOYMENT_NAME="${DEPLOYMENT_NAME:-vllm-qwen3-5}"
+  SERVICE_NAME="${SERVICE_NAME:-vllm-qwen3-5-service}"
+  MODEL_NAME="${MODEL_NAME:-Qwen/Qwen3.5-397B-A17B-FP8}"
+  BENCHMARK_POD="${BENCHMARK_POD:-qwen3-5-bench-8k1k}"
+fi
+
 echo "Waiting for GKE deployment/${DEPLOYMENT_NAME} to be Available..."
 kubectl wait \
     --for=condition=Available \

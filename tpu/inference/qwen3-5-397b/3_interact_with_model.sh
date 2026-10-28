@@ -16,6 +16,14 @@
 
 set -euo pipefail
 
+if [[ "${TPU_TYPE:-v7x}" == "v6e" ]]; then
+  SERVICE_NAME="${SERVICE_NAME:-vllm-qwen3-service}"
+  MODEL_NAME="${MODEL_NAME:-Qwen/Qwen3-30B-A3B-FP8}"
+else
+  SERVICE_NAME="${SERVICE_NAME:-vllm-qwen3-5-service}"
+  MODEL_NAME="${MODEL_NAME:-Qwen/Qwen3.5-397B-A17B-FP8}"
+fi
+
 echo "[$(date)] ==================== Setting up port forwarding to ${SERVICE_NAME}... ===================="
 kubectl port-forward "service/${SERVICE_NAME}" 8000:8000 >/dev/null 2>&1 &
 PORT_FORWARD_PID=$!

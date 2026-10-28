@@ -20,6 +20,16 @@ if [[ -z "${VLLM_IMAGE:-}" || "${VLLM_IMAGE}" == "YOUR_VLLM_TPU_IMAGE" ]]; then
   export VLLM_IMAGE="vllm/vllm-torchtpu:v0.29.0@sha256:3976ccc1a69ffd361e0a7d2831fe317f6b685636014f426321a39ae02f8da0dc"
 fi
 
+if [[ "${TPU_TYPE:-v7x}" == "v6e" ]]; then
+  MODEL_NAME="${MODEL_NAME:-Qwen/Qwen3-30B-A3B-FP8}"
+  SERVER_MANIFEST="${SERVER_MANIFEST:-qwen3_server.yaml}"
+  DEPLOYMENT_NAME="${DEPLOYMENT_NAME:-vllm-qwen3}"
+else
+  MODEL_NAME="${MODEL_NAME:-Qwen/Qwen3.5-397B-A17B-FP8}"
+  SERVER_MANIFEST="${SERVER_MANIFEST:-qwen3_5_server.yaml}"
+  DEPLOYMENT_NAME="${DEPLOYMENT_NAME:-vllm-qwen3-5}"
+fi
+
 echo "[$(date)] ==================== Deploying the vLLM ${MODEL_NAME} server (${SERVER_MANIFEST})... ===================="
 if [[ "${TPU_TYPE:-v7x}" == "v6e" ]]; then
   # [START hypercomputer_tpu_infer_qwen3_5_397b_deploy_v6]
