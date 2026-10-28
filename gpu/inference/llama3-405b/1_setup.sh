@@ -89,12 +89,13 @@ EOF
 
 echo "[$(date)] ==================== Deploying GKE A4 cluster ${CLUSTER_NAME} with Cluster Toolkit... ===================="
 (
-  cd cluster-toolkit
 # [START hypercomputer_gpu_infer_llama3_405b_cluster_create]
+cd cluster-toolkit
 ./gcluster deploy \
     -d examples/gke-a4/gke-a4-deployment.yaml \
     examples/gke-a4/gke-a4.yaml \
     --auto-approve -w
+cd ..
 # [END hypercomputer_gpu_infer_llama3_405b_cluster_create]
 )
 
