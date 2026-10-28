@@ -16,8 +16,8 @@
 
 set -euo pipefail
 
-echo "[$(date)] ==================== Setting up port forwarding to vllm-qwen3-5-service... ===================="
-kubectl port-forward service/vllm-qwen3-5-service 8000:8000 >/dev/null 2>&1 &
+echo "[$(date)] ==================== Setting up port forwarding to ${SERVICE_NAME}... ===================="
+kubectl port-forward "service/${SERVICE_NAME}" 8000:8000 >/dev/null 2>&1 &
 PORT_FORWARD_PID=$!
 
 cleanup() {
@@ -42,17 +42,32 @@ until curl -s http://localhost:8000/health >/dev/null || curl -s http://localhos
   ELAPSED=$((ELAPSED + INTERVAL))
 done
 
-echo "[$(date)] ==================== Sending chat completion request to Qwen 3.5 397B... ===================="
-# [START hypercomputer_tpu_infer_qwen3_5_397b_interact]
-curl http://localhost:8000/v1/chat/completions \
-    -H "Content-Type: application/json" \
-    -d '{
-        "model": "Qwen/Qwen3.5-397B-A17B-FP8",
-        "messages": [
-            {"role": "user", "content": "Hello! Tell me a joke."}
-        ],
-        "max_tokens": 512,
-        "temperature": 0.7
-    }' | jq .
-# [END hypercomputer_tpu_infer_qwen3_5_397b_interact]
+echo "[$(date)] ==================== Sending chat completion request to ${MODEL_NAME}... ===================="
+if [[ "${TPU_TYPE:-v7x}" == "v6e" ]]; then
+  # [START hypercomputer_tpu_infer_qwen3_5_397b_interact_v6]
+  curl http://localhost:8000/v1/chat/completions \
+      -H "Content-Type: application/json" \
+      -d '{
+          "model": "Qwen/Qwen3-30B-A3B-FP8",
+          "messages": [
+              {"role": "user", "content": "Hello! Tell me a joke."}
+          ],
+          "max_tokens": 512,
+          "temperature": 0.7
+      }' | jq .
+  # [END hypercomputer_tpu_infer_qwen3_5_397b_interact_v6]
+else
+  # [START hypercomputer_tpu_infer_qwen3_5_397b_interact]
+  curl http://localhost:8000/v1/chat/completions \
+      -H "Content-Type: application/json" \
+      -d '{
+          "model": "Qwen/Qwen3.5-397B-A17B-FP8",
+          "messages": [
+              {"role": "user", "content": "Hello! Tell me a joke."}
+          ],
+          "max_tokens": 512,
+          "temperature": 0.7
+      }' | jq .
+  # [END hypercomputer_tpu_infer_qwen3_5_397b_interact]
+fi
 echo "[$(date)] ==================== Interaction with the model finished. ===================="

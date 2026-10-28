@@ -20,33 +20,39 @@ if [[ -z "${VLLM_IMAGE:-}" || "${VLLM_IMAGE}" == "YOUR_VLLM_TPU_IMAGE" ]]; then
   export VLLM_IMAGE="vllm/vllm-torchtpu:v0.29.0@sha256:3976ccc1a69ffd361e0a7d2831fe317f6b685636014f426321a39ae02f8da0dc"
 fi
 
-echo "[$(date)] ==================== Deploying the vLLM Qwen 3.5 397B server... ===================="
-# [START hypercomputer_tpu_infer_qwen3_5_397b_deploy]
-envsubst '$VLLM_IMAGE' < "qwen3_5_server.yaml" | kubectl apply -f -
-# [END hypercomputer_tpu_infer_qwen3_5_397b_deploy]
+echo "[$(date)] ==================== Deploying the vLLM ${MODEL_NAME} server (${SERVER_MANIFEST})... ===================="
+if [[ "${TPU_TYPE:-v7x}" == "v6e" ]]; then
+  # [START hypercomputer_tpu_infer_qwen3_5_397b_deploy_v6]
+  envsubst '$VLLM_IMAGE' < "qwen3_server.yaml" | kubectl apply -f -
+  # [END hypercomputer_tpu_infer_qwen3_5_397b_deploy_v6]
+else
+  # [START hypercomputer_tpu_infer_qwen3_5_397b_deploy]
+  envsubst '$VLLM_IMAGE' < "qwen3_5_server.yaml" | kubectl apply -f -
+  # [END hypercomputer_tpu_infer_qwen3_5_397b_deploy]
+fi
 
-echo "Waiting for the vllm-qwen3-5 pod to be created..."
+echo "Waiting for the ${DEPLOYMENT_NAME} pod to be created..."
 TIMEOUT=300
 ELAPSED=0
-until kubectl get pods -l app=vllm-qwen3-5 2>/dev/null | grep -q "vllm-qwen3-5"; do
+until kubectl get pods -l "app=${DEPLOYMENT_NAME}" 2>/dev/null | grep -q "${DEPLOYMENT_NAME}"; do
   if [[ "${ELAPSED}" -ge "${TIMEOUT}" ]]; then
-    echo "Timeout waiting for vllm-qwen3-5 pod to be created! Describing deployment:" >&2
-    kubectl describe deployment vllm-qwen3-5 >&2
+    echo "Timeout waiting for ${DEPLOYMENT_NAME} pod to be created! Describing deployment:" >&2
+    kubectl describe deployment "${DEPLOYMENT_NAME}" >&2
     exit 1
   fi
   sleep 5
   ELAPSED=$((ELAPSED + 5))
 done
 
-echo "Waiting for the vllm-qwen3-5 pod to start running..."
-if ! kubectl wait --for=jsonpath='{.status.phase}'=Running pod -l app=vllm-qwen3-5 --timeout=900s; then
+echo "Waiting for the ${DEPLOYMENT_NAME} pod to start running..."
+if ! kubectl wait --for=jsonpath='{.status.phase}'=Running pod -l "app=${DEPLOYMENT_NAME}" --timeout=900s; then
   echo "Pod failed to start running within 15 minutes! Describing pod:" >&2
-  kubectl describe pod -l app=vllm-qwen3-5 >&2
+  kubectl describe pod -l "app=${DEPLOYMENT_NAME}" >&2
   exit 1
 fi
 
-echo "Streaming server logs while waiting for deployment/vllm-qwen3-5 to become Available..."
-kubectl logs deployment/vllm-qwen3-5 -c vllm-tpu -f &
+echo "Streaming server logs while waiting for deployment/${DEPLOYMENT_NAME} to become Available..."
+kubectl logs "deployment/${DEPLOYMENT_NAME}" -c vllm-tpu -f &
 LOG_PID=$!
 
 cleanup_logs() {
@@ -54,15 +60,28 @@ cleanup_logs() {
 }
 trap cleanup_logs EXIT
 
-# [START hypercomputer_tpu_infer_qwen3_5_397b_deploy_wait]
-if ! kubectl wait \
-    --for=condition=Available \
-    --timeout=7200s deployment/vllm-qwen3-5; then
-  echo "Deployment vllm-qwen3-5 failed to become Available within 120 minutes!" >&2
-  kubectl describe pod -l app=vllm-qwen3-5 >&2
-  kubectl logs deployment/vllm-qwen3-5 -c vllm-tpu --tail=200 >&2 || true
-  exit 1
+if [[ "${TPU_TYPE:-v7x}" == "v6e" ]]; then
+  # [START hypercomputer_tpu_infer_qwen3_5_397b_deploy_wait_v6]
+  if ! kubectl wait \
+      --for=condition=Available \
+      --timeout=7200s deployment/vllm-qwen3; then
+    echo "Deployment vllm-qwen3 failed to become Available within 120 minutes!" >&2
+    kubectl describe pod -l app=vllm-qwen3 >&2
+    kubectl logs deployment/vllm-qwen3 -c vllm-tpu --tail=200 >&2 || true
+    exit 1
+  fi
+  # [END hypercomputer_tpu_infer_qwen3_5_397b_deploy_wait_v6]
+else
+  # [START hypercomputer_tpu_infer_qwen3_5_397b_deploy_wait]
+  if ! kubectl wait \
+      --for=condition=Available \
+      --timeout=7200s deployment/vllm-qwen3-5; then
+    echo "Deployment vllm-qwen3-5 failed to become Available within 120 minutes!" >&2
+    kubectl describe pod -l app=vllm-qwen3-5 >&2
+    kubectl logs deployment/vllm-qwen3-5 -c vllm-tpu --tail=200 >&2 || true
+    exit 1
+  fi
+  # [END hypercomputer_tpu_infer_qwen3_5_397b_deploy_wait]
 fi
-# [END hypercomputer_tpu_infer_qwen3_5_397b_deploy_wait]
 
 echo "[$(date)] ==================== Server deployment is Ready! ===================="

@@ -28,13 +28,26 @@ kubectl wait --for=jsonpath='{.status.phase}'=Running pod -l app=vllm-qwen3-5 --
 kubectl logs deployment/vllm-qwen3-5 -c vllm-tpu -f
 # [END hypercomputer_tpu_infer_qwen3_5_397b_server_logs]
 
+# [START hypercomputer_tpu_infer_qwen3_5_397b_server_logs_v6]
+kubectl wait --for=jsonpath='{.status.phase}'=Running pod -l app=vllm-qwen3 --timeout=900s
+kubectl logs deployment/vllm-qwen3 -c vllm-tpu -f
+# [END hypercomputer_tpu_infer_qwen3_5_397b_server_logs_v6]
+
 # [START hypercomputer_tpu_infer_qwen3_5_397b_port_forward]
 kubectl port-forward service/vllm-qwen3-5-service 8000:8000
 # [END hypercomputer_tpu_infer_qwen3_5_397b_port_forward]
 
+# [START hypercomputer_tpu_infer_qwen3_5_397b_port_forward_v6]
+kubectl port-forward service/vllm-qwen3-service 8000:8000
+# [END hypercomputer_tpu_infer_qwen3_5_397b_port_forward_v6]
+
 # [START hypercomputer_tpu_infer_qwen3_5_397b_benchmark_logs]
 kubectl logs -f qwen3-5-bench-8k1k
 # [END hypercomputer_tpu_infer_qwen3_5_397b_benchmark_logs]
+
+# [START hypercomputer_tpu_infer_qwen3_5_397b_benchmark_logs_v6]
+kubectl logs -f qwen3-bench-8k1k
+# [END hypercomputer_tpu_infer_qwen3_5_397b_benchmark_logs_v6]
 
 # [START hypercomputer_tpu_infer_qwen3_5_397b_auth]
 gcloud auth login
@@ -69,6 +82,14 @@ gcloud compute firewall-rules create "${NETWORK}-allow-internal" \
 curl -O https://raw.githubusercontent.com/GoogleCloudSamples/AIHypercomputerSamples/refs/heads/main/tpu/inference/qwen3-5-397b/qwen3_5_server.yaml
 # [END hypercomputer_tpu_infer_qwen3_5_397b_fetch_server_manifest]
 
+# [START hypercomputer_tpu_infer_qwen3_5_397b_fetch_server_manifest_v6]
+curl -O https://raw.githubusercontent.com/GoogleCloudSamples/AIHypercomputerSamples/refs/heads/main/tpu/inference/qwen3-5-397b/qwen3_server.yaml
+# [END hypercomputer_tpu_infer_qwen3_5_397b_fetch_server_manifest_v6]
+
 # [START hypercomputer_tpu_infer_qwen3_5_397b_fetch_benchmark_manifest]
 curl -O https://raw.githubusercontent.com/GoogleCloudSamples/AIHypercomputerSamples/refs/heads/main/tpu/inference/qwen3-5-397b/qwen3_5-benchmark-8k1k.yaml
 # [END hypercomputer_tpu_infer_qwen3_5_397b_fetch_benchmark_manifest]
+
+# [START hypercomputer_tpu_infer_qwen3_5_397b_fetch_benchmark_manifest_v6]
+curl -O https://raw.githubusercontent.com/GoogleCloudSamples/AIHypercomputerSamples/refs/heads/main/tpu/inference/qwen3-5-397b/qwen3-benchmark-8k1k.yaml
+# [END hypercomputer_tpu_infer_qwen3_5_397b_fetch_benchmark_manifest_v6]
