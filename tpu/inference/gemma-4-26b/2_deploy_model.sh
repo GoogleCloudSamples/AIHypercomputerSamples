@@ -36,37 +36,35 @@ done
 
 echo "Deploying the model and tracking progress..."
 # [START hypercomputer_tpu_infer_gemma4_26b_deploy_wait]
-LIMIT=60
-count=0
-until kubectl get pod -l role=leader -o name | grep -q "vllm-tpu"; do
-  if [ "${count}" -ge "${LIMIT}" ]; then
-    echo "Error: timeout waiting for leader pod to be created." >&2
+(
+  LIMIT=60
+  count=0
+  until kubectl get pod -l role=leader -o name | grep -q "vllm-tpu"; do
+    if [ "${count}" -ge "${LIMIT}" ]; then
+      echo "Error: timeout waiting for leader pod to be created." >&2
+      exit 1
+    fi
+    echo "Waiting for leader pod to be created..."
+    sleep 5
+    count=$((count + 1))
+  done
+  # Wait up to 20 minutes for the pod to start running (TPU nodes take a while to boot)
+  echo "Waiting for pod to be scheduled and running..."
+  if ! kubectl wait --for=jsonpath='{.status.phase}'=Running --timeout=1200s pod -l role=leader; then
+    echo "Pod failed to start running within 20 minutes! Here are the events:" >&2
+    kubectl describe pod -l role=leader
     exit 1
   fi
-  echo "Waiting for leader pod to be created..."
-  sleep 5
-  count=$((count + 1))
-done
-
-# Wait up to 20 minutes for the pod to start running (TPU nodes take a while to boot)
-echo "Waiting for pod to be scheduled and running..."
-if ! kubectl wait --for=jsonpath='{.status.phase}'=Running --timeout=1200s pod -l role=leader; then
-  echo "Pod failed to start running within 20 minutes! Here are the events:" >&2
-  kubectl describe pod -l role=leader
-  exit 1
-fi
-
-echo "Pod is running. Streaming logs while waiting for it to become Ready (this includes model download)..."
-# Stream logs in the background so the user can see what's happening
-kubectl logs -f -l role=leader &
-LOG_PID=$!
-trap 'kill "${LOG_PID}" 2>/dev/null || true' EXIT
-
-if ! kubectl wait --for=condition=Ready --timeout=3600s pod -l role=leader; then
-  echo "Pod failed to become Ready within 60 minutes!" >&2
-  kubectl describe pod -l role=leader
-  exit 1
-fi
-
-echo "Pod is Ready!"
+  echo "Pod is running. Streaming logs while waiting for it to become Ready (this includes model download)..."
+  # Stream logs in the background so the user can see what's happening
+  kubectl logs -f -l role=leader &
+  LOG_PID=$!
+  trap 'kill "${LOG_PID}" 2>/dev/null || true; wait "${LOG_PID}" 2>/dev/null || true' EXIT
+  if ! kubectl wait --for=condition=Ready --timeout=3600s pod -l role=leader; then
+    echo "Pod failed to become Ready within 60 minutes!" >&2
+    kubectl describe pod -l role=leader
+    exit 1
+  fi
+  echo "Pod is Ready!"
+)
 # [END hypercomputer_tpu_infer_gemma4_26b_deploy_wait]

@@ -14,6 +14,11 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
+# [START hypercomputer_tpu_infer_gemma4_26b_auth]
+gcloud auth login
+gcloud auth application-default login
+# [END hypercomputer_tpu_infer_gemma4_26b_auth]
+
 # [START hypercomputer_tpu_infer_gemma4_26b_download_manifest]
 curl -LO https://raw.githubusercontent.com/GoogleCloudSamples/AIHypercomputerSamples/main/tpu/inference/gemma-4-26b/gemma4-26b-multihost-v6e-2x4.yaml
 # [END hypercomputer_tpu_infer_gemma4_26b_download_manifest]
