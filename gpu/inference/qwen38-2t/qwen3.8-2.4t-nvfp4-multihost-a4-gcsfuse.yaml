@@ -217,7 +217,7 @@ spec:
               driver: gcsfuse.csi.storage.gke.io
               readOnly: true
               volumeAttributes:
-                bucketName: <BUCKET_NAME>
+                bucketName: ${GCS_BUCKET}
                 mountOptions: "implicit-dirs,file-cache:max-size-mb:-1"
 
     # --------------------------------------------------------------------------
@@ -341,6 +341,6 @@ spec:
               driver: gcsfuse.csi.storage.gke.io
               readOnly: true
               volumeAttributes:
-                bucketName: <BUCKET_NAME>
+                bucketName: ${GCS_BUCKET}
                 mountOptions: "implicit-dirs,file-cache:max-size-mb:-1"
 # [END hypercomputer_gpu_infer_qwen38_2t_manifest]

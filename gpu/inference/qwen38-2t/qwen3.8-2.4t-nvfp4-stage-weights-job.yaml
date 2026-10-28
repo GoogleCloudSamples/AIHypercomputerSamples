@@ -117,7 +117,7 @@ spec:
               echo "shard ${JOB_COMPLETION_INDEX}: upload complete"
           env:
             - name: DEST
-              value: "gs://<BUCKET_NAME>/hf_models/models--nvidia--qwen3_8-2_4t-a95b-nvfp4"
+              value: "gs://${GCS_BUCKET}/hf_models/models--nvidia--qwen3_8-2_4t-a95b-nvfp4"
           resources:
             requests:
               cpu: "16"

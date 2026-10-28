@@ -88,15 +88,14 @@ EOF
 # [END hypercomputer_gpu_infer_qwen38_2t_configure_blueprint]
 
 echo "[$(date)] ==================== Deploying GKE A4 cluster ${CLUSTER_NAME} with Cluster Toolkit... ===================="
-(
-  cd cluster-toolkit
 # [START hypercomputer_gpu_infer_qwen38_2t_cluster_create]
+cd cluster-toolkit
 ./gcluster deploy \
     -d examples/gke-a4/gke-a4-deployment.yaml \
     examples/gke-a4/gke-a4.yaml \
     --auto-approve -w
+cd ..
 # [END hypercomputer_gpu_infer_qwen38_2t_cluster_create]
-)
 
 echo "[$(date)] ==================== Getting cluster credentials... ===================="
 # [START hypercomputer_gpu_infer_qwen38_2t_cluster_get_creds]

@@ -36,7 +36,7 @@ echo "[$(date)] ==================== Staging Qwen 3.8 2.4T model weights to gs:/
 kubectl delete job qwen3-8-2-4t-stage-weights --ignore-not-found >/dev/null 2>&1 || true
 
 # [START hypercomputer_gpu_infer_qwen38_2t_stage_weights]
-sed "s|<BUCKET_NAME>|${GCS_BUCKET}|g" qwen3.8-2.4t-nvfp4-stage-weights-job.yaml | kubectl apply -f -
+envsubst '${GCS_BUCKET}' < qwen3.8-2.4t-nvfp4-stage-weights-job.yaml | kubectl apply -f -
 
 kubectl wait --for=condition=complete job/qwen3-8-2-4t-stage-weights --timeout=2h
 
@@ -45,7 +45,7 @@ kubectl delete job qwen3-8-2-4t-stage-weights
 
 echo "[$(date)] ==================== Deploying Qwen 3.8 2.4T multihost PD-disaggregated server... ===================="
 # [START hypercomputer_gpu_infer_qwen38_2t_deploy]
-sed "s|<BUCKET_NAME>|${GCS_BUCKET}|g" qwen3.8-2.4t-nvfp4-multihost-a4-gcsfuse.yaml | kubectl apply -f -
+envsubst '${GCS_BUCKET}' < qwen3.8-2.4t-nvfp4-multihost-a4-gcsfuse.yaml | kubectl apply -f -
 # [END hypercomputer_gpu_infer_qwen38_2t_deploy]
 
 echo "Waiting for Qwen 3.8 2.4T frontend, prefill, and decode pods to be created..."

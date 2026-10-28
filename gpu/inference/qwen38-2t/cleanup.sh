@@ -45,12 +45,11 @@ fw_watcher_pid=$!
 trap 'kill "${fw_watcher_pid}" 2>/dev/null || true' EXIT
 
 if [[ -x "cluster-toolkit/gcluster" ]]; then
-  (
-    cd cluster-toolkit
 # [START hypercomputer_gpu_infer_qwen38_2t_cluster_cleanup]
+cd cluster-toolkit
 ./gcluster destroy "${CLUSTER_NAME}" --auto-approve || true
+cd ..
 # [END hypercomputer_gpu_infer_qwen38_2t_cluster_cleanup]
-  )
   if gcloud container clusters describe "${CLUSTER_NAME}" --location="${REGION}" --project="${PROJECT_ID}" >/dev/null 2>&1; then
     gcloud container clusters delete "${CLUSTER_NAME}" --location="${REGION}" --project="${PROJECT_ID}" --quiet || true
     (cd cluster-toolkit && ./gcluster destroy "${CLUSTER_NAME}" --auto-approve || true)
