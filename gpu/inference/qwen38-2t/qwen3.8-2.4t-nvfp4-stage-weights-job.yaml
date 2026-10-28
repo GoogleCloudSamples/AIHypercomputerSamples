@@ -1,0 +1,134 @@
+# Copyright 2026 Google LLC
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+# [START hypercomputer_gpu_infer_qwen38_2t_stage_weights_job]
+# ==============================================================================
+# Stage nvidia/Qwen3.8-2.4T-A95B-NVFP4 (~1.44 TB, 210 files) from Hugging Face Hub
+# into an in-region Cloud Storage bucket for qwen3.8-2.4t-nvfp4-multihost-a4-gcsfuse.yaml
+#
+# Each Indexed Job pod downloads a size-balanced slice of the repo onto the node's
+# local NVMe SSD, then uploads that slice with `gcloud storage rsync`.
+# ==============================================================================
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: qwen3-8-2-4t-stage-weights
+spec:
+  completionMode: Indexed
+  completions: 4
+  parallelism: 4
+  backoffLimitPerIndex: 2
+  template:
+    metadata:
+      labels:
+        app: qwen3-8-2-4t-stage-weights
+    spec:
+      restartPolicy: Never
+      serviceAccountName: workload-identity-k8s-sa
+      nodeSelector:
+        cloud.google.com/gke-accelerator: nvidia-b200
+      tolerations:
+        - key: "nvidia.com/gpu"
+          operator: "Exists"
+          effect: "NoSchedule"
+      topologySpreadConstraints:
+        - maxSkew: 1
+          topologyKey: kubernetes.io/hostname
+          whenUnsatisfiable: DoNotSchedule
+          labelSelector:
+            matchLabels:
+              app: qwen3-8-2-4t-stage-weights
+      initContainers:
+        - name: download
+          image: nvcr.io/nvidia/ai-dynamo/sglang-runtime:1.5.0
+          command: ["python3", "-c"]
+          args:
+            - |
+              import os, time
+              from huggingface_hub import HfApi, snapshot_download
+              repo = os.environ["REPO_ID"]
+              n = int(os.environ["NUM_SHARDS"])
+              i = int(os.environ["JOB_COMPLETION_INDEX"])
+              info = HfApi().model_info(repo, files_metadata=True)
+              files = sorted(((s.size or 0, s.rfilename) for s in info.siblings), reverse=True)
+              bins = [[0, []] for _ in range(n)]
+              for size, name in files:
+                  b = min(bins, key=lambda x: x[0])
+                  b[0] += size
+                  b[1].append(name)
+              size, mine = bins[i]
+              print(f"shard {i}/{n}: {len(mine)} files, {size / 1e9:.1f} GB", flush=True)
+              for attempt in range(1, 7):
+                  try:
+                      snapshot_download(repo, local_dir="/ssd/model", allow_patterns=mine, max_workers=16)
+                      break
+                  except Exception as e:
+                      print(f"shard {i}/{n}: attempt {attempt} failed: {e!r}", flush=True)
+                      if attempt == 6:
+                          raise
+                      time.sleep(30)
+              print(f"shard {i}/{n}: download complete", flush=True)
+          env:
+            - name: REPO_ID
+              value: "nvidia/Qwen3.8-2.4T-A95B-NVFP4"
+            - name: NUM_SHARDS
+              value: "4"
+            - name: HF_HOME
+              value: "/ssd/hf"
+            - name: HF_HUB_DISABLE_XET
+              value: "1"
+            - name: HF_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: hf-secret
+                  key: hf_api_token
+                  optional: true
+          resources:
+            requests:
+              cpu: "16"
+              memory: "64Gi"
+              ephemeral-storage: "450Gi"
+            limits:
+              cpu: "16"
+              memory: "64Gi"
+              ephemeral-storage: "700Gi"
+          volumeMounts:
+            - name: ssd
+              mountPath: /ssd
+      containers:
+        - name: upload
+          image: gcr.io/google.com/cloudsdktool/google-cloud-cli:slim
+          command: ["/bin/bash", "-c"]
+          args:
+            - |
+              set -euo pipefail
+              gcloud storage rsync --recursive --exclude='^\.cache/.*' /ssd/model "${DEST}"
+              echo "shard ${JOB_COMPLETION_INDEX}: upload complete"
+          env:
+            - name: DEST
+              value: "gs://${GCS_BUCKET}/hf_models/models--nvidia--qwen3_8-2_4t-a95b-nvfp4"
+          resources:
+            requests:
+              cpu: "16"
+              memory: "32Gi"
+            limits:
+              cpu: "16"
+              memory: "32Gi"
+          volumeMounts:
+            - name: ssd
+              mountPath: /ssd
+      volumes:
+        - name: ssd
+          emptyDir: {}
+# [END hypercomputer_gpu_infer_qwen38_2t_stage_weights_job]
