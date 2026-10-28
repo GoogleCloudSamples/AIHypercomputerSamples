@@ -1,17 +1,17 @@
-# Serve Qwen3-Coder-480B on a multi-host GKE TPU v7x cluster
+# Serve Qwen 3 Coder on a multi-host GKE TPU cluster (v7x or v6e)
 
-This code sample is intended for AI/ML engineers and platform administrators and demonstrates how to serve the `Qwen/Qwen3-Coder-480B-A35B-Instruct-FP8` Mixture-of-Experts (MoE) model on a multi-host Google Kubernetes Engine (GKE) Standard cluster with Ironwood (TPU v7x) using SGLang-TorchTPU and Prefill/Decode (PD) disaggregation.
+This code sample is intended for AI/ML engineers and platform administrators and demonstrates how to serve the `Qwen/Qwen3-Coder-480B-A35B-Instruct-FP8` or `Qwen/Qwen3-Coder-30B-A3B-Instruct-FP8` Mixture-of-Experts (MoE) models on a multi-host Google Kubernetes Engine (GKE) Standard cluster with Ironwood (TPU v7x) or Trillium (TPU v6e) using SGLang-TorchTPU and Prefill/Decode (PD) disaggregation.
 
 Note: This sample doesn't demonstrate how to fine-tune the model, configure custom VPC networks from scratch, or set up production ingress, authentication, and autoscaling.
 
-The scripts in this directory provision a GKE cluster with two multi-host TPU v7x node pools (each using a `2x2x2` topology with 2 nodes, 8 TPU chips, and 16 TensorCores), install the Kubernetes LeaderWorkerSet (LWS) controller, and deploy disaggregated SGLang prefill and decode pools behind an SGLang router. The sample includes the following files:
+The scripts in this directory provision a GKE cluster with two multi-host TPU node pools, install the Kubernetes LeaderWorkerSet (LWS) controller, and deploy disaggregated SGLang prefill and decode pools behind an SGLang router. The sample includes the following files:
 
-* `0_env.sh`: Contains the starting environment variables, including the project ID, region, zone, cluster name, reservation name, Hugging Face token, and SGLang-TorchTPU container image.
-* `1_setup.sh`: Creates the GKE Standard cluster, the `2x2x2` compact workload placement policy, two 2-node `tpu7x-standard-4t` node pools (`tpu7x-pool-0` and `tpu7x-pool-1`), the Hugging Face Kubernetes secret, and installs the LeaderWorkerSet (LWS) controller.
-* `qwen3-coder-480b-multihost-disagg-v7x.yaml`: Defines the Kubernetes manifests for the `hyperdisk-balanced-tpu` StorageClass, the multi-host `sglang-tpu-prefill` and `sglang-tpu-decode` LeaderWorkerSets (`size: 2`, `tp=16`, `ep=16`), the `sglang-router` Deployment, and their corresponding ClusterIP Services.
-* `2_run_inference.sh`: Substitutes the container image into `qwen3-coder-480b-multihost-disagg-v7x.yaml`, applies the manifest to the cluster, and waits for the prefill, decode, and router workloads to become available.
+* `0_env.sh`: Contains the starting environment variables, including the project ID, region, zone, cluster name, reservation name, Hugging Face token, SGLang-TorchTPU container image, and `ACCELERATOR_TYPE`.
+* `1_setup.sh`: Creates the GKE Standard cluster, the workload placement policy (for v7x only), two 2-node TPU node pools, the Hugging Face Kubernetes secret, and installs the LeaderWorkerSet (LWS) controller.
+* `qwen3-coder-480b-multihost-disagg-v7x.yaml` and `qwen3-coder-30b-multihost-disagg-v6e-2x4.yaml`: Defines the Kubernetes manifests for the `hyperdisk-balanced-tpu` StorageClass, the multi-host `sglang-tpu-prefill` and `sglang-tpu-decode` LeaderWorkerSets, the `sglang-router` Deployment, and their corresponding ClusterIP Services.
+* `2_run_inference.sh`: Substitutes the container image into the selected YAML manifest, applies it to the cluster, and waits for the prefill, decode, and router workloads to become available.
 * `*_validation.sh`: Forwards port `8000` from `sglang-service` and sends a test OpenAI-compatible `/v1/chat/completions` request to verify that the model is serving traffic.
-* `3_run_benchmark.sh`: Runs the `sglang.bench_serving` benchmark inside the `sglang-router` pod (`256` random prompts, `1024` input and `1024` output tokens, concurrency `64`).
+* `3_run_benchmark.sh`: Runs the `sglang.bench_serving` benchmark inside the `sglang-router` pod.
 * `docs_snippets.sh`: Contains supplementary command snippets referenced in the documentation for downloading the manifest, streaming leader pod logs, and manual port-forwarding.
 * `cleanup.sh`: Terminates all created Kubernetes workloads, TPU node pools, the GKE cluster, and the workload placement policy.
 
@@ -21,26 +21,23 @@ For the complete step-by-step tutorial of how to use this sample, see the offici
 
 Before you run this sample, ensure you have the following:
 
-* A Google Cloud project with billing enabled. Running this sample provisions billable Google Cloud resources including:
-  - Google Kubernetes Engine (GKE) cluster management and `e2-standard-4` default node pool VMs
-  - Compute Engine Ironwood TPU v7x VMs (4 `tpu7x-standard-4t` nodes across two `2x2x2` node pools, totaling 16 TPU v7x chips)
-  - Compute Engine Hyperdisk Balanced volumes (4 ephemeral `700Gi` `hyperdisk-balanced` disks for model weight caching)
-
-  You are billed for these resources for the time that they are running. To avoid incurring charges, delete the resources when you have finished running the sample.
-* Quota and an active reservation for at least 4 `tpu7x-standard-4t` VMs (16 TPU v7x chips across two `2x2x2` slices) in your chosen zone.
-* A valid Hugging Face token (`HF_TOKEN`) with access to the `Qwen/Qwen3-Coder-480B-A35B-Instruct-FP8` model, an SGLang-TorchTPU container image URI (`SGLANG_IMAGE`), and the `gcloud`, `kubectl`, and `envsubst` CLI tools installed on your local machine.
+* A Google Cloud project with billing enabled.
+* Quota and an active reservation for either:
+  - 4 `tpu7x-standard-4t` VMs (16 TPU v7x chips) for Ironwood (`v7x`).
+  - 4 `ct6e-standard-4t` VMs (16 TPU v6e chips) for Trillium (`v6e`).
+* A valid Hugging Face token (`HF_TOKEN`) with access to the Qwen3-Coder models, an SGLang-TorchTPU container image URI (`SGLANG_IMAGE`), and the `gcloud`, `kubectl`, and `envsubst` CLI tools installed on your local machine.
 
 ## Run the sample
 
 To execute this sample, follow these steps:
 
-1. Open `0_env.sh` and update the `CLUSTER_NAME`, `PROJECT_ID`, `REGION`, `ZONE`, `RESERVATION`, `HF_TOKEN`, and `SGLANG_IMAGE` variables, then source the file:
+1. Open `0_env.sh` and update the variables including `ACCELERATOR_TYPE` (set to `v7x` or `v6e`), then source the file:
 
    ```bash
    source 0_env.sh
    ```
 
-2. Provision the GKE cluster, workload placement policy, TPU v7x node pools, Hugging Face secret, and LeaderWorkerSet controller:
+2. Provision the GKE cluster, node pools, Hugging Face secret, and LeaderWorkerSet controller:
 
    ```bash
    ./1_setup.sh
@@ -68,13 +65,13 @@ To verify that the workload ran successfully:
    ./*_validation.sh
    ```
 
-2. You should see a JSON `chat.completion` response from `Qwen/Qwen3-Coder-480B-A35B-Instruct-FP8` containing a two-sentence explanation of the quicksort algorithm. If you also ran `./3_run_benchmark.sh`, you should see the `Serving Benchmark Result` summary with `Successful requests: 256` along with token throughput, TTFT, and TPOT metrics.
+2. You should see a JSON `chat.completion` response. If you also ran `./3_run_benchmark.sh`, you should see the `Serving Benchmark Result` summary.
 
 ## Clean up
 
 To clean up the resources created by this sample:
 
-1. Delete the deployed Kubernetes workloads, TPU v7x node pools, GKE cluster, and workload placement policy:
+1. Delete the deployed Kubernetes workloads, TPU node pools, GKE cluster, and workload placement policy:
 
    ```bash
    ./cleanup.sh
