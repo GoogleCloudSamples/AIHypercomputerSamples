@@ -1,0 +1,60 @@
+# [START hypercomputer_gpu_infer_deepseek_r1_download_yaml]
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: download-deepseek-r1
+  namespace: default
+spec:
+  backoffLimit: 1
+  template:
+    spec:
+      restartPolicy: OnFailure
+      # Schedule onto an A4 node with Local SSD
+      nodeSelector:
+        cloud.google.com/gke-accelerator: nvidia-b200
+      tolerations:
+      - operator: Exists
+      containers:
+      - name: model-downloader
+        image: gcr.io/google.com/cloudsdktool/google-cloud-cli:slim
+        env:
+        - name: HF_TOKEN
+          valueFrom:
+            secretKeyRef:
+              name: hf-secret
+              key: hf_api_token
+        # Enable high-performance concurrent chunked downloads in huggingface_hub
+        - name: HF_XET_HIGH_PERFORMANCE
+          value: "1"
+        # Place Hugging Face cache on Local SSD so the boot disk never fills up
+        - name: HF_HOME
+          value: "/local-ssd/hf-cache"
+        command: ["/bin/bash", "-c"]
+        args:
+        - |
+          set -euo pipefail
+
+          echo "=== 1. Installing huggingface_hub ==="
+          pip3 install --break-system-packages -q -U "huggingface_hub"
+
+          echo "=== 2. Downloading deepseek-ai/DeepSeek-R1 to Local NVMe SSD ==="
+          hf download deepseek-ai/DeepSeek-R1 --local-dir /local-ssd/DeepSeek-R1
+          rm -rf /local-ssd/DeepSeek-R1/.cache
+
+          echo "=== 3. Uploading from Local SSD to GCS ==="
+          gcloud config set storage/parallel_composite_upload_compatibility_check False
+          gcloud storage cp -r /local-ssd/DeepSeek-R1 gs://$MODEL_BUCKET/
+
+          echo "=== 4. Cleaning up Local SSD ==="
+          rm -rf /local-ssd/DeepSeek-R1 /local-ssd/hf-cache
+        resources:
+          requests:
+            cpu: "64"
+            memory: "128Gi"
+        volumeMounts:
+        - name: local-ssd
+          mountPath: /local-ssd
+      volumes:
+      - name: local-ssd
+        emptyDir: {}
+# [END hypercomputer_gpu_infer_deepseek_r1_download_yaml]

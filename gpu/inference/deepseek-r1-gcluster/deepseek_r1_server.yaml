@@ -1,0 +1,270 @@
+# [START hypercomputer_gpu_infer_deepseek_r1_server_yaml]
+apiVersion: v1
+kind: Service
+metadata:
+  name: vllm-r1-leader
+  namespace: default
+  labels:
+    app: vllm-r1
+spec:
+  ports:
+  - name: http
+    port: 8080
+    targetPort: 8080
+  - name: ray-head
+    port: 6379
+    targetPort: 6379
+  selector:
+    app: vllm-r1
+    role: leader
+  type: ClusterIP
+---
+apiVersion: jobset.x-k8s.io/v1alpha2
+kind: JobSet
+metadata:
+  name: vllm-r1
+  namespace: default
+  labels:
+    app: vllm-r1
+spec:
+  failurePolicy:
+    maxRestarts: 3
+    restartStrategy: Recreate
+  network:
+    enableDNSHostnames: true
+    publishNotReadyAddresses: true
+  replicatedJobs:
+  # -------------------- LEADER --------------------
+  - name: leader
+    replicas: 1
+    template:
+      spec:
+        parallelism: 1
+        completions: 1
+        backoffLimit: 1
+        template:
+          metadata:
+            labels:
+              app: vllm-r1
+              role: leader
+            annotations:
+              gke-gcsfuse/volumes: "true"
+          spec:
+            hostNetwork: true
+            dnsPolicy: ClusterFirstWithHostNet
+            hostIPC: true
+            nodeSelector:
+              cloud.google.com/gke-accelerator: nvidia-b200
+            tolerations:
+            - key: nvidia.com/gpu
+              operator: Exists
+            - key: cloud.google.com/impending-node-termination
+              operator: Exists
+            - effect: NoSchedule
+              key: cloud.google.com/gke-queued
+              value: "true"
+            containers:
+            - name: vllm-leader
+              image: docker.io/vllm/vllm-openai@sha256:61fc8a896b0a4fbbbdc063bc4b0dbc25ce98e02b5050c24aeb7830ac02039b14
+              imagePullPolicy: IfNotPresent
+              securityContext:
+                privileged: true
+              env:
+              - name: PYTHONUNBUFFERED
+                value: "1"
+              - name: NCCL_DEBUG
+                value: "INFO"
+              - name: VLLM_ENGINE_READY_TIMEOUT_S
+                value: "1800"
+              - name: VLLM_RPC_TIMEOUT
+                value: "1800000"
+              - name: HF_TOKEN
+                valueFrom:
+                  secretKeyRef:
+                    name: hf-secret
+                    key: hf_api_token
+              command: ["/bin/bash", "-c"]
+              args:
+              - |
+                set -e
+                echo "precedence ::ffff:0:0/96  100" >> /etc/gai.conf 2>/dev/null || true
+                ulimit -l unlimited || true
+                export LD_LIBRARY_PATH=/usr/local/gib/lib64:/usr/local/nvidia/lib64:${LD_LIBRARY_PATH:-}
+                source /usr/local/gib/scripts/set_nccl_env.sh
+                export GLOO_SOCKET_IFNAME=eth0
+                export NCCL_SOCKET_IFNAME=eth0
+                export VLLM_HOST_IP=$(hostname -I | awk '{print $1}')
+                echo "=== Starting Optimized vLLM Server with Ray (Leader, rank 0) ==="
+                echo "Host IP: ${VLLM_HOST_IP}"
+                # 0. Install Ray with Compiled Graph support (not pre-installed in vLLM 0.28.0 image)
+                uv pip install --system "ray[cgraph]"
+                # 1. Start Ray head on port 6379 and wait until all 2 nodes (16 GPUs) join
+                bash /vllm-workspace/examples/ray_serving/multi-node-serving.sh leader \
+                  --ray_cluster_size=2 \
+                  --ray_port=6379 \
+                  --node-ip-address="${VLLM_HOST_IP}"
+                # 2. Launch vLLM on the Leader using the Ray cluster
+                exec vllm serve \
+                  --host 0.0.0.0 \
+                  --port 8080 \
+                  --model gs://$MODEL_BUCKET/DeepSeek-R1 \
+                  --tokenizer /models/DeepSeek-R1 \
+                  --load-format runai_streamer \
+                  --model-loader-extra-config '{"distributed": true, "concurrency": 16, "memory_limit": 34359738368}' \
+                  --served-model-name deepseek-ai/DeepSeek-R1 \
+                  --tensor-parallel-size 16 \
+                  --pipeline-parallel-size 1 \
+                  --distributed-executor-backend ray \
+                  --async-scheduling \
+                  --disable-custom-all-reduce \
+                  --kv-cache-dtype fp8_e4m3 \
+                  --block-size 128 \
+                  --enable-expert-parallel \
+                  --max-num-batched-tokens 8192 \
+                  --max-num-seqs 160 \
+                  --compilation-config '{"mode": 3, "cudagraph_mode":"FULL_AND_PIECEWISE", "custom_ops":["none"], "pass_config":{"fuse_allreduce_rms":false}}' \
+                  --trust-remote-code \
+                  --max-model-len 16384 \
+                  --gpu-memory-utilization 0.90
+              resources:
+                requests:
+                  nvidia.com/gpu: "8"
+                limits:
+                  nvidia.com/gpu: "8"
+              ports:
+              - containerPort: 8080
+                name: http
+              - containerPort: 6379
+                name: ray-head
+              volumeMounts:
+              - mountPath: /dev/shm
+                name: dshm
+              - mountPath: /models
+                name: model-volume
+                readOnly: true
+              - mountPath: /usr/local/gib
+                name: gib
+              - mountPath: /usr/local/nvidia/lib64
+                name: nvidia-lib64
+            volumes:
+            - name: dshm
+              emptyDir:
+                medium: Memory
+                sizeLimit: 64Gi
+            - name: model-volume
+              csi:
+                driver: gcsfuse.csi.storage.gke.io
+                volumeAttributes:
+                  bucketName: $MODEL_BUCKET
+                  mountOptions: implicit-dirs
+            - name: gib
+              hostPath:
+                path: /home/kubernetes/bin/gib
+            - name: nvidia-lib64
+              hostPath:
+                path: /home/kubernetes/bin/nvidia/lib64
+  # -------------------- WORKER --------------------
+  - name: worker
+    replicas: 1
+    template:
+      spec:
+        parallelism: 1
+        completions: 1
+        backoffLimit: 1
+        template:
+          metadata:
+            labels:
+              app: vllm-r1
+              role: worker
+            annotations:
+              gke-gcsfuse/volumes: "true"
+          spec:
+            hostNetwork: true
+            dnsPolicy: ClusterFirstWithHostNet
+            hostIPC: true
+            nodeSelector:
+              cloud.google.com/gke-accelerator: nvidia-b200
+            tolerations:
+            - key: nvidia.com/gpu
+              operator: Exists
+            - key: cloud.google.com/impending-node-termination
+              operator: Exists
+            - effect: NoSchedule
+              key: cloud.google.com/gke-queued
+              value: "true"
+            containers:
+            - name: vllm-worker
+              image: docker.io/vllm/vllm-openai@sha256:61fc8a896b0a4fbbbdc063bc4b0dbc25ce98e02b5050c24aeb7830ac02039b14
+              imagePullPolicy: IfNotPresent
+              securityContext:
+                privileged: true
+              env:
+              - name: PYTHONUNBUFFERED
+                value: "1"
+              - name: NCCL_DEBUG
+                value: "INFO"
+              - name: VLLM_ENGINE_READY_TIMEOUT_S
+                value: "1800"
+              - name: VLLM_RPC_TIMEOUT
+                value: "1800000"
+              - name: HF_TOKEN
+                valueFrom:
+                  secretKeyRef:
+                    name: hf-secret
+                    key: hf_api_token
+              command: ["/bin/bash", "-c"]
+              args:
+              - |
+                set -e
+                echo "precedence ::ffff:0:0/96  100" >> /etc/gai.conf 2>/dev/null || true
+                ulimit -l unlimited || true
+                export LD_LIBRARY_PATH=/usr/local/gib/lib64:/usr/local/nvidia/lib64:${LD_LIBRARY_PATH:-}
+                source /usr/local/gib/scripts/set_nccl_env.sh
+                export GLOO_SOCKET_IFNAME=eth0
+                export NCCL_SOCKET_IFNAME=eth0
+                export VLLM_HOST_IP=$(hostname -I | awk '{print $1}')
+                echo "=== Starting Optimized vLLM Ray Worker (rank 1) ==="
+                echo "Host IP: ${VLLM_HOST_IP}"
+                # 0. Install Ray with Compiled Graph support (not pre-installed in vLLM 0.28.0 image)
+                uv pip install --system "ray[cgraph]"
+                # Join the Leader's Ray cluster and block so the container stays alive
+                exec bash /vllm-workspace/examples/ray_serving/multi-node-serving.sh worker \
+                  --ray_address=vllm-r1-leader \
+                  --ray_port=6379 \
+                  --node-ip-address="${VLLM_HOST_IP}"
+              resources:
+                requests:
+                  nvidia.com/gpu: "8"
+                limits:
+                  nvidia.com/gpu: "8"
+              ports:
+              - containerPort: 8080
+                name: http
+              volumeMounts:
+              - mountPath: /dev/shm
+                name: dshm
+              - mountPath: /models
+                name: model-volume
+                readOnly: true
+              - mountPath: /usr/local/gib
+                name: gib
+              - mountPath: /usr/local/nvidia/lib64
+                name: nvidia-lib64
+            volumes:
+            - name: dshm
+              emptyDir:
+                medium: Memory
+                sizeLimit: 64Gi
+            - name: model-volume
+              csi:
+                driver: gcsfuse.csi.storage.gke.io
+                volumeAttributes:
+                  bucketName: $MODEL_BUCKET
+                  mountOptions: implicit-dirs
+            - name: gib
+              hostPath:
+                path: /home/kubernetes/bin/gib
+            - name: nvidia-lib64
+              hostPath:
+                path: /home/kubernetes/bin/nvidia/lib64
+# [END hypercomputer_gpu_infer_deepseek_r1_server_yaml]
