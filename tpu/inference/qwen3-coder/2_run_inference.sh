@@ -14,9 +14,18 @@
 
 set -euo pipefail
 
+if [[ "${ACCELERATOR_TYPE:-v7x}" == "v6e" ]]; then
+# [START hypercomputer_tpu_infer_qwen3_coder_apply_manifest_v6e]
+envsubst '$SGLANG_IMAGE' < qwen3-coder-30b-multihost-disagg-v6e-2x4.yaml | kubectl apply -f -
+# [END hypercomputer_tpu_infer_qwen3_coder_apply_manifest_v6e]
+elif [[ "${ACCELERATOR_TYPE:-v7x}" == "v7x" ]]; then
 # [START hypercomputer_tpu_infer_qwen3_coder_apply_manifest]
 envsubst '$SGLANG_IMAGE' < qwen3-coder-480b-multihost-disagg-v7x.yaml | kubectl apply -f -
 # [END hypercomputer_tpu_infer_qwen3_coder_apply_manifest]
+else
+  echo "Unsupported ACCELERATOR_TYPE: ${ACCELERATOR_TYPE}"
+  exit 1
+fi
 
 kubectl wait --for=condition=Available --timeout=5400s lws/sglang-tpu-prefill lws/sglang-tpu-decode
 kubectl wait --for=condition=Available --timeout=5400s deployment/sglang-router

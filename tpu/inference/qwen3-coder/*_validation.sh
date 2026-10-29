@@ -19,15 +19,31 @@ PORT_FORWARD_PID=$!
 trap 'kill $PORT_FORWARD_PID 2>/dev/null || true' EXIT
 sleep 5
 
-# [START hypercomputer_tpu_infer_qwen3_coder_test_inference]
-curl -s -X POST http://localhost:8000/v1/chat/completions \
+if [[ "${ACCELERATOR_TYPE:-v7x}" == "v6e" ]]; then
+  MODEL_ID="Qwen/Qwen3-Coder-30B-A3B-Instruct-FP8"
+elif [[ "${ACCELERATOR_TYPE:-v7x}" == "v7x" ]]; then
+  MODEL_ID="Qwen/Qwen3-Coder-480B-A35B-Instruct-FP8"
+else
+  echo "Unsupported ACCELERATOR_TYPE: ${ACCELERATOR_TYPE}"
+  exit 1
+fi
+
+RESPONSE=$(curl -s -X POST http://localhost:8000/v1/chat/completions \
   -H "Content-Type: application/json" \
-  -d '{
-    "model": "Qwen/Qwen3-Coder-480B-A35B-Instruct-FP8",
-    "messages": [
-      {"role": "user", "content": "Explain quicksort in two sentences."}
+  -d "{
+    \"model\": \"${MODEL_ID}\",
+    \"messages\": [
+      {\"role\": \"user\", \"content\": \"Explain quicksort in two sentences.\"}
     ],
-    "max_tokens": 60,
-    "temperature": 0.0
-  }'
-# [END hypercomputer_tpu_infer_qwen3_coder_test_inference]
+    \"max_tokens\": 60,
+    \"temperature\": 0.0
+  }")
+
+echo "${RESPONSE}"
+
+if ! echo "${RESPONSE}" | grep -q '"choices"'; then
+  echo "ERROR: Inference request did not return a valid completion response."
+  exit 1
+fi
+
+echo "Validation succeeded."

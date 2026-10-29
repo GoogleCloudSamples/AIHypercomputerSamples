@@ -14,6 +14,20 @@
 
 set -euo pipefail
 
+if [[ "${ACCELERATOR_TYPE:-v7x}" == "v6e" ]]; then
+# [START hypercomputer_tpu_infer_qwen3_coder_run_benchmark_v6e]
+kubectl exec deployment/sglang-router -- python3 -m sglang.bench_serving \
+  --backend sglang \
+  --base-url http://localhost:8000 \
+  --model Qwen/Qwen3-Coder-30B-A3B-Instruct-FP8 \
+  --dataset-name random \
+  --random-input-len 1024 \
+  --random-output-len 1024 \
+  --random-range-ratio 1.0 \
+  --num-prompts 256 \
+  --max-concurrency 128
+# [END hypercomputer_tpu_infer_qwen3_coder_run_benchmark_v6e]
+elif [[ "${ACCELERATOR_TYPE:-v7x}" == "v7x" ]]; then
 # [START hypercomputer_tpu_infer_qwen3_coder_run_benchmark]
 kubectl exec deployment/sglang-router -- python3 -m sglang.bench_serving \
   --backend sglang \
@@ -23,6 +37,10 @@ kubectl exec deployment/sglang-router -- python3 -m sglang.bench_serving \
   --random-input-len 1024 \
   --random-output-len 1024 \
   --random-range-ratio 1.0 \
-  --num-prompts 256 \
-  --max-concurrency 64
+  --num-prompts 512 \
+  --max-concurrency 256
 # [END hypercomputer_tpu_infer_qwen3_coder_run_benchmark]
+else
+  echo "Unsupported ACCELERATOR_TYPE: ${ACCELERATOR_TYPE}"
+  exit 1
+fi

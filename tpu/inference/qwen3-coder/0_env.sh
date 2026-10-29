@@ -21,3 +21,6 @@ export RESERVATION="YOUR_RESERVATION_NAME"
 export HF_TOKEN="YOUR_HF_TOKEN"
 export SGLANG_IMAGE="lmsysorg/sglang:v0.1.0-tpu"
 # [END hypercomputer_tpu_infer_qwen3_coder_env]
+
+# Set ACCELERATOR_TYPE to "v7x" (Ironwood, default) or "v6e" (Trillium)
+export ACCELERATOR_TYPE="${ACCELERATOR_TYPE:-v7x}"
