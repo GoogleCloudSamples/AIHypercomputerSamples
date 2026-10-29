@@ -21,7 +21,7 @@ if [[ -z "${VLLM_IMAGE:-}" || "${VLLM_IMAGE}" == "YOUR_VLLM_IMAGE" ]]; then
 fi
 
 if [[ "${TPU_TYPE}" == "v6e" ]]; then
-  JOBSET_NAME="vllm-qwen3-30b-pd-disagg-v6e"
+  JOBSET_NAME="vllm-qwen3-5-397b-pd-disagg-v6e"
 else
   JOBSET_NAME="vllm-qwen3-5-397b-pd-disagg-v7x"
 fi

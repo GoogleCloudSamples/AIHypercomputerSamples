@@ -23,9 +23,9 @@ if [[ "${TPU_TYPE}" == "v7x" ]]; then
   BENCHMARK_JOB="vllm-qwen3-5-397b-pd-disagg-v7x-tester"
   VAL_MODEL_NAME="Qwen/Qwen3.5-397B-A17B-FP8"
 else
-  JOBSET_NAME="vllm-qwen3-30b-pd-disagg-v6e"
-  BENCHMARK_JOB="vllm-qwen3-30b-pd-disagg-v6e-tester"
-  VAL_MODEL_NAME="Qwen/Qwen3-30B-A3B-FP8"
+  JOBSET_NAME="vllm-qwen3-5-397b-pd-disagg-v6e"
+  BENCHMARK_JOB="vllm-qwen3-5-397b-pd-disagg-v6e-tester"
+  VAL_MODEL_NAME="Qwen/Qwen3.5-397B-A17B-FP8"
 fi
 
 echo "[$(date)] ==================== Starting validation... ===================="

@@ -55,7 +55,7 @@ gcloud config set billing/quota_project "${PROJECT_ID}"
 fi
 
 if [[ "${TPU_TYPE}" == "v6e" ]]; then
-  export MODEL_NAME="Qwen/Qwen3-30B-A3B-FP8"
+  export MODEL_NAME="Qwen/Qwen3.5-397B-A17B-FP8"
   export SERVER_MANIFEST="v6e_qwen3_server_multihost_slice.yaml"
   export BENCHMARK_MANIFEST="v6e_qwen3_benchmark_multihost_slice.yaml"
   export DEPLOYMENT_NAME="vllm-qwen3"

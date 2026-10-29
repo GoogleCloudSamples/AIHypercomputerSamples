@@ -80,7 +80,7 @@ gcloud container node-pools create "${NODE_POOL_NAME_1}" \
     --flex-start
 # [END hypercomputer_tpu_infer_qwen3_5_397b_multihost_nodepool_create_flex_start]
 # [START hypercomputer_tpu_infer_qwen3_5_397b_multihost_v6e_count_shards]
-gcloud storage ls "gs://${GCS_BUCKET}/Qwen/Qwen3-30B-A3B-FP8/*.safetensors" | wc -l
+gcloud storage ls "gs://${GCS_BUCKET}/Qwen/Qwen3.5-397B-A17B-FP8/*.safetensors" | wc -l
 # [END hypercomputer_tpu_infer_qwen3_5_397b_multihost_v6e_count_shards]
 
 # [START hypercomputer_tpu_infer_qwen3_5_397b_multihost_v6e_deploy]
@@ -101,8 +101,8 @@ kubectl logs -l jobset.sigs.k8s.io/replicatedjob-name=decode -f --tail=-1
 # [END hypercomputer_tpu_infer_qwen3_5_397b_multihost_v6e_server_logs]
 
 # [START hypercomputer_tpu_infer_qwen3_5_397b_multihost_v6e_benchmark_logs]
-kubectl wait --for=condition=complete job/vllm-qwen3-30b-pd-disagg-v6e-tester
-kubectl logs -f job/vllm-qwen3-30b-pd-disagg-v6e-tester
+kubectl wait --for=condition=complete job/vllm-qwen3-5-397b-pd-disagg-v6e-tester
+kubectl logs -f job/vllm-qwen3-5-397b-pd-disagg-v6e-tester
 # [END hypercomputer_tpu_infer_qwen3_5_397b_multihost_v6e_benchmark_logs]
 
 # [START hypercomputer_tpu_infer_qwen3_5_397b_multihost_v6e_nodepool_create_spot]
