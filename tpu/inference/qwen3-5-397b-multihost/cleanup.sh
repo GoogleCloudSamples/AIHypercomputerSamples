@@ -16,12 +16,22 @@
 
 set -euo pipefail
 
+TPU_TYPE="${TPU_TYPE:-v7x}"
+
+if [[ "${TPU_TYPE}" == "v7x" ]]; then
+  SERVER_MANIFEST="v7x_qwen3_5_server_multihost_slice.yaml"
+  BENCHMARK_MANIFEST="v7x_qwen3_5_benchmark_multihost_slice.yaml"
+else
+  SERVER_MANIFEST="v6e_qwen3_server_multihost_slice.yaml"
+  BENCHMARK_MANIFEST="v6e_qwen3_benchmark_multihost_slice.yaml"
+fi
+
 echo "[$(date)] ==================== Deleting Kubernetes workloads and secrets... ===================="
-kubectl delete -f v7x_qwen3_5_benchmark_multihost_slice.yaml --ignore-not-found || true
+kubectl delete -f "${BENCHMARK_MANIFEST}" --ignore-not-found || true
 kubectl delete job download-qwen35 --ignore-not-found || true
 
 # [START hypercomputer_tpu_infer_qwen3_5_397b_multihost_deploy_cleanup]
-kubectl delete -f v7x_qwen3_5_server_multihost_slice.yaml --ignore-not-found || true
+kubectl delete -f "${SERVER_MANIFEST}" --ignore-not-found || true
 kubectl delete secret hf-secret --ignore-not-found || true
 # [END hypercomputer_tpu_infer_qwen3_5_397b_multihost_deploy_cleanup]
 
@@ -49,10 +59,12 @@ gcloud container clusters delete "${CLUSTER_NAME}" \
     --project="${PROJECT_ID}" \
     --quiet || true
 
+if [[ "${TPU_TYPE}" == "v7x" ]]; then
 gcloud compute resource-policies delete "${WORKLOAD_POLICY_NAME}" \
     --region="${REGION}" \
     --project="${PROJECT_ID}" \
     --quiet || true
+fi
 # [END hypercomputer_tpu_infer_qwen3_5_397b_multihost_cluster_cleanup]
 
 echo "[$(date)] ==================== Cleanup Complete. ===================="

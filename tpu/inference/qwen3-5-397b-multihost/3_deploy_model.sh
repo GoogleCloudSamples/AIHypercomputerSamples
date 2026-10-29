@@ -20,11 +20,15 @@ if [[ -z "${VLLM_IMAGE:-}" || "${VLLM_IMAGE}" == "YOUR_VLLM_IMAGE" ]]; then
   export VLLM_IMAGE="vllm/vllm-torchtpu:v0.29.0@sha256:3976ccc1a69ffd361e0a7d2831fe317f6b685636014f426321a39ae02f8da0dc"
 fi
 
-JOBSET_NAME="vllm-qwen3-5-397b-pd-disagg-v7x"
+if [[ "${TPU_TYPE}" == "v6e" ]]; then
+  JOBSET_NAME="vllm-qwen3-30b-pd-disagg-v6e"
+else
+  JOBSET_NAME="vllm-qwen3-5-397b-pd-disagg-v7x"
+fi
 
-echo "[$(date)] ==================== Deploying the vLLM Qwen 3.5 397B PD-Disaggregated server JobSet... ===================="
+echo "[$(date)] ==================== Deploying the vLLM server JobSet... ===================="
 for i in {1..12}; do
-  if envsubst '${GCS_BUCKET} ${VLLM_IMAGE}' < v7x_qwen3_5_server_multihost_slice.yaml | kubectl apply -f -; then
+  if envsubst '${GCS_BUCKET} ${VLLM_IMAGE}' < "${SERVER_MANIFEST}" | kubectl apply -f -; then
     break
   fi
   echo "JobSet webhook not ready yet, retrying in 5 seconds..."

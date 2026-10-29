@@ -16,6 +16,12 @@
 
 set -euo pipefail
 
+if [[ "${TPU_TYPE}" == "v6e" ]]; then
+  export TPU_ACCELERATOR="tpu-v6e"
+else
+  export TPU_ACCELERATOR="tpu7x"
+fi
+
 echo "[$(date)] ==================== Creating a Google Cloud Storage bucket gs://${GCS_BUCKET}... ===================="
 if ! gcloud storage buckets describe "gs://${GCS_BUCKET}" --project="${PROJECT_ID}" >/dev/null 2>&1; then
   # [START hypercomputer_tpu_infer_qwen3_5_397b_multihost_bucket_create]
@@ -43,7 +49,7 @@ gcloud storage buckets add-iam-policy-binding "gs://${GCS_BUCKET}" \
 
 echo "[$(date)] ==================== Submitting the model download job... ===================="
 # [START hypercomputer_tpu_infer_qwen3_5_397b_multihost_download_job]
-envsubst '$GCS_BUCKET' < download_model.yaml | kubectl apply -f -
+envsubst '$GCS_BUCKET $MODEL_NAME $TPU_ACCELERATOR' < download_model.yaml | kubectl apply -f -
 # [END hypercomputer_tpu_infer_qwen3_5_397b_multihost_download_job]
 
 echo "Waiting for the download-qwen35 pod to be created and start..."
@@ -76,27 +82,12 @@ if ! kubectl wait \
     --for=condition=Complete \
     --timeout="${DOWNLOAD_TIMEOUT}" job/download-qwen35; then
   echo "Error: Model download job failed or timed out after ${DOWNLOAD_TIMEOUT}." >&2
-
-  echo "================= [DIAGNOSTICS] Job Status =================" >&2
-  kubectl get jobs download-qwen35 -o yaml >&2 || true
-
-  echo "================= [DIAGNOSTICS] Pod Status =================" >&2
-  kubectl get pods -l job-name=download-qwen35 -o wide >&2 || true
-  POD_NAMES=$(kubectl get pods -l job-name=download-qwen35 -o jsonpath='{.items[*].metadata.name}' || true)
-  for pod in ${POD_NAMES}; do
-    echo "============= [DIAGNOSTICS] Describe pod ${pod} =============" >&2
-    kubectl describe pod "${pod}" >&2 || true
-    echo "============= [DIAGNOSTICS] Logs for pod ${pod} (Tail 100) =============" >&2
-    kubectl logs "${pod}" --tail=100 >&2 || true
-    echo "============= [DIAGNOSTICS] Previous Container Logs for pod ${pod} =============" >&2
-    kubectl logs "${pod}" --previous --tail=100 2>/dev/null >&2 || true
-  done
   exit 1
 fi
 
 echo "Verifying uploaded model shards in ${GCS_BUCKET} bucket..."
-SHARD_COUNT=$(gcloud storage ls "gs://${GCS_BUCKET}/Qwen/Qwen3.5-397B-A17B-FP8/*.safetensors" | wc -l)
-echo "Found ${SHARD_COUNT} safetensors shards in gs://${GCS_BUCKET}/Qwen/Qwen3.5-397B-A17B-FP8/."
+SHARD_COUNT=$(gcloud storage ls "gs://${GCS_BUCKET}/${MODEL_NAME}/*.safetensors" | wc -l)
+echo "Found ${SHARD_COUNT} safetensors shards in gs://${GCS_BUCKET}/${MODEL_NAME}/."
 
 # [START hypercomputer_tpu_infer_qwen3_5_397b_multihost_delete_download_job]
 kubectl delete job download-qwen35

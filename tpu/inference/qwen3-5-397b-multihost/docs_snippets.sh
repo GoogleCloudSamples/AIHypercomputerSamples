@@ -79,3 +79,80 @@ gcloud container node-pools create "${NODE_POOL_NAME_1}" \
     --max-nodes=2 \
     --flex-start
 # [END hypercomputer_tpu_infer_qwen3_5_397b_multihost_nodepool_create_flex_start]
+# [START hypercomputer_tpu_infer_qwen3_5_397b_multihost_v6e_count_shards]
+gcloud storage ls "gs://${GCS_BUCKET}/Qwen/Qwen3-30B-A3B-FP8/*.safetensors" | wc -l
+# [END hypercomputer_tpu_infer_qwen3_5_397b_multihost_v6e_count_shards]
+
+# [START hypercomputer_tpu_infer_qwen3_5_397b_multihost_v6e_deploy]
+envsubst '${GCS_BUCKET} ${VLLM_IMAGE}' < "v6e_qwen3_server_multihost_slice.yaml" | kubectl apply -f -
+# [END hypercomputer_tpu_infer_qwen3_5_397b_multihost_v6e_deploy]
+
+# [START hypercomputer_tpu_infer_qwen3_5_397b_multihost_v6e_download_logs]
+kubectl wait --for=condition=Ready pod -l job-name=download-qwen3 --timeout=120s
+kubectl logs -f job/download-qwen3
+# [END hypercomputer_tpu_infer_qwen3_5_397b_multihost_v6e_download_logs]
+
+# [START hypercomputer_tpu_infer_qwen3_5_397b_multihost_v6e_server_logs]
+# Prefill logs
+kubectl logs -l jobset.sigs.k8s.io/replicatedjob-name=prefill -f --tail=-1
+
+# Decode logs
+kubectl logs -l jobset.sigs.k8s.io/replicatedjob-name=decode -f --tail=-1
+# [END hypercomputer_tpu_infer_qwen3_5_397b_multihost_v6e_server_logs]
+
+# [START hypercomputer_tpu_infer_qwen3_5_397b_multihost_v6e_benchmark_logs]
+kubectl wait --for=condition=complete job/vllm-qwen3-30b-pd-disagg-v6e-tester
+kubectl logs -f job/vllm-qwen3-30b-pd-disagg-v6e-tester
+# [END hypercomputer_tpu_infer_qwen3_5_397b_multihost_v6e_benchmark_logs]
+
+# [START hypercomputer_tpu_infer_qwen3_5_397b_multihost_v6e_nodepool_create_spot]
+gcloud container node-pools create "${NODE_POOL_NAME_0}" \
+    --project="${PROJECT_ID}" \
+    --location="${REGION}" \
+    --cluster="${CLUSTER_NAME}" \
+    --node-locations="${ZONE}" \
+    --machine-type="${MACHINE_TYPE}" \
+    --tpu-topology=2x4 \
+    --num-nodes=2 \
+    --spot
+
+gcloud container node-pools create "${NODE_POOL_NAME_1}" \
+    --project="${PROJECT_ID}" \
+    --location="${REGION}" \
+    --cluster="${CLUSTER_NAME}" \
+    --node-locations="${ZONE}" \
+    --machine-type="${MACHINE_TYPE}" \
+    --tpu-topology=2x4 \
+    --num-nodes=2 \
+    --spot
+# [END hypercomputer_tpu_infer_qwen3_5_397b_multihost_v6e_nodepool_create_spot]
+
+# [START hypercomputer_tpu_infer_qwen3_5_397b_multihost_v6e_nodepool_create_flex_start]
+gcloud container node-pools create "${NODE_POOL_NAME_0}" \
+    --project="${PROJECT_ID}" \
+    --location="${REGION}" \
+    --cluster="${CLUSTER_NAME}" \
+    --node-locations="${ZONE}" \
+    --machine-type="${MACHINE_TYPE}" \
+    --tpu-topology=2x4 \
+    --reservation-affinity=none \
+    --enable-autoscaling \
+    --num-nodes=0 \
+    --min-nodes=0 \
+    --max-nodes=2 \
+    --flex-start
+
+gcloud container node-pools create "${NODE_POOL_NAME_1}" \
+    --project="${PROJECT_ID}" \
+    --location="${REGION}" \
+    --cluster="${CLUSTER_NAME}" \
+    --node-locations="${ZONE}" \
+    --machine-type="${MACHINE_TYPE}" \
+    --tpu-topology=2x4 \
+    --reservation-affinity=none \
+    --enable-autoscaling \
+    --num-nodes=0 \
+    --min-nodes=0 \
+    --max-nodes=2 \
+    --flex-start
+# [END hypercomputer_tpu_infer_qwen3_5_397b_multihost_v6e_nodepool_create_flex_start]
