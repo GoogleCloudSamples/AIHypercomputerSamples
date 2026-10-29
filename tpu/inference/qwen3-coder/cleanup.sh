@@ -12,16 +12,16 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
-set -euo pipefail
+set -uo pipefail
 
-if [ "${ACCELERATOR_TYPE}" == "v7x" ]; then
-# [START hypercomputer_tpu_infer_qwen3_coder_cleanup_workload]
-kubectl delete -f qwen3-coder-480b-multihost-disagg-v7x.yaml --ignore-not-found
-# [END hypercomputer_tpu_infer_qwen3_coder_cleanup_workload]
-elif [ "${ACCELERATOR_TYPE}" == "v6e" ]; then
+if [[ "${ACCELERATOR_TYPE:-v7x}" == "v6e" ]]; then
 # [START hypercomputer_tpu_infer_qwen3_coder_cleanup_workload_v6e]
 kubectl delete -f qwen3-coder-30b-multihost-disagg-v6e-2x4.yaml --ignore-not-found
 # [END hypercomputer_tpu_infer_qwen3_coder_cleanup_workload_v6e]
+elif [[ "${ACCELERATOR_TYPE:-v7x}" == "v7x" ]]; then
+# [START hypercomputer_tpu_infer_qwen3_coder_cleanup_workload]
+kubectl delete -f qwen3-coder-480b-multihost-disagg-v7x.yaml --ignore-not-found
+# [END hypercomputer_tpu_infer_qwen3_coder_cleanup_workload]
 else
   echo "Unsupported ACCELERATOR_TYPE: ${ACCELERATOR_TYPE}"
   exit 1
@@ -32,7 +32,26 @@ while gcloud container operations list --project="${PROJECT_ID}" --location="${R
   sleep 10
 done
 
-if [ "${ACCELERATOR_TYPE}" == "v7x" ]; then
+if [[ "${ACCELERATOR_TYPE:-v7x}" == "v6e" ]]; then
+# [START hypercomputer_tpu_infer_qwen3_coder_cleanup_cluster_v6e]
+gcloud container node-pools delete tpu-v6e-pool-0 \
+    --cluster=${CLUSTER_NAME} \
+    --location=${REGION} \
+    --project=${PROJECT_ID} \
+    --quiet
+
+gcloud container node-pools delete tpu-v6e-pool-1 \
+    --cluster=${CLUSTER_NAME} \
+    --location=${REGION} \
+    --project=${PROJECT_ID} \
+    --quiet
+
+gcloud container clusters delete ${CLUSTER_NAME} \
+    --location=${REGION} \
+    --project=${PROJECT_ID} \
+    --quiet
+# [END hypercomputer_tpu_infer_qwen3_coder_cleanup_cluster_v6e]
+elif [[ "${ACCELERATOR_TYPE:-v7x}" == "v7x" ]]; then
 # [START hypercomputer_tpu_infer_qwen3_coder_cleanup_cluster]
 gcloud container node-pools delete tpu7x-pool-0 \
     --cluster=${CLUSTER_NAME} \
@@ -56,23 +75,4 @@ gcloud compute resource-policies delete tpu7x-2x2x2-workload-policy \
     --project=${PROJECT_ID} \
     --quiet
 # [END hypercomputer_tpu_infer_qwen3_coder_cleanup_cluster]
-elif [ "${ACCELERATOR_TYPE}" == "v6e" ]; then
-# [START hypercomputer_tpu_infer_qwen3_coder_cleanup_cluster_v6e]
-gcloud container node-pools delete tpu-v6e-pool-0 \
-    --cluster=${CLUSTER_NAME} \
-    --location=${REGION} \
-    --project=${PROJECT_ID} \
-    --quiet
-
-gcloud container node-pools delete tpu-v6e-pool-1 \
-    --cluster=${CLUSTER_NAME} \
-    --location=${REGION} \
-    --project=${PROJECT_ID} \
-    --quiet
-
-gcloud container clusters delete ${CLUSTER_NAME} \
-    --location=${REGION} \
-    --project=${PROJECT_ID} \
-    --quiet
-# [END hypercomputer_tpu_infer_qwen3_coder_cleanup_cluster_v6e]
 fi

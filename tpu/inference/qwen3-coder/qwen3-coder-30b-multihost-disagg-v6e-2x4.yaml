@@ -1,3 +1,4 @@
+# [START hypercomputer_tpu_infer_qwen3_coder_yaml_v6e]
 # ==============================================================================
 # Serve Qwen/Qwen3-Coder-30B-A3B-Instruct-FP8 on GKE / Trillium (TPU v6e)
 # using SGLang TorchTPU with Prefill/Decode Disaggregation, multi-host (2x4)
@@ -425,3 +426,4 @@ spec:
       protocol: TCP
       port: 8000
       targetPort: 8000
+# [END hypercomputer_tpu_infer_qwen3_coder_yaml_v6e]
