@@ -17,7 +17,7 @@
 set -euo pipefail
 
 if [[ "${TPU_TYPE}" == "v6e" ]]; then
-  export TPU_ACCELERATOR="tpu-v6e"
+  export TPU_ACCELERATOR="tpu-v6e-slice"
 else
   export TPU_ACCELERATOR="tpu7x"
 fi
