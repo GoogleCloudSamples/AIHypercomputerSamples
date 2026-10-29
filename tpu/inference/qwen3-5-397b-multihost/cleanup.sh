@@ -17,18 +17,23 @@
 set -euo pipefail
 
 TPU_TYPE="${TPU_TYPE:-v7x}"
+NODE_POOL_NAME_0="${NODE_POOL_NAME_0:-np-0}"
+NODE_POOL_NAME_1="${NODE_POOL_NAME_1:-np-1}"
 
-if [[ "${TPU_TYPE}" == "v7x" ]]; then
-  SERVER_MANIFEST="v7x_qwen3_5_server_multihost_slice.yaml"
-  BENCHMARK_MANIFEST="v7x_qwen3_5_benchmark_multihost_slice.yaml"
+if [[ "${TPU_TYPE}" == "v6e" ]]; then
+  DOWNLOAD_JOB="${DOWNLOAD_JOB:-download-qwen3}"
+  SERVER_MANIFEST="${SERVER_MANIFEST:-v6e_qwen3_server_multihost_slice.yaml}"
+  BENCHMARK_MANIFEST="${BENCHMARK_MANIFEST:-v6e_qwen3_benchmark_multihost_slice.yaml}"
 else
-  SERVER_MANIFEST="v6e_qwen3_server_multihost_slice.yaml"
-  BENCHMARK_MANIFEST="v6e_qwen3_benchmark_multihost_slice.yaml"
+  WORKLOAD_POLICY_NAME="${WORKLOAD_POLICY_NAME:-${CLUSTER_NAME}-policy}"
+  DOWNLOAD_JOB="${DOWNLOAD_JOB:-download-qwen35}"
+  SERVER_MANIFEST="${SERVER_MANIFEST:-v7x_qwen3_5_server_multihost_slice.yaml}"
+  BENCHMARK_MANIFEST="${BENCHMARK_MANIFEST:-v7x_qwen3_5_benchmark_multihost_slice.yaml}"
 fi
 
 echo "[$(date)] ==================== Deleting Kubernetes workloads and secrets... ===================="
 kubectl delete -f "${BENCHMARK_MANIFEST}" --ignore-not-found || true
-kubectl delete job download-qwen35 --ignore-not-found || true
+kubectl delete job "${DOWNLOAD_JOB}" --ignore-not-found || true
 
 # [START hypercomputer_tpu_infer_qwen3_5_397b_multihost_deploy_cleanup]
 kubectl delete -f "${SERVER_MANIFEST}" --ignore-not-found || true

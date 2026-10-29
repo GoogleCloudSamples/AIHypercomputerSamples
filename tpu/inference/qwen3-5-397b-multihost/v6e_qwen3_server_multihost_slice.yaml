@@ -16,7 +16,7 @@
 apiVersion: jobset.x-k8s.io/v1alpha2
 kind: JobSet
 metadata:
-  name: vllm-qwen3-5-397b-pd-disagg-v6e
+  name: vllm-qwen3-30b-pd-disagg-v6e
 spec:
   failurePolicy:
     restartStrategy: BlockingRecreate
@@ -29,7 +29,7 @@ spec:
   # PREFILL SERVERS (2 Replicas, 1 Node each = 4 chips on 2x4 v6e slice)
   # ---------------------------------------------------------
   - name: prefill
-    replicas: 4
+    replicas: 2
     template:
       spec:
         parallelism: 1
@@ -42,7 +42,7 @@ spec:
           spec:
             dnsPolicy: ClusterFirstWithHostNet
             nodeSelector:
-              cloud.google.com/gke-tpu-topology: 4x4
+              cloud.google.com/gke-tpu-topology: 2x4
               cloud.google.com/gke-tpu-accelerator: tpu-v6e-slice
             tolerations:
             - key: "google.com/tpu"
@@ -100,7 +100,7 @@ spec:
 
                   echo "=== Installing runai-model-streamer[gcs] and pre-caching metadata from GCS on $HOSTNAME ==="
                   pip install -q "runai-model-streamer[gcs]==0.16.1"
-                  python3 -c "from vllm.transformers_utils.runai_utils import ObjectStorageModel; uri = 'gs://${GCS_BUCKET}/Qwen/Qwen3.5-397B-A17B-FP8'; m = ObjectStorageModel(uri); m.pull_files(uri, ignore_pattern=['*.pt', '*.safetensors', '*.bin', '*.tensors', '*.pth']); print('Pulled metadata/tokenizer to', m.dir)"
+                  python3 -c "from vllm.transformers_utils.runai_utils import ObjectStorageModel; uri = 'gs://${GCS_BUCKET}/Qwen/Qwen3-30B-A3B-FP8'; m = ObjectStorageModel(uri); m.pull_files(uri, ignore_pattern=['*.pt', '*.safetensors', '*.bin', '*.tensors', '*.pth']); print('Pulled metadata/tokenizer to', m.dir)"
 
                   HEAD_ADDR="${JS_NAME}-prefill-0-0.${JS_NAME}"
 
@@ -108,22 +108,23 @@ spec:
                     echo "=== Node 0: Starting Ray Head on $HOSTNAME (port 6379, IP $POD_IP) ==="
                     ray start --head --port=6379 --node-ip-address=$POD_IP --resources='{"TPU": 4}' --block &
 
-                    echo "Waiting for worker node to join Ray cluster (expecting 16.0 TPU total across 4 nodes)..."
-                    until ray status 2>/dev/null | grep -E -q "16(\.0)? TPU"; do
+                    echo "Waiting for worker node to join Ray cluster (expecting 8.0 TPU total across 2 nodes)..."
+                    until ray status 2>/dev/null | grep -E -q "8(\.0)? TPU"; do
                       echo "Waiting for worker to connect to Ray Head..."
                       sleep 2
                     done
                     echo "Worker joined! Ray cluster status:"
                     ray status
 
-                    echo "=== Starting vLLM Prefill Server (Qwen3.5 397B FP8, DP=16, TP=1, Port 8000) ==="
+                    echo "=== Starting vLLM Prefill Server (Qwen3 30B FP8, DP=8, TP=1, Port 8000) ==="
                     PREFILL_ARGS=(
-                      gs://${GCS_BUCKET}/Qwen/Qwen3.5-397B-A17B-FP8
-                      --served-model-name=Qwen/Qwen3.5-397B-A17B-FP8
+                      gs://${GCS_BUCKET}/Qwen/Qwen3-30B-A3B-FP8
+                      --served-model-name=Qwen/Qwen3-30B-A3B-FP8
+                      --api-server-count=1
                       --load-format=runai_streamer
                       --enable-ep-weight-filter
                       --tensor-parallel-size=1
-                      --data-parallel-size=16
+                      --data-parallel-size=8
                       --data-parallel-size-local=4
                       --data-parallel-backend=ray
                       --data-parallel-address=$POD_IP
@@ -141,6 +142,7 @@ spec:
                       --attention-backend=CUSTOM
                       --block-size=1024
                       --return-tokens-as-token-ids
+                      --hf-overrides '{"linear_num_key_heads":1,"linear_num_value_heads":1}'
                       --compilation-config '{"backend":"vllm_torchtpu.compilation.tpu_compiler.TpuCompilerAdaptor","compile_sizes":[4096,8192],"inductor_compile_config":{"enable_auto_functionalized_v2":false,"size_asserts":false,"alignment_asserts":false,"scalar_asserts":false}}'
                       --kv-transfer-config '{"kv_connector":"TPURaidenConnector","kv_connector_module_path":"vllm_torchtpu.distributed.kv_transfer.tpu_connector","kv_role":"kv_producer","kv_port":14579}'
                     )
@@ -222,13 +224,14 @@ spec:
                   google.com/tpu: "4"
             volumes:
             - name: dshm
-              emptyDir: {}
+              emptyDir:
+                medium: Memory
 
   # ---------------------------------------------------------
   # DECODE SERVERS (2 Replicas, 1 Node each = 4 chips on 2x4 v6e slice)
   # ---------------------------------------------------------
   - name: decode
-    replicas: 4
+    replicas: 2
     template:
       spec:
         parallelism: 1
@@ -241,7 +244,7 @@ spec:
           spec:
             dnsPolicy: ClusterFirstWithHostNet
             nodeSelector:
-              cloud.google.com/gke-tpu-topology: 4x4
+              cloud.google.com/gke-tpu-topology: 2x4
               cloud.google.com/gke-tpu-accelerator: tpu-v6e-slice
             tolerations:
             - key: "google.com/tpu"
@@ -299,7 +302,7 @@ spec:
 
                   echo "=== Installing runai-model-streamer[gcs] and pre-caching metadata from GCS on $HOSTNAME ==="
                   pip install -q "runai-model-streamer[gcs]==0.16.1"
-                  python3 -c "from vllm.transformers_utils.runai_utils import ObjectStorageModel; uri = 'gs://${GCS_BUCKET}/Qwen/Qwen3.5-397B-A17B-FP8'; m = ObjectStorageModel(uri); m.pull_files(uri, ignore_pattern=['*.pt', '*.safetensors', '*.bin', '*.tensors', '*.pth']); print('Pulled metadata/tokenizer to', m.dir)"
+                  python3 -c "from vllm.transformers_utils.runai_utils import ObjectStorageModel; uri = 'gs://${GCS_BUCKET}/Qwen/Qwen3-30B-A3B-FP8'; m = ObjectStorageModel(uri); m.pull_files(uri, ignore_pattern=['*.pt', '*.safetensors', '*.bin', '*.tensors', '*.pth']); print('Pulled metadata/tokenizer to', m.dir)"
 
                   HEAD_ADDR="${JS_NAME}-decode-0-0.${JS_NAME}"
 
@@ -307,22 +310,23 @@ spec:
                     echo "=== Node 0: Starting Ray Head on $HOSTNAME (port 6379, IP $POD_IP) ==="
                     ray start --head --port=6379 --node-ip-address=$POD_IP --resources='{"TPU": 4}' --block &
 
-                    echo "Waiting for worker node to join Ray cluster (expecting 16.0 TPU total across 4 nodes)..."
-                    until ray status 2>/dev/null | grep -E -q "16(\.0)? TPU"; do
+                    echo "Waiting for worker node to join Ray cluster (expecting 8.0 TPU total across 2 nodes)..."
+                    until ray status 2>/dev/null | grep -E -q "8(\.0)? TPU"; do
                       echo "Waiting for worker to connect to Ray Head..."
                       sleep 2
                     done
                     echo "Worker joined! Ray cluster status:"
                     ray status
 
-                    echo "=== Starting vLLM Decode Server (Qwen3.5 397B FP8, DP=16, TP=1, Port 7200) ==="
+                    echo "=== Starting vLLM Decode Server (Qwen3 30B FP8, DP=8, TP=1, Port 7200) ==="
                     DECODE_ARGS=(
-                      gs://${GCS_BUCKET}/Qwen/Qwen3.5-397B-A17B-FP8
-                      --served-model-name=Qwen/Qwen3.5-397B-A17B-FP8
+                      gs://${GCS_BUCKET}/Qwen/Qwen3-30B-A3B-FP8
+                      --served-model-name=Qwen/Qwen3-30B-A3B-FP8
+                      --api-server-count=1
                       --load-format=runai_streamer
                       --enable-ep-weight-filter
                       --tensor-parallel-size=1
-                      --data-parallel-size=16
+                      --data-parallel-size=8
                       --data-parallel-size-local=4
                       --data-parallel-backend=ray
                       --data-parallel-address=$POD_IP
@@ -339,6 +343,7 @@ spec:
                       --kv-cache-dtype=fp8
                       --attention-backend=CUSTOM
                       --block-size=8192
+                      --hf-overrides '{"linear_num_key_heads":1,"linear_num_value_heads":1}'
                       --compilation-config '{"backend":"vllm_torchtpu.compilation.tpu_compiler.TpuCompilerAdaptor","compile_sizes":[8,16,32,64,2048],"inductor_compile_config":{"enable_auto_functionalized_v2":false,"size_asserts":false,"alignment_asserts":false,"scalar_asserts":false}}'
                       --kv-transfer-config '{"kv_connector":"TPURaidenConnector","kv_connector_module_path":"vllm_torchtpu.distributed.kv_transfer.tpu_connector","kv_role":"kv_consumer","kv_port":14579}'
                     )
@@ -422,7 +427,8 @@ spec:
                   google.com/tpu: "4"
             volumes:
             - name: dshm
-              emptyDir: {}
+              emptyDir:
+                medium: Memory
 
   # ---------------------------------------------------------
   # DISAGGREGATION PROXY (Coordinates Prefill -> Decode)

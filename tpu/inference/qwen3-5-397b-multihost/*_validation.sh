@@ -16,19 +16,17 @@
 
 set -euo pipefail
 
-TPU_TYPE="${TPU_TYPE:-v7x}"
-
-if [[ "${TPU_TYPE}" == "v7x" ]]; then
-  JOBSET_NAME="vllm-qwen3-5-397b-pd-disagg-v7x"
-  BENCHMARK_JOB="vllm-qwen3-5-397b-pd-disagg-v7x-tester"
-  VAL_MODEL_NAME="Qwen/Qwen3.5-397B-A17B-FP8"
-else
-  JOBSET_NAME="vllm-qwen3-5-397b-pd-disagg-v6e"
-  BENCHMARK_JOB="vllm-qwen3-5-397b-pd-disagg-v6e-tester"
-  VAL_MODEL_NAME="Qwen/Qwen3.5-397B-A17B-FP8"
-fi
-
 echo "[$(date)] ==================== Starting validation... ===================="
+
+if [[ "${TPU_TYPE:-v7x}" == "v6e" ]]; then
+  JOBSET_NAME="${JOBSET_NAME:-vllm-qwen3-30b-pd-disagg-v6e}"
+  MODEL_NAME="${MODEL_NAME:-Qwen/Qwen3-30B-A3B-FP8}"
+  BENCHMARK_JOB="${BENCHMARK_JOB:-vllm-qwen3-30b-pd-disagg-v6e-tester}"
+else
+  JOBSET_NAME="${JOBSET_NAME:-vllm-qwen3-5-397b-pd-disagg-v7x}"
+  MODEL_NAME="${MODEL_NAME:-Qwen/Qwen3.5-397B-A17B-FP8}"
+  BENCHMARK_JOB="${BENCHMARK_JOB:-vllm-qwen3-5-397b-pd-disagg-v7x-tester}"
+fi
 
 PROXY_JOB="job/${JOBSET_NAME}-proxy-0"
 
@@ -60,12 +58,12 @@ until curl -sf http://127.0.0.1:10000/healthcheck >/dev/null; do
   count=$((count + 1))
 done
 
-echo "Executing test chat completion query to ${VAL_MODEL_NAME} via PD-Disaggregation proxy..."
+echo "Executing test chat completion query to ${MODEL_NAME} via PD-Disaggregation proxy..."
 RESPONSE=$(curl -s http://127.0.0.1:10000/v1/chat/completions \
     -X POST \
     -H "Content-Type: application/json" \
     -d '{
-        "model": "'"${VAL_MODEL_NAME}"'",
+        "model": "'"${MODEL_NAME}"'",
         "messages": [
             {"role": "user", "content": "Hello! Tell me a short joke."}
         ],

@@ -16,7 +16,7 @@
 apiVersion: batch/v1
 kind: Job
 metadata:
-  name: vllm-qwen3-5-397b-pd-disagg-v6e-tester
+  name: vllm-qwen3-30b-pd-disagg-v6e-tester
 spec:
   parallelism: 1
   completions: 1
@@ -40,7 +40,7 @@ spec:
           PREFILLER_DNS="${JS_NAME}-prefill-0-0.${JS_NAME}"
           DECODER_DNS="${JS_NAME}-decode-0-0.${JS_NAME}"
           PROXY_DNS="${JS_NAME}-proxy-0-0.${JS_NAME}"
-          MODEL="Qwen/Qwen3.5-397B-A17B-FP8"
+          MODEL="Qwen/Qwen3-30B-A3B-FP8"
 
           echo 'import torch; torch.utils.rename_privateuse1_backend("tpu")' > /tmp/sitecustomize.py
           export PYTHONPATH="/tmp:${PYTHONPATH:-}"
@@ -75,5 +75,5 @@ spec:
           fi
         env:
         - name: JS_NAME
-          value: "vllm-qwen3-5-397b-pd-disagg-v6e"
+          value: "vllm-qwen3-30b-pd-disagg-v6e"
 # [END hypercomputer_tpu_infer_qwen3_5_397b_multihost_v6e_benchmark_yaml]
