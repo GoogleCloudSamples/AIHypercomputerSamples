@@ -122,9 +122,9 @@ spec:
                       --served-model-name=Qwen/Qwen3-30B-A3B-FP8
                       --load-format=runai_streamer
                       --enable-ep-weight-filter
-                      --tensor-parallel-size=1
-                      --data-parallel-size=8
-                      --data-parallel-size-local=4
+                      --tensor-parallel-size=2
+                      --data-parallel-size=4
+                      --data-parallel-size-local=2
                       --data-parallel-backend=ray
                       --data-parallel-address=$POD_IP
                       --distributed-executor-backend=ray
@@ -322,9 +322,9 @@ spec:
                       --served-model-name=Qwen/Qwen3-30B-A3B-FP8
                       --load-format=runai_streamer
                       --enable-ep-weight-filter
-                      --tensor-parallel-size=1
-                      --data-parallel-size=8
-                      --data-parallel-size-local=4
+                      --tensor-parallel-size=2
+                      --data-parallel-size=4
+                      --data-parallel-size-local=2
                       --data-parallel-backend=ray
                       --data-parallel-address=$POD_IP
                       --distributed-executor-backend=ray
