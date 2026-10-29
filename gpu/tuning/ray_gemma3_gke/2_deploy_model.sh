@@ -23,7 +23,21 @@ kubectl create cm ray-job-cm --from-file=code -o yaml --dry-run=client | kubectl
 
 # 2. Create Ray Cluster
 # [START hypercomputer_gpu_tune_gemma3_ray_create_ray_cluster]
-envsubst < ray_cluster.yaml | kubectl apply -f -
+MAX_RETRIES=10
+RETRY_DELAY=15
+ATTEMPT=1
+
+echo "Applying ray_cluster.yaml..."
+while ! envsubst < ray_cluster.yaml | kubectl apply -f -; do
+    if [ "$ATTEMPT" -ge "$MAX_RETRIES" ]; then
+        echo "Critical Error: Failed to apply ray_cluster.yaml after $MAX_RETRIES attempts."
+        exit 1
+    fi
+    echo "Attempt $ATTEMPT/$MAX_RETRIES failed. KubeRay webhook might not be ready. Retrying in ${RETRY_DELAY}s..."
+    sleep $RETRY_DELAY
+    ATTEMPT=$((ATTEMPT + 1))
+done
+echo "Successfully applied ray_cluster.yaml"
 # [END hypercomputer_gpu_tune_gemma3_ray_create_ray_cluster]
 
 # ==============================================================================

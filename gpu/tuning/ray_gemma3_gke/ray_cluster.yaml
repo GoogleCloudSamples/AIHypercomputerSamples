@@ -4,17 +4,21 @@ kind: RayCluster
 metadata:
   name: gemma3-tuning
 spec:
-  rayVersion: '2.48.0'
+  rayVersion: '2.59.0'
   headGroupSpec:
     rayStartParams:
       dashboard-host: '0.0.0.0'
     template:
       metadata:
       spec:
+        securityContext:
+          fsGroup: 100
+        nodeSelector:
+          cloud.google.com/compute-class: "Balanced"
         serviceAccountName: $RAY_SA
         containers:
         - name: ray-head
-          image: rayproject/ray:2.48.0
+          image: rayproject/ray:2.59.0
           ports:
           - containerPort: 6379
             name: gcs
@@ -25,11 +29,9 @@ spec:
           resources:
             limits:
               cpu: "24"
-              ephemeral-storage: "9Gi"
               memory: "64Gi"
             requests:
               cpu: "24"
-              ephemeral-storage: "9Gi"
               memory: "64Gi"
           env:
             - name: HF_TOKEN
@@ -37,17 +39,30 @@ spec:
                 secretKeyRef:
                   name: hf-secret
                   key: hf_api_token
+            - name: PIP_CACHE_DIR
+              value: /mnt/local-storage/pip-cache
+            - name: HF_HOME
+              value: /mnt/local-storage/hf-cache
+            - name: RAY_TMPDIR
+              value: /mnt/local-storage/ray-tmp
           volumeMounts:
             - name: job-code
               mountPath: /code/
-            - mountPath: /mnt/local-ssd/
+            - mountPath: /mnt/local-storage/
               name: local-storage
         volumes:
           - name: job-code
             configMap:
               name: ray-job-cm
           - name: local-storage
-            emptyDir: { }
+            ephemeral:
+              volumeClaimTemplate:
+                spec:
+                  accessModes: [ "ReadWriteOnce" ]
+                  storageClassName: "standard-rwo"
+                  resources:
+                    requests:
+                      storage: 50Gi
   workerGroupSpecs:
   - replicas: 2
     minReplicas: 1
@@ -59,22 +74,30 @@ spec:
         serviceAccountName: $RAY_SA
         containers:
         - name: ray-worker
-          image: rayproject/ray:2.48.0-gpu
+          image: rayproject/ray:2.59.0-gpu
           resources:
             limits:
               nvidia.com/gpu: "8"
               cpu: "80"
               memory: "320Gi"
+              ephemeral-storage: "200Gi"
             requests:
               nvidia.com/gpu: "8"
               cpu: "80"
               memory: "320Gi"
+              ephemeral-storage: "200Gi"
           env:
             - name: HF_TOKEN
               valueFrom:
                 secretKeyRef:
                   name: hf-secret
                   key: hf_api_token
+            - name: PIP_CACHE_DIR
+              value: /mnt/local-ssd/pip-cache
+            - name: HF_HOME
+              value: /mnt/local-ssd/hf-cache
+            - name: RAY_TMPDIR
+              value: /mnt/local-ssd/ray-tmp
           volumeMounts:
             - name: job-code
               mountPath: /code/

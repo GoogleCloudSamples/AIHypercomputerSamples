@@ -18,6 +18,47 @@ set -euo pipefail
 
 # [START hypercomputer_gpu_tune_gemma3_ray_validation]
 echo "=============================================================================="
+
+# Dynamically fetch the name of the submitted RayJob from the cluster
+RAY_JOB_NAME=$(kubectl get rayjob -o jsonpath='{.items[0].metadata.name}' 2>/dev/null)
+
+if [[ -z "$RAY_JOB_NAME" ]]; then
+    echo "Error: No RayJob found in the cluster. Training deployment might have failed."
+    exit 1
+fi
+
+echo "Found RayJob: '${RAY_JOB_NAME}'. Waiting for it to complete training..."
+
+JOB_STATUS=""
+TIMEOUT_SECONDS=7200
+ELAPSED_SECONDS=0
+INTERVAL_SECONDS=60
+
+while [[ "$JOB_STATUS" != "SUCCEEDED" ]]; do
+    if [[ "$ELAPSED_SECONDS" -ge "$TIMEOUT_SECONDS" ]]; then
+        echo "Error: Timeout of ${TIMEOUT_SECONDS} seconds reached waiting for RayJob to complete."
+        kubectl describe rayjob "$RAY_JOB_NAME"
+        exit 1
+    fi
+
+    JOB_STATUS=$(kubectl get rayjob "$RAY_JOB_NAME" -o jsonpath='{.status.jobStatus}' 2>/dev/null || echo "PENDING")
+    
+    if [[ "$JOB_STATUS" == "FAILED" || "$JOB_STATUS" == "STOPPED" || "$JOB_STATUS" == "SUSPENDED" ]]; then
+        echo "Error: RayJob '${RAY_JOB_NAME}' failed or stopped with status: ${JOB_STATUS}"
+        kubectl describe rayjob "$RAY_JOB_NAME"
+        exit 1
+    fi
+    
+    if [[ "$JOB_STATUS" != "SUCCEEDED" ]]; then
+        echo "Current RayJob status: ${JOB_STATUS}. Waiting ${INTERVAL_SECONDS} seconds (${ELAPSED_SECONDS}/${TIMEOUT_SECONDS}s elapsed)..."
+        sleep "$INTERVAL_SECONDS"
+        ELAPSED_SECONDS=$((ELAPSED_SECONDS + INTERVAL_SECONDS))
+    fi
+done
+
+echo "RayJob '${RAY_JOB_NAME}' completed successfully!"
+echo "=============================================================================="
+
 echo "Running Ultra-Light Gemma 3 Vision validation job via Ray..."
 
 echo "Checking for the latest fine-tuned checkpoint in gs://${GCS_BUCKET}..."
@@ -80,7 +121,7 @@ kubectl exec "${HEAD_POD}" -c ray-head -- ray job submit \
         "pip": [
             "torch==2.8.0",
             "torchvision==0.23.0",
-            "ray==2.48.0",
+            "ray==2.59.0",
             "transformers==4.55.2",
             "peft==0.17.0",
             "google-cloud-storage"

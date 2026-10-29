@@ -9,7 +9,7 @@ spec:
     pip:
       - torch==2.8.0
       - torchvision==0.23.0
-      - ray==2.48.0
+      - ray==2.59.0
       - transformers==4.55.2
       - datasets==4.0.0
       - evaluate==0.4.5
