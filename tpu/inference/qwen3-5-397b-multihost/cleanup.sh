@@ -17,8 +17,6 @@
 set -euo pipefail
 
 TPU_TYPE="${TPU_TYPE:-v7x}"
-NODE_POOL_NAME_0="${NODE_POOL_NAME_0:-np-0}"
-NODE_POOL_NAME_1="${NODE_POOL_NAME_1:-np-1}"
 
 if [[ "${TPU_TYPE}" == "v6e" ]]; then
   DOWNLOAD_JOB="${DOWNLOAD_JOB:-download-qwen3}"
@@ -55,17 +53,13 @@ gcloud storage rm --recursive "gs://${GCS_BUCKET}" --project="${PROJECT_ID}" --q
 echo "[$(date)] ==================== Deleting GKE TPU node pools, cluster, and workload policy... ===================="
 if [[ "${TPU_TYPE}" == "v6e" ]]; then
   # [START hypercomputer_tpu_infer_qwen3_5_397b_multihost_cluster_cleanup_v6e]
-  gcloud container node-pools delete "${NODE_POOL_NAME_0}" \
-      --cluster="${CLUSTER_NAME}" \
-      --location="${REGION}" \
-      --project="${PROJECT_ID}" \
-      --quiet || true
-
-  gcloud container node-pools delete "${NODE_POOL_NAME_1}" \
-      --cluster="${CLUSTER_NAME}" \
-      --location="${REGION}" \
-      --project="${PROJECT_ID}" \
-      --quiet || true
+  for NODE_POOL_NAME in np-0 np-1; do
+    gcloud container node-pools delete "${NODE_POOL_NAME}" \
+        --cluster="${CLUSTER_NAME}" \
+        --location="${REGION}" \
+        --project="${PROJECT_ID}" \
+        --quiet || true
+  done
 
   gcloud container clusters delete "${CLUSTER_NAME}" \
       --location="${REGION}" \
@@ -74,17 +68,13 @@ if [[ "${TPU_TYPE}" == "v6e" ]]; then
   # [END hypercomputer_tpu_infer_qwen3_5_397b_multihost_cluster_cleanup_v6e]
 else
   # [START hypercomputer_tpu_infer_qwen3_5_397b_multihost_cluster_cleanup]
-  gcloud container node-pools delete "${NODE_POOL_NAME_0}" \
-      --cluster="${CLUSTER_NAME}" \
-      --location="${REGION}" \
-      --project="${PROJECT_ID}" \
-      --quiet || true
-
-  gcloud container node-pools delete "${NODE_POOL_NAME_1}" \
-      --cluster="${CLUSTER_NAME}" \
-      --location="${REGION}" \
-      --project="${PROJECT_ID}" \
-      --quiet || true
+  for NODE_POOL_NAME in np-0 np-1; do
+    gcloud container node-pools delete "${NODE_POOL_NAME}" \
+        --cluster="${CLUSTER_NAME}" \
+        --location="${REGION}" \
+        --project="${PROJECT_ID}" \
+        --quiet || true
+  done
 
   gcloud container clusters delete "${CLUSTER_NAME}" \
       --location="${REGION}" \

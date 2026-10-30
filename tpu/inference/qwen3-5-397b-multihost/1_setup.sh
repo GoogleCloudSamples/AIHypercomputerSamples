@@ -17,8 +17,6 @@
 set -euo pipefail
 
 TPU_TYPE="${TPU_TYPE:-v7x}"
-NODE_POOL_NAME_0="${NODE_POOL_NAME_0:-np-0}"
-NODE_POOL_NAME_1="${NODE_POOL_NAME_1:-np-1}"
 
 if [[ "${TPU_TYPE}" == "v6e" ]]; then
   MACHINE_TYPE="${MACHINE_TYPE:-ct6e-standard-4t}"
@@ -70,102 +68,68 @@ fi
 
 if [[ "${TPU_TYPE}" == "v7x" ]]; then
   if [[ "${USE_SPOT:-false}" != "true" && -n "${RESERVATION_NAME:-}" && "${RESERVATION_NAME}" != "YOUR_RESERVATION_NAME" && "${RESERVATION_NAME}" != "spot" && "${RESERVATION_NAME}" != "none" ]]; then
-    echo "[$(date)] ==================== Creating TPU v7x node pools ${NODE_POOL_NAME_0} and ${NODE_POOL_NAME_1} (Reservation: ${RESERVATION_NAME})... ===================="
+    echo "[$(date)] ==================== Creating TPU v7x node pools np-0 and np-1 (Reservation: ${RESERVATION_NAME})... ===================="
     # [START hypercomputer_tpu_infer_qwen3_5_397b_multihost_nodepool_create_reservation]
-    gcloud container node-pools create "${NODE_POOL_NAME_0}" \
-        --cluster="${CLUSTER_NAME}" \
-        --machine-type="${MACHINE_TYPE}" \
-        --placement-policy="${WORKLOAD_POLICY_NAME}" \
-        --location="${REGION}" \
-        --node-locations="${ZONE}" \
-        --project="${PROJECT_ID}" \
-        --num-nodes=2 \
-        --reservation-affinity=specific \
-        --reservation="${RESERVATION_NAME}"
-
-    gcloud container node-pools create "${NODE_POOL_NAME_1}" \
-        --cluster="${CLUSTER_NAME}" \
-        --machine-type="${MACHINE_TYPE}" \
-        --placement-policy="${WORKLOAD_POLICY_NAME}" \
-        --location="${REGION}" \
-        --node-locations="${ZONE}" \
-        --project="${PROJECT_ID}" \
-        --num-nodes=2 \
-        --reservation-affinity=specific \
-        --reservation="${RESERVATION_NAME}"
+    for NODE_POOL_NAME in np-0 np-1; do
+      gcloud container node-pools create "${NODE_POOL_NAME}" \
+          --cluster="${CLUSTER_NAME}" \
+          --machine-type="${MACHINE_TYPE}" \
+          --placement-policy="${WORKLOAD_POLICY_NAME}" \
+          --location="${REGION}" \
+          --node-locations="${ZONE}" \
+          --project="${PROJECT_ID}" \
+          --num-nodes=2 \
+          --reservation-affinity=specific \
+          --reservation="${RESERVATION_NAME}"
+    done
     # [END hypercomputer_tpu_infer_qwen3_5_397b_multihost_nodepool_create_reservation]
   else
-    echo "[$(date)] ==================== Creating TPU v7x node pools ${NODE_POOL_NAME_0} and ${NODE_POOL_NAME_1} (Spot VMs)... ===================="
+    echo "[$(date)] ==================== Creating TPU v7x node pools np-0 and np-1 (Spot VMs)... ===================="
     # [START hypercomputer_tpu_infer_qwen3_5_397b_multihost_nodepool_create_spot]
-    gcloud container node-pools create "${NODE_POOL_NAME_0}" \
-        --cluster="${CLUSTER_NAME}" \
-        --machine-type="${MACHINE_TYPE}" \
-        --placement-policy="${WORKLOAD_POLICY_NAME}" \
-        --location="${REGION}" \
-        --node-locations="${ZONE}" \
-        --project="${PROJECT_ID}" \
-        --num-nodes=2 \
-        --spot
-
-    gcloud container node-pools create "${NODE_POOL_NAME_1}" \
-        --cluster="${CLUSTER_NAME}" \
-        --machine-type="${MACHINE_TYPE}" \
-        --placement-policy="${WORKLOAD_POLICY_NAME}" \
-        --location="${REGION}" \
-        --node-locations="${ZONE}" \
-        --project="${PROJECT_ID}" \
-        --num-nodes=2 \
-        --spot
+    for NODE_POOL_NAME in np-0 np-1; do
+      gcloud container node-pools create "${NODE_POOL_NAME}" \
+          --cluster="${CLUSTER_NAME}" \
+          --machine-type="${MACHINE_TYPE}" \
+          --placement-policy="${WORKLOAD_POLICY_NAME}" \
+          --location="${REGION}" \
+          --node-locations="${ZONE}" \
+          --project="${PROJECT_ID}" \
+          --num-nodes=2 \
+          --spot
+    done
     # [END hypercomputer_tpu_infer_qwen3_5_397b_multihost_nodepool_create_spot]
   fi
 elif [[ "${TPU_TYPE}" == "v6e" ]]; then
   if [[ "${USE_SPOT:-false}" != "true" && -n "${RESERVATION_NAME:-}" && "${RESERVATION_NAME}" != "YOUR_RESERVATION_NAME" && "${RESERVATION_NAME}" != "spot" && "${RESERVATION_NAME}" != "none" ]]; then
-    echo "[$(date)] ==================== Creating TPU v6e node pools ${NODE_POOL_NAME_0} and ${NODE_POOL_NAME_1} (Reservation: ${RESERVATION_NAME})... ===================="
+    echo "[$(date)] ==================== Creating TPU v6e node pools np-0 and np-1 (Reservation: ${RESERVATION_NAME})... ===================="
     # [START hypercomputer_tpu_infer_qwen3_5_397b_multihost_nodepool_create_reservation_v6e]
-    gcloud container node-pools create "${NODE_POOL_NAME_0}" \
-        --cluster="${CLUSTER_NAME}" \
-        --machine-type="${MACHINE_TYPE}" \
-        --tpu-topology=2x4 \
-        --location="${REGION}" \
-        --node-locations="${ZONE}" \
-        --project="${PROJECT_ID}" \
-        --num-nodes=2 \
-        --reservation-affinity=specific \
-        --reservation="${RESERVATION_NAME}"
-
-    gcloud container node-pools create "${NODE_POOL_NAME_1}" \
-        --cluster="${CLUSTER_NAME}" \
-        --machine-type="${MACHINE_TYPE}" \
-        --tpu-topology=2x4 \
-        --location="${REGION}" \
-        --node-locations="${ZONE}" \
-        --project="${PROJECT_ID}" \
-        --num-nodes=2 \
-        --reservation-affinity=specific \
-        --reservation="${RESERVATION_NAME}"
+    for NODE_POOL_NAME in np-0 np-1; do
+      gcloud container node-pools create "${NODE_POOL_NAME}" \
+          --cluster="${CLUSTER_NAME}" \
+          --machine-type="${MACHINE_TYPE}" \
+          --tpu-topology=2x4 \
+          --location="${REGION}" \
+          --node-locations="${ZONE}" \
+          --project="${PROJECT_ID}" \
+          --num-nodes=2 \
+          --reservation-affinity=specific \
+          --reservation="${RESERVATION_NAME}"
+    done
     # [END hypercomputer_tpu_infer_qwen3_5_397b_multihost_nodepool_create_reservation_v6e]
   else
-    echo "[$(date)] ==================== Creating TPU v6e node pools ${NODE_POOL_NAME_0} and ${NODE_POOL_NAME_1} (Spot VMs)... ===================="
+    echo "[$(date)] ==================== Creating TPU v6e node pools np-0 and np-1 (Spot VMs)... ===================="
     # [START hypercomputer_tpu_infer_qwen3_5_397b_multihost_nodepool_create_spot_v6e]
-    gcloud container node-pools create "${NODE_POOL_NAME_0}" \
-        --cluster="${CLUSTER_NAME}" \
-        --machine-type="${MACHINE_TYPE}" \
-        --tpu-topology=2x4 \
-        --location="${REGION}" \
-        --node-locations="${ZONE}" \
-        --project="${PROJECT_ID}" \
-        --num-nodes=2 \
-        --spot
-
-    gcloud container node-pools create "${NODE_POOL_NAME_1}" \
-        --cluster="${CLUSTER_NAME}" \
-        --machine-type="${MACHINE_TYPE}" \
-        --tpu-topology=2x4 \
-        --location="${REGION}" \
-        --node-locations="${ZONE}" \
-        --project="${PROJECT_ID}" \
-        --num-nodes=2 \
-        --spot
+    for NODE_POOL_NAME in np-0 np-1; do
+      gcloud container node-pools create "${NODE_POOL_NAME}" \
+          --cluster="${CLUSTER_NAME}" \
+          --machine-type="${MACHINE_TYPE}" \
+          --tpu-topology=2x4 \
+          --location="${REGION}" \
+          --node-locations="${ZONE}" \
+          --project="${PROJECT_ID}" \
+          --num-nodes=2 \
+          --spot
+    done
     # [END hypercomputer_tpu_infer_qwen3_5_397b_multihost_nodepool_create_spot_v6e]
   fi
 fi

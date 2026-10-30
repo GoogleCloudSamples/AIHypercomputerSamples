@@ -51,33 +51,21 @@ curl -O https://raw.githubusercontent.com/GoogleCloudSamples/AIHypercomputerSamp
 # [END hypercomputer_tpu_infer_qwen3_5_397b_multihost_curl_benchmark_yaml]
 
 # [START hypercomputer_tpu_infer_qwen3_5_397b_multihost_nodepool_create_flex_start]
-gcloud container node-pools create "${NODE_POOL_NAME_0}" \
-    --cluster="${CLUSTER_NAME}" \
-    --machine-type="${MACHINE_TYPE}" \
-    --placement-policy="${WORKLOAD_POLICY_NAME}" \
-    --location="${REGION}" \
-    --node-locations="${ZONE}" \
-    --project="${PROJECT_ID}" \
-    --reservation-affinity=none \
-    --enable-autoscaling \
-    --num-nodes=0 \
-    --min-nodes=0 \
-    --max-nodes=2 \
-    --flex-start
-
-gcloud container node-pools create "${NODE_POOL_NAME_1}" \
-    --cluster="${CLUSTER_NAME}" \
-    --machine-type="${MACHINE_TYPE}" \
-    --placement-policy="${WORKLOAD_POLICY_NAME}" \
-    --location="${REGION}" \
-    --node-locations="${ZONE}" \
-    --project="${PROJECT_ID}" \
-    --reservation-affinity=none \
-    --enable-autoscaling \
-    --num-nodes=0 \
-    --min-nodes=0 \
-    --max-nodes=2 \
-    --flex-start
+for NODE_POOL_NAME in np-0 np-1; do
+  gcloud container node-pools create "${NODE_POOL_NAME}" \
+      --cluster="${CLUSTER_NAME}" \
+      --machine-type="${MACHINE_TYPE}" \
+      --placement-policy="${WORKLOAD_POLICY_NAME}" \
+      --location="${REGION}" \
+      --node-locations="${ZONE}" \
+      --project="${PROJECT_ID}" \
+      --reservation-affinity=none \
+      --enable-autoscaling \
+      --num-nodes=0 \
+      --min-nodes=0 \
+      --max-nodes=2 \
+      --flex-start
+done
 # [END hypercomputer_tpu_infer_qwen3_5_397b_multihost_nodepool_create_flex_start]
 # [START hypercomputer_tpu_infer_qwen3_5_397b_multihost_v6e_count_shards]
 gcloud storage ls "gs://${GCS_BUCKET}/Qwen/Qwen3-30B-A3B-FP8/*.safetensors" | wc -l
@@ -118,53 +106,33 @@ curl -O https://raw.githubusercontent.com/GoogleCloudSamples/AIHypercomputerSamp
 # [END hypercomputer_tpu_infer_qwen3_5_397b_multihost_v6e_curl_benchmark_yaml]
 
 # [START hypercomputer_tpu_infer_qwen3_5_397b_multihost_v6e_nodepool_create_spot]
-gcloud container node-pools create "${NODE_POOL_NAME_0}" \
-    --project="${PROJECT_ID}" \
-    --location="${REGION}" \
-    --cluster="${CLUSTER_NAME}" \
-    --node-locations="${ZONE}" \
-    --machine-type="${MACHINE_TYPE}" \
-    --tpu-topology=2x4 \
-    --num-nodes=2 \
-    --spot
-
-gcloud container node-pools create "${NODE_POOL_NAME_1}" \
-    --project="${PROJECT_ID}" \
-    --location="${REGION}" \
-    --cluster="${CLUSTER_NAME}" \
-    --node-locations="${ZONE}" \
-    --machine-type="${MACHINE_TYPE}" \
-    --tpu-topology=2x4 \
-    --num-nodes=2 \
-    --spot
+for NODE_POOL_NAME in np-0 np-1; do
+  gcloud container node-pools create "${NODE_POOL_NAME}" \
+      --project="${PROJECT_ID}" \
+      --location="${REGION}" \
+      --cluster="${CLUSTER_NAME}" \
+      --node-locations="${ZONE}" \
+      --machine-type="${MACHINE_TYPE}" \
+      --tpu-topology=2x4 \
+      --num-nodes=2 \
+      --spot
+done
 # [END hypercomputer_tpu_infer_qwen3_5_397b_multihost_v6e_nodepool_create_spot]
 
 # [START hypercomputer_tpu_infer_qwen3_5_397b_multihost_v6e_nodepool_create_flex_start]
-gcloud container node-pools create "${NODE_POOL_NAME_0}" \
-    --project="${PROJECT_ID}" \
-    --location="${REGION}" \
-    --cluster="${CLUSTER_NAME}" \
-    --node-locations="${ZONE}" \
-    --machine-type="${MACHINE_TYPE}" \
-    --tpu-topology=2x4 \
-    --reservation-affinity=none \
-    --enable-autoscaling \
-    --num-nodes=0 \
-    --min-nodes=0 \
-    --max-nodes=2 \
-    --flex-start
-
-gcloud container node-pools create "${NODE_POOL_NAME_1}" \
-    --project="${PROJECT_ID}" \
-    --location="${REGION}" \
-    --cluster="${CLUSTER_NAME}" \
-    --node-locations="${ZONE}" \
-    --machine-type="${MACHINE_TYPE}" \
-    --tpu-topology=2x4 \
-    --reservation-affinity=none \
-    --enable-autoscaling \
-    --num-nodes=0 \
-    --min-nodes=0 \
-    --max-nodes=2 \
-    --flex-start
+for NODE_POOL_NAME in np-0 np-1; do
+  gcloud container node-pools create "${NODE_POOL_NAME}" \
+      --project="${PROJECT_ID}" \
+      --location="${REGION}" \
+      --cluster="${CLUSTER_NAME}" \
+      --node-locations="${ZONE}" \
+      --machine-type="${MACHINE_TYPE}" \
+      --tpu-topology=2x4 \
+      --reservation-affinity=none \
+      --enable-autoscaling \
+      --num-nodes=0 \
+      --min-nodes=0 \
+      --max-nodes=2 \
+      --flex-start
+done
 # [END hypercomputer_tpu_infer_qwen3_5_397b_multihost_v6e_nodepool_create_flex_start]
