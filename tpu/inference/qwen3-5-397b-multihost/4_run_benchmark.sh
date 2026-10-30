@@ -35,9 +35,16 @@ fi
 
 echo "[$(date)] ==================== Starting PD-Disaggregation 8k/1k benchmark (${BENCHMARK_MANIFEST})... ===================="
 kubectl delete job "${BENCHMARK_JOB}" --ignore-not-found
-# [START hypercomputer_tpu_infer_qwen3_5_397b_multihost_benchmark_apply]
-envsubst '${VLLM_IMAGE}' < "${BENCHMARK_MANIFEST}" | kubectl apply -f -
-# [END hypercomputer_tpu_infer_qwen3_5_397b_multihost_benchmark_apply]
+
+if [[ "${TPU_TYPE:-v7x}" == "v6e" ]]; then
+  # [START hypercomputer_tpu_infer_qwen3_5_397b_multihost_benchmark_apply_v6e]
+  envsubst '${VLLM_IMAGE}' < v6e_qwen3_benchmark_multihost_slice.yaml | kubectl apply -f -
+  # [END hypercomputer_tpu_infer_qwen3_5_397b_multihost_benchmark_apply_v6e]
+else
+  # [START hypercomputer_tpu_infer_qwen3_5_397b_multihost_benchmark_apply]
+  envsubst '${VLLM_IMAGE}' < v7x_qwen3_5_benchmark_multihost_slice.yaml | kubectl apply -f -
+  # [END hypercomputer_tpu_infer_qwen3_5_397b_multihost_benchmark_apply]
+fi
 
 echo "Waiting for benchmark pod to be created and start running..."
 pod_creation_timeout=300

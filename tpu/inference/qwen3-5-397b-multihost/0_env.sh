@@ -29,13 +29,6 @@ export RESERVATION_NAME="YOUR_RESERVATION_NAME"
 export GCS_BUCKET="YOUR_GCS_BUCKET"
 export HF_TOKEN="YOUR_HF_TOKEN"
 export VLLM_IMAGE="vllm/vllm-torchtpu:v0.29.0@sha256:3976ccc1a69ffd361e0a7d2831fe317f6b685636014f426321a39ae02f8da0dc"
-export MODEL_NAME="Qwen/Qwen3-30B-A3B-FP8"
-export DOWNLOAD_MANIFEST="download_qwen3_30b.yaml"
-export DOWNLOAD_JOB="download-qwen3"
-export SERVER_MANIFEST="v6e_qwen3_server_multihost_slice.yaml"
-export JOBSET_NAME="vllm-qwen3-30b-pd-disagg-v6e"
-export BENCHMARK_MANIFEST="v6e_qwen3_benchmark_multihost_slice.yaml"
-export BENCHMARK_JOB="vllm-qwen3-30b-pd-disagg-v6e-tester"
 
 gcloud config set project "${PROJECT_ID}"
 gcloud config set billing/quota_project "${PROJECT_ID}"
@@ -57,17 +50,28 @@ export RESERVATION_NAME="YOUR_RESERVATION_NAME"
 export GCS_BUCKET="YOUR_GCS_BUCKET"
 export HF_TOKEN="YOUR_HF_TOKEN"
 export VLLM_IMAGE="vllm/vllm-torchtpu:v0.29.0@sha256:3976ccc1a69ffd361e0a7d2831fe317f6b685636014f426321a39ae02f8da0dc"
-export MODEL_NAME="Qwen/Qwen3.5-397B-A17B-FP8"
-export DOWNLOAD_MANIFEST="download_model.yaml"
-export DOWNLOAD_JOB="download-qwen35"
-export SERVER_MANIFEST="v7x_qwen3_5_server_multihost_slice.yaml"
-export JOBSET_NAME="vllm-qwen3-5-397b-pd-disagg-v7x"
-export BENCHMARK_MANIFEST="v7x_qwen3_5_benchmark_multihost_slice.yaml"
-export BENCHMARK_JOB="vllm-qwen3-5-397b-pd-disagg-v7x-tester"
 
 gcloud config set project "${PROJECT_ID}"
 gcloud config set billing/quota_project "${PROJECT_ID}"
 # [END hypercomputer_tpu_infer_qwen3_5_397b_multihost_env]
+fi
+
+if [[ "${TPU_TYPE}" == "v6e" ]]; then
+  export MODEL_NAME="Qwen/Qwen3-30B-A3B-FP8"
+  export DOWNLOAD_MANIFEST="download_qwen3_30b.yaml"
+  export DOWNLOAD_JOB="download-qwen3"
+  export SERVER_MANIFEST="v6e_qwen3_server_multihost_slice.yaml"
+  export JOBSET_NAME="vllm-qwen3-30b-pd-disagg-v6e"
+  export BENCHMARK_MANIFEST="v6e_qwen3_benchmark_multihost_slice.yaml"
+  export BENCHMARK_JOB="vllm-qwen3-30b-pd-disagg-v6e-tester"
+else
+  export MODEL_NAME="Qwen/Qwen3.5-397B-A17B-FP8"
+  export DOWNLOAD_MANIFEST="download_model.yaml"
+  export DOWNLOAD_JOB="download-qwen35"
+  export SERVER_MANIFEST="v7x_qwen3_5_server_multihost_slice.yaml"
+  export JOBSET_NAME="vllm-qwen3-5-397b-pd-disagg-v7x"
+  export BENCHMARK_MANIFEST="v7x_qwen3_5_benchmark_multihost_slice.yaml"
+  export BENCHMARK_JOB="vllm-qwen3-5-397b-pd-disagg-v7x-tester"
 fi
 
 # Timeout for waiting for the model download job to complete in 2_download_model.sh.

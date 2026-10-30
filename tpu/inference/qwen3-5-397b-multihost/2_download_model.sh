@@ -52,9 +52,15 @@ gcloud storage buckets add-iam-policy-binding "gs://${GCS_BUCKET}" \
 # [END hypercomputer_tpu_infer_qwen3_5_397b_multihost_add_bucket_permissions]
 
 echo "[$(date)] ==================== Submitting the model download job (${DOWNLOAD_MANIFEST})... ===================="
-# [START hypercomputer_tpu_infer_qwen3_5_397b_multihost_download_job]
-envsubst '$GCS_BUCKET' < "${DOWNLOAD_MANIFEST}" | kubectl apply -f -
-# [END hypercomputer_tpu_infer_qwen3_5_397b_multihost_download_job]
+if [[ "${TPU_TYPE:-v7x}" == "v6e" ]]; then
+  # [START hypercomputer_tpu_infer_qwen3_5_397b_multihost_download_job_v6e]
+  envsubst '$GCS_BUCKET' < download_qwen3_30b.yaml | kubectl apply -f -
+  # [END hypercomputer_tpu_infer_qwen3_5_397b_multihost_download_job_v6e]
+else
+  # [START hypercomputer_tpu_infer_qwen3_5_397b_multihost_download_job]
+  envsubst '$GCS_BUCKET' < download_model.yaml | kubectl apply -f -
+  # [END hypercomputer_tpu_infer_qwen3_5_397b_multihost_download_job]
+fi
 
 echo "Waiting for the ${DOWNLOAD_JOB} pod to be created and start..."
 pod_creation_timeout=300
@@ -108,7 +114,13 @@ echo "Verifying uploaded model shards in ${GCS_BUCKET} bucket..."
 SHARD_COUNT=$(gcloud storage ls "gs://${GCS_BUCKET}/${MODEL_NAME}/*.safetensors" | wc -l)
 echo "Found ${SHARD_COUNT} safetensors shards in gs://${GCS_BUCKET}/${MODEL_NAME}/."
 
-# [START hypercomputer_tpu_infer_qwen3_5_397b_multihost_delete_download_job]
-kubectl delete job "${DOWNLOAD_JOB}"
-# [END hypercomputer_tpu_infer_qwen3_5_397b_multihost_delete_download_job]
+if [[ "${TPU_TYPE:-v7x}" == "v6e" ]]; then
+  # [START hypercomputer_tpu_infer_qwen3_5_397b_multihost_delete_download_job_v6e]
+  kubectl delete job download-qwen3
+  # [END hypercomputer_tpu_infer_qwen3_5_397b_multihost_delete_download_job_v6e]
+else
+  # [START hypercomputer_tpu_infer_qwen3_5_397b_multihost_delete_download_job]
+  kubectl delete job download-qwen35
+  # [END hypercomputer_tpu_infer_qwen3_5_397b_multihost_delete_download_job]
+fi
 echo "[$(date)] ==================== Model download to GCS completed successfully! ===================="

@@ -35,10 +35,17 @@ echo "[$(date)] ==================== Deleting Kubernetes workloads and secrets..
 kubectl delete -f "${BENCHMARK_MANIFEST}" --ignore-not-found || true
 kubectl delete job "${DOWNLOAD_JOB}" --ignore-not-found || true
 
-# [START hypercomputer_tpu_infer_qwen3_5_397b_multihost_deploy_cleanup]
-kubectl delete -f "${SERVER_MANIFEST}" --ignore-not-found || true
-kubectl delete secret hf-secret --ignore-not-found || true
-# [END hypercomputer_tpu_infer_qwen3_5_397b_multihost_deploy_cleanup]
+if [[ "${TPU_TYPE}" == "v6e" ]]; then
+  # [START hypercomputer_tpu_infer_qwen3_5_397b_multihost_deploy_cleanup_v6e]
+  kubectl delete -f v6e_qwen3_server_multihost_slice.yaml --ignore-not-found || true
+  kubectl delete secret hf-secret --ignore-not-found || true
+  # [END hypercomputer_tpu_infer_qwen3_5_397b_multihost_deploy_cleanup_v6e]
+else
+  # [START hypercomputer_tpu_infer_qwen3_5_397b_multihost_deploy_cleanup]
+  kubectl delete -f v7x_qwen3_5_server_multihost_slice.yaml --ignore-not-found || true
+  kubectl delete secret hf-secret --ignore-not-found || true
+  # [END hypercomputer_tpu_infer_qwen3_5_397b_multihost_deploy_cleanup]
+fi
 
 echo "[$(date)] ==================== Deleting the GCS bucket... ===================="
 # [START hypercomputer_tpu_infer_qwen3_5_397b_multihost_bucket_cleanup]
@@ -46,30 +53,49 @@ gcloud storage rm --recursive "gs://${GCS_BUCKET}" --project="${PROJECT_ID}" --q
 # [END hypercomputer_tpu_infer_qwen3_5_397b_multihost_bucket_cleanup]
 
 echo "[$(date)] ==================== Deleting GKE TPU node pools, cluster, and workload policy... ===================="
-# [START hypercomputer_tpu_infer_qwen3_5_397b_multihost_cluster_cleanup]
-gcloud container node-pools delete "${NODE_POOL_NAME_0}" \
-    --cluster="${CLUSTER_NAME}" \
-    --location="${REGION}" \
-    --project="${PROJECT_ID}" \
-    --quiet || true
+if [[ "${TPU_TYPE}" == "v6e" ]]; then
+  # [START hypercomputer_tpu_infer_qwen3_5_397b_multihost_cluster_cleanup_v6e]
+  gcloud container node-pools delete "${NODE_POOL_NAME_0}" \
+      --cluster="${CLUSTER_NAME}" \
+      --location="${REGION}" \
+      --project="${PROJECT_ID}" \
+      --quiet || true
 
-gcloud container node-pools delete "${NODE_POOL_NAME_1}" \
-    --cluster="${CLUSTER_NAME}" \
-    --location="${REGION}" \
-    --project="${PROJECT_ID}" \
-    --quiet || true
+  gcloud container node-pools delete "${NODE_POOL_NAME_1}" \
+      --cluster="${CLUSTER_NAME}" \
+      --location="${REGION}" \
+      --project="${PROJECT_ID}" \
+      --quiet || true
 
-gcloud container clusters delete "${CLUSTER_NAME}" \
-    --location="${REGION}" \
-    --project="${PROJECT_ID}" \
-    --quiet || true
+  gcloud container clusters delete "${CLUSTER_NAME}" \
+      --location="${REGION}" \
+      --project="${PROJECT_ID}" \
+      --quiet || true
+  # [END hypercomputer_tpu_infer_qwen3_5_397b_multihost_cluster_cleanup_v6e]
+else
+  # [START hypercomputer_tpu_infer_qwen3_5_397b_multihost_cluster_cleanup]
+  gcloud container node-pools delete "${NODE_POOL_NAME_0}" \
+      --cluster="${CLUSTER_NAME}" \
+      --location="${REGION}" \
+      --project="${PROJECT_ID}" \
+      --quiet || true
 
-if [[ "${TPU_TYPE}" == "v7x" ]]; then
-gcloud compute resource-policies delete "${WORKLOAD_POLICY_NAME}" \
-    --region="${REGION}" \
-    --project="${PROJECT_ID}" \
-    --quiet || true
+  gcloud container node-pools delete "${NODE_POOL_NAME_1}" \
+      --cluster="${CLUSTER_NAME}" \
+      --location="${REGION}" \
+      --project="${PROJECT_ID}" \
+      --quiet || true
+
+  gcloud container clusters delete "${CLUSTER_NAME}" \
+      --location="${REGION}" \
+      --project="${PROJECT_ID}" \
+      --quiet || true
+
+  gcloud compute resource-policies delete "${WORKLOAD_POLICY_NAME}" \
+      --region="${REGION}" \
+      --project="${PROJECT_ID}" \
+      --quiet || true
+  # [END hypercomputer_tpu_infer_qwen3_5_397b_multihost_cluster_cleanup]
 fi
-# [END hypercomputer_tpu_infer_qwen3_5_397b_multihost_cluster_cleanup]
 
 echo "[$(date)] ==================== Cleanup Complete. ===================="
