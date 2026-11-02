@@ -33,7 +33,7 @@ kubectl port-forward service/vllm-qwen3-5-service 8000:8000
 # [END hypercomputer_tpu_infer_qwen3_5_397b_port_forward]
 
 # [START hypercomputer_tpu_infer_qwen3_5_397b_benchmark_logs]
-kubectl wait --for=jsonpath='{.status.phase}'=Running pod/qwen3-5-bench-8k1k --timeout=600s
+kubectl wait --for=jsonpath='{.status.phase}'=Running pod --field-selector=metadata.name=qwen3-5-bench-8k1k --timeout=600s
 kubectl logs -f qwen3-5-bench-8k1k
 # [END hypercomputer_tpu_infer_qwen3_5_397b_benchmark_logs]
 
