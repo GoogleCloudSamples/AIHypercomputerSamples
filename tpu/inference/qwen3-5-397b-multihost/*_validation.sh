@@ -18,9 +18,17 @@ set -euo pipefail
 
 echo "[$(date)] ==================== Starting validation... ===================="
 
-JOBSET_NAME="vllm-qwen3-5-397b-pd-disagg-v7x"
+if [[ "${TPU_TYPE:-v7x}" == "v6e" ]]; then
+  JOBSET_NAME="${JOBSET_NAME:-vllm-qwen3-30b-pd-disagg-v6e}"
+  MODEL_NAME="${MODEL_NAME:-Qwen/Qwen3-30B-A3B-FP8}"
+  BENCHMARK_JOB="${BENCHMARK_JOB:-vllm-qwen3-30b-pd-disagg-v6e-tester}"
+else
+  JOBSET_NAME="${JOBSET_NAME:-vllm-qwen3-5-397b-pd-disagg-v7x}"
+  MODEL_NAME="${MODEL_NAME:-Qwen/Qwen3.5-397B-A17B-FP8}"
+  BENCHMARK_JOB="${BENCHMARK_JOB:-vllm-qwen3-5-397b-pd-disagg-v7x-tester}"
+fi
+
 PROXY_JOB="job/${JOBSET_NAME}-proxy-0"
-BENCHMARK_JOB="vllm-qwen3-5-397b-pd-disagg-v7x-tester"
 
 echo "Verifying proxy pod for ${PROXY_JOB} is Ready..."
 kubectl wait --for=condition=Ready --timeout=600s pod -l "job-name=${JOBSET_NAME}-proxy-0"
@@ -50,12 +58,12 @@ until curl -sf http://127.0.0.1:10000/healthcheck >/dev/null; do
   count=$((count + 1))
 done
 
-echo "Executing test chat completion query to Qwen/Qwen3.5-397B-A17B-FP8 via PD-Disaggregation proxy..."
+echo "Executing test chat completion query to ${MODEL_NAME} via PD-Disaggregation proxy..."
 RESPONSE=$(curl -s http://127.0.0.1:10000/v1/chat/completions \
     -X POST \
     -H "Content-Type: application/json" \
     -d '{
-        "model": "Qwen/Qwen3.5-397B-A17B-FP8",
+        "model": "'"${MODEL_NAME}"'",
         "messages": [
             {"role": "user", "content": "Hello! Tell me a short joke."}
         ],
@@ -65,7 +73,8 @@ RESPONSE=$(curl -s http://127.0.0.1:10000/v1/chat/completions \
 
 echo "Verifying JSON completion structure..."
 if echo "${RESPONSE}" | grep -q '"object": *"chat.completion"'; then
-  echo "Chat completion validation succeeded!"
+  echo "Chat completion validation succeeded! Response:"
+  echo "${RESPONSE}" | jq . 2>/dev/null || echo "${RESPONSE}"
 else
   echo "Validation Failed! Expected chat.completion JSON structure. Response was:" >&2
   echo "${RESPONSE}" >&2

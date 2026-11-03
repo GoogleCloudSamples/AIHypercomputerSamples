@@ -1,0 +1,79 @@
+#  Copyright 2026 Google LLC
+#
+#  Licensed under the Apache License, Version 2.0 (the "License");
+#  you may not use this file except in compliance with the License.
+#  You may obtain a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+#  Unless required by applicable law or agreed to in writing, software
+#  distributed under the License is distributed on an "AS IS" BASIS,
+#  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#  See the License for the specific language governing permissions and
+#  limitations under the License.
+
+# [START hypercomputer_tpu_infer_qwen3_5_397b_multihost_v6e_benchmark_yaml]
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: vllm-qwen3-30b-pd-disagg-v6e-tester
+spec:
+  parallelism: 1
+  completions: 1
+  backoffLimit: 0
+  template:
+    spec:
+      restartPolicy: Never
+      containers:
+      - name: vllm-test
+        image: ${VLLM_IMAGE}
+        imagePullPolicy: IfNotPresent
+        resources:
+          requests: { cpu: "1", memory: "4Gi" }
+          limits: { cpu: "4", memory: "8Gi" }
+        command:
+        - /bin/bash
+        - -c
+        args:
+        - |
+          set -e
+          PREFILLER_DNS="${JS_NAME}-prefill-0-0.${JS_NAME}"
+          DECODER_DNS="${JS_NAME}-decode-0-0.${JS_NAME}"
+          PROXY_DNS="${JS_NAME}-proxy-0-0.${JS_NAME}"
+          MODEL="Qwen/Qwen3-30B-A3B-FP8"
+
+          echo 'import torch; torch.utils.rename_privateuse1_backend("tpu")' > /tmp/sitecustomize.py
+          export PYTHONPATH="/tmp:${PYTHONPATH:-}"
+
+          wait_for() {
+            local name="$1" url="$2" timeout=18000 elapsed=0
+            echo "Waiting for $name ($url)..."
+            until curl -sf "$url" > /dev/null; do
+              [ "$elapsed" -ge "$timeout" ] && { echo "ERROR: $name timeout" >&2; exit 1; }
+              sleep 10; elapsed=$((elapsed + 10))
+            done
+            echo "$name is up after ${elapsed}s!"
+          }
+          wait_for prefill "http://$PREFILLER_DNS:8000/health"
+          wait_for decode  "http://$DECODER_DNS:7200/health"
+          wait_for proxy   "http://$PROXY_DNS:10000/healthcheck"
+
+          echo "=== BENCHMARK: 8K/1K c=128 n=1280 ==="
+          BENCH_ARGS=(
+            --backend openai-chat
+            --base-url "http://$PROXY_DNS:10000" --endpoint /v1/chat/completions
+            --model "$MODEL" --dataset-name random
+            --random-input-len 8192 --random-output-len 1024
+            --ignore-eos
+            --max-concurrency 128 --num-prompts 1280
+          )
+          if vllm bench serve "${BENCH_ARGS[@]}"; then
+            echo "=== BENCHMARK COMPLETED SUCCESSFULLY ==="
+          else
+            echo "ERROR: BENCHMARK FAILED"
+            exit 1
+          fi
+        env:
+        - name: JS_NAME
+          value: "vllm-qwen3-30b-pd-disagg-v6e"
+# [END hypercomputer_tpu_infer_qwen3_5_397b_multihost_v6e_benchmark_yaml]

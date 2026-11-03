@@ -52,15 +52,15 @@ spec:
           pip3 install --break-system-packages -q -U "huggingface_hub"
 
           echo "=== 2. Downloading Qwen/Qwen3.5-397B-A17B-FP8 to Local Staging Volume ==="
-          hf download Qwen/Qwen3.5-397B-A17B-FP8 --local-dir /local-ssd/Qwen/Qwen3.5-397B-A17B-FP8
-          rm -rf /local-ssd/Qwen/Qwen3.5-397B-A17B-FP8/.cache
+          hf download Qwen/Qwen3.5-397B-A17B-FP8 --local-dir /local-ssd/model/Qwen/Qwen3.5-397B-A17B-FP8
+          rm -rf /local-ssd/model/Qwen/Qwen3.5-397B-A17B-FP8/.cache
 
           echo "=== 3. Uploading from Local Staging Volume to GCS ==="
           gcloud config set storage/parallel_composite_upload_compatibility_check False
-          gcloud storage cp -r /local-ssd/Qwen gs://${GCS_BUCKET}/
+          gcloud storage cp -r /local-ssd/model/Qwen gs://${GCS_BUCKET}/
 
           echo "=== 4. Cleaning up Local Staging Volume ==="
-          rm -rf /local-ssd/Qwen /local-ssd/hf-cache
+          rm -rf /local-ssd/model /local-ssd/hf-cache
         resources:
           requests:
             cpu: "64"
