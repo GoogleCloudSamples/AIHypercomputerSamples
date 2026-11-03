@@ -12,7 +12,7 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
-export ACCELERATOR_TYPE="${ACCELERATOR_TYPE:-v6e}"
+export ACCELERATOR_TYPE="${ACCELERATOR_TYPE:-v7x}"
 
 if [[ "${ACCELERATOR_TYPE}" == "v6e" ]]; then
 export ACCELERATOR_TYPE="v6e"
