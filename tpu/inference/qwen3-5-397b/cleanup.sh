@@ -18,16 +18,14 @@ set -euo pipefail
 
 echo "[$(date)] ==================== Deleting Kubernetes workloads and secrets... ===================="
 if [[ "${TPU_TYPE:-v7x}" == "v6e" ]]; then
-  kubectl delete -f qwen3-benchmark-8k1k.yaml --ignore-not-found || true
-
   # [START hypercomputer_tpu_infer_qwen3_5_397b_deploy_cleanup_v6]
+  kubectl delete -f qwen3-benchmark-8k1k.yaml --ignore-not-found || true
   kubectl delete -f qwen3_server.yaml --ignore-not-found || true
   kubectl delete secret hf-secret --ignore-not-found || true
   # [END hypercomputer_tpu_infer_qwen3_5_397b_deploy_cleanup_v6]
 else
-  kubectl delete -f qwen3_5-benchmark-8k1k.yaml --ignore-not-found || true
-
   # [START hypercomputer_tpu_infer_qwen3_5_397b_deploy_cleanup]
+  kubectl delete -f qwen3_5-benchmark-8k1k.yaml --ignore-not-found || true
   kubectl delete -f qwen3_5_server.yaml --ignore-not-found || true
   kubectl delete secret hf-secret --ignore-not-found || true
   # [END hypercomputer_tpu_infer_qwen3_5_397b_deploy_cleanup]
