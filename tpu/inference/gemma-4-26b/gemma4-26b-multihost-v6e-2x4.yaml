@@ -81,6 +81,10 @@ spec:
             value: "1"
           - name: TMPDIR
             value: "/data/tmp"
+          - name: TPU_MIN_LOG_LEVEL
+            value: "2"
+          - name: TF_CPP_MIN_LOG_LEVEL
+            value: "2"
           volumeMounts:
           - mountPath: /dev/shm
             name: dshm
@@ -107,7 +111,6 @@ spec:
           topology.kubernetes.io/zone: "$ZONE"
           cloud.google.com/gke-tpu-accelerator: tpu-v6e-slice
           cloud.google.com/gke-tpu-topology: 2x4
-          cloud.google.com/reservation-name: $RESERVATION_NAME
         volumes:
         - name: dshm
           emptyDir:
@@ -169,6 +172,10 @@ spec:
             value: "1"
           - name: TMPDIR
             value: "/data/tmp"
+          - name: TPU_MIN_LOG_LEVEL
+            value: "2"
+          - name: TF_CPP_MIN_LOG_LEVEL
+            value: "2"
           volumeMounts:
           - mountPath: /dev/shm
             name: dshm
@@ -178,7 +185,6 @@ spec:
           topology.kubernetes.io/zone: "$ZONE"
           cloud.google.com/gke-tpu-accelerator: tpu-v6e-slice
           cloud.google.com/gke-tpu-topology: 2x4
-          cloud.google.com/reservation-name: $RESERVATION_NAME
         volumes:
         - name: dshm
           emptyDir:
