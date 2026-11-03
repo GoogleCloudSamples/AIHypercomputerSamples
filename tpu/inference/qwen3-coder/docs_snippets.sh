@@ -12,9 +12,18 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
+if [ "${ACCELERATOR_TYPE}" == "v7x" ]; then
 # [START hypercomputer_tpu_infer_qwen3_coder_download_manifest]
 curl -LO https://raw.githubusercontent.com/GoogleCloudSamples/AIHypercomputerSamples/main/tpu/inference/qwen3-coder/qwen3-coder-480b-multihost-disagg-v7x.yaml
 # [END hypercomputer_tpu_infer_qwen3_coder_download_manifest]
+elif [ "${ACCELERATOR_TYPE}" == "v6e" ]; then
+# [START hypercomputer_tpu_infer_qwen3_coder_download_manifest_v6e]
+curl -LO https://raw.githubusercontent.com/GoogleCloudSamples/AIHypercomputerSamples/main/tpu/inference/qwen3-coder/qwen3-coder-30b-multihost-disagg-v6e-2x4.yaml
+# [END hypercomputer_tpu_infer_qwen3_coder_download_manifest_v6e]
+else
+  echo "Unsupported ACCELERATOR_TYPE: ${ACCELERATOR_TYPE}"
+  exit 1
+fi
 
 # [START hypercomputer_tpu_infer_qwen3_coder_check_pods]
 kubectl get pods
@@ -31,6 +40,7 @@ kill "${LOG_PID}" 2>/dev/null || true
 kubectl port-forward service/sglang-service 8000:8000
 # [END hypercomputer_tpu_infer_qwen3_coder_port_forward]
 
+if [ "${ACCELERATOR_TYPE}" == "v7x" ]; then
 # [START hypercomputer_tpu_infer_qwen3_coder_test_inference]
 curl -s -X POST http://localhost:8000/v1/chat/completions \
   -H "Content-Type: application/json" \
@@ -43,3 +53,17 @@ curl -s -X POST http://localhost:8000/v1/chat/completions \
     "temperature": 0.0
   }'
 # [END hypercomputer_tpu_infer_qwen3_coder_test_inference]
+elif [ "${ACCELERATOR_TYPE}" == "v6e" ]; then
+# [START hypercomputer_tpu_infer_qwen3_coder_test_inference_v6e]
+curl -s -X POST http://localhost:8000/v1/chat/completions \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "Qwen/Qwen3-Coder-30B-A3B-Instruct-FP8",
+    "messages": [
+      {"role": "user", "content": "Explain quicksort in two sentences."}
+    ],
+    "max_tokens": 60,
+    "temperature": 0.0
+  }'
+# [END hypercomputer_tpu_infer_qwen3_coder_test_inference_v6e]
+fi
