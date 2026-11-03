@@ -64,14 +64,17 @@ echo "Executing test query to ${MODEL_NAME}..."
 RESPONSE=$(curl -s http://127.0.0.1:8000/v1/chat/completions \
     -X POST \
     -H "Content-Type: application/json" \
-    -d "{
-        \"model\": \"${MODEL_NAME}\",
-        \"messages\": [
-            {\"role\": \"user\", \"content\": \"Hello! Tell me a joke.\"}
-        ],
-        \"max_tokens\": 512,
-        \"temperature\": 0.7
-    }")
+    -d @- <<EOF
+{
+    "model": "${MODEL_NAME}",
+    "messages": [
+        {"role": "user", "content": "Hello! Tell me a joke."}
+    ],
+    "max_tokens": 512,
+    "temperature": 0.7
+}
+EOF
+)
 
 echo "Verifying JSON completion structure..."
 if echo "${RESPONSE}" | grep -q '"object": *"chat.completion"'; then
