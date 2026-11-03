@@ -60,12 +60,30 @@ vars:
   deployment_name: ${CLUSTER_NAME}
   region: ${REGION}
   zone: ${ZONE}
-  static_node_count: 2
   authorized_cidr: 0.0.0.0/0
+
+## Choose ONE consumption model from the options below (default is Specific Reservation):
+
+## --- Option 1: Specific Reservation ---
   reservation_affinity:
     consume_reservation_type: SPECIFIC_RESERVATION
     specific_reservations:
     - name: ${RESERVATION_NAME}
+  static_node_count: 2
+
+## --- Option 2: DWS Flex Start ---
+  #enable_flex_start: true
+  #static_node_count: $(null)
+
+## --- Option 3: DWS Flex Start + Queued Provisioning ---
+  #enable_queued_provisioning: true
+  #auto_provisioning_CleanUp_interval:
+
+## --- Option 4: Spot ---
+  #spot: true
+  #static_node_count: 2
+  #placement_policy:
+  #  type: COMPACT
 EOF
 # [END hypercomputer_gpu_infer_deepseek_r1_deployment_configure]
 
