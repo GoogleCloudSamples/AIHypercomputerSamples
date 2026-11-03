@@ -39,9 +39,11 @@ kubectl delete job qwen3-8-2-4t-stage-weights --ignore-not-found >/dev/null 2>&1
 envsubst '${GCS_BUCKET}' < qwen3.8-2.4t-nvfp4-stage-weights-job.yaml | kubectl apply -f -
 
 kubectl wait --for=condition=complete job/qwen3-8-2-4t-stage-weights --timeout=2h
-
-kubectl delete job qwen3-8-2-4t-stage-weights
 # [END hypercomputer_gpu_infer_qwen38_2t_stage_weights]
+
+# [START hypercomputer_gpu_infer_qwen38_2t_stage_weights_delete_job]
+kubectl delete job qwen3-8-2-4t-stage-weights
+# [END hypercomputer_gpu_infer_qwen38_2t_stage_weights_delete_job]
 
 echo "[$(date)] ==================== Deploying Qwen 3.8 2.4T multihost PD-disaggregated server... ===================="
 # [START hypercomputer_gpu_infer_qwen38_2t_deploy]

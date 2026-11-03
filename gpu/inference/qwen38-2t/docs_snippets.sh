@@ -25,9 +25,12 @@ curl -O https://raw.githubusercontent.com/GoogleCloudSamples/AIHypercomputerSamp
 # [END hypercomputer_gpu_infer_qwen38_2t_fetch_manifest]
 
 # [START hypercomputer_gpu_infer_qwen38_2t_stage_weights_logs]
-POD_NAME="YOUR_POD_NAME"
-kubectl logs -f "${POD_NAME}"
+kubectl logs -f -l job-name=qwen3-8-2-4t-stage-weights --all-containers --prefix --max-log-requests=8
 # [END hypercomputer_gpu_infer_qwen38_2t_stage_weights_logs]
+
+# [START hypercomputer_gpu_infer_qwen38_2t_stage_weights_verify]
+gcloud storage ls "gs://${GCS_BUCKET}/hf_models/models--nvidia--qwen3_8-2_4t-a95b-nvfp4"
+# [END hypercomputer_gpu_infer_qwen38_2t_stage_weights_verify]
 
 # [START hypercomputer_gpu_infer_qwen38_2t_server_logs]
 kubectl get pods
