@@ -40,6 +40,7 @@ gcloud storage ls "gs://${MODEL_BUCKET}/DeepSeek-R1/*.safetensors" | wc -l
 # [END hypercomputer_gpu_infer_deepseek_r1_verify_model]
 
 # [START hypercomputer_gpu_infer_deepseek_r1_server_logs]
+kubectl wait --for=condition=Ready pod -l jobset.sigs.k8s.io/jobset-name=vllm-r1 --timeout=600s
 # monitor leader
 kubectl logs -l jobset.sigs.k8s.io/replicatedjob-name=leader -c vllm-leader -f --tail=-1
 # monitor worker
