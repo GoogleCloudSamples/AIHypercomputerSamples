@@ -30,6 +30,59 @@ gcloud compute resource-policies create workload-policy tpu7x-2x2x2-workload-pol
     --region="${REGION}"
 # [END hypercomputer_tpu_infer_qwen3_coder_create_workload_policy]
 
+if [ "${USE_FLEX_START:-false}" == "true" ]; then
+# [START hypercomputer_tpu_infer_qwen3_coder_create_nodepools_flex_start]
+gcloud container node-pools create tpu7x-pool-0 \
+    --cluster="${CLUSTER_NAME}" \
+    --location="${REGION}" \
+    --node-locations="${ZONE}" \
+    --machine-type=tpu7x-standard-4t \
+    --placement-policy=tpu7x-2x2x2-workload-policy \
+    --project="${PROJECT_ID}" \
+    --reservation-affinity=none \
+    --enable-autoscaling \
+    --num-nodes=0 \
+    --min-nodes=0 \
+    --max-nodes=2 \
+    --flex-start
+
+gcloud container node-pools create tpu7x-pool-1 \
+    --cluster="${CLUSTER_NAME}" \
+    --location="${REGION}" \
+    --node-locations="${ZONE}" \
+    --machine-type=tpu7x-standard-4t \
+    --placement-policy=tpu7x-2x2x2-workload-policy \
+    --project="${PROJECT_ID}" \
+    --reservation-affinity=none \
+    --enable-autoscaling \
+    --num-nodes=0 \
+    --min-nodes=0 \
+    --max-nodes=2 \
+    --flex-start
+# [END hypercomputer_tpu_infer_qwen3_coder_create_nodepools_flex_start]
+elif [ "${USE_SPOT:-false}" == "true" ]; then
+# [START hypercomputer_tpu_infer_qwen3_coder_create_nodepools_spot]
+gcloud container node-pools create tpu7x-pool-0 \
+    --cluster="${CLUSTER_NAME}" \
+    --location="${REGION}" \
+    --node-locations="${ZONE}" \
+    --machine-type=tpu7x-standard-4t \
+    --num-nodes=2 \
+    --placement-policy=tpu7x-2x2x2-workload-policy \
+    --project="${PROJECT_ID}" \
+    --spot
+
+gcloud container node-pools create tpu7x-pool-1 \
+    --cluster="${CLUSTER_NAME}" \
+    --location="${REGION}" \
+    --node-locations="${ZONE}" \
+    --machine-type=tpu7x-standard-4t \
+    --num-nodes=2 \
+    --placement-policy=tpu7x-2x2x2-workload-policy \
+    --project="${PROJECT_ID}" \
+    --spot
+# [END hypercomputer_tpu_infer_qwen3_coder_create_nodepools_spot]
+else
 # [START hypercomputer_tpu_infer_qwen3_coder_create_nodepools]
 gcloud container node-pools create tpu7x-pool-0 \
     --cluster="${CLUSTER_NAME}" \
@@ -53,7 +106,61 @@ gcloud container node-pools create tpu7x-pool-1 \
     --reservation="${RESERVATION}" \
     --project="${PROJECT_ID}"
 # [END hypercomputer_tpu_infer_qwen3_coder_create_nodepools]
+fi
 elif [ "${ACCELERATOR_TYPE}" == "v6e" ]; then
+if [ "${USE_FLEX_START:-false}" == "true" ]; then
+# [START hypercomputer_tpu_infer_qwen3_coder_create_nodepools_v6e_flex_start]
+gcloud container node-pools create tpu-v6e-pool-0 \
+    --cluster="${CLUSTER_NAME}" \
+    --location="${REGION}" \
+    --node-locations="${ZONE}" \
+    --machine-type=ct6e-standard-4t \
+    --tpu-topology=2x4 \
+    --project="${PROJECT_ID}" \
+    --reservation-affinity=none \
+    --enable-autoscaling \
+    --num-nodes=0 \
+    --min-nodes=0 \
+    --max-nodes=2 \
+    --flex-start
+
+gcloud container node-pools create tpu-v6e-pool-1 \
+    --cluster="${CLUSTER_NAME}" \
+    --location="${REGION}" \
+    --node-locations="${ZONE}" \
+    --machine-type=ct6e-standard-4t \
+    --tpu-topology=2x4 \
+    --project="${PROJECT_ID}" \
+    --reservation-affinity=none \
+    --enable-autoscaling \
+    --num-nodes=0 \
+    --min-nodes=0 \
+    --max-nodes=2 \
+    --flex-start
+# [END hypercomputer_tpu_infer_qwen3_coder_create_nodepools_v6e_flex_start]
+elif [ "${USE_SPOT:-false}" == "true" ]; then
+# [START hypercomputer_tpu_infer_qwen3_coder_create_nodepools_v6e_spot]
+gcloud container node-pools create tpu-v6e-pool-0 \
+    --cluster="${CLUSTER_NAME}" \
+    --location="${REGION}" \
+    --node-locations="${ZONE}" \
+    --machine-type=ct6e-standard-4t \
+    --tpu-topology=2x4 \
+    --num-nodes=2 \
+    --project="${PROJECT_ID}" \
+    --spot
+
+gcloud container node-pools create tpu-v6e-pool-1 \
+    --cluster="${CLUSTER_NAME}" \
+    --location="${REGION}" \
+    --node-locations="${ZONE}" \
+    --machine-type=ct6e-standard-4t \
+    --tpu-topology=2x4 \
+    --num-nodes=2 \
+    --project="${PROJECT_ID}" \
+    --spot
+# [END hypercomputer_tpu_infer_qwen3_coder_create_nodepools_v6e_spot]
+else
 # [START hypercomputer_tpu_infer_qwen3_coder_create_nodepools_v6e]
 gcloud container node-pools create tpu-v6e-pool-0 \
     --cluster="${CLUSTER_NAME}" \
@@ -77,6 +184,7 @@ gcloud container node-pools create tpu-v6e-pool-1 \
     --reservation="${RESERVATION}" \
     --project="${PROJECT_ID}"
 # [END hypercomputer_tpu_infer_qwen3_coder_create_nodepools_v6e]
+fi
 else
   echo "Unsupported ACCELERATOR_TYPE: ${ACCELERATOR_TYPE}"
   exit 1
