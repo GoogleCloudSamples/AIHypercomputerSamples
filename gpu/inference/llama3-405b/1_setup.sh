@@ -67,7 +67,7 @@ fi
 
 echo "[$(date)] ==================== Configuring gke-a4 deployment blueprint... ===================="
 # [START hypercomputer_gpu_infer_llama3_405b_configure_blueprint]
-cat <<EOF > cluster-toolkit/examples/gke-a4/gke-a4-deployment.yaml
+cat <<EOF > cluster-toolkit/gke-a4-deployment.yaml
 terraform_backend_defaults:
   type: gcs
   configuration:
@@ -92,7 +92,7 @@ echo "[$(date)] ==================== Deploying GKE A4 cluster ${CLUSTER_NAME} wi
 # [START hypercomputer_gpu_infer_llama3_405b_cluster_create]
 cd cluster-toolkit
 ./gcluster deploy \
-    -d examples/gke-a4/gke-a4-deployment.yaml \
+    -d gke-a4-deployment.yaml \
     examples/gke-a4/gke-a4.yaml \
     --auto-approve -w
 cd ..

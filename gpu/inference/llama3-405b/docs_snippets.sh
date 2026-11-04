@@ -23,6 +23,37 @@ gcloud auth application-default login
 curl -O https://raw.githubusercontent.com/GoogleCloudSamples/AIHypercomputerSamples/refs/heads/main/gpu/inference/llama3-405b/llama3.1-405b-singlehost-a4.yaml
 # [END hypercomputer_gpu_infer_llama3_405b_fetch_manifest]
 
+# [START hypercomputer_gpu_infer_llama3_405b_poll_ready]
+frontend_pod=$(kubectl get pods -l "nvidia.com/dynamo-component-type=frontend" -o jsonpath='{.items[*].metadata.name}')
+prefill_pod=$(kubectl get pods -l "nvidia.com/dynamo-sub-component-type=prefill" -o jsonpath='{.items[*].metadata.name}')
+decode_pod=$(kubectl get pods -l "nvidia.com/dynamo-sub-component-type=decode" -o jsonpath='{.items[*].metadata.name}')
+echo "Created frontend/prefill/decode pods:"
+echo "  Frontend: ${frontend_pod}"
+echo "  Prefill:  ${prefill_pod}"
+echo "  Decode:   ${decode_pod}"
+echo ""
+echo "Waiting for pods to be ready..."
+for pod in "${frontend_pod}" "${prefill_pod}" "${decode_pod}"; do
+  if ! kubectl wait --for=condition=Ready "pod/${pod}" --timeout=3600s; then
+    echo "Pod ${pod} failed to become Ready within 60 minutes!" >&2
+    kubectl describe "pod/${pod}" >&2
+    kubectl logs "${pod}" --tail=200 >&2 || true
+  fi
+done
+# [END hypercomputer_gpu_infer_llama3_405b_poll_ready]
+
+# [START hypercomputer_gpu_infer_llama3_405b_server_logs_prefill]
+# monitor prefill pod
+kubectl logs -f -c main --tail=-1 \
+$(kubectl get pods -l "nvidia.com/dynamo-sub-component-type=prefill" -o jsonpath='{.items[*].metadata.name}')
+# [END hypercomputer_gpu_infer_llama3_405b_server_logs_prefill]
+
+# [START hypercomputer_gpu_infer_llama3_405b_server_logs_decode]
+# monitor decode pod
+kubectl logs -f -c main --tail=-1 \
+$(kubectl get pods -l "nvidia.com/dynamo-sub-component-type=decode" -o jsonpath='{.items[*].metadata.name}')
+# [END hypercomputer_gpu_infer_llama3_405b_server_logs_decode]
+
 # [START hypercomputer_gpu_infer_llama3_405b_server_logs]
 kubectl get pods
 POD_NAME="YOUR_POD_NAME"
