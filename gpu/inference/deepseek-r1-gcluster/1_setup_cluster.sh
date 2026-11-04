@@ -73,11 +73,12 @@ vars:
 
 ## --- Option 2: DWS Flex Start ---
   #enable_flex_start: true
-  #static_node_count: $(null)
+  #static_node_count: null
 
 ## --- Option 3: DWS Flex Start + Queued Provisioning ---
+  #enable_flex_start: true
   #enable_queued_provisioning: true
-  #auto_provisioning_CleanUp_interval:
+  #static_node_count: null
 
 ## --- Option 4: Spot ---
   #spot: true
