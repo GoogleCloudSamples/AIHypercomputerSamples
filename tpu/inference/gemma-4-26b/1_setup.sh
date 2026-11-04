@@ -20,7 +20,7 @@ set -euo pipefail
 gcloud container clusters create "${CLUSTER_NAME}" \
     --project="${PROJECT_ID}" \
     --location="${REGION}" \
-    --machine-type=e2-standard-4 \
+    --machine-type=e2-standard-4
 
 gcloud container node-pools create "${NODE_POOL_NAME}" \
     --project="${PROJECT_ID}" \
@@ -62,7 +62,13 @@ kubectl create secret generic hf-secret \
 
 echo "Installing LeaderWorkerSet controller..."
 # [START hypercomputer_tpu_infer_gemma4_26b_lws_install]
-kubectl apply --server-side -k "github.com/kubernetes-sigs/lws/config/default?ref=main"
+kubectl apply --server-side -f https://github.com/kubernetes-sigs/lws/releases/download/v1.0.0/manifests.yaml
 echo "Waiting for LWS controller to be ready..."
 kubectl wait --for=condition=Available --timeout=300s deployment/lws-controller-manager -n lws-system
 # [END hypercomputer_tpu_infer_gemma4_26b_lws_install]
+
+echo "Waiting for Konnectivity agent and LWS webhook to be ready..."
+kubectl wait --for=condition=Available --timeout=300s \
+  deployment/konnectivity-agent -n kube-system
+kubectl wait --for=jsonpath='{.webhooks[0].clientConfig.caBundle}' --timeout=300s \
+  validatingwebhookconfiguration/lws-validating-webhook-configuration
