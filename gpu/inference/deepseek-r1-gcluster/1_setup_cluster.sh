@@ -60,12 +60,31 @@ vars:
   deployment_name: ${CLUSTER_NAME}
   region: ${REGION}
   zone: ${ZONE}
-  static_node_count: 2
   authorized_cidr: 0.0.0.0/0
+
+## Choose ONE consumption model from the options below (default is Specific Reservation):
+
+## --- Option 1: Specific Reservation ---
   reservation_affinity:
     consume_reservation_type: SPECIFIC_RESERVATION
     specific_reservations:
     - name: ${RESERVATION_NAME}
+  static_node_count: 2
+
+## --- Option 2: DWS Flex Start ---
+  #enable_flex_start: true
+  #static_node_count: null
+
+## --- Option 3: DWS Flex Start + Queued Provisioning ---
+  #enable_flex_start: true
+  #enable_queued_provisioning: true
+  #static_node_count: null
+
+## --- Option 4: Spot ---
+  #spot: true
+  #static_node_count: 2
+  #placement_policy:
+  #  type: COMPACT
 EOF
 # [END hypercomputer_gpu_infer_deepseek_r1_deployment_configure]
 
@@ -80,8 +99,8 @@ echo "Deploying the cluster (this takes ~30-45 minutes)..."
 gcloud container clusters get-credentials "${CLUSTER_NAME}" \
     --project="${PROJECT_ID}" \
     --location="${REGION}"
-# [END hypercomputer_gpu_infer_deepseek_r1_cluster_get_creds]
 
+# [START_EXCLUDE silent]
 echo "Waiting for the JobSet controller and the gIB NCCL installer to be ready..."
 LIMIT=60
 count=0
@@ -94,7 +113,9 @@ until kubectl get deployment/jobset-controller -n jobset-system >/dev/null 2>&1 
   sleep 5
   count=$((count + 1))
 done
+# [END_EXCLUDE]
 kubectl rollout status deployment/jobset-controller -n jobset-system --timeout=300s
 kubectl rollout status daemonset/nccl-rdma-installer -n kube-system --timeout=900s
+# [END hypercomputer_gpu_infer_deepseek_r1_cluster_get_creds]
 
 echo "Success! Cluster ${CLUSTER_NAME} is ready for deployment."
