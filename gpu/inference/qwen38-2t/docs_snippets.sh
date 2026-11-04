@@ -59,15 +59,17 @@ POD_NAME="YOUR_POD_NAME"
 kubectl logs -f "${POD_NAME}"
 # [END hypercomputer_gpu_infer_qwen38_2t_server_logs]
 
-# [START hypercomputer_gpu_infer_qwen38_2t_server_logs_v2]
+# [START hypercomputer_gpu_infer_qwen38_2t_server_logs_prefill]
 # monitor prefill leader pod
 kubectl logs -f -c main --tail=-1 \
 $(kubectl get pods --no-headers -o custom-columns=":metadata.name" | grep "^qwen3-8-2-4t-a4-disagg.*prefill-ldr" | head -n 1)
+# [END hypercomputer_gpu_infer_qwen38_2t_server_logs_prefill]
 
+# [START hypercomputer_gpu_infer_qwen38_2t_server_logs_decode]
 # monitor decode leader pod
 kubectl logs -f -c main --tail=-1 \
 $(kubectl get pods --no-headers -o custom-columns=":metadata.name" | grep "^qwen3-8-2-4t-a4-disagg.*decode-ldr" | head -n 1)
-# [END hypercomputer_gpu_infer_qwen38_2t_server_logs_v2]
+# [END hypercomputer_gpu_infer_qwen38_2t_server_logs_decode]
 
 # [START hypercomputer_gpu_infer_qwen38_2t_port_forward]
 kubectl port-forward svc/qwen3-8-2-4t-a4-disagg-frontend 8000:8000
