@@ -25,8 +25,9 @@ envsubst '$RESERVATION_NAME $ZONE $VLLM_IMAGE' < gemma4-26b-multihost-v6e-2x4.ya
 echo "Deploying the model and tracking progress..."
 # [START hypercomputer_tpu_infer_gemma4_26b_deploy_wait]
 # Stream logs from the InitContainer to monitor model download
-kubectl wait --for=jsonpath='{.status.initContainerStatuses[0].state.running}' \
-  --timeout=1200s pod -l leaderworkerset.sigs.k8s.io/name=vllm-tpu-gemma4-26b
+until kubectl get pod -l leaderworkerset.sigs.k8s.io/name=vllm-tpu-gemma4-26b -o jsonpath='{.items[*].status.initContainerStatuses[0].state}' 2>/dev/null | grep -qE "running|terminated"; do
+  sleep 2
+done
 kubectl logs -f -l leaderworkerset.sigs.k8s.io/name=vllm-tpu-gemma4-26b -c prefetch-model --prefix
 
 # When the pods transition to Running, monitor logs
