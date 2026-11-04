@@ -30,6 +30,7 @@ if ! gcloud container clusters describe "${CLUSTER_NAME}" --location="${REGION}"
       --project="${PROJECT_ID}" \
       --location="${REGION}" \
       --node-locations="${ZONE}" \
+      --machine-type=e2-standard-4 \
       --network="${NETWORK}" \
       --subnetwork="${SUBNETWORK}"
   # [END hypercomputer_tpu_infer_qwen3_5_397b_cluster_create]
@@ -49,7 +50,7 @@ fi
 
 if ! gcloud container node-pools describe "${NODE_POOL_NAME}" --cluster="${CLUSTER_NAME}" --location="${REGION}" --project="${PROJECT_ID}" >/dev/null 2>&1; then
   if [[ "${USE_SPOT:-false}" == "true" || -z "${RESERVATION_NAME:-}" || "${RESERVATION_NAME}" == "YOUR_RESERVATION_NAME" || "${RESERVATION_NAME}" == "spot" || "${RESERVATION_NAME}" == "none" ]]; then
-    echo "[$(date)] ==================== Creating TPU v7x node pool ${NODE_POOL_NAME} (Spot VMs)... ===================="
+    echo "[$(date)] ==================== Creating TPU ${TPU_TYPE:-v7x} node pool ${NODE_POOL_NAME} (Spot VMs)... ===================="
     # [START hypercomputer_tpu_infer_qwen3_5_397b_nodepool_create_spot]
     gcloud container node-pools create "${NODE_POOL_NAME}" \
         --cluster="${CLUSTER_NAME}" \
@@ -61,7 +62,7 @@ if ! gcloud container node-pools describe "${NODE_POOL_NAME}" --cluster="${CLUST
         --spot
     # [END hypercomputer_tpu_infer_qwen3_5_397b_nodepool_create_spot]
   else
-    echo "[$(date)] ==================== Creating TPU v7x node pool ${NODE_POOL_NAME} (Reservation: ${RESERVATION_NAME})... ===================="
+    echo "[$(date)] ==================== Creating TPU ${TPU_TYPE:-v7x} node pool ${NODE_POOL_NAME} (Reservation: ${RESERVATION_NAME})... ===================="
     # [START hypercomputer_tpu_infer_qwen3_5_397b_nodepool_create_reservation]
     gcloud container node-pools create "${NODE_POOL_NAME}" \
         --cluster="${CLUSTER_NAME}" \

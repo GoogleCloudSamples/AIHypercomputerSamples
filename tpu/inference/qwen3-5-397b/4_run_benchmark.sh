@@ -25,29 +25,45 @@ if [[ -z "${VLLM_IMAGE:-}" || "${VLLM_IMAGE}" == "YOUR_VLLM_TPU_IMAGE" ]]; then
   export VLLM_IMAGE="vllm/vllm-torchtpu:v0.29.0@sha256:3976ccc1a69ffd361e0a7d2831fe317f6b685636014f426321a39ae02f8da0dc"
 fi
 
-echo "[$(date)] ==================== Starting Qwen 3.5 397B 8k/1k benchmark... ===================="
-kubectl delete pod qwen3-5-bench-8k1k --ignore-not-found
+if [[ "${TPU_TYPE:-v7x}" == "v6e" ]]; then
+  MODEL_NAME="${MODEL_NAME:-Qwen/Qwen3-30B-A3B-FP8}"
+  BENCHMARK_MANIFEST="${BENCHMARK_MANIFEST:-qwen3-benchmark-8k1k.yaml}"
+  BENCHMARK_POD="${BENCHMARK_POD:-qwen3-bench-8k1k}"
+else
+  MODEL_NAME="${MODEL_NAME:-Qwen/Qwen3.5-397B-A17B-FP8}"
+  BENCHMARK_MANIFEST="${BENCHMARK_MANIFEST:-qwen3_5-benchmark-8k1k.yaml}"
+  BENCHMARK_POD="${BENCHMARK_POD:-qwen3-5-bench-8k1k}"
+fi
 
-# [START hypercomputer_tpu_infer_qwen3_5_397b_benchmark_apply]
-envsubst '$VLLM_IMAGE' < "qwen3_5-benchmark-8k1k.yaml" | kubectl apply -f -
-# [END hypercomputer_tpu_infer_qwen3_5_397b_benchmark_apply]
+echo "[$(date)] ==================== Starting ${MODEL_NAME} 8k/1k benchmark (${BENCHMARK_MANIFEST})... ===================="
+kubectl delete pod "${BENCHMARK_POD}" --ignore-not-found
 
-echo "Waiting for benchmark pod qwen3-5-bench-8k1k to start running..."
+if [[ "${TPU_TYPE:-v7x}" == "v6e" ]]; then
+  # [START hypercomputer_tpu_infer_qwen3_5_397b_benchmark_apply_v6]
+  envsubst '$VLLM_IMAGE' < "qwen3-benchmark-8k1k.yaml" | kubectl apply -f -
+  # [END hypercomputer_tpu_infer_qwen3_5_397b_benchmark_apply_v6]
+else
+  # [START hypercomputer_tpu_infer_qwen3_5_397b_benchmark_apply]
+  envsubst '$VLLM_IMAGE' < "qwen3_5-benchmark-8k1k.yaml" | kubectl apply -f -
+  # [END hypercomputer_tpu_infer_qwen3_5_397b_benchmark_apply]
+fi
+
+echo "Waiting for benchmark pod ${BENCHMARK_POD} to start running..."
 TIMEOUT=600
 ELAPSED=0
 while true; do
-  PHASE=$(kubectl get pod qwen3-5-bench-8k1k -o jsonpath='{.status.phase}' 2>/dev/null || echo "Pending")
+  PHASE=$(kubectl get pod "${BENCHMARK_POD}" -o jsonpath='{.status.phase}' 2>/dev/null || echo "Pending")
   if [[ "${PHASE}" == "Running" || "${PHASE}" == "Succeeded" ]]; then
     break
   fi
   if [[ "${PHASE}" == "Failed" ]]; then
     echo "Benchmark pod failed to start!" >&2
-    kubectl describe pod qwen3-5-bench-8k1k >&2
+    kubectl describe pod "${BENCHMARK_POD}" >&2
     exit 1
   fi
   if [[ "${ELAPSED}" -ge "${TIMEOUT}" ]]; then
-    echo "Timeout waiting for benchmark pod qwen3-5-bench-8k1k to start." >&2
-    kubectl describe pod qwen3-5-bench-8k1k >&2
+    echo "Timeout waiting for benchmark pod ${BENCHMARK_POD} to start." >&2
+    kubectl describe pod "${BENCHMARK_POD}" >&2
     exit 1
   fi
   sleep 5
@@ -55,7 +71,7 @@ while true; do
 done
 
 echo "Streaming benchmark logs..."
-kubectl logs -f qwen3-5-bench-8k1k &
+kubectl logs -f "${BENCHMARK_POD}" &
 LOG_PID=$!
 
 cleanup_logs() {
@@ -63,10 +79,10 @@ cleanup_logs() {
 }
 trap cleanup_logs EXIT
 
-if ! kubectl wait --for=jsonpath='{.status.phase}'=Succeeded --timeout=7200s pod/qwen3-5-bench-8k1k; then
-  echo "Benchmark pod qwen3-5-bench-8k1k did not succeed within 120 minutes!" >&2
-  kubectl describe pod qwen3-5-bench-8k1k >&2
-  kubectl logs qwen3-5-bench-8k1k --tail=200 >&2 || true
+if ! kubectl wait --for=jsonpath='{.status.phase}'=Succeeded --timeout=7200s "pod/${BENCHMARK_POD}"; then
+  echo "Benchmark pod ${BENCHMARK_POD} did not succeed within 120 minutes!" >&2
+  kubectl describe pod "${BENCHMARK_POD}" >&2
+  kubectl logs "${BENCHMARK_POD}" --tail=200 >&2 || true
   exit 1
 fi
 
