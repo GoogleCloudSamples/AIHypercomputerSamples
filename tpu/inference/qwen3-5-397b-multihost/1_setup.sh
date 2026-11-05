@@ -33,7 +33,6 @@ if ! gcloud container clusters describe "${CLUSTER_NAME}" --location="${REGION}"
   gcloud container clusters create "${CLUSTER_NAME}" \
       --project="${PROJECT_ID}" \
       --location="${REGION}" \
-      --node-locations="${ZONE}" \
       --machine-type="e2-standard-4" \
       --workload-pool="${PROJECT_ID}.svc.id.goog"
   # [END hypercomputer_tpu_infer_qwen3_5_397b_multihost_cluster_create]
