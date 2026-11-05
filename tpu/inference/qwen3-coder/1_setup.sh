@@ -18,8 +18,6 @@ set -euo pipefail
 gcloud container clusters create "${CLUSTER_NAME}" \
   --project="${PROJECT_ID}" \
   --location="${REGION}" \
-  --node-locations="${ZONE}" \
-  --num-nodes=2 \
   --machine-type=e2-standard-4
 # [END hypercomputer_tpu_infer_qwen3_coder_create_cluster]
 

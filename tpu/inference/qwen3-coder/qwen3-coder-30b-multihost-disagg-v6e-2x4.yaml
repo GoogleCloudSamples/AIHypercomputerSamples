@@ -148,7 +148,7 @@ spec:
                 path: /health
                 port: 8000
               periodSeconds: 10
-              timeoutSeconds: 15
+              timeoutSeconds: 10
               failureThreshold: 6
             volumeMounts:
               - name: model-cache
@@ -310,7 +310,7 @@ spec:
                 path: /health
                 port: 8000
               periodSeconds: 10
-              timeoutSeconds: 15
+              timeoutSeconds: 10
               failureThreshold: 6
             volumeMounts:
               - name: model-cache
