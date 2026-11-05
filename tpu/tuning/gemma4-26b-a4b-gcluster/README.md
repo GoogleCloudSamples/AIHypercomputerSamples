@@ -96,13 +96,11 @@ To verify that the workload ran successfully:
 
 ## Clean up
 
-To clean up the resources created by this sample:
+To clean up the resources created by this sample, run the cleanup script:
 
-1. Terminate the resources and clean up the workspace:
-
-   ```bash
-   ./cleanup.sh
-   ```
+```bash
+./cleanup.sh
+```
   
 ## Additional resources
   

@@ -71,15 +71,11 @@ To verify that the workload ran successfully:
 
 _[Provide instructions to terminate all created resources to avoid unnecessary charges.]_
 
-To clean up the resources created by this sample:
+To clean up the resources created by this sample, run the cleanup script:
 
-1. _[Delete resources]_
-
-   Example: Delete the Slurm cluster and clean up the workspace:
-
-   ```bash
-   ./cleanup.sh
-   ```
+```bash
+./cleanup.sh
+```
   
 ## Additional resources
   
