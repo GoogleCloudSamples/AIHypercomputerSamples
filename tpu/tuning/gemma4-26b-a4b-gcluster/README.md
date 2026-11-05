@@ -1,4 +1,4 @@
-# Fine-tune Gemma 4 26B on a TPU GKE Cluster
+# Fine-tune Gemma 4 26B on a TPU GKE cluster
 
 This code sample is intended for AI/ML engineers and demonstrates how to fine-tune the Gemma 4 26B model on a Google Kubernetes Engine (GKE) cluster with Cloud TPUs.
 

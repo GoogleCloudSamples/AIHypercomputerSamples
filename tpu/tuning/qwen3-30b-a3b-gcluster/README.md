@@ -1,4 +1,4 @@
-# Fine-tune Qwen3 30B on a TPU GKE Cluster
+# Fine-tune Qwen3 30B on a TPU GKE cluster
 
 This code sample is intended for AI/ML engineers and demonstrates how to fine-tune the Qwen3 30B model on a Google Kubernetes Engine (GKE) cluster with Cloud TPUs.
 

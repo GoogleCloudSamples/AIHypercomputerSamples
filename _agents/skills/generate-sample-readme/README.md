@@ -1,4 +1,4 @@
-# Generate Sample README Skill
+# Generate sample README skill
 
 This directory contains the `generate-sample-readme` skill, which automates the creation and formatting of `README.md` files for AI Hypercomputer code samples. The skill ensures that all sample documentation strictly adheres to the official repository template (`sample_template/README.md`).
 
@@ -14,7 +14,7 @@ When invoked, the skill:
 
 If you are using Gemini (or the Jetski agent system), you can instruct the agent to use this skill when creating a new sample or updating an old one. 
 
-**Example Prompts:**
+**Example prompts:**
 * *"I just created a new sample in `gpu/inference/new-model`. Please use the `generate-sample-readme` skill to generate its README."*
 * *"Please run the `generate-sample-readme` skill for `tpu/tuning/my-sample`. The tutorial URL is `https://docs.cloud.google.com/ai-hypercomputer/docs/...`"*
 
