@@ -33,6 +33,50 @@ export GVNIC_NETWORK_PREFIX="YOUR_GVNIC_NAME"
 export RDMA_NETWORK_PREFIX="YOUR_RDMA_NAME"
 # [END hypercomputer_gpu_train_ray_verl_std_env]
 
+# [START hypercomputer_gpu_train_ray_verl_std_env_0]
+################################################################################
+# In this tutorial "PLACEHOLDER_VARIABLES" can be edited by clicking on them #
+# Additionally, code blocks can be copied using icons in the top right corner  #
+################################################################################
+# [END hypercomputer_gpu_train_ray_verl_std_env_0]
+
+# [START hypercomputer_gpu_train_ray_verl_std_env_1]
+export PROJECT_ID=$(gcloud config get project)
+export PROJECT_NUMBER=$(gcloud projects describe ${PROJECT_ID} --format="value(projectNumber)")
+# [END hypercomputer_gpu_train_ray_verl_std_env_1]
+
+# [START hypercomputer_gpu_train_ray_verl_std_env_2]
+export CLUSTER_NAME="YOUR_CLUSTER_NAME"
+export CONTROL_PLANE_REGION="YOUR_REGION"
+export NODE_ZONE="YOUR_ZONE"
+# [END hypercomputer_gpu_train_ray_verl_std_env_2]
+
+# [START hypercomputer_gpu_train_ray_verl_std_env_3]
+export GS_BUCKET="YOUR_GCS_BUCKET"
+export KSA_NAME="YOUR_KSA_NAME"
+# [END hypercomputer_gpu_train_ray_verl_std_env_3]
+
+# [START hypercomputer_gpu_train_ray_verl_std_env_4]
+export GPU_TYPE="YOUR_GPU_TYPE"
+export MACHINE_TYPE="YOUR_MACHINE_TYPE"
+export CPU_MACHINE_TYPE="YOUR_CPU_MACHINE_TYPE"
+# [END hypercomputer_gpu_train_ray_verl_std_env_4]
+
+# [START hypercomputer_gpu_train_ray_verl_std_env_5]
+export RESERVATION="YOUR_RESERVATION_NAME"
+export HF_TOKEN="YOUR_HF_TOKEN"
+# [END hypercomputer_gpu_train_ray_verl_std_env_5]
+
+# [START hypercomputer_gpu_train_ray_verl_std_env_6]
+export GVNIC_NETWORK_PREFIX="YOUR_GVNIC_NAME"
+export RDMA_NETWORK_PREFIX="YOUR_RDMA_NAME"
+# [END hypercomputer_gpu_train_ray_verl_std_env_6]
+
+# [START hypercomputer_gpu_train_ray_verl_std_env_7]
+export NAMESPACE="default"
+# other hardcoded variables that might be useful to explain
+# [END hypercomputer_gpu_train_ray_verl_std_env_7]
+
 # Timeout for waiting for Ray GPU worker pods to become Ready.
 # Used in 2_setup_cluster.sh.
 # Default value is 3600s (60 minutes) to account for potential
