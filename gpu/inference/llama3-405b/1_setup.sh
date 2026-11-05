@@ -131,10 +131,10 @@ helm upgrade --install dynamo-platform ./dynamo-platform \
     --set global.grove.install=true \
     --set global.grove.enabled=true \
     --set global.kai-scheduler.enabled=true
-# [END hypercomputer_gpu_infer_llama3_405b_install_dynamo]
 
 echo "Waiting for Dynamo operator and Grove operator deployments to become Available..."
 kubectl wait --for=condition=Available deployment/dynamo-platform-dynamo-operator-controller-manager --timeout=300s || true
 kubectl wait --for=condition=Available deployment/grove-operator --timeout=300s || true
+# [END hypercomputer_gpu_infer_llama3_405b_install_dynamo]
 
 echo "[$(date)] ==================== Cluster and Dynamo setup completed! ===================="
