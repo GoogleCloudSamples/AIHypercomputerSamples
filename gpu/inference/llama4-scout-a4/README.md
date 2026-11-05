@@ -1,6 +1,6 @@
-# Serve Llama 4 Scout A4 on a GKE cluster
+# Serve Llama 4 Scout on an A4 GKE cluster
 
-This code sample is intended for AI/ML engineers and demonstrates how to serve the Llama 4 Scout A4 model on a Google Kubernetes Engine (GKE) cluster for inference.
+This code sample is intended for AI/ML engineers and demonstrates how to serve the Llama 4 Scout model on an A4 Google Kubernetes Engine (GKE) cluster for inference.
 
 Note: This sample doesn’t demonstrate how to fine-tune the model or configure Virtual Private Cloud (VPC) networks from scratch.
 

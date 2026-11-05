@@ -1,6 +1,6 @@
-# Serve DeepSeek v3 on a GKE cluster
+# Serve DeepSeek-V3.1-Base on a GKE cluster
 
-This code sample is intended for AI/ML engineers and demonstrates how to serve the DeepSeek v3 model on a Google Kubernetes Engine (GKE) cluster for inference.
+This code sample is intended for AI/ML engineers and demonstrates how to serve the DeepSeek-V3.1-Base model on a Google Kubernetes Engine (GKE) cluster for inference.
 
 Note: This sample doesn’t demonstrate how to fine-tune the model or configure Virtual Private Cloud (VPC) networks from scratch.
 

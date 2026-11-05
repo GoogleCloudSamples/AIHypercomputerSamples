@@ -1,6 +1,6 @@
-# SFT tuning on a TPU GKE cluster
+# Fine-tune Gemma 4 31B on a TPU GKE cluster
 
-This code sample is intended for AI/ML engineers and demonstrates how to perform supervised fine-tuning (SFT) on a Google Kubernetes Engine (GKE) cluster with TPUs, provisioned using Cluster Toolkit.
+This code sample is intended for AI/ML engineers and demonstrates how to fine-tune the Gemma 4 31B model using supervised fine-tuning (SFT) on a Google Kubernetes Engine (GKE) cluster with TPUs, provisioned using Cluster Toolkit.
 
 Note: This sample doesn't demonstrate how to prepare a dataset or serve the model in production.
 
