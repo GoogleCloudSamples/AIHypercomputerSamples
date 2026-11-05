@@ -12,6 +12,11 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
+# [START hypercomputer_tpu_infer_qwen3_coder_auth]
+gcloud auth login
+gcloud auth application-default login
+# [END hypercomputer_tpu_infer_qwen3_coder_auth]
+
 if [ "${ACCELERATOR_TYPE}" == "v7x" ]; then
 # [START hypercomputer_tpu_infer_qwen3_coder_download_manifest]
 curl -LO https://raw.githubusercontent.com/GoogleCloudSamples/AIHypercomputerSamples/main/tpu/inference/qwen3-coder/qwen3-coder-480b-multihost-disagg-v7x.yaml
