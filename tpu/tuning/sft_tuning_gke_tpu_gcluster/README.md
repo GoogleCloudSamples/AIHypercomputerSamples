@@ -23,7 +23,8 @@ Before you run this sample, ensure you have the following:
 
 * A Google Cloud project with billing enabled. Running this sample provisions billable Google Cloud resources including:
   - GKE cluster
-  - Compute Engine (Cloud TPU `v6e-32` and CPU `n2-standard-8` node pools)
+  - Cloud TPU (`v6e-32` node pool)
+  - Compute Engine (`n2-standard-8` CPU node pool)
   - Cloud Storage
   - Artifact Registry
 

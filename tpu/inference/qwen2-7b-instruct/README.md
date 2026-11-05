@@ -1,6 +1,6 @@
 # Run inference with Qwen2 7B Instruct on TPU v6e
 
-This code sample is intended for AI/ML engineers and demonstrates how to run inference and benchmark workloads with the Qwen2 7B Instruct model on Google Cloud TPUs (v6e).
+This code sample is intended for AI/ML engineers and demonstrates how to run inference and benchmark workloads with the Qwen2 7B Instruct model on Cloud TPU v6e.
 
 Note: This sample doesn’t demonstrate how to serve the model in production or configure Virtual Private Cloud (VPC) networks from scratch.
 
@@ -20,7 +20,7 @@ For the complete step-by-step tutorial of how to use this sample, see the offici
 Before you run this sample, ensure you have the following:
 
 * A Google Cloud project with billing enabled. Running this sample provisions billable Google Cloud resources including:
-  - Compute Engine (Cloud TPU `v6e-8` using TPU VM)
+  - Cloud TPU (`v6e-8` TPU VM)
 
   You are billed for these resources for the time that they are running. To avoid incurring charges, delete the resources when you have finished running the sample.
 * Quota and an active reservation (`RESERVATION`) for Cloud TPU `v6e-8` (8 TPU v6e chips) in your chosen zone.

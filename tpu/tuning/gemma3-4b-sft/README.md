@@ -1,6 +1,6 @@
 # Fine-tune Gemma 3 4B (SFT) on TPU v6e
 
-This code sample is intended for AI/ML engineers and demonstrates how to fine-tune the Gemma 3 4B model using supervised fine-tuning (SFT) on Google Cloud TPUs (v6e).
+This code sample is intended for AI/ML engineers and demonstrates how to fine-tune the Gemma 3 4B model using supervised fine-tuning (SFT) on Cloud TPU v6e.
 
 Note: This sample doesn’t demonstrate how to prepare a dataset or serve the model in production.
 
@@ -20,13 +20,13 @@ For the complete step-by-step tutorial of how to use this sample, see the offici
 Before you run this sample, ensure you have the following:
 
 * A Google Cloud project with billing enabled. Running this sample provisions billable Google Cloud resources including:
-  - Compute Engine (`ct6e-standard-8t` Cloud TPU `v6e-8` VM)
+  - Cloud TPU (`ct6e-standard-8t` `v6e-8` TPU VM)
 
   You are billed for these resources for the time that they are running. To avoid incurring charges, delete the resources when you have finished running the sample.
 * Quota and an active reservation (`RESERVATION`) for Cloud TPU `v6e-8` (`ct6e-standard-8t`, 8 TPU v6e chips) in your chosen zone.
 * A valid Hugging Face token (`HF_TOKEN`) with access to the `google/gemma-3-4b` (`gemma3-4b`) model.
 * The `gcloud` CLI tool installed.
-* Identity and Access Management (IAM) permissions to create and SSH into Compute Engine TPU VM instances.
+* Identity and Access Management (IAM) permissions to create and SSH into Cloud TPU VM instances.
 
 ## Run the sample
 
