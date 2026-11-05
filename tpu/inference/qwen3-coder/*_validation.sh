@@ -19,7 +19,7 @@ PORT_FORWARD_PID=$!
 trap 'kill "${PORT_FORWARD_PID}" 2>/dev/null || true' EXIT
 sleep 5
 
-if [ "${ACCELERATOR_TYPE}" == "v7x" ]; then
+if [ "${TPU_TYPE}" == "v7x" ]; then
 # [START hypercomputer_tpu_infer_qwen3_coder_test_inference]
 curl -s -X POST http://localhost:8000/v1/chat/completions \
   -H "Content-Type: application/json" \
@@ -32,7 +32,7 @@ curl -s -X POST http://localhost:8000/v1/chat/completions \
     "temperature": 0.0
   }'
 # [END hypercomputer_tpu_infer_qwen3_coder_test_inference]
-elif [ "${ACCELERATOR_TYPE}" == "v6e" ]; then
+elif [ "${TPU_TYPE}" == "v6e" ]; then
 # [START hypercomputer_tpu_infer_qwen3_coder_test_inference_v6e]
 curl -s -X POST http://localhost:8000/v1/chat/completions \
   -H "Content-Type: application/json" \

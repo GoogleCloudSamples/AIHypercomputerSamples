@@ -12,10 +12,10 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
-export ACCELERATOR_TYPE="${ACCELERATOR_TYPE:-v7x}"
+export TPU_TYPE="${TPU_TYPE:-v7x}"
 
-if [[ "${ACCELERATOR_TYPE}" == "v6e" ]]; then
-export ACCELERATOR_TYPE="v6e"
+if [[ "${TPU_TYPE}" == "v6e" ]]; then
+export TPU_TYPE="v6e"
 # [START hypercomputer_tpu_infer_qwen3_coder_env_v6e]
 export CLUSTER_NAME="YOUR_CLUSTER_NAME"
 export PROJECT_ID="YOUR_PROJECT_ID"
@@ -27,7 +27,7 @@ export SGLANG_IMAGE="lmsysorg/sglang:v0.1.0-tpu"
 # [END hypercomputer_tpu_infer_qwen3_coder_env_v6e]
 
 else
-export ACCELERATOR_TYPE="v7x"
+export TPU_TYPE="v7x"
 # [START hypercomputer_tpu_infer_qwen3_coder_env]
 export CLUSTER_NAME="YOUR_CLUSTER_NAME"
 export PROJECT_ID="YOUR_PROJECT_ID"
