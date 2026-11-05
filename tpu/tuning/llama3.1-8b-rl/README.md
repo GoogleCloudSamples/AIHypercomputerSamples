@@ -1,4 +1,4 @@
-# Reinforcement learning (RL) fine-tuning for Llama 3.1 8B on TPU
+# Run RL fine-tuning for Llama 3.1 8B on TPU
 
 This code sample is intended for AI/ML engineers and demonstrates how to perform reinforcement learning (RL) fine-tuning for the Llama 3.1 8B model on Cloud TPU.
 

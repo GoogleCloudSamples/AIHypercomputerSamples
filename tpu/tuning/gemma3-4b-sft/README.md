@@ -1,4 +1,4 @@
-# Fine-tune Gemma 3 4B (SFT) on TPU v6e
+# Fine-tune Gemma 3 4B on TPU v6e
 
 This code sample is intended for AI/ML engineers and demonstrates how to fine-tune the Gemma 3 4B model using supervised fine-tuning (SFT) on Cloud TPU v6e.
 
