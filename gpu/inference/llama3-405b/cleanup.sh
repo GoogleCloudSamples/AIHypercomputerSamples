@@ -18,8 +18,9 @@ set -uo pipefail
 
 echo "[$(date)] ==================== Deleting Kubernetes workloads, Helm releases, and secrets... ===================="
 # [START hypercomputer_gpu_infer_llama3_405b_deploy_cleanup]
-kubectl delete -f llama3.1-405b-singlehost-a4.yaml --ignore-not-found || true
+kubectl delete -f llama3.1-405b-singlehost-a4-gcsfuse.yaml --ignore-not-found || true
 # [END hypercomputer_gpu_infer_llama3_405b_deploy_cleanup]
+kubectl delete job llama3-405b-stage-weights --ignore-not-found || true
 
 # [START hypercomputer_gpu_infer_llama3_405b_dynamo_cleanup]
 helm uninstall dynamo-platform kai-scheduler || true

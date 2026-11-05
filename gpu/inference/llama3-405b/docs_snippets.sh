@@ -20,8 +20,19 @@ gcloud auth application-default login
 # [END hypercomputer_gpu_infer_llama3_405b_auth]
 
 # [START hypercomputer_gpu_infer_llama3_405b_fetch_manifest]
-curl -O https://raw.githubusercontent.com/GoogleCloudSamples/AIHypercomputerSamples/refs/heads/main/gpu/inference/llama3-405b/llama3.1-405b-singlehost-a4.yaml
+curl -O https://raw.githubusercontent.com/GoogleCloudSamples/AIHypercomputerSamples/refs/heads/main/gpu/inference/llama3-405b/llama3.1-405b-stage-weights-job.yaml
+curl -O https://raw.githubusercontent.com/GoogleCloudSamples/AIHypercomputerSamples/refs/heads/main/gpu/inference/llama3-405b/llama3.1-405b-singlehost-a4-gcsfuse.yaml
 # [END hypercomputer_gpu_infer_llama3_405b_fetch_manifest]
+
+# [START hypercomputer_gpu_infer_llama3_405b_stage_weights_logs]
+kubectl logs -f -l job-name=llama3-405b-stage-weights -c download --prefix --max-log-requests=2
+sleep 5
+kubectl logs -f -l job-name=llama3-405b-stage-weights -c upload --prefix --max-log-requests=2
+# [END hypercomputer_gpu_infer_llama3_405b_stage_weights_logs]
+
+# [START hypercomputer_gpu_infer_llama3_405b_stage_weights_verify]
+gcloud storage ls "gs://${GCS_BUCKET}/hf_models/models--nvidia--llama-3_1-405b-instruct-fp8/*.safetensors" | wc -l
+# [END hypercomputer_gpu_infer_llama3_405b_stage_weights_verify]
 
 # [START hypercomputer_gpu_infer_llama3_405b_poll_ready]
 frontend_pod=$(kubectl get pods -l "nvidia.com/dynamo-component-type=frontend" -o jsonpath='{.items[*].metadata.name}')
