@@ -1,10 +1,10 @@
 # verl RL on GKE Standard
 
-This code sample is intended for AI/ML engineers and demonstrates how to run verl Reinforcement Learning (RL) using a Google Kubernetes Engine (GKE) Standard cluster.
+This code sample is intended for AI/ML engineers and demonstrates how to run verl reinforcement learning (RL) using a Google Kubernetes Engine (GKE) Standard cluster.
 
 Note: This sample doesn’t demonstrate how to prepare a dataset or serve the model in production.
 
-This sample provisions a GKE Standard cluster to run a distributed RL workload with verl. The architecture utilizes GPU-enabled Virtual Machines (VMs) (for example, A4 or A3 Ultra instances) and a Ray cluster running on top of GKE. It configures custom Virtual Private Cloud (VPC) networking and uses Cloud Storage for datasets and checkpoints. The sample includes the following files:
+This sample provisions a GKE Standard cluster to run a distributed RL workload with verl. The architecture utilizes GPU-enabled virtual machines (VMs) (for example, A4 or A3 Ultra instances) and a Ray cluster running on top of GKE. It configures custom Virtual Private Cloud (VPC) networking and uses Cloud Storage for datasets and checkpoints. The sample includes the following files:
 
 * `0_env.sh`: Configures starting environment variables (project ID, zone, token).
 * `1_setup_network.sh`: Provisions the custom VPC network and firewall rules.

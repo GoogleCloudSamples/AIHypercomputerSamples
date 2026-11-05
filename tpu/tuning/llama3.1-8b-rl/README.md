@@ -1,10 +1,10 @@
 # Reinforcement learning (RL) fine-tuning for Llama 3.1 8B on TPU
 
-This code sample is intended for AI/ML engineers and demonstrates how to perform Reinforcement Learning (RL) fine-tuning for the Llama 3.1 8B model on Google Cloud TPUs.
+This code sample is intended for AI/ML engineers and demonstrates how to perform reinforcement learning (RL) fine-tuning for the Llama 3.1 8B model on Google Cloud TPUs.
 
 Note: This sample doesn’t demonstrate how to prepare a dataset or serve the model in production.
 
-The scripts in this directory deploy the infrastructure and run the AI/ML workload on AI Hypercomputer. The sample provisions a single Cloud TPU `v6e-8` using a TPU Virtual Machine (VM) architecture, and the training scripts execute directly on the provisioned TPU VM to run an RL fine-tuning workload for the Llama 3.1 8B model. The sample includes the following files:
+The scripts in this directory deploy the infrastructure and run the AI/ML workload on AI Hypercomputer. The sample provisions a single Cloud TPU `v6e-8` using a TPU virtual machine (VM) architecture, and the training scripts execute directly on the provisioned TPU VM to run an RL fine-tuning workload for the Llama 3.1 8B model. The sample includes the following files:
 
 * `0_env.sh`: Contains the starting environment variables.
 * `1_setup.sh`: Sets up the required infrastructure and environment.

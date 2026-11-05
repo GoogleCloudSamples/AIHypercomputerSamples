@@ -19,7 +19,7 @@ For the complete step-by-step tutorial of how to use this sample, see the offici
 Before you run this sample, ensure you have the following:
 
 * A Google Cloud project with billing enabled. Running this sample provisions billable Google Cloud resources including:
-  - Compute Engine A4 (`a4-highgpu-8g`) Virtual Machines (VMs)
+  - Compute Engine A4 (`a4-highgpu-8g`) virtual machines (VMs)
   - Cloud Storage buckets
   - Filestore for shared cluster storage
   

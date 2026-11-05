@@ -1,6 +1,6 @@
 # SFT tuning on a TPU GKE cluster
 
-This code sample is intended for AI/ML engineers and demonstrates how to perform Supervised Fine-Tuning (SFT) on a Google Kubernetes Engine (GKE) cluster with TPUs, provisioned using Cluster Toolkit.
+This code sample is intended for AI/ML engineers and demonstrates how to perform supervised fine-tuning (SFT) on a Google Kubernetes Engine (GKE) cluster with TPUs, provisioned using Cluster Toolkit.
 
 Note: This sample doesn't demonstrate how to prepare a dataset or serve the model in production.
 
@@ -28,7 +28,7 @@ Before you run this sample, ensure you have the following:
   - Artifact Registry
 
   You are billed for these resources for the time that they are running. To avoid incurring charges, delete the resources when you have finished running the sample.
-* Quota and an active reservation (`RESERVATION`) for Cloud TPU `v6e-32` (32 TPU v6e chips) and `n2-standard-8` CPU Virtual Machines (VMs) in your chosen zone.
+* Quota and an active reservation (`RESERVATION`) for Cloud TPU `v6e-32` (32 TPU v6e chips) and `n2-standard-8` CPU virtual machines (VMs) in your chosen zone.
 * A valid Hugging Face token (`HF_TOKEN`) with access to the `google/gemma-4-31b` (`gemma4-31b`) model.
 * The `gcloud`, `kubectl`, `docker`, `wget`, and `tar` CLI tools installed (`1_prerequisites.sh` downloads the Cluster Toolkit `gcluster` binary automatically).
 * Identity and Access Management (IAM) permissions to enable Google Cloud APIs, create GKE clusters, create Cloud Storage buckets, and bind project IAM roles (`roles/storage.admin`, `roles/storage.objectViewer`, `roles/logging.logWriter`, and `roles/artifactregistry.writer`).

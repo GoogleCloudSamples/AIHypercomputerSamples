@@ -1,10 +1,10 @@
 # verl RL on GKE Autopilot
 
-This code sample is intended for AI/ML engineers and demonstrates how to run verl Reinforcement Learning (RL) using a Google Kubernetes Engine (GKE) Autopilot cluster.
+This code sample is intended for AI/ML engineers and demonstrates how to run verl reinforcement learning (RL) using a Google Kubernetes Engine (GKE) Autopilot cluster.
 
 Note: This sample doesn’t demonstrate how to prepare a dataset or serve the model in production.
 
-This sample provisions a fully managed GKE Autopilot cluster to run a distributed RL workload with verl. It sets up a Ray cluster over GKE, utilizing Dynamic Resource Allocation (DRANET) and GPU Virtual Machines (VMs) (for example, A4 or A3 Ultra instances) for computation. Storage is handled using Cloud Storage and Persistent Volumes. The sample includes the following files:
+This sample provisions a fully managed GKE Autopilot cluster to run a distributed RL workload with verl. It sets up a Ray cluster over GKE, utilizing Dynamic Resource Allocation (DRANET) and GPU virtual machines (VMs) (for example, A4 or A3 Ultra instances) for computation. Storage is handled using Cloud Storage and persistent volumes. The sample includes the following files:
 
 * `0_env.sh`: Configures starting environment variables (project ID, region, cluster name).
 * `1_setup_cluster.sh`: Provisions the GKE Autopilot cluster.

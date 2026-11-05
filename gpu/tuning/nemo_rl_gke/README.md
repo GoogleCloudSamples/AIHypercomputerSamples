@@ -1,15 +1,15 @@
 # NeMo RL on GKE
 
-This code sample is intended for AI/ML engineers and demonstrates how to run NeMo Reinforcement Learning (RL) using a Google Kubernetes Engine (GKE) cluster.
+This code sample is intended for AI/ML engineers and demonstrates how to run NeMo reinforcement learning (RL) using a Google Kubernetes Engine (GKE) cluster.
 
 Note: This sample doesn’t demonstrate how to prepare a dataset or serve the model in production.
 
-This sample provisions a GKE cluster with a Ray cluster on top of it to orchestrate the distributed RL workload. It uses GPU-enabled Virtual Machines (VMs) (for example, A3 Ultra or A4 instances), a Cloud Storage bucket, and a Virtual Private Cloud (VPC) network for communication. The NeMo framework is used within the Ray cluster for model training. The sample includes the following files:
+This sample provisions a GKE cluster with a Ray cluster on top of it to orchestrate the distributed RL workload. It uses GPU-enabled virtual machines (VMs) (for example, A3 Ultra or A4 instances), a Cloud Storage bucket, and a Virtual Private Cloud (VPC) network for communication. The NeMo framework is used within the Ray cluster for model training. The sample includes the following files:
 
 * `0_env.sh`: Configures starting environment variables, such as the project ID, cluster name, and zone.
 * `1_create_vpc_network.sh`: Creates the custom VPC network and firewall rules for the cluster.
 * `2_create_cluster.sh`: Provisions the GKE cluster with the required machine types and node pools.
-* `3_prepare_storage.sh`: Configures the necessary Persistent Volumes (for example, Google Cloud Managed Lustre or Cloud Storage FUSE).
+* `3_prepare_storage.sh`: Configures the necessary persistent volumes (for example, Google Cloud Managed Lustre or Cloud Storage FUSE).
 * `4_deploy_ray_cluster.sh`: Deploys the Ray cluster custom resources on GKE.
 * `5_launch_job.sh`: Submits the NeMo RL job to the Ray cluster.
 * `6_monitor_job.sh`: Tails the logs and monitors the status of the running job.
