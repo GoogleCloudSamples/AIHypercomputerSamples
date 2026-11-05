@@ -30,10 +30,8 @@ kubectl get pods
 # [END hypercomputer_tpu_infer_qwen3_coder_check_pods]
 
 # [START hypercomputer_tpu_infer_qwen3_coder_logs]
-kubectl logs -f -l role=leader --prefix=true &
-LOG_PID=$!
-kubectl wait --for=condition=Ready --timeout=3600s pod -l role=leader
-kill "${LOG_PID}" 2>/dev/null || true
+kubectl wait --for=condition=Available --timeout=5400s lws/sglang-tpu-prefill lws/sglang-tpu-decode
+kubectl wait --for=condition=Available --timeout=5400s deployment/sglang-router
 # [END hypercomputer_tpu_infer_qwen3_coder_logs]
 
 # [START hypercomputer_tpu_infer_qwen3_coder_port_forward]
