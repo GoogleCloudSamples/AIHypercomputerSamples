@@ -26,7 +26,7 @@ export HF_TOKEN="YOUR_HF_TOKEN"
 export SGLANG_IMAGE="lmsysorg/sglang:v0.1.0-tpu"
 # [END hypercomputer_tpu_infer_qwen3_coder_env_v6e]
 
-else
+elif [[ "${TPU_TYPE}" == "v7x" ]]; then
 export TPU_TYPE="v7x"
 # [START hypercomputer_tpu_infer_qwen3_coder_env]
 export CLUSTER_NAME="YOUR_CLUSTER_NAME"
@@ -37,4 +37,8 @@ export RESERVATION="YOUR_RESERVATION_NAME"
 export HF_TOKEN="YOUR_HF_TOKEN"
 export SGLANG_IMAGE="lmsysorg/sglang:v0.1.0-tpu"
 # [END hypercomputer_tpu_infer_qwen3_coder_env]
+
+else
+  echo "Error: Unsupported TPU_TYPE '${TPU_TYPE}'. Expected 'v6e' or 'v7x'."
+  exit 1
 fi
