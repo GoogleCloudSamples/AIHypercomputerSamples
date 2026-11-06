@@ -30,7 +30,7 @@ spec:
       - operator: Exists
       containers:
       - name: model-downloader
-        image: gcr.io/google.com/cloudsdktool/google-cloud-cli:slim
+        image: gcr.io/google.com/cloudsdktool/google-cloud-cli:latest
         env:
         - name: HF_TOKEN
           valueFrom:
@@ -47,6 +47,9 @@ spec:
         args:
         - |
           set -euo pipefail
+
+          echo "=== 0. Installing Python3 ==="
+          apt-get update && apt-get install -y python3-pip
 
           echo "=== 1. Installing huggingface_hub ==="
           pip3 install --break-system-packages -q -U "huggingface_hub"
