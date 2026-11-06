@@ -17,7 +17,7 @@ export ACCELERATOR_TYPE="${ACCELERATOR_TYPE:-v7x}"
 if [[ "${ACCELERATOR_TYPE}" == "v6e" ]]; then
 export ACCELERATOR_TYPE="v6e"
 # [START hypercomputer_tpu_infer_qwen3_coder_env_v6e]
-export CLUSTER_NAME="YOUR_CLUSTER_NAME" # <= 20 chars; start with a-z; only a-z, 0-9, -
+export CLUSTER_NAME="YOUR_CLUSTER_NAME" # <= 40 chars; start with a-z; only a-z, 0-9, -
 export PROJECT_ID="YOUR_PROJECT_ID" # Your Google Cloud project ID
 export REGION="YOUR_REGION" # for example, us-central1
 export ZONE="YOUR_ZONE" # for example, us-central1-b
