@@ -11,6 +11,8 @@ The scripts in this directory deploy the infrastructure and run the AI/ML worklo
 * `2_build_and_deploy.sh`: Builds a custom container image using Cloud Build, deploys the fine-tuning Job, and monitors its execution.
 * `*_validation.sh`: Checks the output logs of the job to ensure the training finished successfully.
 * `cleanup.sh`: Terminates all created resources, including the cluster, Job, and Artifact Registry repository.
+* `docs_snippets.sh`: Contains command snippets used only in the tutorial documentation for steps that differ from the automated scripts.
+* `metadata.yaml`: Defines sample metadata, such as the expected runtime for automated testing.
 
 For the complete step-by-step tutorial of how to use this sample, see the official Google Cloud documentation: [Fine-tune Gemma 4 on an A4 GKE cluster](https://docs.cloud.google.com/ai-hypercomputer/docs/tutorials/gpu/gemma4-finetune-a4-gke-cluster).
 

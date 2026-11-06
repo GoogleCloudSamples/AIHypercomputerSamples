@@ -11,6 +11,8 @@ This sample uses Cluster Toolkit to provision a Slurm cluster with A4 High GPU (
 * `2_run_job.sh`: Submits the `sbatch` job to the Slurm cluster to execute the Gemma 3 fine-tuning workload.
 * `*_validation.sh`: Validates that the fine-tuning workload ran successfully.
 * `cleanup.sh`: Terminates the cluster and cleans up all created resources.
+* `docs_snippets.sh`: Contains command snippets used only in the tutorial documentation for steps that differ from the automated scripts.
+* `metadata.yaml`: Defines sample metadata, such as the expected runtime for automated testing.
 
 For the complete step-by-step tutorial of how to use this sample, see the official Google Cloud documentation: [Fine-tune Gemma 3 on an A4 Slurm cluster](https://docs.cloud.google.com/ai-hypercomputer/docs/tutorials/gpu/gemma-3-slurm-cluster).
 

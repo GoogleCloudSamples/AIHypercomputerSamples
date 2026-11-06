@@ -11,6 +11,8 @@ This sample provisions a Slurm cluster using Cluster Toolkit. It uses A4 High GP
 * `2_run_job.sh`: Submits the `sbatch` job to the Slurm cluster to distribute the Qwen2 training workload.
 * `*_validation.sh`: Validates that the training workload ran successfully.
 * `cleanup.sh`: Terminates and deletes all created Google Cloud resources.
+* `docs_snippets.sh`: Contains command snippets used only in the tutorial documentation for steps that differ from the automated scripts.
+* `metadata.yaml`: Defines sample metadata, such as the expected runtime for automated testing.
 
 For the complete step-by-step tutorial of how to use this sample, see the official Google Cloud documentation: [Train Qwen2 on an A4 Slurm cluster](https://docs.cloud.google.com/ai-hypercomputer/docs/tutorials/gpu/train-qwen2-a4-slurm-cluster).
 

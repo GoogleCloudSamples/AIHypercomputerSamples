@@ -15,6 +15,8 @@ This sample provisions a GKE cluster with a Ray cluster on top of it to orchestr
 * `6_monitor_job.sh`: Tails the logs and monitors the status of the running job.
 * `*_validation.sh`: Validates that the RL workload ran successfully.
 * `cleanup.sh`: Deletes the GKE cluster, Ray cluster, and all created network/storage resources.
+* `docs_snippets.sh`: Contains command snippets used only in the tutorial documentation for steps that differ from the automated scripts.
+* `metadata.yaml`: Defines sample metadata, such as the expected runtime for automated testing.
 
 For the complete step-by-step tutorial of how to use this sample, see the official Google Cloud documentation: [Fine-tune and scale reinforcement learning with NVIDIA NeMo RL on GKE](https://docs.cloud.google.com/kubernetes-engine/docs/tutorials/nemo-rl-gke).
 

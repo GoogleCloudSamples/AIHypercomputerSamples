@@ -12,7 +12,7 @@ The scripts in this directory deploy the infrastructure and run the AI/ML worklo
 * `3_interract_with_model.sh`: Interacts with the deployed model.
 * `*_validation.sh`: Validates the workload.
 * `cleanup.sh`: Terminates all created resources.
-* `docs_snippets.sh`: Contains documentation snippets.
+* `docs_snippets.sh`: Contains command snippets used only in the tutorial documentation for steps that differ from the automated scripts.
 * `vllm-3-27b-it.yaml`: Configures the model.
 
 For the complete step-by-step tutorial of how to use this sample, see the official Google Cloud documentation: [Use vLLM on GKE to serve Gemma 3 27B inference](https://docs.cloud.google.com/ai-hypercomputer/docs/tutorials/gpu/gemma-3-vllm-inference).

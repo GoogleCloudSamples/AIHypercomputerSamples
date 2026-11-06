@@ -13,7 +13,7 @@ The scripts in this directory deploy the infrastructure and run the AI/ML worklo
 * `4_interract_with_model.sh`: Interacts with the deployed model.
 * `*_validation.sh`: Validates the workload.
 * `cleanup.sh`: Terminates all created resources.
-* `docs_snippets.sh`: Contains documentation snippets.
+* `docs_snippets.sh`: Contains command snippets used only in the tutorial documentation for steps that differ from the automated scripts.
 * `gpt-download-job.yaml`: Configures the job.
 * `vllm-gpt-oss-120b.yaml`: Configures the model.
 

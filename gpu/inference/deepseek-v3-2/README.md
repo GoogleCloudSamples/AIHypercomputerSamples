@@ -14,8 +14,8 @@ The scripts in this directory deploy the infrastructure and run the AI/ML worklo
 * `*_validation.sh`: Validates the workload.
 * `cleanup.sh`: Terminates all created resources.
 * `deepseek-download-job.yaml`: Configures the job.
-* `docs_snippets.sh`: Contains documentation snippets.
-* `metadata.yaml`: Defines the sample metadata.
+* `docs_snippets.sh`: Contains command snippets used only in the tutorial documentation for steps that differ from the automated scripts.
+* `metadata.yaml`: Defines sample metadata, such as the expected runtime for automated testing.
 * `vllm-deepseek3-2.yaml`: Configures the model.
 
 For the complete step-by-step tutorial of how to use this sample, see the official Google Cloud documentation: [Use vLLM on GKE to run inference with DeepSeek-V3.2-Speciale](https://docs.cloud.google.com/ai-hypercomputer/docs/tutorials/gpu/vllm-gke-deepseek-speciale).

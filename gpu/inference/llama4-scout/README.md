@@ -11,7 +11,7 @@ The scripts in this directory deploy the infrastructure and run the AI/ML worklo
 * `2_deploy_model.sh`: Deploys the model.
 * `*_validation.sh`: Validates the workload.
 * `cleanup.sh`: Terminates all created resources.
-* `docs_snippet.sh`: Contains documentation snippets.
+* `docs_snippet.sh`: Contains command snippets used only in the tutorial documentation for steps that differ from the automated scripts.
 * `vllm-l4-17b.yaml`: Configures the model.
 
 For the complete step-by-step tutorial of how to use this sample, see the official Google Cloud documentation: [Use vLLM on GKE to run inference with Llama 4](https://docs.cloud.google.com/ai-hypercomputer/docs/tutorials/gpu/vllm-gke-llama4).

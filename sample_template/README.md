@@ -12,10 +12,12 @@ _[Provide a high-level description of the architecture, workload, and how the sc
 Example: The scripts in this directory deploy the infrastructure and run the AI/ML workload on AI Hypercomputer. The sample includes the following files:
 
 * `0_env.sh`: Contains the starting environment variables, such as the project ID, zone, and Hugging Face token.
-* `1_deploy_cluster.sh`: Uses the Google Cloud Cluster Toolkit to provision the Slurm cluster infrastructure.
+* `1_deploy_cluster.sh`: Uses Cluster Toolkit to provision the Slurm cluster infrastructure.
 * `2_run_job.sh`: Submits the sbatch job that uses Accelerate to distribute the fine-tuning workload across the GPUs.
 * `3_validation.sh`: Checks the output logs for the final training loss to verify success.
 * `cleanup.sh`: Terminates all created resources.
+* `docs_snippets.sh`: Contains command snippets used only in the tutorial documentation for steps that differ from the automated scripts.
+* `metadata.yaml`: Defines sample metadata, such as the expected runtime for automated testing.
 
 For the complete step-by-step tutorial of how to use this sample, see the official Google Cloud documentation: _TUTORIAL_TITLE_.
 

@@ -12,6 +12,8 @@ The scripts in this directory deploy the infrastructure and run the AI/ML worklo
 * `3_run_benchmark.sh`: Runs the benchmark workload.
 * `*_validation.sh`: Validates the workload ran successfully.
 * `cleanup.sh`: Terminates all created resources.
+* `docs_snippets.sh`: Contains command snippets used only in the tutorial documentation for steps that differ from the automated scripts.
+* `metadata.yaml`: Defines sample metadata, such as the expected runtime for automated testing.
 
 For the complete step-by-step tutorial of how to use this sample, see the official Google Cloud documentation: [Serve Qwen2-7B-Instruct with vLLM on TPUs](https://docs.cloud.google.com/ai-hypercomputer/docs/tutorials/tpu/serve-qwen2-7b-instruct).
 

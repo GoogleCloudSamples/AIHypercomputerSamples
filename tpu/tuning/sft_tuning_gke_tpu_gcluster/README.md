@@ -14,6 +14,7 @@ The scripts in this directory deploy the infrastructure and run the AI/ML worklo
 * `5_train_model.sh`: Submits the fine-tuning job.
 * `6_convert_model_hf.sh`: Converts the trained model back to Hugging Face format.
 * `cleanup.sh`: Terminates all created resources.
+* `docs_snippets.sh`: Contains command snippets used only in the tutorial documentation for steps that differ from the automated scripts.
 
 For the complete step-by-step tutorial of how to use this sample, see the official Google Cloud documentation: [Run SFT for Gemma 4 31B on multi-host TPU v6e](https://docs.cloud.google.com/ai-hypercomputer/docs/tutorials/tpu/run-gemma4-31b-sft-maxtext).
 

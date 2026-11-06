@@ -11,6 +11,8 @@ This sample provisions a Slurm cluster using Cluster Toolkit. The architecture u
 * `2_run_job.sh`: Submits the `sbatch` job to distribute the fine-tuning workload across the cluster.
 * `*_validation.sh`: Validates that the fine-tuning workload ran successfully.
 * `cleanup.sh`: Deletes the Slurm cluster and all associated resources.
+* `doc_snippets.sh`: Contains command snippets used only in the tutorial documentation for steps that differ from the automated scripts.
+* `metadata.yaml`: Defines sample metadata, such as the expected runtime for automated testing.
 
 For the complete step-by-step tutorial of how to use this sample, see the official Google Cloud documentation: [Use FSDP to fine-tune Mixtral-8x7B on an A4 Slurm cluster](https://docs.cloud.google.com/ai-hypercomputer/docs/tutorials/gpu/fsdp-mixtral-8x7b).
 

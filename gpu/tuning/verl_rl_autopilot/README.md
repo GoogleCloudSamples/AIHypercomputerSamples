@@ -15,6 +15,8 @@ This sample provisions a fully managed GKE Autopilot cluster to run a distribute
 * `6_run_job.sh`: Triggers and monitors the RL job.
 * `*_validation.sh`: Validates that the RL workload ran successfully.
 * `cleanup.sh`: Deletes the GKE cluster and removes all related resources.
+* `docs_scripts.sh`: Contains command snippets used only in the tutorial documentation for steps that differ from the automated scripts.
+* `metadata.yaml`: Defines sample metadata, such as the expected runtime for automated testing.
 
 For the complete step-by-step tutorial of how to use this sample, see the official Google Cloud documentation: [Fine-tune and scale reinforcement learning with verl on GKE](https://docs.cloud.google.com/kubernetes-engine/docs/tutorials/scaling-rl-verl-gke).
 

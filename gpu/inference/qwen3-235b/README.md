@@ -12,8 +12,8 @@ The scripts in this directory deploy the infrastructure and run the AI/ML worklo
 * `3_interact_with_model.sh`: Interacts with the deployed model.
 * `*_validation.sh`: Validates the workload.
 * `cleanup.sh`: Terminates all created resources.
-* `docs_snippets.sh`: Contains documentation snippets.
-* `metadata.yaml`: Defines the sample metadata.
+* `docs_snippets.sh`: Contains command snippets used only in the tutorial documentation for steps that differ from the automated scripts.
+* `metadata.yaml`: Defines sample metadata, such as the expected runtime for automated testing.
 * `qwen3-235b-deploy.yaml`: Configures the model deployment.
 * `qwen3-model-loader.yaml`: Configures the model loader.
 
