@@ -25,9 +25,11 @@ curl -O https://raw.githubusercontent.com/GoogleCloudSamples/AIHypercomputerSamp
 # [END hypercomputer_gpu_infer_llama3_405b_fetch_manifest]
 
 # [START hypercomputer_gpu_infer_llama3_405b_stage_weights_logs]
-kubectl logs -f -l job-name=llama3-405b-stage-weights -c download --prefix --max-log-requests=2
-sleep 5
-kubectl logs -f -l job-name=llama3-405b-stage-weights -c upload --prefix --max-log-requests=2
+until kubectl logs -l job-name=llama3-405b-stage-weights -c download >/dev/null 2>&1; do sleep 2; done
+kubectl logs -f -l job-name=llama3-405b-stage-weights -c download --prefix
+
+until kubectl logs -l job-name=llama3-405b-stage-weights -c upload >/dev/null 2>&1; do sleep 2; done
+kubectl logs -f -l job-name=llama3-405b-stage-weights -c upload --prefix
 # [END hypercomputer_gpu_infer_llama3_405b_stage_weights_logs]
 
 # [START hypercomputer_gpu_infer_llama3_405b_stage_weights_verify]
