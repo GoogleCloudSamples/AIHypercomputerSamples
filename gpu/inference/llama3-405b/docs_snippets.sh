@@ -37,6 +37,7 @@ gcloud storage ls "gs://${GCS_BUCKET}/hf_models/models--nvidia--llama-3_1-405b-i
 # [END hypercomputer_gpu_infer_llama3_405b_stage_weights_verify]
 
 # [START hypercomputer_gpu_infer_llama3_405b_poll_ready]
+until [[ $(kubectl get pods -l nvidia.com/dynamo-component-type --no-headers 2>/dev/null | wc -l) -eq 3 ]]; do sleep 2; done
 frontend_pod=$(kubectl get pods -l "nvidia.com/dynamo-component-type=frontend" -o jsonpath='{.items[*].metadata.name}')
 prefill_pod=$(kubectl get pods -l "nvidia.com/dynamo-sub-component-type=prefill" -o jsonpath='{.items[*].metadata.name}')
 decode_pod=$(kubectl get pods -l "nvidia.com/dynamo-sub-component-type=decode" -o jsonpath='{.items[*].metadata.name}')
@@ -46,13 +47,7 @@ echo "  Prefill:  ${prefill_pod}"
 echo "  Decode:   ${decode_pod}"
 echo ""
 echo "Waiting for pods to be ready..."
-for pod in "${frontend_pod}" "${prefill_pod}" "${decode_pod}"; do
-  if ! kubectl wait --for=condition=Ready "pod/${pod}" --timeout=3600s; then
-    echo "Pod ${pod} failed to become Ready within 60 minutes!" >&2
-    kubectl describe "pod/${pod}" >&2
-    kubectl logs "${pod}" --tail=200 >&2 || true
-  fi
-done
+kubectl wait --for=condition=Ready pod "${frontend_pod}" "${prefill_pod}" "${decode_pod}" --timeout=3600s
 # [END hypercomputer_gpu_infer_llama3_405b_poll_ready]
 
 # [START hypercomputer_gpu_infer_llama3_405b_server_logs_prefill]
