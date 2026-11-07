@@ -29,7 +29,6 @@ if ! gcloud container clusters describe "${CLUSTER_NAME}" --location="${REGION}"
   gcloud container clusters create "${CLUSTER_NAME}" \
       --project="${PROJECT_ID}" \
       --location="${REGION}" \
-      --node-locations="${ZONE}" \
       --machine-type=e2-standard-4 \
       --network="${NETWORK}" \
       --subnetwork="${SUBNETWORK}"
