@@ -15,53 +15,57 @@
 
 set -euo pipefail
 
-NETWORK_NAME="${NETWORK}"
-FIREWALL_RULE_NAME="allow-ssh-from-iap-${NAME}"
+VM_SCRIPT_TIMEOUT_SECONDS=6000
 
 FIREWALL_EXISTS=$(gcloud compute firewall-rules list \
-  --project="${PROJECT}" \
-  --filter="name=${FIREWALL_RULE_NAME} AND network=${NETWORK_NAME}" \
-  --format="value(name)" 2>/dev/null || echo "")
+    --project="${PROJECT_ID}" \
+    --filter="name=allow-ssh-from-iap-${TPU_NAME} AND network=${NETWORK}" \
+    --format="value(name)" 2>/dev/null || echo "")
 
 if [ -z "${FIREWALL_EXISTS}" ]; then
-  echo "Creating missing firewall rule '${FIREWALL_RULE_NAME}' for network ${NETWORK_NAME}..."
-  gcloud compute firewall-rules create "${FIREWALL_RULE_NAME}" \
-    --project="${PROJECT}" \
-    --network="${NETWORK_NAME}" \
+# [START hypercomputer_tpu_tune_gemma4_e4b_sft_firewall]
+export FIREWALL_RULE_NAME="allow-ssh-from-iap-${TPU_NAME}"
+gcloud compute firewall-rules create "${FIREWALL_RULE_NAME}" \
+    --project="${PROJECT_ID}" \
+    --network="${NETWORK}" \
     --direction=INGRESS \
     --action=allow \
     --rules=tcp:22 \
     --source-ranges=35.235.240.0/20 \
-    --target-tags="${NAME}" \
-    --description="Allow SSH ingress from Google Cloud Identity-Aware Proxy (IAP) for ${NETWORK_NAME}"
+    --target-tags="${TPU_NAME}" \
+    --description="Allow SSH from Identity-Aware Proxy (IAP) to ${TPU_NAME}"
+# [END hypercomputer_tpu_tune_gemma4_e4b_sft_firewall]
   echo "Firewall rule created. Waiting 20s for VPC propagation..."
   sleep 20
 else
-  echo "Firewall rule '${FIREWALL_RULE_NAME}' already exists for this network. Skipping creation."
+  echo "Firewall rule '${FIREWALL_EXISTS}' already exists for network ${NETWORK}. Skipping creation."
 fi
 
-LIMIT=30
-count=0
-until gcloud compute ssh "${NAME}" \
+deadline=$((SECONDS + 300))
+until timeout 60 gcloud compute ssh "${TPU_NAME}" \
+    --project="${PROJECT_ID}" \
     --zone="${ZONE}" \
-    --project="${PROJECT}" \
     --tunnel-through-iap \
-    --command="true" >/dev/null 2>&1; do
-  if [ "${count}" -ge "${LIMIT}" ]; then
-    echo "Timeout waiting for SSH on ${NAME}." >&2
+    --quiet \
+    --command="true" </dev/null >/dev/null 2>&1; do
+  if [ "${SECONDS}" -ge "${deadline}" ]; then
+    echo "Timeout waiting for SSH on ${TPU_NAME}." >&2
     exit 1
   fi
   sleep 10
-  count=$((count+1))
 done
 
-gcloud compute scp run_on_vm.sh "${NAME}":~/ \
+timeout 300 gcloud compute scp run_on_vm.sh "${TPU_NAME}":~/ \
+    --project="${PROJECT_ID}" \
     --zone="${ZONE}" \
-    --project="${PROJECT}" \
-    --tunnel-through-iap
-
-gcloud compute ssh "${NAME}" \
-    --zone="${ZONE}" \
-    --project="${PROJECT}" \
     --tunnel-through-iap \
-    --command="UV_HTTP_TIMEOUT=300 UV_CONCURRENT_DOWNLOADS=1 YOUR_HF_TOKEN='${HF_TOKEN}' bash ~/run_on_vm.sh"
+    --quiet </dev/null
+
+timeout $((VM_SCRIPT_TIMEOUT_SECONDS + 300)) gcloud compute ssh "${TPU_NAME}" \
+    --project="${PROJECT_ID}" \
+    --zone="${ZONE}" \
+    --tunnel-through-iap \
+    --quiet \
+    --ssh-flag="-o ServerAliveInterval=30" \
+    --ssh-flag="-o ServerAliveCountMax=20" \
+    --command="bash -o pipefail -c 'UV_HTTP_TIMEOUT=300 UV_CONCURRENT_DOWNLOADS=1 YOUR_HF_TOKEN=${HF_TOKEN} timeout --kill-after=60 ${VM_SCRIPT_TIMEOUT_SECONDS} bash ~/run_on_vm.sh 2>&1 | tee ~/run_on_vm.log'" </dev/null
