@@ -12,6 +12,11 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
+# [START hypercomputer_tpu_infer_qwen3_coder_auth]
+gcloud auth login
+gcloud auth application-default login
+# [END hypercomputer_tpu_infer_qwen3_coder_auth]
+
 if [ "${TPU_TYPE}" == "v7x" ]; then
 # [START hypercomputer_tpu_infer_qwen3_coder_download_manifest]
 curl -LO https://raw.githubusercontent.com/GoogleCloudSamples/AIHypercomputerSamples/main/tpu/inference/qwen3-coder/qwen3-coder-480b-multihost-disagg-v7x.yaml
@@ -30,10 +35,8 @@ kubectl get pods
 # [END hypercomputer_tpu_infer_qwen3_coder_check_pods]
 
 # [START hypercomputer_tpu_infer_qwen3_coder_logs]
-kubectl logs -f -l role=leader --prefix=true &
-LOG_PID=$!
-kubectl wait --for=condition=Ready --timeout=3600s pod -l role=leader
-kill "${LOG_PID}" 2>/dev/null || true
+kubectl wait --for=condition=Available --timeout=5400s \
+  lws/sglang-tpu-prefill lws/sglang-tpu-decode deployment/sglang-router
 # [END hypercomputer_tpu_infer_qwen3_coder_logs]
 
 # [START hypercomputer_tpu_infer_qwen3_coder_port_forward]

@@ -17,10 +17,12 @@ set -euo pipefail
 if [ "${TPU_TYPE}" == "v7x" ]; then
 # [START hypercomputer_tpu_infer_qwen3_coder_cleanup_workload]
 kubectl delete -f qwen3-coder-480b-multihost-disagg-v7x.yaml --ignore-not-found
+kubectl delete secret hf-secret --ignore-not-found
 # [END hypercomputer_tpu_infer_qwen3_coder_cleanup_workload]
 elif [ "${TPU_TYPE}" == "v6e" ]; then
 # [START hypercomputer_tpu_infer_qwen3_coder_cleanup_workload_v6e]
 kubectl delete -f qwen3-coder-30b-multihost-disagg-v6e-2x4.yaml --ignore-not-found
+kubectl delete secret hf-secret --ignore-not-found
 # [END hypercomputer_tpu_infer_qwen3_coder_cleanup_workload_v6e]
 else
   echo "Unsupported TPU_TYPE: ${TPU_TYPE}"

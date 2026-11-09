@@ -67,7 +67,7 @@ fi
 
 echo "[$(date)] ==================== Configuring gke-a4 deployment blueprint... ===================="
 # [START hypercomputer_gpu_infer_llama3_405b_configure_blueprint]
-cat <<EOF > cluster-toolkit/examples/gke-a4/gke-a4-deployment.yaml
+cat <<EOF > cluster-toolkit/gke-a4-deployment.yaml
 terraform_backend_defaults:
   type: gcs
   configuration:
@@ -92,7 +92,7 @@ echo "[$(date)] ==================== Deploying GKE A4 cluster ${CLUSTER_NAME} wi
 # [START hypercomputer_gpu_infer_llama3_405b_cluster_create]
 cd cluster-toolkit
 ./gcluster deploy \
-    -d examples/gke-a4/gke-a4-deployment.yaml \
+    -d gke-a4-deployment.yaml \
     examples/gke-a4/gke-a4.yaml \
     --auto-approve -w
 cd ..
@@ -131,10 +131,10 @@ helm upgrade --install dynamo-platform ./dynamo-platform \
     --set global.grove.install=true \
     --set global.grove.enabled=true \
     --set global.kai-scheduler.enabled=true
-# [END hypercomputer_gpu_infer_llama3_405b_install_dynamo]
 
 echo "Waiting for Dynamo operator and Grove operator deployments to become Available..."
 kubectl wait --for=condition=Available deployment/dynamo-platform-dynamo-operator-controller-manager --timeout=300s || true
 kubectl wait --for=condition=Available deployment/grove-operator --timeout=300s || true
+# [END hypercomputer_gpu_infer_llama3_405b_install_dynamo]
 
 echo "[$(date)] ==================== Cluster and Dynamo setup completed! ===================="

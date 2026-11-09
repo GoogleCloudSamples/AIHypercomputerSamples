@@ -16,9 +16,38 @@
 
 set -euo pipefail
 
+echo "[$(date)] ==================== Configuring GCS bucket gs://${GCS_BUCKET} for model weights... ===================="
+if ! gcloud storage buckets describe "gs://${GCS_BUCKET}" --project="${PROJECT_ID}" >/dev/null 2>&1; then
+  gcloud storage buckets create "gs://${GCS_BUCKET}" \
+      --default-storage-class=STANDARD \
+      --project="${PROJECT_ID}" \
+      --location="${REGION}" \
+      --uniform-bucket-level-access
+fi
+
+# [START hypercomputer_gpu_infer_llama3_405b_create_weights_bucket]
+GSA=$(kubectl get sa workload-identity-k8s-sa -o jsonpath='{.metadata.annotations.iam\.gke\.io/gcp-service-account}')
+gcloud storage buckets add-iam-policy-binding "gs://${GCS_BUCKET}" \
+    --member="serviceAccount:${GSA}" \
+    --role="roles/storage.objectUser"
+# [END hypercomputer_gpu_infer_llama3_405b_create_weights_bucket]
+
+echo "[$(date)] ==================== Staging Llama 3.1 405B model weights to gs://${GCS_BUCKET}... ===================="
+kubectl delete job llama3-405b-stage-weights --ignore-not-found >/dev/null 2>&1 || true
+
+# [START hypercomputer_gpu_infer_llama3_405b_stage_weights]
+envsubst '${GCS_BUCKET}' < llama3.1-405b-stage-weights-job.yaml | kubectl apply -f -
+
+kubectl wait --for=condition=complete job/llama3-405b-stage-weights --timeout=2h
+# [END hypercomputer_gpu_infer_llama3_405b_stage_weights]
+
+# [START hypercomputer_gpu_infer_llama3_405b_stage_weights_delete_job]
+kubectl delete job llama3-405b-stage-weights
+# [END hypercomputer_gpu_infer_llama3_405b_stage_weights_delete_job]
+
 echo "[$(date)] ==================== Deploying Llama 3.1 405B PD-disaggregated server... ===================="
 # [START hypercomputer_gpu_infer_llama3_405b_deploy]
-kubectl apply -f llama3.1-405b-singlehost-a4.yaml
+envsubst '${GCS_BUCKET}' < llama3.1-405b-singlehost-a4-gcsfuse.yaml | kubectl apply -f -
 # [END hypercomputer_gpu_infer_llama3_405b_deploy]
 
 echo "Waiting for Llama 3.1 405B frontend, prefill, and decode pods to be created..."
