@@ -16,116 +16,153 @@
 
 set -euo pipefail
 
-# [START hypercomputer_gpu_tune_gemma3_ray_validation]
-echo "=============================================================================="
+RAY_JOB_NAME="gemma4-tuning-job"
+RAY_CLUSTER_NAME="gemma4-tuning"
+TRAINING_LOG="$(mktemp)"
 
-# Dynamically fetch the name of the submitted RayJob from the cluster
-RAY_JOB_NAME=$(kubectl get rayjob -o jsonpath='{.items[0].metadata.name}' 2>/dev/null)
+dump_debug_info() {
+    echo "==================== Debug information ===================="
+    kubectl describe rayjob "${RAY_JOB_NAME}" || true
+    echo "---------- Ray job submitter logs (last 200 lines) ----------"
+    kubectl logs "job/${RAY_JOB_NAME}" --tail=200 || true
+    echo "---------- Ray pods ----------"
+    kubectl get pods -l "ray.io/cluster=${RAY_CLUSTER_NAME}" -o wide || true
+    echo "---------- Recent events ----------"
+    kubectl get events --sort-by='.metadata.creationTimestamp' | tail -n 30 || true
+}
 
-if [[ -z "$RAY_JOB_NAME" ]]; then
-    echo "Error: No RayJob found in the cluster. Training deployment might have failed."
+on_exit() {
+    local status=$?
+    if [[ "${status}" -ne 0 ]]; then
+        echo "[$(date)] Validation failed with exit code ${status}."
+        dump_debug_info
+    fi
+    rm -f "${TRAINING_LOG}"
+}
+trap on_exit EXIT
+
+echo "[$(date)] ==================== Starting validation ===================="
+
+# 1. Wait for the training RayJob to finish
+if ! kubectl get rayjob "${RAY_JOB_NAME}" > /dev/null; then
+    echo "Error: RayJob '${RAY_JOB_NAME}' not found. Run ./2_deploy_model.sh first."
     exit 1
 fi
 
-echo "Found RayJob: '${RAY_JOB_NAME}'. Waiting for it to complete training..."
-
-JOB_STATUS=""
-TIMEOUT_SECONDS=7200
-ELAPSED_SECONDS=0
+TIMEOUT_SECONDS=5400
 INTERVAL_SECONDS=60
-
-while [[ "$JOB_STATUS" != "SUCCEEDED" ]]; do
-    if [[ "$ELAPSED_SECONDS" -ge "$TIMEOUT_SECONDS" ]]; then
-        echo "Error: Timeout of ${TIMEOUT_SECONDS} seconds reached waiting for RayJob to complete."
-        kubectl describe rayjob "$RAY_JOB_NAME"
+ELAPSED_SECONDS=0
+while true; do
+    JOB_STATUS="$(kubectl get rayjob "${RAY_JOB_NAME}" \
+        -o jsonpath='{.status.jobStatus}' 2> /dev/null || true)"
+    DEPLOYMENT_STATUS="$(kubectl get rayjob "${RAY_JOB_NAME}" \
+        -o jsonpath='{.status.jobDeploymentStatus}' 2> /dev/null || true)"
+    if [[ "${JOB_STATUS}" == "SUCCEEDED" ]]; then
+        break
+    fi
+    if [[ "${JOB_STATUS}" == "FAILED" || "${JOB_STATUS}" == "STOPPED" \
+        || "${DEPLOYMENT_STATUS}" == "Failed" ]]; then
+        echo "Error: RayJob '${RAY_JOB_NAME}' ended with jobStatus='${JOB_STATUS}'" \
+            "and jobDeploymentStatus='${DEPLOYMENT_STATUS}'."
         exit 1
     fi
-
-    JOB_STATUS=$(kubectl get rayjob "$RAY_JOB_NAME" -o jsonpath='{.status.jobStatus}' 2>/dev/null || echo "PENDING")
-    
-    if [[ "$JOB_STATUS" == "FAILED" || "$JOB_STATUS" == "STOPPED" || "$JOB_STATUS" == "SUSPENDED" ]]; then
-        echo "Error: RayJob '${RAY_JOB_NAME}' failed or stopped with status: ${JOB_STATUS}"
-        kubectl describe rayjob "$RAY_JOB_NAME"
+    if [[ "${ELAPSED_SECONDS}" -ge "${TIMEOUT_SECONDS}" ]]; then
+        echo "Error: RayJob '${RAY_JOB_NAME}' did not finish within ${TIMEOUT_SECONDS}s."
         exit 1
     fi
-    
-    if [[ "$JOB_STATUS" != "SUCCEEDED" ]]; then
-        echo "Current RayJob status: ${JOB_STATUS}. Waiting ${INTERVAL_SECONDS} seconds (${ELAPSED_SECONDS}/${TIMEOUT_SECONDS}s elapsed)..."
-        sleep "$INTERVAL_SECONDS"
-        ELAPSED_SECONDS=$((ELAPSED_SECONDS + INTERVAL_SECONDS))
-    fi
+    echo "RayJob status: jobStatus='${JOB_STATUS:-PENDING}'" \
+        "jobDeploymentStatus='${DEPLOYMENT_STATUS:-Initializing}'" \
+        "(${ELAPSED_SECONDS}/${TIMEOUT_SECONDS}s elapsed)..."
+    sleep "${INTERVAL_SECONDS}"
+    ELAPSED_SECONDS=$((ELAPSED_SECONDS + INTERVAL_SECONDS))
 done
+echo "[$(date)] RayJob '${RAY_JOB_NAME}' succeeded."
 
-echo "RayJob '${RAY_JOB_NAME}' completed successfully!"
-echo "=============================================================================="
+kubectl logs "job/${RAY_JOB_NAME}" > "${TRAINING_LOG}" 2>&1 || true
+echo "Ray Train workers that reported 'Training finished.':" \
+    "$(grep -c "Training finished." "${TRAINING_LOG}" || true)"
+grep "Final checkpoint: " "${TRAINING_LOG}" \
+    || echo "Warning: 'Final checkpoint:' not found in the submitter logs."
 
-echo "Running Ultra-Light Gemma 3 Vision validation job via Ray..."
-
-echo "Checking for the latest fine-tuned checkpoint in gs://${GCS_BUCKET}..."
-LATEST_CHECKPOINT=$(gcloud storage ls "gs://${GCS_BUCKET}/" | grep "gemma_vision_train_" | sort | tail -n 1 || true)
-
-if [[ -z "$LATEST_CHECKPOINT" ]]; then
-    echo "Error: No fine-tuning checkpoints found in gs://${GCS_BUCKET}"
+# 2. Validate the fine-tuned adapter
+# [START hypercomputer_gpu_tune_gemma4_ray_validation]
+LATEST_RUN="$(gcloud storage ls "gs://${GCS_BUCKET}/" --project="${PROJECT_ID}" \
+    | grep "gemma4_vision_train_" | sort | tail -n 1 || true)"
+if [[ -z "${LATEST_RUN}" ]]; then
+    echo "Error: No training run found in gs://${GCS_BUCKET}."
     exit 1
 fi
 
-echo "Found latest checkpoint artifact: ${LATEST_CHECKPOINT}"
-echo "=============================================================================="
-
-HEAD_POD=$(kubectl get pods -l ray.io/node-type=head -o jsonpath='{.items[0].metadata.name}')
-if [[ -z "$HEAD_POD" ]]; then
-    echo "Error: Ray head pod not found."
+ADAPTER_FILE="$(gcloud storage ls "${LATEST_RUN}**/adapter_model.safetensors" \
+    --project="${PROJECT_ID}" | sort | tail -n 1 || true)"
+if [[ -z "${ADAPTER_FILE}" ]]; then
+    echo "Error: No adapter_model.safetensors found under ${LATEST_RUN}."
     exit 1
 fi
+ADAPTER_URI="${ADAPTER_FILE%/adapter_model.safetensors}"
+echo "Latest fine-tuned adapter: ${ADAPTER_URI}"
 
-echo "Submitting validation job directly to Head Pod: ${HEAD_POD}..."
+HEAD_POD="$(kubectl get pods -l ray.io/cluster=gemma4-tuning,ray.io/node-type=head \
+    -o jsonpath='{.items[0].metadata.name}')"
 
-DOWNLOAD_SCRIPT="import os; from google.cloud import storage; c='${LATEST_CHECKPOINT}'.replace('gs://','').split('/'); b=storage.Client().bucket(c[0]); p='/'.join(c[1:]); os.makedirs('/tmp/checkpoint',exist_ok=True); [blob.download_to_filename(os.path.join('/tmp/checkpoint',os.path.basename(blob.name))) for blob in b.list_blobs(prefix=p) if not blob.name.endswith('/')]"
+kubectl get rayjob gemma4-tuning-job -o jsonpath='{.spec.runtimeEnvYAML}' \
+    | kubectl exec -i "${HEAD_POD}" -c ray-head -- sh -c 'cat > /tmp/runtime_env.yaml'
 
-INLINE_VALIDATION_SCRIPT="
-import os, torch
-from transformers import Gemma3ForConditionalGeneration, Gemma3Processor
-from peft import PeftModel
-
-model_id = 'google/gemma-3-4b-it'
-print('1/3 [OK] Loading processor and configuration...')
-processor = Gemma3Processor.from_pretrained(model_id)
-
-print('2/3 [OK] Loading base vision model (Gemma 3) onto GPU...')
-model = Gemma3ForConditionalGeneration.from_pretrained(model_id, device_map='auto', torch_dtype=torch.bfloat16)
-
-print('3/3 [OK] Loading fine-tuned LoRA weights from /tmp/checkpoint...')
-model = PeftModel.from_pretrained(model, '/tmp/checkpoint')
-model.eval()
-
-print('\n== ALL SYSTEMS GO: MODEL LOADED SUCCESSFULLY ==')
-print('Running warm-up text inference test...')
-
-prompt = '<bos><start_of_turn>user\nHello Gemma! Tell me a 3-word greeting.<end_of_turn>\n<start_of_turn>model\n'
-
-inputs = processor(text=prompt, images=None, return_tensors='pt').to('cuda')
-
-with torch.no_grad():
-    output = model.generate(**inputs, max_new_tokens=20)
-
-print('\nSUCCESS! Model responded correctly.')
-generated_text = processor.decode(output[0], skip_special_tokens=True)
-print('Model Output:', generated_text)
-print('==============================================================================')
-"
-
+VALIDATION_JOB_ID="gemma4-validate-$(date +%s)"
 kubectl exec "${HEAD_POD}" -c ray-head -- ray job submit \
+    --no-wait \
+    --submission-id="${VALIDATION_JOB_ID}" \
     --entrypoint-num-gpus=1 \
     --entrypoint-num-cpus=4 \
-    --runtime-env-json '{
-        "pip": [
-            "torch==2.8.0",
-            "torchvision==0.23.0",
-            "ray==2.59.0",
-            "transformers==4.55.2",
-            "peft==0.17.0",
-            "google-cloud-storage"
-        ]
-    }' \
-    -- bash -c "python -c \"$DOWNLOAD_SCRIPT\" && python -c \"$INLINE_VALIDATION_SCRIPT\""
-# [END hypercomputer_gpu_tune_gemma3_ray_validation]
+    --runtime-env=/tmp/runtime_env.yaml \
+    -- python /code/validate_adapter.py \
+        --model_id "${MODEL_ID}" \
+        --adapter_uri "${ADAPTER_URI}"
+# [END hypercomputer_gpu_tune_gemma4_ray_validation]
+
+get_validation_status() {
+    kubectl exec "${HEAD_POD}" -c ray-head -- python -c \
+        "from ray.job_submission import JobSubmissionClient; \
+print(JobSubmissionClient('http://127.0.0.1:8265').get_job_status('${VALIDATION_JOB_ID}'))" \
+        2> /dev/null | tail -n 1 | tr -d '\r' || true
+}
+
+TIMEOUT_SECONDS=1200
+INTERVAL_SECONDS=15
+ELAPSED_SECONDS=0
+while true; do
+    VALIDATION_STATUS="$(get_validation_status)"
+    if [[ "${VALIDATION_STATUS}" == "SUCCEEDED" || "${VALIDATION_STATUS}" == "FAILED" \
+        || "${VALIDATION_STATUS}" == "STOPPED" ]]; then
+        break
+    fi
+    if [[ "${ELAPSED_SECONDS}" -ge "${TIMEOUT_SECONDS}" ]]; then
+        echo "Error: Validation job '${VALIDATION_JOB_ID}' did not finish within ${TIMEOUT_SECONDS}s."
+        exit 1
+    fi
+    echo "Validation job status: '${VALIDATION_STATUS:-UNKNOWN}' (${ELAPSED_SECONDS}/${TIMEOUT_SECONDS}s elapsed)..."
+    sleep "${INTERVAL_SECONDS}"
+    ELAPSED_SECONDS=$((ELAPSED_SECONDS + INTERVAL_SECONDS))
+done
+
+VALIDATION_LOG="$(mktemp)"
+for attempt in 1 2 3 4 5; do
+    if kubectl exec "${HEAD_POD}" -c ray-head -- \
+        ray job logs "${VALIDATION_JOB_ID}" > "${VALIDATION_LOG}" 2>&1; then
+        break
+    fi
+    echo "Retrying 'ray job logs' (attempt ${attempt}/5)..."
+    sleep 5
+done
+grep -v -E "HTTP Request|Loading weights" "${VALIDATION_LOG}" || true
+
+if [[ "${VALIDATION_STATUS}" != "SUCCEEDED" ]] \
+    || ! grep -q "VALIDATION PASSED" "${VALIDATION_LOG}"; then
+    echo "Error: Validation job '${VALIDATION_JOB_ID}' ended with status '${VALIDATION_STATUS}'" \
+        "or did not report 'VALIDATION PASSED'."
+    rm -f "${VALIDATION_LOG}"
+    exit 1
+fi
+rm -f "${VALIDATION_LOG}"
+
+echo "[$(date)] ==================== Validation succeeded ===================="
