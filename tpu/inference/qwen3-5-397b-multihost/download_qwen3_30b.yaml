@@ -30,7 +30,7 @@ spec:
       - operator: Exists
       containers:
       - name: model-downloader
-        image: gcr.io/google.com/cloudsdktool/google-cloud-cli:latest
+        image: gcr.io/google.com/cloudsdktool/google-cloud-cli:592.0.0-slim-20261103
         env:
         - name: HF_TOKEN
           valueFrom:
