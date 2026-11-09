@@ -1,0 +1,137 @@
+#  Copyright 2026 Google LLC
+#
+#  Licensed under the Apache License, Version 2.0 (the "License");
+#  you may not use this file except in compliance with the License.
+#  You may obtain a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+#  Unless required by applicable law or agreed to in writing, software
+#  distributed under the License is distributed on an "AS IS" BASIS,
+#  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#  See the License for the specific language governing permissions and
+#  limitations under the License.
+
+# [START hypercomputer_gpu_tune_gemma4_ray_ray_cluster]
+apiVersion: ray.io/v1
+kind: RayCluster
+metadata:
+  name: gemma4-tuning
+spec:
+  rayVersion: '${RAY_VERSION}'
+  headGroupSpec:
+    rayStartParams:
+      dashboard-host: '0.0.0.0'
+    template:
+      metadata:
+      spec:
+        securityContext:
+          fsGroup: 100
+        nodeSelector:
+          cloud.google.com/compute-class: "Balanced"
+        serviceAccountName: ${RAY_SA}
+        containers:
+        - name: ray-head
+          image: rayproject/ray:${RAY_VERSION}-py312
+          ports:
+          - containerPort: 6379
+            name: gcs
+          - containerPort: 8265
+            name: dashboard
+          - containerPort: 10001
+            name: client
+          resources:
+            limits:
+              cpu: "24"
+              memory: "64Gi"
+            requests:
+              cpu: "24"
+              memory: "64Gi"
+          env:
+            - name: HF_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: hf-secret
+                  key: hf_api_token
+            - name: PIP_CACHE_DIR
+              value: /mnt/local-storage/pip-cache
+            - name: HF_HOME
+              value: /mnt/local-storage/hf-cache
+            - name: TMPDIR
+              value: /mnt/local-storage
+            - name: RAY_TMPDIR
+              value: /mnt/local-storage/ray-tmp
+          volumeMounts:
+            - name: job-code
+              mountPath: /code/
+            - mountPath: /mnt/local-storage/
+              name: local-storage
+        volumes:
+          - name: job-code
+            configMap:
+              name: gemma4-tuning-code
+          - name: local-storage
+            ephemeral:
+              volumeClaimTemplate:
+                spec:
+                  accessModes: [ "ReadWriteOnce" ]
+                  storageClassName: "standard-rwo"
+                  resources:
+                    requests:
+                      storage: 50Gi
+  workerGroupSpecs:
+  - replicas: 2
+    minReplicas: 1
+    maxReplicas: 5
+    groupName: gpu-group
+    rayStartParams: {}
+    template:
+      spec:
+        securityContext:
+          fsGroup: 100
+        serviceAccountName: ${RAY_SA}
+        containers:
+        - name: ray-worker
+          image: rayproject/ray:${RAY_VERSION}-py312-cu128
+          resources:
+            limits:
+              nvidia.com/gpu: "8"
+              cpu: "80"
+              memory: "320Gi"
+              ephemeral-storage: "200Gi"
+            requests:
+              nvidia.com/gpu: "8"
+              cpu: "80"
+              memory: "320Gi"
+              ephemeral-storage: "200Gi"
+          env:
+            - name: HF_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: hf-secret
+                  key: hf_api_token
+            - name: PIP_CACHE_DIR
+              value: /mnt/local-storage/pip-cache
+            - name: HF_HOME
+              value: /mnt/local-storage/hf-cache
+            - name: TMPDIR
+              value: /mnt/local-storage
+            - name: RAY_TMPDIR
+              value: /mnt/local-storage/ray-tmp
+          volumeMounts:
+            - name: job-code
+              mountPath: /code/
+            - mountPath: /mnt/local-storage/
+              name: local-storage
+        volumes:
+          - name: job-code
+            configMap:
+              name: gemma4-tuning-code
+          - name: local-storage
+            emptyDir: { }
+        nodeSelector:
+          cloud.google.com/gke-accelerator: nvidia-b200
+          cloud.google.com/reservation-name: ${RESERVATION}
+          cloud.google.com/reservation-affinity: "specific"
+          cloud.google.com/gke-gpu-driver-version: latest
+# [END hypercomputer_gpu_tune_gemma4_ray_ray_cluster]
