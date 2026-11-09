@@ -1,3 +1,5 @@
+#!/bin/bash
+#
 #  Copyright 2026 Google LLC
 #
 #  Licensed under the Apache License, Version 2.0 (the "License");
@@ -14,20 +16,30 @@
 
 set -euo pipefail
 
-# [START hypercomputer_gpu_infer_gemma3_deploy]
-envsubst < vllm-3-27b-it.yaml | kubectl apply -f -
-# [END hypercomputer_gpu_infer_gemma3_deploy]
+: "${RESERVATION_NAME:?RESERVATION_NAME must be set (see 0_env.sh)}"
+: "${VLLM_IMAGE:?VLLM_IMAGE must be set (see 0_env.sh)}"
+: "${MODEL_ID:?MODEL_ID must be set (see 0_env.sh)}"
+
+on_exit() {
+  local status=$?
+  if [ "${status}" -ne 0 ]; then
+    echo "Deployment failed. Fetching diagnostic information..." >&2
+    kubectl describe deployment/vllm-gemma4-31b || true
+    kubectl describe pods -l app=vllm-gemma4-31b || true
+    kubectl logs -l app=vllm-gemma4-31b --tail=200 || true
+    kubectl logs -l app=vllm-gemma4-31b --previous --tail=200 || true
+  fi
+}
+trap on_exit EXIT
+
+# shellcheck disable=SC2016
+# [START hypercomputer_gpu_infer_gemma4_31b_deploy]
+envsubst '$RESERVATION_NAME $VLLM_IMAGE $MODEL_ID' < vllm-gemma-4-31b-it.yaml | kubectl apply -f -
+# [END hypercomputer_gpu_infer_gemma4_31b_deploy]
 
 echo "Deploying the model and tracking progress..."
-# [START hypercomputer_gpu_infer_gemma3_deploy_wait]
-if ! kubectl wait \
+# [START hypercomputer_gpu_infer_gemma4_31b_deploy_wait]
+kubectl wait \
     --for=condition=Available \
-    --timeout=3600s deployment/vllm-gemma-deployment; then
-  echo "Deployment timed out. Fetching diagnostic information..."
-  kubectl describe deployment/vllm-gemma-deployment || true
-  kubectl describe pods -l app=gemma-server || true
-  kubectl logs -l app=gemma-server --tail=200 || true
-  kubectl logs -l app=gemma-server --previous --tail=200 || true
-  exit 1
-fi
-# [END hypercomputer_gpu_infer_gemma3_deploy_wait]
+    --timeout=3600s deployment/vllm-gemma4-31b
+# [END hypercomputer_gpu_infer_gemma4_31b_deploy_wait]
