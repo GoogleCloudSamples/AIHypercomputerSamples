@@ -17,41 +17,58 @@
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-TARGET_FILE="${SCRIPT_DIR}/kubernetes-engine-samples/ai-ml/nemo-rl-on-gke/nemoRL/gemma3-27b-it/gemma3-27b-gsm8k.sh"
-LOG_FILE="${SCRIPT_DIR}/kubernetes-engine-samples/ai-ml/nemo-rl-on-gke/nemoRL/gemma3-27b-it/logs/job_output.log"
+LOG_FILE="${SCRIPT_DIR}/logs/job_output.log"
+CHECKPOINT_DIR="/data/${RUN_NAME}/step_${GRPO_MAX_STEPS}"
+HEAD_POD_NAME=""
 
-if [ ! -f "${LOG_FILE}" ]; then
-    echo "Validation Failed. Log file ${LOG_FILE} not found."
-    exit 1
+dump_debug() {
+  echo "========== Debug output =========="
+  kubectl get pods -o wide || true
+  if [[ -f "${LOG_FILE}" ]]; then
+    echo "---------- Last 100 lines of ${LOG_FILE} ----------"
+    tail -n 100 "${LOG_FILE}" || true
+    echo "---------- Errors in ${LOG_FILE} ----------"
+    grep -nE 'Traceback|Error|OOM|out of memory|NCCL WARN' "${LOG_FILE}" | tail -n 40 || true
+  fi
+  if [[ -n "${HEAD_POD_NAME}" ]]; then
+    echo "---------- Contents of /data/${RUN_NAME} ----------"
+    kubectl exec "${HEAD_POD_NAME}" -c ray-head -- find "/data/${RUN_NAME}" -maxdepth 3 || true
+  fi
+}
+
+fail() {
+  echo "Validation Failed! $*"
+  dump_debug
+  exit 1
+}
+
+if [[ ! -f "${LOG_FILE}" ]]; then
+  fail "Log file ${LOG_FILE} not found."
 fi
 
-# Extract expected step count from gemma3-27b-gsm8k.sh
-echo "Reading expected step count from gemma3-27b-gsm8k.sh..."
-if ! EXPECTED_STEPS=$(grep -oP 'grpo\.max_num_steps=\K\d+' "${TARGET_FILE}"); then
-    echo "Error: Could not extract 'grpo.max_num_steps' from ${TARGET_FILE}." >&2
-    exit 1
-fi
-echo "Expected number of training steps: ${EXPECTED_STEPS}"
+echo "Expected number of training steps: ${GRPO_MAX_STEPS}"
 
-# Count occurrences of "Training Results:" in job_output.log
-declare -r TRAINING_COUNT="$(grep -o "Training Results:" "${LOG_FILE}" | wc -l)"
-echo "Found ${TRAINING_COUNT} completed training steps in job_output.log."
-if [[ "${TRAINING_COUNT}" -ne "${EXPECTED_STEPS}" ]]; then
-    echo "Validation Failed! Expected ${EXPECTED_STEPS} training steps, but found ${TRAINING_COUNT}."
-    exit 1
+TRAINING_COUNT="$(grep -c "Training Results:" "${LOG_FILE}" || true)"
+echo "Found ${TRAINING_COUNT} completed training steps in ${LOG_FILE}."
+if [[ "${TRAINING_COUNT}" -ne "${GRPO_MAX_STEPS}" ]]; then
+  fail "Expected ${GRPO_MAX_STEPS} training steps, but found ${TRAINING_COUNT}."
 fi
 
-# Verify checkpoint on the Lustre disk
-export HEAD_POD_NAME=$(kubectl get pods --selector=ray.io/node-type=head -o jsonpath='{.items[0].metadata.name}')
-if [ -z "$HEAD_POD_NAME" ]; then
-    echo "Error: No running Ray head pod found."
-    exit 1
+if grep -qiE 'Loss: (nan|-?inf)' "${LOG_FILE}"; then
+  fail "The training loss is not finite."
+fi
+echo "Last reported training loss: $(grep -oP 'Loss: \K[-0-9.e]+' "${LOG_FILE}" | tail -n 1)"
+
+# Verify the final checkpoint on the Lustre volume
+HEAD_POD_NAME="$(kubectl get pods --selector=ray.io/node-type=head -o jsonpath='{.items[0].metadata.name}')"
+if [[ -z "${HEAD_POD_NAME}" ]]; then
+  fail "No running Ray head pod found."
 fi
 
-echo "Verifying Lustre checkpoint /data/nemo_rl_gemma3_27b_3_17/step_${EXPECTED_STEPS} inside ${HEAD_POD_NAME}..."
-if ! kubectl exec "${HEAD_POD_NAME}" -c ray-head -- test -d "/data/nemo_rl_gemma3_27b_3_17/step_${EXPECTED_STEPS}"; then
-    echo "Validation Failed! Checkpoint directory step_${EXPECTED_STEPS} not found on Lustre volume."
-    exit 1
+echo "Verifying Lustre checkpoint ${CHECKPOINT_DIR} inside ${HEAD_POD_NAME}..."
+if ! kubectl exec "${HEAD_POD_NAME}" -c ray-head -- test -d "${CHECKPOINT_DIR}/policy/weights"; then
+  fail "Checkpoint ${CHECKPOINT_DIR}/policy/weights not found on the Lustre volume."
 fi
+kubectl exec "${HEAD_POD_NAME}" -c ray-head -- du -sh "${CHECKPOINT_DIR}" || true
 
 echo "Validation Succeeded!"

@@ -1,3 +1,5 @@
+#!/bin/bash
+#
 #  Copyright 2026 Google LLC
 #
 #  Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,16 +14,17 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
-# [START hypercomputer_gpu_infer_gemma3_env]
+# [START hypercomputer_gpu_infer_gemma4_31b_env]
 export PROJECT_ID="YOUR_PROJECT_ID"
-export RESERVATION_URL="YOUR_RESERVATION_NAME"
 export REGION="YOUR_REGION"
 export CLUSTER_NAME="YOUR_CLUSTER_NAME"
 export HUGGING_FACE_TOKEN="YOUR_HF_TOKEN"
+export RESERVATION_NAME="YOUR_RESERVATION_NAME"
 export NETWORK="YOUR_NETWORK_NAME"
 export SUBNETWORK="YOUR_SUBNETWORK_NAME"
+export VLLM_IMAGE="vllm/vllm-openai:v0.32.0"
+export MODEL_ID="google/gemma-4-31B-it"
 
 gcloud config set project "${PROJECT_ID}"
 gcloud config set billing/quota_project "${PROJECT_ID}"
-# [END hypercomputer_gpu_infer_gemma3_env]
-
+# [END hypercomputer_gpu_infer_gemma4_31b_env]

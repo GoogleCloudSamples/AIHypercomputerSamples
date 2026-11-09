@@ -17,24 +17,52 @@
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-TARGET_DIR="${SCRIPT_DIR}/kubernetes-engine-samples"
-cd "${TARGET_DIR}/ai-ml/nemo-rl-on-gke/nemoRL/gemma3-27b-it"
+LOG_DIR="${SCRIPT_DIR}/logs"
+LOG_FILE="${LOG_DIR}/job_output.log"
+mkdir -p "${LOG_DIR}"
+rm -f "${LOG_FILE}"
 
-echo "[$(date)] ========== Launching Ray session =========="
-kubectl ray session ray-cluster-kuberay >/dev/null 2>&1 &
-RAY_SESSION_PID=$!
-
-echo "[$(date)] ========== Verifying Ray session status =========="
-if ! kill -0 "$RAY_SESSION_PID" 2>/dev/null; then
-  echo "Error: Ray session failed to start." >&2
+echo "[$(date)] ========== Finding the Ray head pod =========="
+HEAD_POD_NAME="$(kubectl get pods --selector=ray.io/node-type=head -o jsonpath='{.items[0].metadata.name}')"
+if [[ -z "${HEAD_POD_NAME}" ]]; then
+  echo "Error: No running Ray head pod found." >&2
   exit 1
-else
-  echo "Ray session is launched."
+fi
+echo "Found head pod: ${HEAD_POD_NAME}"
+
+echo "[$(date)] ========== Checking the recipe in the NeMo RL ${NEMO_RL_VERSION} image =========="
+if ! kubectl exec "${HEAD_POD_NAME}" -c ray-head -- test -f "/opt/nemo-rl/${NEMO_RL_RECIPE}"; then
+  echo "Error: Recipe ${NEMO_RL_RECIPE} does not exist in nvcr.io/nvidia/nemo-rl:${NEMO_RL_VERSION}." >&2
+  exit 1
 fi
 
-echo "[$(date)] ========== Replacing values in gemma3-27b-gsm8k.sh file =========="
-sed -i "s|WANDB_API_KEY='YOUR_WANDB_API_KEY'|WANDB_API_KEY='${WANDB_API_KEY}'|" gemma3-27b-gsm8k.sh
-sed -i "s|HF_TOKEN='YOUR_HF_TOKEN'|HF_TOKEN='${HF_TOKEN}'|" gemma3-27b-gsm8k.sh
+WANDB_ENABLED="False"
+if [[ -n "${WANDB_API_KEY}" && "${WANDB_API_KEY}" != "YOUR_WANDB_API_KEY" ]]; then
+  WANDB_ENABLED="True"
+fi
 
-echo "[$(date)] ========== Submitting the Job =========="
-bash gemma3-27b-gsm8k.sh 2>&1 | tee logs/job_output.log
+echo "[$(date)] ========== Submitting the job for ${MODEL_ID} (log: ${LOG_FILE}) =========="
+exec > >(tee "${LOG_FILE}") 2>&1
+
+# [START hypercomputer_gpu_tune_gemma4_12b_nemo_rl_job_submit]
+kubectl exec -i "${HEAD_POD_NAME}" -c ray-head -- bash -s <<EOF
+set -euo pipefail
+cd /opt/nemo-rl
+export WANDB_API_KEY="${WANDB_API_KEY}"
+export HF_TOKEN="${HF_TOKEN}"
+uv run examples/run_grpo.py \
+  --config "${NEMO_RL_RECIPE}" \
+  policy.model_name="${MODEL_ID}" \
+  policy.tokenizer.name="${MODEL_ID}" \
+  cluster.num_nodes="${NUM_GPU_NODES}" \
+  cluster.gpus_per_node=8 \
+  grpo.max_num_steps="${GRPO_MAX_STEPS}" \
+  checkpointing.checkpoint_dir="/data/${RUN_NAME}" \
+  logger.log_dir="/data/${RUN_NAME}/logs" \
+  logger.tensorboard_enabled=True \
+  logger.wandb_enabled="${WANDB_ENABLED}" \
+  logger.wandb.name="${RUN_NAME}"
+EOF
+# [END hypercomputer_gpu_tune_gemma4_12b_nemo_rl_job_submit]
+
+echo "[$(date)] ========== Job finished =========="

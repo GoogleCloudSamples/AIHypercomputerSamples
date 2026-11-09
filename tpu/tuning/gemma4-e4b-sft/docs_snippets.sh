@@ -15,6 +15,6 @@
 
 set -euo pipefail
 
-# [START hypercomputer_tpu_tune_gemma3_sft_ssh]
-gcloud compute ssh "${NAME}" --zone "${ZONE}" --project "${PROJECT}"
-# [END hypercomputer_tpu_tune_gemma3_sft_ssh]
+# [START hypercomputer_tpu_tune_gemma4_e4b_sft_ssh]
+gcloud compute ssh "${TPU_NAME}" --project="${PROJECT_ID}" --zone="${ZONE}" --tunnel-through-iap
+# [END hypercomputer_tpu_tune_gemma4_e4b_sft_ssh]

@@ -1,3 +1,5 @@
+#!/bin/bash
+#
 #  Copyright 2026 Google LLC
 #
 #  Licensed under the Apache License, Version 2.0 (the "License");
@@ -14,35 +16,44 @@
 
 set -euo pipefail
 
-kubectl port-forward service/llm-service 8000:8000 &
+kubectl port-forward service/vllm-gemma4-31b-service 8000:8000 >/dev/null 2>&1 &
 PORT_FORWARD_PID=$!
 
 cleanup() {
-  kill "$PORT_FORWARD_PID" 2>/dev/null || true
+  kill "${PORT_FORWARD_PID}" 2>/dev/null || true
 }
 trap cleanup EXIT
 
 echo "Waiting for port forwarding to be ready..."
-until curl -s http://localhost:8000/health >/dev/null; do
-  if ! kill -0 "$PORT_FORWARD_PID" 2>/dev/null; then
+LIMIT=60
+count=0
+until curl -sf http://127.0.0.1:8000/health >/dev/null; do
+  if ! kill -0 "${PORT_FORWARD_PID}" 2>/dev/null; then
     echo "Error: Port forwarding failed to start or died unexpectedly." >&2
     exit 1
   fi
-  sleep 1
+  if [ "${count}" -ge "${LIMIT}" ]; then
+    echo "Error: Timeout waiting for the model server health endpoint." >&2
+    exit 1
+  fi
+  sleep 2
+  count=$((count + 1))
 done
 
 echo "Sending request to the model..."
-# [START hypercomputer_gpu_infer_gemma3_interact]
-curl http://127.0.0.1:8000/v1/chat/completions \
--X POST \
+# [START hypercomputer_gpu_infer_gemma4_31b_interact]
+curl -sS --fail-with-body http://127.0.0.1:8000/v1/chat/completions \
 -H "Content-Type: application/json" \
--d '{
-  "model": "google/gemma-3-27b-it",
+-d @- <<EOF | jq .
+{
+  "model": "${MODEL_ID}",
   "messages": [
     {
       "role": "user",
       "content": "Why is the sky blue?"
     }
-  ]
-}' | jq .
-# [END hypercomputer_gpu_infer_gemma3_interact]
+  ],
+  "max_tokens": 256
+}
+EOF
+# [END hypercomputer_gpu_infer_gemma4_31b_interact]

@@ -16,95 +16,68 @@
 
 set -euo pipefail
 
-# 1. Create a ConfigMap
-# [START hypercomputer_gpu_tune_gemma3_ray_create_configmap]
-kubectl create cm ray-job-cm --from-file=code -o yaml --dry-run=client | kubectl apply -f -
-# [END hypercomputer_gpu_tune_gemma3_ray_create_configmap]
+RAY_CLUSTER_NAME="gemma4-tuning"
 
-# 2. Create Ray Cluster
-# [START hypercomputer_gpu_tune_gemma3_ray_create_ray_cluster]
-MAX_RETRIES=10
+# 1. Create a ConfigMap
+# [START hypercomputer_gpu_tune_gemma4_ray_create_configmap]
+kubectl create configmap gemma4-tuning-code --from-file=code \
+    --dry-run=client -o yaml | kubectl apply -f -
+# [END hypercomputer_gpu_tune_gemma4_ray_create_configmap]
+
+echo "Waiting for the Ray operator to accept the RayCluster manifest..."
+MAX_ATTEMPTS=40
 RETRY_DELAY=15
 ATTEMPT=1
-
-echo "Applying ray_cluster.yaml..."
-while ! envsubst < ray_cluster.yaml | kubectl apply -f -; do
-    if [ "$ATTEMPT" -ge "$MAX_RETRIES" ]; then
-        echo "Critical Error: Failed to apply ray_cluster.yaml after $MAX_RETRIES attempts."
+until envsubst < ray_cluster.yaml | kubectl apply --dry-run=server -f - > /dev/null; do
+    if [[ "${ATTEMPT}" -ge "${MAX_ATTEMPTS}" ]]; then
+        echo "Error: The Ray operator did not accept ray_cluster.yaml after ${MAX_ATTEMPTS} attempts."
+        kubectl get crd | grep -E "NAME|ray.io" || true
+        kubectl get pods -A | grep -iE "NAME|ray" || true
         exit 1
     fi
-    echo "Attempt $ATTEMPT/$MAX_RETRIES failed. KubeRay webhook might not be ready. Retrying in ${RETRY_DELAY}s..."
-    sleep $RETRY_DELAY
+    echo "Attempt ${ATTEMPT}/${MAX_ATTEMPTS} failed. Retrying in ${RETRY_DELAY}s..."
+    sleep "${RETRY_DELAY}"
     ATTEMPT=$((ATTEMPT + 1))
 done
-echo "Successfully applied ray_cluster.yaml"
-# [END hypercomputer_gpu_tune_gemma3_ray_create_ray_cluster]
 
-# ==============================================================================
-#  WAITING FOR THE 'RUNNING' STATE FOR GEMMA3 PODS
-# ==============================================================================
-echo "Waiting for all gemma3 PODS to transition to the state RUNNING..."
+# 2. Create Ray Cluster
+# [START hypercomputer_gpu_tune_gemma4_ray_create_ray_cluster]
+envsubst < ray_cluster.yaml | kubectl apply -f -
+# [END hypercomputer_gpu_tune_gemma4_ray_create_ray_cluster]
 
-ALL_READY=false
-TIMEOUT_SECONDS=600  # Maximum waiting time 10 minutes
-INTERVAL_SECONDS=10
+WORKER_REPLICAS="$(kubectl get raycluster "${RAY_CLUSTER_NAME}" \
+    -o jsonpath='{.spec.workerGroupSpecs[0].replicas}')"
+EXPECTED_PODS=$((WORKER_REPLICAS + 1))
+echo "Waiting for ${EXPECTED_PODS} Ray pods (1 head, ${WORKER_REPLICAS} workers) to be ready..."
+
+TIMEOUT_SECONDS=1800
+INTERVAL_SECONDS=15
 ELAPSED_SECONDS=0
-
-while [ "$ALL_READY" = false ]; do
-    if [ "$ELAPSED_SECONDS" -ge "$TIMEOUT_SECONDS" ]; then
-        echo "Critical Error: Timeout reached ($TIMEOUT_SECONDS seconds). Pods failed to become ready."
-        echo "Current status of deployment:"
-        kubectl get pods | grep -E "NAME|gemma3"
-        echo "Fetching last 20 cluster events for debugging:"
-        kubectl get events --sort-by='.metadata.creationTimestamp' | tail -n 20
+while true; do
+    READY_PODS="$(kubectl get pods -l "ray.io/cluster=${RAY_CLUSTER_NAME}" \
+        -o jsonpath='{range .items[*]}{.status.phase}{" "}{.status.conditions[?(@.type=="Ready")].status}{"\n"}{end}' \
+        | grep -c "^Running True$" || true)"
+    if [[ "${READY_PODS}" -ge "${EXPECTED_PODS}" ]]; then
+        break
+    fi
+    if [[ "${ELAPSED_SECONDS}" -ge "${TIMEOUT_SECONDS}" ]]; then
+        echo "Error: Ray pods were not ready within ${TIMEOUT_SECONDS}s."
+        kubectl get pods -l "ray.io/cluster=${RAY_CLUSTER_NAME}" -o wide || true
+        kubectl describe pods -l "ray.io/cluster=${RAY_CLUSTER_NAME}" | tail -n 60 || true
+        kubectl get events --sort-by='.metadata.creationTimestamp' | tail -n 30 || true
         exit 1
     fi
-    #  Retrieve data about the gemma3 pods (Name, Ready, Status)
-    PODS_DATA=$(kubectl get pods 2>/dev/null | grep "gemma3" || true)
-
-    if [ -z "$PODS_DATA" ]; then
-        echo "Waiting for the pods to start"
-        sleep $INTERVAL_SECONDS
-        ELAPSED_SECONDS=$((ELAPSED_SECONDS + INTERVAL_SECONDS))
-        continue
-    fi
-
-    # Extract the READY column (column 2) and the STATUS column (column 3)
-    COMPACT_STATUSES=$(echo "$PODS_DATA" | awk '{print $2 ":" $3}')
-
-    # Set the flag to true by default, and then verify each pod
-    ALL_READY=true
-
-    for ITEM in $COMPACT_STATUSES; do
-        READY_COUNT=$(echo "$ITEM" | cut -d':' -f1)
-        STATUS_NAME=$(echo "$ITEM" | cut -d':' -f2)
-
-        # CONDITION: The pod must have the status "Running" AND the state "2/2"
-        if [ "$STATUS_NAME" != "Running" ] || [ "$READY_COUNT" != "2/2" ]; then
-            ALL_READY=false
-            break
-        fi
-    done
-
-    if [ "$ALL_READY" = false ]; then
-        echo "Awaiting all gemma3 PODS to be ready:"
-        # Display the current status
-        kubectl get pods | grep -E "NAME|gemma3"
-        echo "------------------------------------------------------------------------------"
-        sleep $INTERVAL_SECONDS
-        ELAPSED_SECONDS=$((ELAPSED_SECONDS + INTERVAL_SECONDS))
-    fi
+    echo "${READY_PODS}/${EXPECTED_PODS} Ray pods ready (${ELAPSED_SECONDS}/${TIMEOUT_SECONDS}s elapsed)..."
+    sleep "${INTERVAL_SECONDS}"
+    ELAPSED_SECONDS=$((ELAPSED_SECONDS + INTERVAL_SECONDS))
 done
 
-echo ""
-echo "Success! All PODS are ready and running:"
-echo "=============================================================================="
-kubectl get pods | grep -E "NAME|gemma3"
-echo "=============================================================================="
+echo "All Ray pods are ready:"
+kubectl get pods -l "ray.io/cluster=${RAY_CLUSTER_NAME}" -o wide
 
 sleep 20
 
 # 3. Schedule a training job
-# [START hypercomputer_gpu_tune_gemma3_ray_training_job]
+# [START hypercomputer_gpu_tune_gemma4_ray_training_job]
 envsubst < ray_job.yaml | kubectl apply -f -
-# [END hypercomputer_gpu_tune_gemma3_ray_training_job]
+# [END hypercomputer_gpu_tune_gemma4_ray_training_job]

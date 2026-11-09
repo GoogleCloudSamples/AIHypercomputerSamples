@@ -1,3 +1,4 @@
+#!/bin/bash
 #  Copyright 2026 Google LLC
 #
 #  Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,7 +13,7 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
-# [START hypercomputer_gpu_tune_gemma3_ray_env]
+# [START hypercomputer_gpu_tune_gemma4_ray_env]
 export PROJECT_ID="YOUR_PROJECT_ID"
 export RESERVATION="YOUR_RESERVATION_NAME"
 export REGION="YOUR_REGION"
@@ -21,7 +22,9 @@ export HF_TOKEN="YOUR_HF_TOKEN"
 export RAY_SA="YOUR_RAY_SA"
 export GSA_NAME="YOUR_GSA_NAME"
 export GCS_BUCKET="YOUR_GCS_BUCKET"
+export MODEL_ID="google/gemma-4-E4B-it"
+export RAY_VERSION="2.59.0"
 
-gcloud config set project $PROJECT_ID
-gcloud config set billing/quota_project $PROJECT_ID
-# [END hypercomputer_gpu_tune_gemma3_ray_env]
+gcloud config set project "${PROJECT_ID}"
+gcloud config set billing/quota_project "${PROJECT_ID}"
+# [END hypercomputer_gpu_tune_gemma4_ray_env]

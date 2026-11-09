@@ -1,3 +1,5 @@
+#!/bin/bash
+#
 #  Copyright 2026 Google LLC
 #
 #  Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,6 +14,8 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
-# [START hypercomputer_gpu_infer_gemma3_port_forward]
-kubectl port-forward service/llm-service 8000:8000
-# [END hypercomputer_gpu_infer_gemma3_port_forward]
+set -euo pipefail
+
+# [START hypercomputer_gpu_infer_gemma4_31b_port_forward]
+kubectl port-forward service/vllm-gemma4-31b-service 8000:8000
+# [END hypercomputer_gpu_infer_gemma4_31b_port_forward]

@@ -15,30 +15,36 @@
 
 set -euo pipefail
 
-# [START hypercomputer_tpu_tune_gemma3_sft_create]
-gcloud compute instances create "${NAME}" \
+# [START hypercomputer_tpu_tune_gemma4_e4b_sft_create]
+gcloud compute instances create "${TPU_NAME}" \
+    --project="${PROJECT_ID}" \
     --zone="${ZONE}" \
-    --project="${PROJECT}" \
     --network="${NETWORK}" \
-    --tags="${NAME}" \
-    --machine-type=ct6e-standard-8t \
-    --image-project=ubuntu-os-accelerator-images \
-    --image-family=ubuntu-accel-2204-amd64-tpu-v5e-v5p-v6e \
-    --boot-disk-size=200GB \
+    --tags="${TPU_NAME}" \
+    --machine-type="${MACHINE_TYPE}" \
+    --image-project="${IMAGE_PROJECT}" \
+    --image-family="${IMAGE_FAMILY}" \
+    --boot-disk-size="${BOOT_DISK_SIZE}" \
     --maintenance-policy=TERMINATE \
     --instance-termination-action=DELETE \
     --provisioning-model=RESERVATION_BOUND \
     --reservation-affinity=specific \
     --reservation="${RESERVATION}"
-# [END hypercomputer_tpu_tune_gemma3_sft_create]
+# [END hypercomputer_tpu_tune_gemma4_e4b_sft_create]
 
-LIMIT=60
-count=0
-while [ "$(gcloud compute instances describe "${NAME}" --project "${PROJECT}" --zone "${ZONE}" --format='value(status)' 2>/dev/null || echo "PENDING")" != "RUNNING" ]; do
-  if [ "${count}" -ge "${LIMIT}" ]; then
-    echo "Timeout waiting for TPU instance to become RUNNING." >&2
+deadline=$((SECONDS + 600))
+until [ "$(timeout 60 gcloud compute instances describe "${TPU_NAME}" \
+    --project="${PROJECT_ID}" \
+    --zone="${ZONE}" \
+    --format='value(status)' </dev/null 2>/dev/null || echo "PENDING")" = "RUNNING" ]; do
+  if [ "${SECONDS}" -ge "${deadline}" ]; then
+    echo "Timeout waiting for instance ${TPU_NAME} to become RUNNING." >&2
+    timeout 60 gcloud compute instances describe "${TPU_NAME}" \
+        --project="${PROJECT_ID}" \
+        --zone="${ZONE}" \
+        --format='yaml(status,statusMessage,lastStartTimestamp)' </dev/null >&2 || true
     exit 1
   fi
   sleep 10
-  count=$((count+1))
 done
+echo "Instance ${TPU_NAME} is RUNNING."

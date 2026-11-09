@@ -1,3 +1,5 @@
+#!/bin/bash
+#
 #  Copyright 2026 Google LLC
 #
 #  Licensed under the Apache License, Version 2.0 (the "License");
@@ -14,32 +16,54 @@
 
 set -euo pipefail
 
-# [START hypercomputer_gpu_infer_gemma3_cluster_create_auto]
-gcloud container clusters create-auto $CLUSTER_NAME \
-    --project=$PROJECT_ID \
-    --region=$REGION \
-    --release-channel=rapid \
-    --network=$NETWORK \
-    --subnetwork=$SUBNETWORK
-# [END hypercomputer_gpu_infer_gemma3_cluster_create_auto]
+MIN_GKE_VERSION="1.34.0-gke.1662000"
+
+# [START hypercomputer_gpu_infer_gemma4_31b_cluster_create_auto]
+gcloud container clusters create-auto "${CLUSTER_NAME}" \
+    --project="${PROJECT_ID}" \
+    --location="${REGION}" \
+    --release-channel=regular \
+    --network="${NETWORK}" \
+    --subnetwork="${SUBNETWORK}"
+# [END hypercomputer_gpu_infer_gemma4_31b_cluster_create_auto]
 
 echo "Verifying cluster status..."
-STATUS=$(gcloud container clusters describe $CLUSTER_NAME --region $REGION --format="value(status)")
-
-if [ "$STATUS" = "RUNNING" ]; then
-    echo "Success! Cluster $CLUSTER_NAME is RUNNING and ready for deployment."
-else
-    echo "Warning: Cluster is in '$STATUS' state."
+LIMIT=30
+count=0
+while true; do
+  CLUSTER_INFO=$(gcloud container clusters describe "${CLUSTER_NAME}" \
+      --project="${PROJECT_ID}" \
+      --location="${REGION}" \
+      --format="value(status,currentMasterVersion)")
+  read -r STATUS CLUSTER_VERSION <<< "${CLUSTER_INFO}"
+  if [ "${STATUS}" = "RUNNING" ]; then
+    break
+  fi
+  if [ "${count}" -ge "${LIMIT}" ]; then
+    echo "Error: cluster ${CLUSTER_NAME} is in '${STATUS}' state." >&2
     exit 1
+  fi
+  echo "Cluster is in '${STATUS}' state, waiting..."
+  sleep 20
+  count=$((count + 1))
+done
+echo "Cluster ${CLUSTER_NAME} is RUNNING with GKE version ${CLUSTER_VERSION}."
+
+OLDEST_VERSION=$(printf '%s\n' "${MIN_GKE_VERSION}" "${CLUSTER_VERSION}" | sort -V | head -n 1)
+if [ "${OLDEST_VERSION}" != "${MIN_GKE_VERSION}" ]; then
+  echo "Error: GKE version ${CLUSTER_VERSION} is older than ${MIN_GKE_VERSION}." >&2
+  echo "Older versions can install an NVIDIA driver older than R580, which ${VLLM_IMAGE} doesn't support." >&2
+  exit 1
 fi
 
-# [START hypercomputer_gpu_infer_gemma3_cluster_get_creds]
-gcloud container clusters get-credentials $CLUSTER_NAME \
-    --location=$REGION
-# [END hypercomputer_gpu_infer_gemma3_cluster_get_creds]
+# [START hypercomputer_gpu_infer_gemma4_31b_cluster_get_creds]
+gcloud container clusters get-credentials "${CLUSTER_NAME}" \
+    --project="${PROJECT_ID}" \
+    --location="${REGION}"
+# [END hypercomputer_gpu_infer_gemma4_31b_cluster_get_creds]
 
-# [START hypercomputer_gpu_infer_gemma3_secret_create]
+# [START hypercomputer_gpu_infer_gemma4_31b_secret_create]
 kubectl create secret generic hf-secret \
-    --from-literal=hf_api_token=${HUGGING_FACE_TOKEN} \
+    --from-literal=hf_api_token="${HUGGING_FACE_TOKEN}" \
     --dry-run=client -o yaml | kubectl apply -f -
-# [END hypercomputer_gpu_infer_gemma3_secret_create]
+# [END hypercomputer_gpu_infer_gemma4_31b_secret_create]

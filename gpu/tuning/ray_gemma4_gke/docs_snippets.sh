@@ -1,3 +1,4 @@
+#!/bin/bash
 #  Copyright 2026 Google LLC
 #
 #  Licensed under the Apache License, Version 2.0 (the "License");
@@ -11,28 +12,29 @@
 #  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
-#
-# [START hypercomputer_gpu_tune_gemma3_ray_monitor_pods]
+
+# [START hypercomputer_gpu_tune_gemma4_ray_monitor_pods]
 kubectl get pods
-# [END hypercomputer_gpu_tune_gemma3_ray_monitor_pods]
+# [END hypercomputer_gpu_tune_gemma4_ray_monitor_pods]
 
-# [START hypercomputer_gpu_tune_gemma3_ray_monitor_logs]
-kubectl logs -f <test-ray-job-UNIQUE_ID>
-# [END hypercomputer_gpu_tune_gemma3_ray_monitor_logs]
+# [START hypercomputer_gpu_tune_gemma4_ray_monitor_logs]
+kubectl logs -f job/gemma4-tuning-job
+# [END hypercomputer_gpu_tune_gemma4_ray_monitor_logs]
 
-# [START hypercomputer_gpu_tune_gemma3_ray_port_forward]
-kubectl port-forward service/gemma3-tuning-head-svc 8265:8265 > fwd.log 2>&1 &
-# [END hypercomputer_gpu_tune_gemma3_ray_port_forward]
+# [START hypercomputer_gpu_tune_gemma4_ray_port_forward]
+kubectl port-forward service/gemma4-tuning-head-svc 8265:8265 > fwd.log 2>&1 &
+# [END hypercomputer_gpu_tune_gemma4_ray_port_forward]
 
-# [START hypercomputer_gpu_tune_gemma3_ray_delete_ray_cluster]
-kubectl delete -f ray_cluster.yaml
-# [END hypercomputer_gpu_tune_gemma3_ray_delete_ray_cluster]
+# [START hypercomputer_gpu_tune_gemma4_ray_delete_ray_cluster]
+kubectl delete raycluster gemma4-tuning
+# [END hypercomputer_gpu_tune_gemma4_ray_delete_ray_cluster]
 
-# [START hypercomputer_gpu_tune_gemma3_ray_delete_gke_cluster]
-gcloud container clusters delete $CLUSTER_NAME \
-    --region=$REGION
-# [END hypercomputer_gpu_tune_gemma3_ray_delete_gke_cluster]
+# [START hypercomputer_gpu_tune_gemma4_ray_delete_gke_cluster]
+gcloud container clusters delete "${CLUSTER_NAME}" \
+    --project="${PROJECT_ID}" \
+    --location="${REGION}"
+# [END hypercomputer_gpu_tune_gemma4_ray_delete_gke_cluster]
 
-# [START hypercomputer_gpu_tune_gemma3_ray_delete_gcs_bucket]
-gcloud storage rm -r gs://$GCS_BUCKET
-# [END hypercomputer_gpu_tune_gemma3_ray_delete_gcs_bucket]
+# [START hypercomputer_gpu_tune_gemma4_ray_delete_gcs_bucket]
+gcloud storage rm -r "gs://${GCS_BUCKET}" --project="${PROJECT_ID}"
+# [END hypercomputer_gpu_tune_gemma4_ray_delete_gcs_bucket]
