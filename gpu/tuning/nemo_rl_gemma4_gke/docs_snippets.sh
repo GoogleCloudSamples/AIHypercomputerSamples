@@ -14,40 +14,38 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
+# shellcheck disable=SC2164
+
 # ========== Deploy Ray Cluster ==========
 
-# [START hypercomputer_gpu_tune_gemma3_27b_nemo_rl_git_clone]
+# [START hypercomputer_gpu_tune_gemma4_12b_nemo_rl_git_clone]
 git clone https://github.com/GoogleCloudPlatform/kubernetes-engine-samples.git
-git -C kubernetes-engine-samples checkout 87fa0575c977b96f6d3af2cab58c9128f3cf0dc3
-# [END hypercomputer_gpu_tune_gemma3_27b_nemo_rl_git_clone]
+git -C kubernetes-engine-samples checkout "${NEMO_RL_CHART_COMMIT}"
+# [END hypercomputer_gpu_tune_gemma4_12b_nemo_rl_git_clone]
 
-# [START hypercomputer_gpu_tune_gemma3_27b_nemo_rl_navigate_working_dir]
+# [START hypercomputer_gpu_tune_gemma4_12b_nemo_rl_navigate_working_dir]
 cd kubernetes-engine-samples/ai-ml/nemo-rl-on-gke/nemoRL
-# [END hypercomputer_gpu_tune_gemma3_27b_nemo_rl_navigate_working_dir]
+# [END hypercomputer_gpu_tune_gemma4_12b_nemo_rl_navigate_working_dir]
 
 # ========== Launch the Job ==========
 
-# [START hypercomputer_gpu_tune_gemma3_27b_nemo_rl_launch_ray_session]
+# [START hypercomputer_gpu_tune_gemma4_12b_nemo_rl_launch_ray_session]
 kubectl ray session ray-cluster-kuberay
-# [END hypercomputer_gpu_tune_gemma3_27b_nemo_rl_launch_ray_session]
-
-# [START hypercomputer_gpu_tune_gemma3_27b_nemo_rl_job_submit]
-bash gemma3-27b-it/gemma3-27b-gsm8k.sh
-# [END hypercomputer_gpu_tune_gemma3_27b_nemo_rl_job_submit]
-
+# [END hypercomputer_gpu_tune_gemma4_12b_nemo_rl_launch_ray_session]
 
 # ========== Monitor the Job ==========
 
-# [START hypercomputer_gpu_tune_gemma3_27b_nemo_rl_enter_container]
-kubectl exec -it $(kubectl get pods -l ray.io/node-type=head -o name) -c ray-head -- bash
-# [END hypercomputer_gpu_tune_gemma3_27b_nemo_rl_enter_container]
+# [START hypercomputer_gpu_tune_gemma4_12b_nemo_rl_enter_container]
+kubectl exec -it "$(kubectl get pods -l ray.io/node-type=head -o name)" -c ray-head -- \
+    env RUN_NAME="${RUN_NAME}" bash
+# [END hypercomputer_gpu_tune_gemma4_12b_nemo_rl_enter_container]
 
-# [START hypercomputer_gpu_tune_gemma3_27b_nemo_rl_install_tree]
+# [START hypercomputer_gpu_tune_gemma4_12b_nemo_rl_install_tree]
 apt update && apt install -y tree
-# [END hypercomputer_gpu_tune_gemma3_27b_nemo_rl_install_tree]
+# [END hypercomputer_gpu_tune_gemma4_12b_nemo_rl_install_tree]
 
 # ========== Cleanup ==========
 
-# [START hypercomputer_gpu_tune_gemma3_27b_nemo_rl_ray_cluster_cleanup]
+# [START hypercomputer_gpu_tune_gemma4_12b_nemo_rl_ray_cluster_cleanup]
 helm delete ray-cluster
-# [END hypercomputer_gpu_tune_gemma3_27b_nemo_rl_ray_cluster_cleanup]
+# [END hypercomputer_gpu_tune_gemma4_12b_nemo_rl_ray_cluster_cleanup]

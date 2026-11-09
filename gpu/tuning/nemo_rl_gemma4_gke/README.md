@@ -9,4 +9,4 @@ For a step-by-step guide on how to use these files, please refer to the official
 
 ## Overview
 
-This sample demonstrates how to fine-tune Gemma 3 on a Google Kubernetes Engine (GKE) cluster with NVIDIA B200 or H200 GPUs. It uses Ray and the NVIDIA NeMo RL framework to set up a distributed training environment to fine-tune a model.
+This sample demonstrates how to fine-tune Gemma 4 on a Google Kubernetes Engine (GKE) cluster with NVIDIA B200 or H200 GPUs. It uses Ray and the NVIDIA NeMo RL framework to set up a distributed training environment to fine-tune a model.

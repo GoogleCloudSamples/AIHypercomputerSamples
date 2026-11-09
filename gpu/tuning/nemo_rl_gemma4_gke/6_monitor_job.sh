@@ -16,20 +16,26 @@
 
 set -euo pipefail
 
-HEAD_POD=$(kubectl get pods -l ray.io/node-type=head -o name)
+HEAD_POD_NAME="$(kubectl get pods -l ray.io/node-type=head -o jsonpath='{.items[0].metadata.name}')"
+if [[ -z "${HEAD_POD_NAME}" ]]; then
+  echo "Error: No running Ray head pod found." >&2
+  exit 1
+fi
 
 echo "[$(date)] ========== Inspecting output inside ray-head container =========="
 
-kubectl exec "${HEAD_POD}" -c ray-head -- bash -c "
+# shellcheck disable=SC2016
+kubectl exec "${HEAD_POD_NAME}" -c ray-head -- env RUN_NAME="${RUN_NAME}" bash -c '
   set -e
-  apt-get update && apt-get install -y tree
-  if [ -d '/data/nemo_rl_gemma3_27b_3_17/' ]; then
-    # [START hypercomputer_gpu_tune_gemma3_27b_nemo_rl_tree]
-    tree /data/nemo_rl_gemma3_27b_3_17/
-    # [END hypercomputer_gpu_tune_gemma3_27b_nemo_rl_tree]
+  if [ ! -d "/data/${RUN_NAME}" ]; then
+    echo "Directory /data/${RUN_NAME} not found or still being written."
+  elif command -v tree > /dev/null; then
+    # [START hypercomputer_gpu_tune_gemma4_12b_nemo_rl_tree]
+    tree -L 3 "/data/${RUN_NAME}"
+    # [END hypercomputer_gpu_tune_gemma4_12b_nemo_rl_tree]
   else
-    echo 'Directory /data/nemo_rl_gemma3_27b_3_17/ not found or still being written.'
+    find "/data/${RUN_NAME}" -maxdepth 3
   fi
-"
+'
 
 echo "[$(date)] ========== Monitoring has completed. =========="
