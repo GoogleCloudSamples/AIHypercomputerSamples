@@ -15,3 +15,9 @@
 # [START hypercomputer_gpu_infer_deepseek31_port_forward]
 kubectl port-forward service/deepseek-service 8000:8000
 # [END hypercomputer_gpu_infer_deepseek31_port_forward]
+
+# [START hypercomputer_gpu_infer_deepseek31_wait_job_completion]
+kubectl wait \
+    --for=condition=Complete \
+    --timeout=7200s job/deepseek-download-job
+# [END hypercomputer_gpu_infer_deepseek31_wait_job_completion]
