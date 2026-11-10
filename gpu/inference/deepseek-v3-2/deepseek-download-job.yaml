@@ -13,7 +13,7 @@ spec:
       restartPolicy: OnFailure
       containers:
       - name: downloader
-        image: google/cloud-sdk:slim
+        image: google/cloud-sdk:591.0.0-slim
         resources:
           requests:
             cpu: "8"
