@@ -19,8 +19,8 @@ export TPU_TYPE="v6e"
 # [START hypercomputer_tpu_infer_qwen3_coder_env_v6e]
 export CLUSTER_NAME="YOUR_CLUSTER_NAME" # maximum 40 chars; start with a-z; only a-z, 0-9, -
 export PROJECT_ID="YOUR_PROJECT_ID"
-export REGION="YOUR_REGION"
-export ZONE="YOUR_ZONE"
+export REGION="YOUR_REGION" # for example, us-central1
+export ZONE="YOUR_ZONE" # for example, us-central1-b
 export RESERVATION="YOUR_RESERVATION_NAME"
 export HF_TOKEN="YOUR_HF_TOKEN"
 export SGLANG_IMAGE="lmsysorg/sglang:v0.1.0-tpu"
@@ -31,8 +31,8 @@ export TPU_TYPE="v7x"
 # [START hypercomputer_tpu_infer_qwen3_coder_env]
 export CLUSTER_NAME="YOUR_CLUSTER_NAME" # maximum 40 chars; start with a-z; only a-z, 0-9, -
 export PROJECT_ID="YOUR_PROJECT_ID"
-export REGION="YOUR_REGION"
-export ZONE="YOUR_ZONE"
+export REGION="YOUR_REGION" # for example, us-central1
+export ZONE="YOUR_ZONE" # for example, us-central1-c
 export RESERVATION="YOUR_RESERVATION_NAME"
 export HF_TOKEN="YOUR_HF_TOKEN"
 export SGLANG_IMAGE="lmsysorg/sglang:v0.1.0-tpu"

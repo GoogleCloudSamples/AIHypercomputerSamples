@@ -16,8 +16,8 @@
 
 # [START hypercomputer_gpu_infer_llama3_405b_env]
 export PROJECT_ID="YOUR_PROJECT_ID"
-export REGION="YOUR_REGION"
-export ZONE="YOUR_ZONE"
+export REGION="YOUR_REGION" # for example, us-central1
+export ZONE="YOUR_ZONE" # for example, us-central1-b
 export CLUSTER_NAME="YOUR_CLUSTER_NAME" # maximum 20 chars; start with a-z; only a-z, 0-9, -
 export RESERVATION_NAME="YOUR_RESERVATION_NAME" # A4 reservation name or RESERVATION_NAME/reservationBlocks/BLOCK_NAME
 export GCS_BUCKET="YOUR_BUCKET_NAME"

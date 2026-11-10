@@ -17,8 +17,8 @@
 # [START hypercomputer_tpu_infer_gemma4_26b_env]
 export PROJECT_ID="YOUR_PROJECT_ID"
 export RESERVATION_NAME="YOUR_RESERVATION_NAME"
-export REGION="YOUR_REGION"
-export ZONE="YOUR_ZONE"
+export REGION="YOUR_REGION" # for example, us-central1
+export ZONE="YOUR_ZONE" # for example, us-central1-b
 export CLUSTER_NAME="YOUR_CLUSTER_NAME" # maximum 40 chars; start with a-z; only a-z, 0-9, -
 export HF_TOKEN="YOUR_HF_TOKEN"
 export NODE_POOL_NAME="tpuv6e-pool"

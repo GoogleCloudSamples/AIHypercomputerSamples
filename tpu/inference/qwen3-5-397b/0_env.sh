@@ -19,8 +19,8 @@ if [[ "${TPU_TYPE}" == "v6e" ]]; then
 export TPU_TYPE="v6e"
 # [START hypercomputer_tpu_infer_qwen3_5_397b_env_v6]
 export PROJECT_ID="YOUR_PROJECT_ID"
-export REGION="YOUR_REGION"
-export ZONE="YOUR_ZONE"
+export REGION="YOUR_REGION" # for example, us-central1
+export ZONE="YOUR_ZONE" # for example, us-central1-b
 export CLUSTER_NAME="YOUR_CLUSTER_NAME" # maximum 40 chars; start with a-z; only a-z, 0-9, -
 export MACHINE_TYPE="ct6e-standard-4t"
 export NODE_POOL_NAME="np-0"
@@ -37,8 +37,8 @@ else
 export TPU_TYPE="v7x"
 # [START hypercomputer_tpu_infer_qwen3_5_397b_env]
 export PROJECT_ID="YOUR_PROJECT_ID"
-export REGION="YOUR_REGION"
-export ZONE="YOUR_ZONE"
+export REGION="YOUR_REGION" # for example, us-central1
+export ZONE="YOUR_ZONE" # for example, us-central1-c
 export CLUSTER_NAME="YOUR_CLUSTER_NAME" # maximum 40 chars; start with a-z; only a-z, 0-9, -
 export MACHINE_TYPE="tpu7x-standard-4t"
 export NODE_POOL_NAME="np-0"
