@@ -21,6 +21,7 @@ if [[ "${TPU_TYPE:-v7x}" == "v6e" ]]; then
   # [START hypercomputer_tpu_infer_qwen3_5_397b_deploy_cleanup_v6]
   kubectl delete -f qwen3-benchmark-8k1k.yaml --ignore-not-found || true
   kubectl delete -f qwen3_server.yaml --ignore-not-found || true
+  kubectl wait --for=delete pvc/hd-claim-qwen3 --timeout=120s
   kubectl delete secret hf-secret --ignore-not-found || true
   # [END hypercomputer_tpu_infer_qwen3_5_397b_deploy_cleanup_v6]
 else

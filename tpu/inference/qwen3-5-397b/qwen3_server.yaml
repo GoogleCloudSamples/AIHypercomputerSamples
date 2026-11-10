@@ -52,6 +52,7 @@ spec:
       labels:
         app: vllm-qwen3
     spec:
+      enableServiceLinks: false
       nodeSelector:
         cloud.google.com/gke-tpu-accelerator: tpu-v6e-slice
         cloud.google.com/gke-tpu-topology: 2x2
@@ -97,7 +98,7 @@ spec:
           value: "1"
         - name: VLLM_CACHE_ROOT
           value: "/data/vllm_cache"
-        - name: VLLM_TORCH_COMPILE_CACHE_DIR
+        - name: TORCHINDUCTOR_CACHE_DIR
           value: "/data/torch_compile_cache"
         - name: XLA_CACHE_DIR
           value: "/data/xla_cache"
@@ -115,6 +116,12 @@ spec:
             google.com/tpu: '4'
           requests:
             google.com/tpu: '4'
+        startupProbe:
+          httpGet:
+            path: "/health"
+            port: 8000
+          periodSeconds: 15
+          failureThreshold: 120
         readinessProbe:
           tcpSocket:
             port: 8000
