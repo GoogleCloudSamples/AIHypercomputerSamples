@@ -24,12 +24,12 @@ gcloud container node-pools create "${NODE_POOL_NAME}" \
 # [END hypercomputer_tpu_infer_qwen3_5_397b_nodepool_create_flex_start]
 
 # [START hypercomputer_tpu_infer_qwen3_5_397b_server_logs]
-kubectl wait --for=jsonpath='{.status.phase}'=Running pod -l app=vllm-qwen3-5 --timeout=900s
+kubectl wait --for=jsonpath='{.status.phase}'=Running pod -l app=vllm-qwen3-5 --timeout=1800s
 kubectl logs deployment/vllm-qwen3-5 -c vllm-tpu -f
 # [END hypercomputer_tpu_infer_qwen3_5_397b_server_logs]
 
 # [START hypercomputer_tpu_infer_qwen3_5_397b_server_logs_v6]
-kubectl wait --for=condition=Ready pod -l app=vllm-qwen3 --timeout=900s
+kubectl wait --for=condition=Ready pod -l app=vllm-qwen3 --timeout=1800s
 kubectl logs deployment/vllm-qwen3 -c vllm-tpu -f
 # [END hypercomputer_tpu_infer_qwen3_5_397b_server_logs_v6]
 

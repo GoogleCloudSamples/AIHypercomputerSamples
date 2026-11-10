@@ -55,8 +55,8 @@ until kubectl get pods -l "app=${DEPLOYMENT_NAME}" 2>/dev/null | grep -q "${DEPL
 done
 
 echo "Waiting for the ${DEPLOYMENT_NAME} pod to start running..."
-if ! kubectl wait --for=condition=Ready pod -l "app=${DEPLOYMENT_NAME}" --timeout=900s; then
-  echo "Pod failed to start running within 15 minutes! Describing pod:" >&2
+if ! kubectl wait --for=condition=Ready pod -l "app=${DEPLOYMENT_NAME}" --timeout=1800s; then
+  echo "Pod failed to start running within 30 minutes! Describing pod:" >&2
   kubectl describe pod -l "app=${DEPLOYMENT_NAME}" >&2
   exit 1
 fi
