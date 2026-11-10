@@ -28,7 +28,7 @@ spec:
     args:
     - |
       while ! curl -sf http://vllm-qwen3-service:8000/health > /dev/null; do sleep 30 && echo 'Waiting for server...'; done
-      command -v git >/dev/null 2>&1 || (apt-get update && apt-get install -y git) && \
+      if ! command -v git >/dev/null 2>&1; then apt-get update && apt-get install -y git; fi && \
       git clone https://github.com/SemiAnalysisAI/InferenceX.git /ubench/inferencex && \
       cd /ubench/inferencex && \
       git checkout 89ce6098ef2bc4576a735c43f39c7d972b091cfc && \
