@@ -22,7 +22,7 @@ spec:
   backoffLimit: 1
   template:
     spec:
-      restartPolicy: OnFailure
+      restartPolicy: Never
       # Schedule onto a TPU node (requests 0 TPUs so it can run alongside or before workloads)
       nodeSelector:
         cloud.google.com/gke-tpu-accelerator: tpu-v6e-slice
@@ -47,6 +47,7 @@ spec:
         args:
         - |
           set -euo pipefail
+          export PATH="/usr/lib/google-cloud-sdk/platform/bundledpythonunix/bin:$PATH"
 
           echo "=== 0. Installing Python3 ==="
           apt-get update && apt-get install -y python3-pip
