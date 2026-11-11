@@ -35,6 +35,7 @@ kubectl delete job "${DOWNLOAD_JOB}" --ignore-not-found || true
 
 if [[ "${TPU_TYPE}" == "v6e" ]]; then
   # [START hypercomputer_tpu_infer_qwen3_5_397b_multihost_deploy_cleanup_v6e]
+  kubectl delete -f v6e_qwen3_benchmark_multihost_slice.yaml --ignore-not-found || true
   kubectl delete -f v6e_qwen3_server_multihost_slice.yaml --ignore-not-found || true
   kubectl delete secret hf-secret --ignore-not-found || true
   # [END hypercomputer_tpu_infer_qwen3_5_397b_multihost_deploy_cleanup_v6e]
@@ -52,7 +53,7 @@ gcloud storage rm --recursive "gs://${GCS_BUCKET}" --project="${PROJECT_ID}" --q
 
 echo "[$(date)] ==================== Deleting GKE TPU node pools, cluster, and workload policy... ===================="
 if [[ "${TPU_TYPE}" == "v6e" ]]; then
-  # [START hypercomputer_tpu_infer_qwen3_5_397b_multihost_cluster_cleanup_v6e]
+  # [START hypercomputer_tpu_infer_qwen3_5_397b_multihost_nodepool_cleanup_v6e]
   for NODE_POOL_NAME in np-0 np-1; do
     gcloud container node-pools delete "${NODE_POOL_NAME}" \
         --cluster="${CLUSTER_NAME}" \
@@ -60,7 +61,8 @@ if [[ "${TPU_TYPE}" == "v6e" ]]; then
         --project="${PROJECT_ID}" \
         --quiet || true
   done
-
+  # [END hypercomputer_tpu_infer_qwen3_5_397b_multihost_nodepool_cleanup_v6e]
+  # [START hypercomputer_tpu_infer_qwen3_5_397b_multihost_cluster_cleanup_v6e]
   gcloud container clusters delete "${CLUSTER_NAME}" \
       --location="${REGION}" \
       --project="${PROJECT_ID}" \
