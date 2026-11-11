@@ -82,6 +82,8 @@ spec:
           value: "cpu"
         - name: JAX_PLATFORMS
           value: "cpu"
+        - name: PYTHONUNBUFFERED
+          value: "1"
         - name: HF_TOKEN
           valueFrom:
             secretKeyRef:
