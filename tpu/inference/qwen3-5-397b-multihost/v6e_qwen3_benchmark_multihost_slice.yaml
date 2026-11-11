@@ -76,4 +76,15 @@ spec:
         env:
         - name: JS_NAME
           value: "vllm-qwen3-30b-pd-disagg-v6e"
+        - name: VLLM_PLUGINS
+          value: ""
+        - name: VLLM_TARGET_DEVICE
+          value: "cpu"
+        - name: JAX_PLATFORMS
+          value: "cpu"
+        - name: HF_TOKEN
+          valueFrom:
+            secretKeyRef:
+              name: hf-secret
+              key: hf_api_token
 # [END hypercomputer_tpu_infer_qwen3_5_397b_multihost_v6e_benchmark_yaml]
