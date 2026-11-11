@@ -81,7 +81,7 @@ kubectl logs -f job/download-qwen3
 # [END hypercomputer_tpu_infer_qwen3_5_397b_multihost_v6e_download_logs]
 
 # [START hypercomputer_tpu_infer_qwen3_5_397b_multihost_v6e_wait_ready]
-kubectl wait --for=condition=Ready --timeout=600s pod -l jobset.sigs.k8s.io/jobset-name=vllm-qwen3-30b-pd-disagg-v6e
+kubectl wait --for=condition=Ready --timeout=1800s pod -l jobset.sigs.k8s.io/jobset-name=vllm-qwen3-30b-pd-disagg-v6e
 # [END hypercomputer_tpu_infer_qwen3_5_397b_multihost_v6e_wait_ready]
 
 # [START hypercomputer_tpu_infer_qwen3_5_397b_multihost_v6e_server_logs]
