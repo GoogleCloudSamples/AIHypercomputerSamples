@@ -80,13 +80,17 @@ kubectl wait --for=condition=Ready pod -l job-name=download-qwen3 --timeout=120s
 kubectl logs -f job/download-qwen3
 # [END hypercomputer_tpu_infer_qwen3_5_397b_multihost_v6e_download_logs]
 
-# [START hypercomputer_tpu_infer_qwen3_5_397b_multihost_v6e_server_logs]
-# Prefill logs
-kubectl logs -l jobset.sigs.k8s.io/replicatedjob-name=prefill -f --tail=-1
+# [START hypercomputer_tpu_infer_qwen3_5_397b_multihost_v6e_wait_ready]
+kubectl wait --for=condition=Ready --timeout=600s pod -l jobset.sigs.k8s.io/jobset-name=vllm-qwen3-30b-pd-disagg-v6e
+# [END hypercomputer_tpu_infer_qwen3_5_397b_multihost_v6e_wait_ready]
 
-# Decode logs
-kubectl logs -l jobset.sigs.k8s.io/replicatedjob-name=decode -f --tail=-1
+# [START hypercomputer_tpu_infer_qwen3_5_397b_multihost_v6e_server_logs]
+kubectl logs -l jobset.sigs.k8s.io/replicatedjob-name=prefill -f --tail=-1 --prefix=true
 # [END hypercomputer_tpu_infer_qwen3_5_397b_multihost_v6e_server_logs]
+
+# [START hypercomputer_tpu_infer_qwen3_5_397b_multihost_v6e_decode_logs]
+kubectl logs -l jobset.sigs.k8s.io/replicatedjob-name=decode -f --tail=-1 --prefix=true
+# [END hypercomputer_tpu_infer_qwen3_5_397b_multihost_v6e_decode_logs]
 
 # [START hypercomputer_tpu_infer_qwen3_5_397b_multihost_v6e_benchmark_logs]
 kubectl wait --for=condition=Ready pod -l job-name=vllm-qwen3-30b-pd-disagg-v6e-tester --timeout=300s
@@ -113,7 +117,7 @@ for NODE_POOL_NAME in np-0 np-1; do
       --cluster="${CLUSTER_NAME}" \
       --node-locations="${ZONE}" \
       --machine-type="${MACHINE_TYPE}" \
-      --tpu-topology=2x4 \
+      --tpu-topology="${TOPOLOGY}" \
       --num-nodes=2 \
       --spot
 done
@@ -127,7 +131,7 @@ for NODE_POOL_NAME in np-0 np-1; do
       --cluster="${CLUSTER_NAME}" \
       --node-locations="${ZONE}" \
       --machine-type="${MACHINE_TYPE}" \
-      --tpu-topology=2x4 \
+      --tpu-topology="${TOPOLOGY}" \
       --reservation-affinity=none \
       --enable-autoscaling \
       --num-nodes=0 \
