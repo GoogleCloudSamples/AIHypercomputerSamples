@@ -83,15 +83,25 @@ spec:
           command: ["/bin/bash", "-c"]
           args:
             - |
+              set -euo pipefail
               echo "Installing GIB plugins..."
-              curl -s https://packages.cloud.google.com/apt/doc/apt-key.gpg | gpg --dearmor -o /etc/apt/trusted.gpg.d/cloud.google.gpg
-              echo 'deb https://packages.cloud.google.com/apt gpudirect-gib-apt main' | tee /etc/apt/sources.list.d/nccl-gib.list
-              apt-get update && apt-get install -y nccl-gib-plugins
-              
-              echo "Local install skipped (handled by data prep)"
+              curl -fsSL --retry 5 --retry-all-errors --retry-delay 2 \
+                https://packages.cloud.google.com/apt/doc/apt-key.gpg \
+                | gpg --dearmor --yes -o /etc/apt/trusted.gpg.d/cloud.google.gpg
+              echo 'deb https://packages.cloud.google.com/apt gpudirect-gib-apt main' \
+                | tee /etc/apt/sources.list.d/nccl-gib.list
+              apt-get update \
+                -o Dir::Etc::sourcelist="sources.list.d/nccl-gib.list" \
+                -o Dir::Etc::sourceparts="-" \
+                -o APT::Get::List-Cleanup="0" \
+                -o Acquire::Retries="5"
+              apt-get install -y --no-install-recommends -o Acquire::Retries="5" nccl-gib-plugins || {
+                apt-get update -o Acquire::Retries="5"
+                apt-get install -y -o Acquire::Retries="5" nccl-gib-plugins
+              }
+              test -f /usr/local/gib/lib64/libnccl-net.so
+              echo "GIB plugins installed successfully."
           volumeMounts:
-          - name: training-bucket-vol
-            mountPath: /data
           - name: gib
             mountPath: /usr/local/gib
         serviceAccountName: ${KSA_NAME}
