@@ -20,6 +20,6 @@ accelerate==1.9.0
 trl==0.21.0
 
 # Other dependencies
-sentencepiece==0.2.0
+sentencepiece==0.2.1
 protobuf==6.31.1
 # [END hypercomputer_gpu_tune_mixtral_slurm_requirements]
