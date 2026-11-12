@@ -1,4 +1,3 @@
-#!/bin/bash
 #  Copyright 2026 Google LLC
 #
 #  Licensed under the Apache License, Version 2.0 (the "License");
@@ -13,8 +12,4 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
-set -euo pipefail
-
-# [START hypercomputer_tpu_tune_gemma3_sft_ssh]
-gcloud compute ssh "${NAME}" --zone "${ZONE}" --project "${PROJECT}"
-# [END hypercomputer_tpu_tune_gemma3_sft_ssh]
+expected_runtime: 9000

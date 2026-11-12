@@ -15,4 +15,6 @@
 
 set -euo pipefail
 
-# Put your validation code here.
+# [START hypercomputer_tpu_tune_gemma4_e4b_sft_ssh]
+gcloud compute ssh "${TPU_NAME}" --project="${PROJECT_ID}" --zone="${ZONE}" --tunnel-through-iap
+# [END hypercomputer_tpu_tune_gemma4_e4b_sft_ssh]
