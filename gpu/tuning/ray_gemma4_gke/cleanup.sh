@@ -23,10 +23,23 @@ RUNNING_OPERATIONS="$(gcloud container operations list \
     --project="${PROJECT_ID}" --location="${REGION}" \
     --filter="status=RUNNING AND targetLink~/clusters/${CLUSTER_NAME}" \
     --format="value(name)" 2> /dev/null || true)"
+# Poll instead of using `gcloud container operations wait`, which gives up after 20 minutes.
+OPERATIONS_DEADLINE=$((SECONDS + 3600))
 for OPERATION in ${RUNNING_OPERATIONS}; do
     echo "Waiting for running cluster operation ${OPERATION} to finish..."
-    timeout 3600 gcloud container operations wait "${OPERATION}" \
-        --project="${PROJECT_ID}" --location="${REGION}" || true
+    while true; do
+        OPERATION_STATUS="$(gcloud container operations describe "${OPERATION}" \
+            --project="${PROJECT_ID}" --location="${REGION}" \
+            --format="value(status)" 2> /dev/null || true)"
+        if [[ ! "${OPERATION_STATUS}" =~ ^(PENDING|RUNNING|ABORTING)$ ]]; then
+            break
+        fi
+        if [[ ${SECONDS} -ge ${OPERATIONS_DEADLINE} ]]; then
+            echo "Warning: operation ${OPERATION} is still ${OPERATION_STATUS}; continuing with the cleanup." >&2
+            break
+        fi
+        sleep 30
+    done
 done
 
 if gcloud container clusters get-credentials "${CLUSTER_NAME}" \
