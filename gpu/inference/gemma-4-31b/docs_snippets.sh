@@ -1,3 +1,5 @@
+#!/bin/bash
+#
 #  Copyright 2026 Google LLC
 #
 #  Licensed under the Apache License, Version 2.0 (the "License");
@@ -14,13 +16,6 @@
 
 set -euo pipefail
 
-# [START hypercomputer_gpu_infer_gemma3_27b_deploy_cleanup]
-envsubst < vllm-3-27b-it.yaml | kubectl delete -f -
-kubectl delete secret hf-secret
-# [END hypercomputer_gpu_infer_gemma3_27b_deploy_cleanup]
-
-# [START hypercomputer_gpu_infer_gemma3_27b_cluster_cleanup]
-gcloud container clusters delete $CLUSTER_NAME \
-    --region=$REGION \
-    --quiet
-# [END hypercomputer_gpu_infer_gemma3_27b_cluster_cleanup]
+# [START hypercomputer_gpu_infer_gemma4_31b_port_forward]
+kubectl port-forward service/vllm-gemma4-31b-service 8000:8000
+# [END hypercomputer_gpu_infer_gemma4_31b_port_forward]
