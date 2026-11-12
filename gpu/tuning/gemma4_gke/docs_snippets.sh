@@ -45,7 +45,7 @@ gcloud container clusters delete "${CLUSTER_NAME}" \
 # [END hypercomputer_gpu_tune_gemma4_gke_delete_cluster]
 
 # [START hypercomputer_gpu_tune_gemma4_gke_delete_repo]
-gcloud artifacts repositories delete gemma \
+gcloud artifacts repositories delete "${REPO_NAME}" \
     --location="${ARTIFACT_REPO_LOCATION}"
 # [END hypercomputer_gpu_tune_gemma4_gke_delete_repo]
 

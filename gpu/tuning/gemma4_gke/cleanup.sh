@@ -23,7 +23,7 @@ gcloud container clusters delete "${CLUSTER_NAME}" \
     --region="${CLUSTER_REGION}" --quiet || true
 echo "[$(date)] ==================== Cluster deleted. ===================="
 
-gcloud artifacts repositories delete gemma \
+gcloud artifacts repositories delete "${REPO_NAME}" \
     --location="${ARTIFACT_REPO_LOCATION}" \
     --quiet || true
 echo "[$(date)] ==================== Artifact Registry deleted. ===================="

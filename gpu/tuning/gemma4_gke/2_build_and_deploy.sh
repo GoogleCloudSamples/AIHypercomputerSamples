@@ -19,14 +19,14 @@ set -euo pipefail
 # 1. Build and Submit
 # [START hypercomputer_gpu_tune_gemma4_gke_build_submit]
 gcloud builds submit . \
-    --substitutions=_ARTIFACT_REPO_LOCATION="${ARTIFACT_REPO_LOCATION}"
+    --substitutions=_ARTIFACT_REPO_LOCATION="${ARTIFACT_REPO_LOCATION}",_REPO_NAME="${REPO_NAME}"
 # [END hypercomputer_gpu_tune_gemma4_gke_build_submit]
 echo "[$(date)] ==================== Build finished. ===================="
 
 # 2. Set image name for the job template
 # [START hypercomputer_gpu_tune_gemma4_gke_set_image_url]
 IMAGE_REGISTRY="${ARTIFACT_REPO_LOCATION}-docker.pkg.dev/${PROJECT_ID}"
-export IMAGE_URL="${IMAGE_REGISTRY}/gemma/finetune-gemma-gpu:2.0.0"
+export IMAGE_URL="${IMAGE_REGISTRY}/${REPO_NAME}/finetune-gemma-gpu:2.0.0"
 # [END hypercomputer_gpu_tune_gemma4_gke_set_image_url]
 
 # 3. Deploy Job

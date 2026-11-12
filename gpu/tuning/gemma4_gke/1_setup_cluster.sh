@@ -42,9 +42,12 @@ echo "[$(date)] ==================== Secret created. ===================="
 
 # 4. Create Artifact Registry
 # [START hypercomputer_gpu_tune_gemma4_gke_create_repo]
-gcloud artifacts repositories create gemma \
-    --repository-format=docker \
-    --location="${ARTIFACT_REPO_LOCATION}" \
-    --description="Repository for Gemma fine tuning workload containers" || true
+if ! gcloud artifacts repositories describe "${REPO_NAME}" \
+    --location="${ARTIFACT_REPO_LOCATION}" > /dev/null 2>&1; then
+    gcloud artifacts repositories create "${REPO_NAME}" \
+        --repository-format=docker \
+        --location="${ARTIFACT_REPO_LOCATION}" \
+        --description="Repository for Gemma fine tuning workload containers"
+fi
 # [END hypercomputer_gpu_tune_gemma4_gke_create_repo]
 echo "[$(date)] ==================== Artifact Registry Repository created. ===================="
