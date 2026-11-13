@@ -32,11 +32,30 @@ envsubst '$GCS_BUCKET' < deepseek-download-job.yaml | kubectl apply -f -
 # [END hypercomputer_gpu_infer_deepseek31_download_job]
 
 echo "[$(date)] ==================== Waiting for the model download to complete... ==================="
-# [START hypercomputer_gpu_infer_deepseek31_wait_job_completion]
-kubectl wait \
-    --for=condition=Complete \
-    --timeout=7200s job/deepseek-download-job
-# [END hypercomputer_gpu_infer_deepseek31_wait_job_completion]
+download_job="job/deepseek-download-job"
+seconds=0
+deadline=7200
+
+job_condition() {
+  kubectl get "$download_job" -o jsonpath="{.status.conditions[?(@.type==\"$1\")].status}"
+}
+pod_restarts() {
+  kubectl get pods -l job-name=deepseek-download-job \
+    -o jsonpath='{.items[0].status.containerStatuses[0].restartCount}' 2>/dev/null || true
+}
+until [[ "$(job_condition Complete)" == "True" ]]; do
+  restart_count="$(pod_restarts)"
+  if [[ "$(job_condition Failed)" == "True" ]] || (( ${restart_count:-0} >= 2 )) || (( seconds >= deadline )); then
+    echo "ERROR: $download_job failed (restarts=${restart_count:-0}) or did not complete within 7200s."
+    kubectl describe "$download_job" || true
+    kubectl describe pod -l job-name=deepseek-download-job || true
+    kubectl logs "$download_job" --all-containers --tail=200 || true
+    kubectl logs "$download_job" --all-containers --previous --tail=200 2>/dev/null || true
+    exit 1
+  fi
+  sleep 10
+  seconds=$((seconds + 10))
+done
 
 echo "[$(date)] ==================== The model is downloaded. Deleting the job... ==================="
 # [START hypercomputer_gpu_infer_deepseek31_delete_job]
