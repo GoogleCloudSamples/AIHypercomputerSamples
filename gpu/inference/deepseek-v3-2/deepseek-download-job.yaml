@@ -5,6 +5,9 @@ metadata:
   name: deepseek-download-job
   namespace: default
 spec:
+  # Stop retrying a crashing download container after 3 retries so the Job
+  # reports a Failed condition instead of restarting it until the wait times out.
+  backoffLimit: 3
   template:
     metadata:
       labels:

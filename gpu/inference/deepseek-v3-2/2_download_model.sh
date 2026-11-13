@@ -33,9 +33,20 @@ envsubst '$GCS_BUCKET' < deepseek-download-job.yaml | kubectl apply -f -
 
 echo "[$(date)] ==================== Waiting for the model download to complete... ==================="
 # [START hypercomputer_gpu_infer_deepseek32_wait_job_completion]
-kubectl wait \
-    --for=condition=Complete \
-    --timeout=7200s job/deepseek-download-job
+DOWNLOAD_JOB="job/deepseek-download-job"
+DEADLINE=$((SECONDS + 7200))
+job_condition() {
+  kubectl get "$DOWNLOAD_JOB" -o jsonpath="{.status.conditions[?(@.type==\"$1\")].status}"
+}
+until [[ "$(job_condition Complete)" == "True" ]]; do
+  if [[ "$(job_condition Failed)" == "True" ]] || (( SECONDS >= DEADLINE )); then
+    echo "ERROR: $DOWNLOAD_JOB failed or did not complete within 7200s." >&2
+    kubectl describe "$DOWNLOAD_JOB" || true
+    kubectl logs "$DOWNLOAD_JOB" --all-containers --tail=200 || true
+    exit 1
+  fi
+  sleep 30
+done
 # [END hypercomputer_gpu_infer_deepseek32_wait_job_completion]
 
 echo "[$(date)] ==================== The model is downloaded. Deleting the job... ==================="
