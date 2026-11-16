@@ -1,0 +1,217 @@
+# Copyright 2026 Google LLC
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+# [START hypercomputer_gpu_train_mixtral_8x7b_jobset_yaml]
+apiVersion: jobset.x-k8s.io/v1alpha2
+kind: JobSet
+metadata:
+  name: mixtral-8x7b
+  namespace: default
+  labels:
+    kueue.x-k8s.io/queue-name: a4
+spec:
+  ttlSecondsAfterFinished: 3600
+  suspend: false
+  network:
+    enableDNSHostnames: true
+  replicatedJobs:
+  - name: w
+    replicas: 1
+    template:
+      spec:
+        parallelism: 2
+        completions: 2
+        backoffLimit: 0
+        template:
+          metadata:
+            annotations:
+              kueue.x-k8s.io/podset-preferred-topology: "kubernetes.io/hostname"
+              networking.gke.io/default-interface: "eth0"
+              gke-gcsfuse/volumes: "true"
+              gke-gcsfuse/cpu-limit: "0"
+              gke-gcsfuse/memory-limit: "0"
+              gke-gcsfuse/ephemeral-storage-limit: "0"
+          spec:
+            serviceAccountName: workload-identity-k8s-sa
+            restartPolicy: Never
+            setHostnameAsFQDN: true
+            nodeSelector:
+              cloud.google.com/gke-nodepool: a4-highgpu-8g-a4-pool
+            tolerations:
+            - key: "nvidia.com/gpu"
+              operator: "Exists"
+              effect: "NoSchedule"
+            - key: "cloud.google.com/gke-queued"
+              value: "true"
+              effect: "NoSchedule"
+            resourceClaims:
+            - name: rdma
+              resourceClaimTemplateName: default-rdma
+            volumes:
+            - name: gib
+              hostPath:
+                path: /home/kubernetes/bin/gib
+            - name: nvidia
+              hostPath:
+                path: /home/kubernetes/bin/nvidia
+            - name: shared-memory
+              emptyDir:
+                medium: "Memory"
+                sizeLimit: 512Gi
+            - name: training-data
+              persistentVolumeClaim:
+                claimName: ${TRAINING_PVC}
+                readOnly: true
+            - name: checkpoint-data
+              persistentVolumeClaim:
+                claimName: ${CHECKPOINT_PVC}
+            containers:
+            - name: megatron-lm
+              image: us-central1-docker.pkg.dev/deeplearning-images/reproducibility/pytorch-gpu-nemo-nccl:nemo25.04-gib1.0.6-A4
+              securityContext:
+                privileged: true
+              env:
+              - name: MASTER_ADDR
+                value: "mixtral-8x7b-w-0-0.mixtral-8x7b"
+              - name: MASTER_PORT
+                value: "29500"
+              - name: NNODES
+                value: "2"
+              - name: GPUS_PER_NODE
+                value: "8"
+              - name: GLOO_SOCKET_IFNAME
+                value: "eth0"
+              - name: NCCL_SOCKET_IFNAME
+                value: "eth0"
+              command:
+              - bash
+              - -c
+              - |
+                set -ex
+                /sbin/ldconfig
+
+                # Configure Google NCCL gIB RDMA plugin environment while preserving container library paths
+                source /usr/local/gib/scripts/set_nccl_env.sh
+                export LD_LIBRARY_PATH="/usr/local/gib/lib64:/usr/local/nvidia/lib64:${LD_LIBRARY_PATH:-}"
+                export NCCL_NET=gIB
+                export CUDA_DEVICE_MAX_CONNECTIONS=32
+                export PYTORCH_CUDA_ALLOC_CONF="expandable_segments:True"
+                export PYTHONUNBUFFERED=1
+
+                # Check out Megatron-Core v0.14.0 for interleaved 1F1B EP All-to-All communication overlap on Blackwell
+                MEGATRON_TAG="core_v0.14.0"
+                git clone --branch "${MEGATRON_TAG}" --depth 1 https://github.com/NVIDIA/Megatron-LM.git /tmp/Megatron-LM
+                make -C /tmp/Megatron-LM/megatron/core/datasets
+                export PYTHONPATH="/tmp/Megatron-LM"
+                MEGATRON_SCRIPT="/tmp/Megatron-LM/pretrain_gpt.py"
+
+                # Stage tokenized C4 IndexedDataset to local NVMe SSD and create shared dataset index cache dir
+                mkdir -p /tmp/megatron-data /checkpoint-data/mixtral-8x7b /checkpoint-data/data-cache
+                cp -f /training-data/tokenizer/tokenizer.model /tmp/megatron-data/tokenizer.model
+                cp -f /training-data/dataset/c4_mixtral_text_document.bin /tmp/megatron-data/c4_mixtral_text_document.bin
+                cp -f /training-data/dataset/c4_mixtral_text_document.idx /tmp/megatron-data/c4_mixtral_text_document.idx
+
+                # Wait for Rank 0 FQDN to resolve in cluster DNS
+                until getent hosts "${MASTER_ADDR}" >/dev/null 2>&1; do
+                  echo "Waiting for ${MASTER_ADDR} DNS resolution..."
+                  sleep 2
+                done
+
+                torchrun \
+                  --nnodes="${NNODES}" \
+                  --nproc_per_node="${GPUS_PER_NODE}" \
+                  --node_rank="${JOB_COMPLETION_INDEX}" \
+                  --master_addr="${MASTER_ADDR}" \
+                  --master_port="${MASTER_PORT}" \
+                  "${MEGATRON_SCRIPT}" \
+                  --use-mcore-models \
+                  --transformer-impl transformer_engine \
+                  --fp8-format hybrid \
+                  --tensor-model-parallel-size 2 \
+                  --pipeline-model-parallel-size 2 \
+                  --num-layers-per-virtual-pipeline-stage 8 \
+                  --expert-model-parallel-size 4 \
+                  --expert-tensor-parallel-size 1 \
+                  --sequence-parallel \
+                  --num-experts 8 \
+                  --moe-router-topk 2 \
+                  --moe-router-load-balancing-type aux_loss \
+                  --moe-aux-loss-coeff 1e-2 \
+                  --moe-grouped-gemm \
+                  --moe-permute-fusion \
+                  --moe-token-dispatcher-type alltoall \
+                  --overlap-moe-expert-parallel-comm \
+                  --no-gradient-accumulation-fusion \
+                  --overlap-grad-reduce \
+                  --overlap-param-gather \
+                  --use-distributed-optimizer \
+                  --num-layers 32 \
+                  --hidden-size 4096 \
+                  --ffn-hidden-size 14336 \
+                  --num-attention-heads 32 \
+                  --group-query-attention \
+                  --num-query-groups 8 \
+                  --seq-length 4096 \
+                  --max-position-embeddings 32768 \
+                  --position-embedding-type rope \
+                  --swiglu \
+                  --normalization RMSNorm \
+                  --untie-embeddings-and-output-weights \
+                  --disable-bias-linear \
+                  --micro-batch-size 2 \
+                  --global-batch-size 64 \
+                  --lr 1e-4 \
+                  --min-lr 1e-5 \
+                  --lr-decay-style cosine \
+                  --lr-warmup-iters 5 \
+                  --lr-decay-iters 50 \
+                  --weight-decay 0.1 \
+                  --adam-beta1 0.9 \
+                  --adam-beta2 0.95 \
+                  --clip-grad 1.0 \
+                  --train-iters 50 \
+                  --eval-iters 5 \
+                  --eval-interval 25 \
+                  --log-interval 1 \
+                  --log-throughput \
+                  --bf16 \
+                  --data-path /tmp/megatron-data/c4_mixtral_text_document \
+                  --data-cache-path /checkpoint-data/data-cache \
+                  --split 98,2,0 \
+                  --tokenizer-type Llama2Tokenizer \
+                  --tokenizer-model /tmp/megatron-data/tokenizer.model \
+                  --save /checkpoint-data/mixtral-8x7b \
+                  --save-interval 50 \
+                  --ckpt-format torch_dist \
+                  --async-save
+              volumeMounts:
+              - name: gib
+                mountPath: /usr/local/gib
+              - name: nvidia
+                mountPath: /usr/local/nvidia
+              - name: shared-memory
+                mountPath: /dev/shm
+              - name: training-data
+                mountPath: /training-data
+                readOnly: true
+              - name: checkpoint-data
+                mountPath: /checkpoint-data
+              resources:
+                limits:
+                  nvidia.com/gpu: 8
+                requests:
+                  nvidia.com/gpu: 8
+                claims:
+                - name: rdma
+# [END hypercomputer_gpu_train_mixtral_8x7b_jobset_yaml]

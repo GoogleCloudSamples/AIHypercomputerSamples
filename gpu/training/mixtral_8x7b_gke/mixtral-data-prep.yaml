@@ -1,0 +1,139 @@
+# Copyright 2026 Google LLC
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+# [START hypercomputer_gpu_train_mixtral_8x7b_data_prep_yaml]
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: mixtral-data-prep
+  namespace: default
+  labels:
+    kueue.x-k8s.io/queue-name: a4
+spec:
+  backoffLimit: 1
+  ttlSecondsAfterFinished: 3600
+  template:
+    metadata:
+      annotations:
+        gke-gcsfuse/volumes: "true"
+        gke-gcsfuse/cpu-limit: "0"
+        gke-gcsfuse/memory-limit: "0"
+        gke-gcsfuse/ephemeral-storage-limit: "0"
+    spec:
+      serviceAccountName: workload-identity-k8s-sa
+      restartPolicy: Never
+      nodeSelector:
+        cloud.google.com/gke-nodepool: a4-highgpu-8g-a4-pool
+      tolerations:
+      - key: "nvidia.com/gpu"
+        operator: "Exists"
+        effect: "NoSchedule"
+      - key: "cloud.google.com/gke-queued"
+        value: "true"
+        effect: "NoSchedule"
+      volumes:
+      - name: nvidia
+        hostPath:
+          path: /home/kubernetes/bin/nvidia
+      - name: training-data
+        persistentVolumeClaim:
+          claimName: ${TRAINING_PVC}
+      containers:
+      - name: data-prep
+        image: us-central1-docker.pkg.dev/deeplearning-images/reproducibility/pytorch-gpu-nemo-nccl:nemo25.04-gib1.0.6-A4
+        command:
+        - bash
+        - -c
+        - |
+          set -euo pipefail
+          /sbin/ldconfig
+          export LD_LIBRARY_PATH="/usr/local/nvidia/lib64:${LD_LIBRARY_PATH:-}"
+
+          if [[ -s /training-data/dataset/c4_mixtral_text_document.bin && \
+                -s /training-data/dataset/c4_mixtral_text_document.idx && \
+                -s /training-data/tokenizer/tokenizer.model ]]; then
+            echo "Tokenized C4 dataset and Mixtral tokenizer already exist in /training-data:"
+            ls -lh /training-data/tokenizer/ /training-data/dataset/
+            exit 0
+          fi
+
+          mkdir -p /tmp/prep /training-data/tokenizer /training-data/dataset
+
+          echo "Downloading Mixtral 8x7B SentencePiece tokenizer.model..."
+          if ! curl -fsSL --retry 3 \
+            "https://huggingface.co/mistralai/Mixtral-8x7B-v0.1/resolve/main/tokenizer.model" \
+            -o /tmp/prep/tokenizer.model; then
+            curl -fsSL --retry 3 \
+              "https://huggingface.co/MaziyarPanahi/Mixtral-8x7B-v0.1/resolve/main/tokenizer.model" \
+              -o /tmp/prep/tokenizer.model
+          fi
+
+          echo "Downloading public C4 English shard (c4-train.00000-of-01024.json.gz)..."
+          curl -fL --retry 3 \
+            "https://huggingface.co/datasets/allenai/c4/resolve/main/en/c4-train.00000-of-01024.json.gz" \
+            -o /tmp/prep/c4.json.gz
+
+          echo "Extracting 100,000 C4 documents (~55M tokens) to local NVMe scratch..."
+          gzip -dc /tmp/prep/c4.json.gz > /tmp/prep/c4_full.jsonl
+          head -n 100000 /tmp/prep/c4_full.jsonl > /tmp/prep/c4_en_100k.jsonl
+          rm -f /tmp/prep/c4.json.gz /tmp/prep/c4_full.jsonl
+
+          PREPROCESS_SCRIPT=""
+          for candidate in \
+            "/opt/megatron-lm/tools/preprocess_data.py" \
+            "/opt/Megatron-LM/tools/preprocess_data.py" \
+            "/workspace/Megatron-LM/tools/preprocess_data.py"; do
+            if [[ -f "${candidate}" ]]; then
+              PREPROCESS_SCRIPT="${candidate}"
+              break
+            fi
+          done
+
+          if [[ -z "${PREPROCESS_SCRIPT}" ]]; then
+            git clone --depth 1 https://github.com/NVIDIA/Megatron-LM.git /workspace/Megatron-LM
+            PREPROCESS_SCRIPT="/workspace/Megatron-LM/tools/preprocess_data.py"
+          fi
+
+          MEGATRON_DIR="$(dirname "$(dirname "${PREPROCESS_SCRIPT}")")"
+          export PYTHONPATH="${MEGATRON_DIR}:${PYTHONPATH:-}"
+
+          echo "Tokenizing C4 JSONL into Megatron-LM IndexedDataset (.bin/.idx)..."
+          python3 "${PREPROCESS_SCRIPT}" \
+            --input /tmp/prep/c4_en_100k.jsonl \
+            --output-prefix /tmp/prep/c4_mixtral \
+            --tokenizer-type Llama2Tokenizer \
+            --tokenizer-model /tmp/prep/tokenizer.model \
+            --json-keys text \
+            --append-eod \
+            --workers 16 \
+            --log-interval 25000
+
+          echo "Persisting tokenized dataset and tokenizer to Cloud Storage FUSE..."
+          cp -f /tmp/prep/tokenizer.model /training-data/tokenizer/tokenizer.model
+          cp -f /tmp/prep/c4_mixtral_text_document.bin /training-data/dataset/c4_mixtral_text_document.bin
+          cp -f /tmp/prep/c4_mixtral_text_document.idx /training-data/dataset/c4_mixtral_text_document.idx
+          sync
+          ls -lh /training-data/tokenizer/ /training-data/dataset/
+          echo "Dataset preparation complete."
+        volumeMounts:
+        - name: nvidia
+          mountPath: /usr/local/nvidia
+        - name: training-data
+          mountPath: /training-data
+        resources:
+          limits:
+            nvidia.com/gpu: 1
+          requests:
+            nvidia.com/gpu: 1
+# [END hypercomputer_gpu_train_mixtral_8x7b_data_prep_yaml]
