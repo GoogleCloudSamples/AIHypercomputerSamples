@@ -32,6 +32,7 @@ gcloud storage buckets create "gs://${MODEL_BUCKET}" \
 fi
 
 echo "Granting bucket permissions..."
+if false; then
 # [START hypercomputer_gpu_infer_deepseek_r1_model_bucket_iam]
 PROJECT_NUMBER=$(gcloud projects describe "${PROJECT_ID}" --format="value(projectNumber)")
 
@@ -52,6 +53,40 @@ gcloud storage buckets add-iam-policy-binding "gs://${MODEL_BUCKET}" \
     --member="serviceAccount:${CLUSTER_NAME}-gke-np-sa@${PROJECT_ID}.iam.gserviceaccount.com" \
     --role="roles/storage.legacyBucketReader"
 # [END hypercomputer_gpu_infer_deepseek_r1_model_bucket_iam]
+fi
+
+# [START hypercomputer_gpu_infer_deepseek_r1_model_bucket_iam_v2]
+PROJECT_NUMBER=$(gcloud projects describe "${PROJECT_ID}" --format="value(projectNumber)")
+
+# Helper function to retry IAM policy bindings to avoid HTTP 412 Precondition Failed errors
+add_iam_binding_with_retry() {
+  local member="$1"
+  local role="$2"
+  local max_attempts=5
+  local attempt=1
+
+  until gcloud storage buckets add-iam-policy-binding "gs://${MODEL_BUCKET}" \
+      --member="${member}" \
+      --role="${role}"; do
+    if [ "${attempt}" -ge "${max_attempts}" ]; then
+      echo "Error: Failed to grant IAM binding after ${max_attempts} attempts." >&2
+      exit 1
+    fi
+    attempt=$((attempt + 1))
+    echo "Retrying IAM binding... (Attempt ${attempt} of ${max_attempts} for ${member})"
+    sleep 3
+  done
+}
+
+add_iam_binding_with_retry "principal://iam.googleapis.com/projects/${PROJECT_NUMBER}/locations/global/workloadIdentityPools/${PROJECT_ID}.svc.id.goog/subject/ns/default/sa/default" "roles/storage.objectAdmin"
+
+add_iam_binding_with_retry "serviceAccount:${PROJECT_NUMBER}-compute@developer.gserviceaccount.com" "roles/storage.objectAdmin"
+
+add_iam_binding_with_retry "serviceAccount:${CLUSTER_NAME}-gke-np-sa@${PROJECT_ID}.iam.gserviceaccount.com" "roles/storage.objectAdmin"
+
+# legacyBucketReader is required to load the model with --load-format runai_streamer
+add_iam_binding_with_retry "serviceAccount:${CLUSTER_NAME}-gke-np-sa@${PROJECT_ID}.iam.gserviceaccount.com" "roles/storage.legacyBucketReader"
+# [END hypercomputer_gpu_infer_deepseek_r1_model_bucket_iam_v2]
 
 # [START hypercomputer_gpu_infer_deepseek_r1_secret_create]
 kubectl create secret generic hf-secret \
