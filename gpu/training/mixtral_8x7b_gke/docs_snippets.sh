@@ -17,7 +17,6 @@
 # [START hypercomputer_gpu_train_mixtral_8x7b_auth]
 gcloud auth login
 gcloud auth application-default login
-gcloud auth configure-docker us-central1-docker.pkg.dev --quiet
 # [END hypercomputer_gpu_train_mixtral_8x7b_auth]
 
 # [START hypercomputer_gpu_train_mixtral_8x7b_redeploy_overwrite]

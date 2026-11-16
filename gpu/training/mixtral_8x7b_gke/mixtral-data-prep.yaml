@@ -71,13 +71,9 @@ spec:
           mkdir -p /tmp/prep /training-data/tokenizer /training-data/dataset
 
           echo "Downloading Mixtral 8x7B SentencePiece tokenizer.model..."
-          if ! curl -fsSL --retry 3 \
+          curl -fsSL --retry 3 \
             "https://huggingface.co/mistralai/Mixtral-8x7B-v0.1/resolve/main/tokenizer.model" \
-            -o /tmp/prep/tokenizer.model; then
-            curl -fsSL --retry 3 \
-              "https://huggingface.co/MaziyarPanahi/Mixtral-8x7B-v0.1/resolve/main/tokenizer.model" \
-              -o /tmp/prep/tokenizer.model
-          fi
+            -o /tmp/prep/tokenizer.model
 
           echo "Downloading public C4 English shard (c4-train.00000-of-01024.json.gz)..."
           curl -fL --retry 3 \

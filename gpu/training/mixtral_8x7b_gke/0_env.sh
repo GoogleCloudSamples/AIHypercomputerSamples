@@ -23,7 +23,7 @@ export BUCKET_NAME="YOUR_BUCKET_NAME"
 export RESERVATION_NAME="YOUR_RESERVATION_NAME" # A4 reservation name or RESERVATION_NAME/reservationBlocks/RESERVATION_BLOCK_NAME
 export CLUSTER_TOOLKIT_VERSION="v1.103.0"
 export NODE_COUNT=2
-export AUTHORIZED_CIDR="0.0.0.0/0"
+export AUTHORIZED_CIDR="0.0.0.0/0" # or restrict to "<YOUR_IP>/32" for a static workstation IP
 # [END hypercomputer_gpu_train_mixtral_8x7b_env]
 
 # Keep CLUSTER_NAME <= 20 characters so that the service account IDs created by
