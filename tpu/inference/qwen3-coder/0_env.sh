@@ -12,29 +12,33 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
-export ACCELERATOR_TYPE="${ACCELERATOR_TYPE:-v7x}"
+export TPU_TYPE="${TPU_TYPE:-v7x}"
 
-if [[ "${ACCELERATOR_TYPE}" == "v6e" ]]; then
-export ACCELERATOR_TYPE="v6e"
+if [[ "${TPU_TYPE}" == "v6e" ]]; then
+export TPU_TYPE="v6e"
 # [START hypercomputer_tpu_infer_qwen3_coder_env_v6e]
-export CLUSTER_NAME="YOUR_CLUSTER_NAME" # <= 40 chars; start with a-z; only a-z, 0-9, -
-export PROJECT_ID="YOUR_PROJECT_ID" # Your Google Cloud project ID
+export CLUSTER_NAME="YOUR_CLUSTER_NAME" # maximum 40 chars; start with a-z; only a-z, 0-9, -
+export PROJECT_ID="YOUR_PROJECT_ID"
 export REGION="YOUR_REGION" # for example, us-central1
 export ZONE="YOUR_ZONE" # for example, us-central1-b
-export RESERVATION="YOUR_RESERVATION_NAME" # TPU v6e reservation name (if using a reservation)
-export HF_TOKEN="YOUR_HF_TOKEN" # Hugging Face access token
+export RESERVATION="YOUR_RESERVATION_NAME"
+export HF_TOKEN="YOUR_HF_TOKEN"
 export SGLANG_IMAGE="lmsysorg/sglang:v0.1.0-tpu"
 # [END hypercomputer_tpu_infer_qwen3_coder_env_v6e]
 
-else
-export ACCELERATOR_TYPE="v7x"
+elif [[ "${TPU_TYPE}" == "v7x" ]]; then
+export TPU_TYPE="v7x"
 # [START hypercomputer_tpu_infer_qwen3_coder_env]
-export CLUSTER_NAME="YOUR_CLUSTER_NAME" # <= 40 chars; start with a-z; only a-z, 0-9, -
-export PROJECT_ID="YOUR_PROJECT_ID" # Your Google Cloud project ID
+export CLUSTER_NAME="YOUR_CLUSTER_NAME" # maximum 40 chars; start with a-z; only a-z, 0-9, -
+export PROJECT_ID="YOUR_PROJECT_ID"
 export REGION="YOUR_REGION" # for example, us-central1
 export ZONE="YOUR_ZONE" # for example, us-central1-c
-export RESERVATION="YOUR_RESERVATION_NAME" # TPU7x reservation name (if using a reservation)
-export HF_TOKEN="YOUR_HF_TOKEN" # Hugging Face access token
+export RESERVATION="YOUR_RESERVATION_NAME"
+export HF_TOKEN="YOUR_HF_TOKEN"
 export SGLANG_IMAGE="lmsysorg/sglang:v0.1.0-tpu"
 # [END hypercomputer_tpu_infer_qwen3_coder_env]
+
+else
+  echo "Error: Unsupported TPU_TYPE '${TPU_TYPE}'. Expected 'v6e' or 'v7x'."
+  exit 1
 fi

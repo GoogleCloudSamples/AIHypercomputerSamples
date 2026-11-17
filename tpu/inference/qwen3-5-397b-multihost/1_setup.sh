@@ -106,7 +106,7 @@ elif [[ "${TPU_TYPE}" == "v6e" ]]; then
       gcloud container node-pools create "${NODE_POOL_NAME}" \
           --cluster="${CLUSTER_NAME}" \
           --machine-type="${MACHINE_TYPE}" \
-          --tpu-topology=2x4 \
+          --tpu-topology="${TOPOLOGY}" \
           --location="${REGION}" \
           --node-locations="${ZONE}" \
           --project="${PROJECT_ID}" \
@@ -122,7 +122,7 @@ elif [[ "${TPU_TYPE}" == "v6e" ]]; then
       gcloud container node-pools create "${NODE_POOL_NAME}" \
           --cluster="${CLUSTER_NAME}" \
           --machine-type="${MACHINE_TYPE}" \
-          --tpu-topology=2x4 \
+          --tpu-topology="${TOPOLOGY}" \
           --location="${REGION}" \
           --node-locations="${ZONE}" \
           --project="${PROJECT_ID}" \
