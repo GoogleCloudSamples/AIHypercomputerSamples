@@ -56,7 +56,7 @@ gcluster --version
 # [START hypercomputer_gpu_tune_mixtral_slurm_firewall_rule]
 gcloud compute firewall-rules create allow-ssh-ingress-from-iap \
   --project="${PROJECT_ID}" \
-  --network="${CLUSTER_NETWORK}" \
+  --network="${DEPLOYMENT_NAME}-net-0" \
   --direction=INGRESS \
   --action=allow \
   --rules=tcp:22 \
@@ -68,7 +68,7 @@ gcloud compute firewall-rules create allow-ssh-ingress-from-iap \
 gcloud compute ssh "${LOGIN_NODE}" \
     --project="${PROJECT_ID}" \
     --tunnel-through-iap \
-    --zone="${ZONE}"
+    --zone="${ZONE}" \
     -- -t "export HF_TOKEN='${HF_TOKEN}'; bash -l"
 # [END hypercomputer_gpu_tune_mixtral_slurm_ssh_login]
 
