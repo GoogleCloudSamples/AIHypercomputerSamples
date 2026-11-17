@@ -94,6 +94,8 @@ spec:
                 value: "eth0"
               - name: NCCL_SOCKET_IFNAME
                 value: "eth0"
+              - name: OMP_NUM_THREADS
+                value: "4"
               command:
               - bash
               - -c
@@ -159,6 +161,7 @@ spec:
                   --num-layers 32 \
                   --hidden-size 4096 \
                   --ffn-hidden-size 14336 \
+                  --moe-ffn-hidden-size 14336 \
                   --num-attention-heads 32 \
                   --group-query-attention \
                   --num-query-groups 8 \
