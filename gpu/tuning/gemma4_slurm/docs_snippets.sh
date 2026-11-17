@@ -17,6 +17,20 @@
 set -euo pipefail
 
 # ==============================================================================
+# Prerequisites
+# ==============================================================================
+
+# [START hypercomputer_gpu_tune_gemma4_slurm_adc_login]
+gcloud auth application-default login
+# [END hypercomputer_gpu_tune_gemma4_slurm_adc_login]
+
+# [START hypercomputer_gpu_tune_gemma4_slurm_enable_oslogin]
+gcloud compute project-info add-metadata \
+    --metadata=enable-oslogin=TRUE \
+    --project=PROJECT_ID
+# [END hypercomputer_gpu_tune_gemma4_slurm_enable_oslogin]
+
+# ==============================================================================
 # Prepare Environment
 # ==============================================================================
 
@@ -87,9 +101,22 @@ tail -f "slurm-${JOB_ID}.out" "slurm-${JOB_ID}.err"
 # [END hypercomputer_gpu_tune_gemma4_slurm_monitor_tail]
 
 # ==============================================================================
+# Monitor Workload
+# ==============================================================================
+
+# [START hypercomputer_gpu_tune_gemma4_slurm_view_metrics]
+echo "https://console.cloud.google.com/monitoring/metrics-explorer?project=${PROJECT_ID}&pageState=%7B%22xyChart%22%3A%7B%22dataSets%22%3A%5B%7B%22timeSeriesFilter%22%3A%7B%22filter%22%3A%22metric.type%3D%5C%22agent.googleapis.com%2Fgpu%2Futilization%5C%22%20resource.type%3D%5C%22gce_instance%5C%22%22%2C%22perSeriesAligner%22%3A%22ALIGN_MEAN%22%7D%2C%22plotType%22%3A%22LINE%22%7D%5D%7D%7D"
+# [END hypercomputer_gpu_tune_gemma4_slurm_view_metrics]
+
+# ==============================================================================
 # Cleanup
 # ==============================================================================
 
 # [START hypercomputer_gpu_tune_gemma4_slurm_destroy_cluster]
 gcluster destroy "${CLUSTER_NAME}" --auto-approve
 # [END hypercomputer_gpu_tune_gemma4_slurm_destroy_cluster]
+
+# [START hypercomputer_gpu_tune_gemma4_slurm_delete_bucket]
+gcloud storage rm --recursive "gs://${BUCKET_NAME}" \
+    --project="${PROJECT_ID}"
+# [END hypercomputer_gpu_tune_gemma4_slurm_delete_bucket]
