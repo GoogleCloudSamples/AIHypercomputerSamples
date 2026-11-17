@@ -22,7 +22,7 @@ Run the scripts in order after updating `0_env.sh` with your project, region,
 zone, cluster name, Terraform state bucket name, and A4 reservation:
 
 1. `source 0_env.sh` — Export environment variables for your deployment.
-2. `./1_setup_cluster.sh` — Run pre-flight checks, install Cluster Toolkit
+2. `./1_setup_cluster.sh` — Install Cluster Toolkit
    `v1.103.0`, and deploy the two-node A4 GKE cluster.
 3. `./2_prepare_dataset.sh` — Download the Mixtral 8x7B SentencePiece tokenizer
    and tokenize 100,000 C4 documents into `IndexedDataset` files on Cloud

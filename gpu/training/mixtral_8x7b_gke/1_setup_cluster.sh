@@ -16,66 +16,6 @@
 
 set -euo pipefail
 
-echo "Running pre-flight checks..."
-# [START hypercomputer_gpu_train_mixtral_8x7b_preflight]
-bash -c '
-set -euo pipefail
-
-for var in PROJECT_ID REGION ZONE CLUSTER_NAME BUCKET_NAME RESERVATION_NAME; do
-  val="${!var:-}"
-  if [[ -z "${val}" || "${val}" == *"YOUR_"* ]]; then
-    echo "ERROR: ${var} is not set or still contains a placeholder (${val})." >&2
-    exit 1
-  fi
-done
-
-if [[ ${#CLUSTER_NAME} -gt 20 ]] || ! [[ "${CLUSTER_NAME}" =~ ^[a-z][-a-z0-9]*$ ]]; then
-  echo "ERROR: CLUSTER_NAME (${CLUSTER_NAME}) must be <= 20 chars and match ^[a-z][-a-z0-9]*$." >&2
-  exit 1
-fi
-
-if [[ "${ZONE}" != "${REGION}-"* ]]; then
-  echo "ERROR: ZONE (${ZONE}) does not belong to REGION (${REGION})." >&2
-  exit 1
-fi
-
-gcloud config set project "${PROJECT_ID}"
-
-REQUIRED_APIS=(
-  compute.googleapis.com
-  container.googleapis.com
-  storage.googleapis.com
-  iam.googleapis.com
-  cloudresourcemanager.googleapis.com
-  serviceusage.googleapis.com
-  logging.googleapis.com
-  monitoring.googleapis.com
-)
-ENABLED_APIS="$(gcloud services list --enabled --project="${PROJECT_ID}" --format="value(config.name)")"
-MISSING_APIS=()
-for api in "${REQUIRED_APIS[@]}"; do
-  if ! grep -Fxq "${api}" <<< "${ENABLED_APIS}"; then
-    MISSING_APIS+=("${api}")
-  fi
-done
-if (( ${#MISSING_APIS[@]} > 0 )); then
-  echo "Enabling missing Google Cloud APIs: ${MISSING_APIS[*]}..."
-  gcloud services enable "${MISSING_APIS[@]}" --project="${PROJECT_ID}"
-else
-  echo "All required Google Cloud APIs are already enabled."
-fi
-
-BASE_RESERVATION_NAME="$(cut -d/ -f1 <<< "${RESERVATION_NAME}")"
-echo "Verifying reservation ${BASE_RESERVATION_NAME} in zone ${ZONE}..."
-gcloud compute reservations describe "${BASE_RESERVATION_NAME}" \
-  --zone="${ZONE}" \
-  --project="${PROJECT_ID}" \
-  --format="table(name,zone.basename(),status,specificReservation.count,specificReservation.inUseCount,specificReservation.instanceProperties.machineType)"
-
-echo "Pre-flight checks passed."
-'
-# [END hypercomputer_gpu_train_mixtral_8x7b_preflight]
-
 echo "Downloading Cluster Toolkit ${CLUSTER_TOOLKIT_VERSION}..."
 # [START hypercomputer_gpu_train_mixtral_8x7b_install_ctk]
 case "$(uname -s)-$(uname -m)" in
