@@ -17,16 +17,16 @@ gcloud auth login
 gcloud auth application-default login
 # [END hypercomputer_tpu_infer_qwen3_coder_auth]
 
-if [ "${ACCELERATOR_TYPE}" == "v7x" ]; then
+if [ "${TPU_TYPE}" == "v7x" ]; then
 # [START hypercomputer_tpu_infer_qwen3_coder_download_manifest]
 curl -LO https://raw.githubusercontent.com/GoogleCloudSamples/AIHypercomputerSamples/main/tpu/inference/qwen3-coder/qwen3-coder-480b-multihost-disagg-v7x.yaml
 # [END hypercomputer_tpu_infer_qwen3_coder_download_manifest]
-elif [ "${ACCELERATOR_TYPE}" == "v6e" ]; then
+elif [ "${TPU_TYPE}" == "v6e" ]; then
 # [START hypercomputer_tpu_infer_qwen3_coder_download_manifest_v6e]
 curl -LO https://raw.githubusercontent.com/GoogleCloudSamples/AIHypercomputerSamples/main/tpu/inference/qwen3-coder/qwen3-coder-30b-multihost-disagg-v6e-2x4.yaml
 # [END hypercomputer_tpu_infer_qwen3_coder_download_manifest_v6e]
 else
-  echo "Unsupported ACCELERATOR_TYPE: ${ACCELERATOR_TYPE}"
+  echo "Unsupported TPU_TYPE: ${TPU_TYPE}"
   exit 1
 fi
 
@@ -43,7 +43,7 @@ kubectl wait --for=condition=Available --timeout=5400s \
 kubectl port-forward service/sglang-service 8000:8000
 # [END hypercomputer_tpu_infer_qwen3_coder_port_forward]
 
-if [ "${ACCELERATOR_TYPE}" == "v7x" ]; then
+if [ "${TPU_TYPE}" == "v7x" ]; then
 # [START hypercomputer_tpu_infer_qwen3_coder_test_inference]
 curl -s -X POST http://localhost:8000/v1/chat/completions \
   -H "Content-Type: application/json" \
@@ -56,7 +56,7 @@ curl -s -X POST http://localhost:8000/v1/chat/completions \
     "temperature": 0.0
   }'
 # [END hypercomputer_tpu_infer_qwen3_coder_test_inference]
-elif [ "${ACCELERATOR_TYPE}" == "v6e" ]; then
+elif [ "${TPU_TYPE}" == "v6e" ]; then
 # [START hypercomputer_tpu_infer_qwen3_coder_test_inference_v6e]
 curl -s -X POST http://localhost:8000/v1/chat/completions \
   -H "Content-Type: application/json" \
