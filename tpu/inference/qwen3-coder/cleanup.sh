@@ -14,18 +14,18 @@
 
 set -euo pipefail
 
-if [ "${ACCELERATOR_TYPE}" == "v7x" ]; then
+if [ "${TPU_TYPE}" == "v7x" ]; then
 # [START hypercomputer_tpu_infer_qwen3_coder_cleanup_workload]
 kubectl delete -f qwen3-coder-480b-multihost-disagg-v7x.yaml --ignore-not-found
 kubectl delete secret hf-secret --ignore-not-found
 # [END hypercomputer_tpu_infer_qwen3_coder_cleanup_workload]
-elif [ "${ACCELERATOR_TYPE}" == "v6e" ]; then
+elif [ "${TPU_TYPE}" == "v6e" ]; then
 # [START hypercomputer_tpu_infer_qwen3_coder_cleanup_workload_v6e]
 kubectl delete -f qwen3-coder-30b-multihost-disagg-v6e-2x4.yaml --ignore-not-found
 kubectl delete secret hf-secret --ignore-not-found
 # [END hypercomputer_tpu_infer_qwen3_coder_cleanup_workload_v6e]
 else
-  echo "Unsupported ACCELERATOR_TYPE: ${ACCELERATOR_TYPE}"
+  echo "Unsupported TPU_TYPE: ${TPU_TYPE}"
   exit 1
 fi
 
@@ -34,7 +34,7 @@ while gcloud container operations list --project="${PROJECT_ID}" --location="${R
   sleep 10
 done
 
-if [ "${ACCELERATOR_TYPE}" == "v7x" ]; then
+if [ "${TPU_TYPE}" == "v7x" ]; then
 # [START hypercomputer_tpu_infer_qwen3_coder_cleanup_cluster]
 gcloud container node-pools delete tpu7x-pool-0 \
     --cluster="${CLUSTER_NAME}" \
@@ -58,7 +58,7 @@ gcloud compute resource-policies delete tpu7x-2x2x2-workload-policy \
     --project="${PROJECT_ID}" \
     --quiet
 # [END hypercomputer_tpu_infer_qwen3_coder_cleanup_cluster]
-elif [ "${ACCELERATOR_TYPE}" == "v6e" ]; then
+elif [ "${TPU_TYPE}" == "v6e" ]; then
 # [START hypercomputer_tpu_infer_qwen3_coder_cleanup_cluster_v6e]
 gcloud container node-pools delete tpu-v6e-pool-0 \
     --cluster="${CLUSTER_NAME}" \

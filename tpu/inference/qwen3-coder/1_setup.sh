@@ -21,7 +21,7 @@ gcloud container clusters create "${CLUSTER_NAME}" \
   --machine-type=e2-standard-4
 # [END hypercomputer_tpu_infer_qwen3_coder_create_cluster]
 
-if [ "${ACCELERATOR_TYPE}" == "v7x" ]; then
+if [ "${TPU_TYPE}" == "v7x" ]; then
 # [START hypercomputer_tpu_infer_qwen3_coder_create_workload_policy]
 gcloud compute resource-policies create workload-policy tpu7x-2x2x2-workload-policy \
     --type=HIGH_THROUGHPUT \
@@ -107,7 +107,7 @@ gcloud container node-pools create tpu7x-pool-1 \
     --project="${PROJECT_ID}"
 # [END hypercomputer_tpu_infer_qwen3_coder_create_nodepools]
 fi
-elif [ "${ACCELERATOR_TYPE}" == "v6e" ]; then
+elif [ "${TPU_TYPE}" == "v6e" ]; then
 if [ "${USE_FLEX_START:-false}" == "true" ]; then
 # [START hypercomputer_tpu_infer_qwen3_coder_create_nodepools_v6e_flex_start]
 gcloud container node-pools create tpu-v6e-pool-0 \
@@ -186,7 +186,7 @@ gcloud container node-pools create tpu-v6e-pool-1 \
 # [END hypercomputer_tpu_infer_qwen3_coder_create_nodepools_v6e]
 fi
 else
-  echo "Unsupported ACCELERATOR_TYPE: ${ACCELERATOR_TYPE}"
+  echo "Unsupported TPU_TYPE: ${TPU_TYPE}"
   exit 1
 fi
 

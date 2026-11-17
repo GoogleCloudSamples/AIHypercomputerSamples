@@ -14,7 +14,7 @@
 
 set -euo pipefail
 
-if [ "${ACCELERATOR_TYPE}" == "v7x" ]; then
+if [ "${TPU_TYPE}" == "v7x" ]; then
 # [START hypercomputer_tpu_infer_qwen3_coder_run_benchmark]
 kubectl exec deployment/sglang-router -- python3 -m sglang.bench_serving \
   --backend sglang \
@@ -27,7 +27,7 @@ kubectl exec deployment/sglang-router -- python3 -m sglang.bench_serving \
   --num-prompts 256 \
   --max-concurrency 64
 # [END hypercomputer_tpu_infer_qwen3_coder_run_benchmark]
-elif [ "${ACCELERATOR_TYPE}" == "v6e" ]; then
+elif [ "${TPU_TYPE}" == "v6e" ]; then
 # [START hypercomputer_tpu_infer_qwen3_coder_run_benchmark_v6e]
 kubectl exec deployment/sglang-router -- python3 -m sglang.bench_serving \
   --backend sglang \
@@ -41,6 +41,6 @@ kubectl exec deployment/sglang-router -- python3 -m sglang.bench_serving \
   --max-concurrency 256
 # [END hypercomputer_tpu_infer_qwen3_coder_run_benchmark_v6e]
 else
-  echo "Unsupported ACCELERATOR_TYPE: ${ACCELERATOR_TYPE}"
+  echo "Unsupported TPU_TYPE: ${TPU_TYPE}"
   exit 1
 fi
