@@ -6,7 +6,7 @@ Note: This sample doesn't demonstrate how to fine-tune the model, configure cust
 
 The scripts in this directory provision a GKE cluster with two multi-host TPU node pools, install the Kubernetes LeaderWorkerSet (LWS) controller, and deploy disaggregated SGLang prefill and decode pools behind an SGLang router. The sample includes the following files:
 
-* `0_env.sh`: Contains the starting environment variables, including the project ID, region, zone, cluster name, reservation name, Hugging Face token, SGLang-TorchTPU container image, and `ACCELERATOR_TYPE`.
+* `0_env.sh`: Contains the starting environment variables, including the project ID, region, zone, cluster name, reservation name, Hugging Face token, SGLang-TorchTPU container image, and `TPU_TYPE`.
 * `1_setup.sh`: Creates the GKE Standard cluster, the workload placement policy (for v7x only), two 2-node TPU node pools, the Hugging Face Kubernetes secret, and installs the LeaderWorkerSet (LWS) controller.
 * `qwen3-coder-480b-multihost-disagg-v7x.yaml` and `qwen3-coder-30b-multihost-disagg-v6e-2x4.yaml`: Defines the Kubernetes manifests for the `hyperdisk-balanced-tpu` StorageClass, the multi-host `sglang-tpu-prefill` and `sglang-tpu-decode` LeaderWorkerSets, the `sglang-router` Deployment, and their corresponding ClusterIP Services.
 * `2_run_inference.sh`: Substitutes the container image into the selected YAML manifest, applies it to the cluster, and waits for the prefill, decode, and router workloads to become available.
@@ -31,7 +31,7 @@ Before you run this sample, ensure you have the following:
 
 To execute this sample, follow these steps:
 
-1. Open `0_env.sh` and update the variables including `ACCELERATOR_TYPE` (set to `v7x` or `v6e`), then source the file:
+1. Open `0_env.sh` and update the variables including `TPU_TYPE` (set to `v7x` or `v6e`), then source the file:
 
    ```bash
    source 0_env.sh
