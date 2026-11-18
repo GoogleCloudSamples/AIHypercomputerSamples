@@ -72,3 +72,42 @@ kubectl wait --for=condition=Available --timeout=300s \
   deployment/konnectivity-agent -n kube-system
 kubectl wait --for=jsonpath='{.webhooks[0].clientConfig.caBundle}' --timeout=300s \
   validatingwebhookconfiguration/lws-validating-webhook-configuration
+kubectl wait --for=jsonpath='{.webhooks[0].clientConfig.caBundle}' --timeout=300s \
+  mutatingwebhookconfiguration/lws-mutating-webhook-configuration
+
+# The LWS controller runs multiple replicas. Each replica starts serving the
+# webhook on :9443 only after kubelet projects the cert Secret into its pod,
+# which can happen several seconds apart. Wait until every replica is serving,
+# otherwise the API server may route webhook calls to a replica that is not
+# listening yet ("connect: connection refused").
+echo "Waiting for all LWS controller replicas to serve the webhook on :9443..."
+LWS_WEBHOOK_READY=false
+for attempt in $(seq 1 60); do
+  DESIRED=$(kubectl get deployment lws-controller-manager -n lws-system \
+    -o jsonpath='{.spec.replicas}' 2>/dev/null || echo 0)
+  PODS=$(kubectl get pods -n lws-system -l control-plane=controller-manager \
+    --field-selector=status.phase=Running \
+    -o jsonpath='{.items[*].metadata.name}' 2>/dev/null || true)
+
+  TOTAL=0
+  SERVING=0
+  for pod in ${PODS}; do
+    TOTAL=$((TOTAL + 1))
+    if kubectl logs -n lws-system "${pod}" 2>/dev/null | grep -q "Serving webhook server"; then
+      SERVING=$((SERVING + 1))
+    fi
+  done
+
+  if [ "${TOTAL}" -gt 0 ] && [ "${TOTAL}" -ge "${DESIRED:-1}" ] && [ "${SERVING}" -eq "${TOTAL}" ]; then
+    echo "All ${TOTAL} LWS controller replica(s) are serving the webhook."
+    LWS_WEBHOOK_READY=true
+    break
+  fi
+  echo "  ${SERVING}/${TOTAL} replica(s) serving (desired: ${DESIRED:-?}), attempt ${attempt}/60..."
+  sleep 5
+done
+
+if [ "${LWS_WEBHOOK_READY}" != "true" ]; then
+  echo "Error: timed out waiting for all LWS webhook replicas to serve on :9443." >&2
+  exit 1
+fi
