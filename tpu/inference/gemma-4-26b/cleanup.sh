@@ -34,11 +34,15 @@ gcloud container node-pools delete "${NODE_POOL_NAME}" \
 # with "Cluster is running incompatible operation". Wait for them to finish.
 echo "Waiting for in-progress GKE operations on ${CLUSTER_NAME} to finish..."
 for attempt in $(seq 1 80); do
-  ACTIVE_OPS=$(gcloud container operations list \
+  if ! ACTIVE_OPS=$(gcloud container operations list \
       --project="${PROJECT_ID}" \
       --location="${REGION}" \
       --filter="status!=DONE AND targetLink~/clusters/${CLUSTER_NAME}(/|$)" \
-      --format="value(name)" 2>/dev/null || true)
+      --format="value(name)" 2>/dev/null); then
+    echo "  Warning: failed to list GKE operations (attempt ${attempt}/80), retrying in 15s..."
+    sleep 15
+    continue
+  fi
   if [ -z "${ACTIVE_OPS}" ]; then
     echo "No active GKE operations on ${CLUSTER_NAME}."
     break
