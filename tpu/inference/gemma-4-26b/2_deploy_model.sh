@@ -25,9 +25,10 @@ set -euo pipefail
 echo "Verifying LWS admission webhooks with a server-side dry run..."
 REQUIRED_SUCCESSES=3
 SUCCESSES=0
+LAST_ERROR=""
 for attempt in $(seq 1 30); do
-  if envsubst '$RESERVATION_NAME $ZONE $VLLM_IMAGE' < gemma4-26b-multihost-v6e-2x4.yaml \
-      | kubectl apply --dry-run=server -f - >/dev/null 2>&1; then
+  if DRY_RUN_ERR=$(envsubst '$RESERVATION_NAME $ZONE $VLLM_IMAGE' < gemma4-26b-multihost-v6e-2x4.yaml \
+      | kubectl apply --dry-run=server -f - 2>&1 >/dev/null); then
     SUCCESSES=$((SUCCESSES + 1))
     if [ "${SUCCESSES}" -ge "${REQUIRED_SUCCESSES}" ]; then
       echo "LWS admission webhooks are ready."
@@ -35,6 +36,7 @@ for attempt in $(seq 1 30); do
     fi
   else
     SUCCESSES=0
+    LAST_ERROR="${DRY_RUN_ERR}"
     echo "  LWS webhook not ready yet (attempt ${attempt}/30), retrying in 5s..."
   fi
   sleep 5
@@ -42,6 +44,9 @@ done
 
 if [ "${SUCCESSES}" -lt "${REQUIRED_SUCCESSES}" ]; then
   echo "Error: LWS admission webhooks did not become ready in time." >&2
+  if [ -n "${LAST_ERROR}" ]; then
+    echo "Last error: ${LAST_ERROR}" >&2
+  fi
   exit 1
 fi
 
