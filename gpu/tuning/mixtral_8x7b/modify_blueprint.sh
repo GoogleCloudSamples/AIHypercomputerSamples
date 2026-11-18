@@ -42,12 +42,6 @@ text = re.sub(
     text,
 )
 
-# Set network_name to LUSTRE_VPC_NETWORK for a4high-slurm-net-0 to use existing Managed Lustre quota in a project
-text = text.replace(
-    'network_name: \$(vars.base_network_name)-net-0',
-    'network_name: ${LUSTRE_VPC_NETWORK}',
-)
-
 with open('$YAML_PATH', 'w') as f:
     f.write(text)
 "

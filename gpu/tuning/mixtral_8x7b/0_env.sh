@@ -26,4 +26,3 @@ export DEPLOYMENT_NAME="YOUR_CLUSTER_NAME"
 export BUCKET_NAME="YOUR_GCS_BUCKET"
 export HF_TOKEN="YOUR_HF_TOKEN"
 # [END hypercomputer_gpu_tune_mixtral_slurm_env]
-export LUSTRE_VPC_NETWORK="YOUR_LUSTRE_VPC_NETWORK"
