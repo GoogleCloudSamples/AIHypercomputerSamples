@@ -84,7 +84,7 @@ echo "Waiting for all LWS controller replicas to serve the webhook on :9443..."
 LWS_WEBHOOK_READY=false
 for attempt in $(seq 1 60); do
   DESIRED=$(kubectl get deployment lws-controller-manager -n lws-system \
-    -o jsonpath='{.spec.replicas}' 2>/dev/null || echo 0)
+    -o jsonpath='{.spec.replicas}' 2>/dev/null || echo 1)
   PODS=$(kubectl get pods -n lws-system -l control-plane=controller-manager \
     --field-selector=status.phase=Running \
     -o jsonpath='{.items[*].metadata.name}' 2>/dev/null || true)
