@@ -91,10 +91,6 @@ vars:
 EOF
 # [END hypercomputer_gpu_train_mixtral_8x7b_configure_deployment]
 
-# [START hypercomputer_gpu_train_mixtral_8x7b_force_destroy]
-sed -i 's/force_destroy: false/force_destroy: true/g' examples/gke-a4/gke-a4.yaml
-# [END hypercomputer_gpu_train_mixtral_8x7b_force_destroy]
-
 echo "Deploying the A4 GKE cluster (~15-20 minutes)..."
 # [START hypercomputer_gpu_train_mixtral_8x7b_deploy_cluster]
 ./gcluster deploy \
