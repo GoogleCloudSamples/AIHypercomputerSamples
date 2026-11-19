@@ -16,7 +16,7 @@
 
 set -euo pipefail
 
-echo "[$(date)] ==================== Build started. ===================="
+echo "[$(date)] ==================== Storage setup started. ===================="
 
 echo "[$(date)] ==================== Creating Cloud Storage bucket... ===================="
 # [START hypercomputer_tpu_tune_qwen3_30b_rl_create_bucket]

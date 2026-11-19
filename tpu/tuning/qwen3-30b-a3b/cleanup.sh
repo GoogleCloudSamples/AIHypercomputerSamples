@@ -73,12 +73,6 @@ if gcloud storage buckets describe "gs://${GCS_BUCKET}" --project="${PROJECT}" &
   gcloud storage rm --recursive "gs://${GCS_BUCKET}" || echo "Warning: Failed to delete bucket"
 fi
 
-if false; then
-  if gcloud artifacts repositories describe maxtext-images --location="${REGION}" --project="${PROJECT}" &>/dev/null; then
-    gcloud artifacts repositories delete maxtext-images --location="${REGION}" --project="${PROJECT}" --quiet || echo "Warning: Failed to delete repository"
-  fi
-fi
-
 if [ -d "venvp3" ]; then
   echo "Removing virtual environment directory venvp3..."
   deactivate 2>/dev/null || true

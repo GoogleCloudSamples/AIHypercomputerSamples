@@ -108,18 +108,3 @@ gcloud storage rm -r "gs://${GCS_BUCKET:?}"
 # To delete the local deployment folder
 rm -rf .ghpc "${CLUSTER_NAME:?}"
 # [END hypercomputer_tpu_tune_gemma4_26b_rl_cleanup_storage_v2]
-
-# [START hypercomputer_tpu_tune_gemma4_26b_rl_yaml_service_account]
-  - id: node_pool_service_account
-    source: modules/project/service-account
-    settings:
-      name: gke-np-sa
-      project_roles:
-      - logging.logWriter
-      - monitoring.metricWriter
-      - monitoring.viewer
-      - stackdriver.resourceMetadata.writer
-      - storage.admin
-      - artifactregistry.reader
-# [END hypercomputer_tpu_tune_gemma4_26b_rl_yaml_service_account]
-

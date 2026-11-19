@@ -49,12 +49,6 @@ sed -i '/system_node_pool_machine_type/a \      system_node_pool_zones: [$(vars.
     -l IGNORE --auto-approve -w
 # [END hypercomputer_tpu_tune_qwen3_30b_rl_create_cluster]
 
-# [START hypercomputer_tpu_tune_qwen3_30b_rl_get_credentials]
-gcloud container clusters get-credentials "${CLUSTER_NAME:?}" \
-    --location="${REGION:?}" \
-    --project="${PROJECT:?}"
-# [END hypercomputer_tpu_tune_qwen3_30b_rl_get_credentials]
-
 # [START hypercomputer_tpu_tune_qwen3_30b_rl_configure_defaults]
 # Configure gcluster Defaults
 ./gcluster job config set project "${PROJECT:?}"
@@ -118,17 +112,3 @@ gcloud storage rm -r "gs://${GCS_BUCKET:?}"
 # To delete the local deployment folder and copied blueprint
 rm -rf .ghpc "${CLUSTER_NAME:?}" gke-tpu-v6e-advanced.yaml
 # [END hypercomputer_tpu_tune_qwen3_30b_rl_cleanup_storage_v2]
-
-# [START hypercomputer_tpu_tune_qwen3_30b_rl_yaml_service_account]
-  - id: node_pool_service_account
-    source: modules/project/service-account
-    settings:
-      name: gke-np-sa
-      project_roles:
-      - logging.logWriter
-      - monitoring.metricWriter
-      - monitoring.viewer
-      - stackdriver.resourceMetadata.writer
-      - storage.admin
-      - artifactregistry.reader
-# [END hypercomputer_tpu_tune_qwen3_30b_rl_yaml_service_account]
