@@ -18,6 +18,38 @@ set -euo pipefail
 
 : "${VLLM_IMAGE:?VLLM_IMAGE must be set (see 0_env.sh)}"
 
+# Pre-flight: make sure the LWS admission webhooks answer reliably before the
+# real apply. A server-side dry run goes through mutating/validating webhooks
+# without persisting anything. Require several consecutive successes because
+# webhook calls are load-balanced across all LWS controller replicas.
+echo "Verifying LWS admission webhooks with a server-side dry run..."
+REQUIRED_SUCCESSES=3
+SUCCESSES=0
+LAST_ERROR=""
+for attempt in $(seq 1 30); do
+  if DRY_RUN_ERR=$(envsubst '$RESERVATION_NAME $ZONE $VLLM_IMAGE' < gemma4-26b-multihost-v6e-2x4.yaml \
+      | kubectl apply --dry-run=server -f - 2>&1 >/dev/null); then
+    SUCCESSES=$((SUCCESSES + 1))
+    if [ "${SUCCESSES}" -ge "${REQUIRED_SUCCESSES}" ]; then
+      echo "LWS admission webhooks are ready."
+      break
+    fi
+  else
+    SUCCESSES=0
+    LAST_ERROR="${DRY_RUN_ERR}"
+    echo "  LWS webhook not ready yet (attempt ${attempt}/30), retrying in 5s..."
+  fi
+  sleep 5
+done
+
+if [ "${SUCCESSES}" -lt "${REQUIRED_SUCCESSES}" ]; then
+  echo "Error: LWS admission webhooks did not become ready in time." >&2
+  if [ -n "${LAST_ERROR}" ]; then
+    echo "Last error: ${LAST_ERROR}" >&2
+  fi
+  exit 1
+fi
+
 # [START hypercomputer_tpu_infer_gemma4_26b_deploy]
 envsubst '$RESERVATION_NAME $ZONE $VLLM_IMAGE' < gemma4-26b-multihost-v6e-2x4.yaml | kubectl apply -f -
 # [END hypercomputer_tpu_infer_gemma4_26b_deploy]

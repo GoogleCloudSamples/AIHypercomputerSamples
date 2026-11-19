@@ -28,6 +28,30 @@ gcloud container node-pools delete "${NODE_POOL_NAME}" \
     --project="${PROJECT_ID}" \
     --quiet || true
 
+# [START_EXCLUDE silent]
+# GKE may start internal operations (e.g. RESIZE_CLUSTER) after the node pool
+# is deleted. Deleting the cluster while such an operation is running fails
+# with "Cluster is running incompatible operation". Wait for them to finish.
+echo "Waiting for in-progress GKE operations on ${CLUSTER_NAME} to finish..."
+for attempt in $(seq 1 80); do
+  if ! ACTIVE_OPS=$(gcloud container operations list \
+      --project="${PROJECT_ID}" \
+      --location="${REGION}" \
+      --filter="status!=DONE AND targetLink~/clusters/${CLUSTER_NAME}(/|$)" \
+      --format="value(name)" 2>/dev/null); then
+    echo "  Warning: failed to list GKE operations (attempt ${attempt}/80), retrying in 15s..."
+    sleep 15
+    continue
+  fi
+  if [ -z "${ACTIVE_OPS}" ]; then
+    echo "No active GKE operations on ${CLUSTER_NAME}."
+    break
+  fi
+  echo "  Active operation(s): ${ACTIVE_OPS//$'\n'/, } (attempt ${attempt}/80), waiting 15s..."
+  sleep 15
+done
+# [END_EXCLUDE]
+
 gcloud container clusters delete "${CLUSTER_NAME}" \
     --location="${REGION}" \
     --project="${PROJECT_ID}" \
