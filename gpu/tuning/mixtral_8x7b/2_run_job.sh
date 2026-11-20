@@ -119,60 +119,255 @@ gcloud compute scp \
   "${LOGIN_NODE}":~/
 # [END hypercomputer_gpu_tune_mixtral_slurm_transfer_scripts]
 
-# 3. Connect and run environment setup & submit job
-echo "[$(date)] Running environment setup and submitting Slurm job on login node..."
-ensure_iap_firewall
+ssh_login_with_retry() {
+  local cmd="$1"
+  local output=""
+  for attempt in {1..5}; do
+    ensure_iap_firewall >&2
+    if output=$(gcloud compute ssh "${LOGIN_NODE}" \
+      --project="${PROJECT_ID}" \
+      --zone="${ZONE}" \
+      --tunnel-through-iap \
+      --command="${cmd}"); then
+      printf '%s\n' "${output}"
+      return 0
+    fi
+    echo "Warning: SSH command to ${LOGIN_NODE} failed (attempt ${attempt}/5). Retrying in 10s..." >&2
+    sleep 10
+  done
+  echo "Error: SSH command to ${LOGIN_NODE} failed after 5 attempts." >&2
+  return 1
+}
 
-# Run ssh and capture stdout to get the Job ID.
-# Since we need to run multiple commands, we chain them.
-SSH_CMD="export HF_TOKEN='${HF_TOKEN}' && \
-chmod +x install_environment.sh && \
-srun --job-name=env-setup --nodes=1 --ntasks=1 --gpus-per-node=1 --partition=a4high bash ./install_environment.sh && \
-sbatch train-mixtral.sh"
+poll_slurm_job() {
+  local job_id="$1"
+  local label="$2"
+  local limit="${3:-240}" # 2 hours maximum polling (30s * 240)
+  local count=0
+  local squeue_output=""
 
-SSH_OUTPUT=$(gcloud compute ssh "${LOGIN_NODE}" \
-  --project="${PROJECT_ID}" \
-  --zone="${ZONE}" \
-  --tunnel-through-iap \
-  --command="${SSH_CMD}")
+  echo "[$(date)] Monitoring ${label} (Slurm job ${job_id})..."
+  while true; do
+    ensure_iap_firewall
+    if squeue_output=$(gcloud compute ssh "${LOGIN_NODE}" \
+      --project="${PROJECT_ID}" \
+      --zone="${ZONE}" \
+      --tunnel-through-iap \
+      --command="squeue -h -j ${job_id} -o '%i %T' 2>&1" 2>/dev/null); then
+      if ! echo "${squeue_output}" | grep -qE "^[[:space:]]*${job_id}([[:space:]]|$)"; then
+        break
+      fi
+    elif echo "${squeue_output}" | grep -q "Invalid job id specified"; then
+      break
+    else
+      echo "Warning: SSH/squeue failed while polling ${label} (job ${job_id}). Retrying..."
+    fi
+    if [ "${count}" -ge "${limit}" ]; then
+      echo "Error: Timeout waiting for ${label} (job ${job_id}) to complete." >&2
+      exit 1
+    fi
+    echo "${label} (job ${job_id}) status: ${squeue_output:-unknown}. Waiting 30 seconds... (${count}/${limit})"
+    sleep 30
+    count=$((count+1))
+  done
+}
 
-echo "${SSH_OUTPUT}"
+scp_to_login_with_retry() {
+  for attempt in {1..5}; do
+    ensure_iap_firewall >&2
+    if gcloud compute scp \
+      --project="${PROJECT_ID}" \
+      --zone="${ZONE}" \
+      --tunnel-through-iap \
+      "$@" "${LOGIN_NODE}":~/; then
+      return 0
+    fi
+    echo "Warning: SCP to ${LOGIN_NODE} failed (attempt ${attempt}/5). Retrying in 10s..." >&2
+    sleep 10
+  done
+  echo "Error: SCP to ${LOGIN_NODE} failed after 5 attempts." >&2
+  return 1
+}
 
-# Parse job ID
-JOB_ID=$(echo "${SSH_OUTPUT}" | grep -oP 'Submitted batch job \K\d+')
+# Build transient Slurm batch wrappers so the unmodified install_environment.sh
+# and train-mixtral.sh can run against node-local NVMe (/mnt/localssd) without
+# incurring cross-region Managed Lustre small-file metadata latency.
+WRAPPER_DIR=$(mktemp -d)
+trap 'rm -rf "${WRAPPER_DIR}"' EXIT
 
-if [ -z "${JOB_ID}" ]; then
-  echo "Error: Failed to submit Slurm job or parse Job ID." >&2
+cat <<'EOF' > "${WRAPPER_DIR}/.run_env_setup.sbatch"
+#!/bin/bash
+#SBATCH --job-name=env-setup
+#SBATCH --nodes=1
+#SBATCH --ntasks=1
+#SBATCH --gpus-per-node=1
+#SBATCH --partition=a4high
+#SBATCH --output=env-setup-%j.out
+#SBATCH --error=env-setup-%j.err
+set -eo pipefail
+
+REAL_HOME="${HOME}"
+STAGE_HOME="/mnt/localssd/mixtral_stage_home"
+WORK_TMP="/mnt/localssd/env_setup_${SLURM_JOB_ID:-$$}"
+VENV_ARCHIVE="${REAL_HOME}/.venv/venv-fsdp.tar"
+
+if [ ! -d /mnt/localssd ] || [ ! -w /mnt/localssd ]; then
+  echo "ERROR: Local SSD directory /mnt/localssd is not available or writable." >&2
   exit 1
 fi
-echo "Successfully submitted Slurm job ID: ${JOB_ID}"
 
-# 4. Poll job status until it finishes
-echo "[$(date)] Monitoring Slurm job ${JOB_ID}..."
-LIMIT=240 # 2 hours maximum polling (30s * 240)
-count=0
+cleanup() {
+  rm -rf "${STAGE_HOME}" "${WORK_TMP}" "${VENV_ARCHIVE}.tmp"
+}
+trap cleanup EXIT
 
-while true; do
+rm -rf "${STAGE_HOME}" "${WORK_TMP}"
+mkdir -p "${STAGE_HOME}" \
+  "${WORK_TMP}/pip_cache" \
+  "${WORK_TMP}/hf_cache" \
+  "${WORK_TMP}/tmp" \
+  "${WORK_TMP}/torch_extensions"
+
+export PIP_NO_CACHE_DIR=1
+export PIP_CACHE_DIR="${WORK_TMP}/pip_cache"
+export HF_HOME="${WORK_TMP}/hf_cache"
+export TMPDIR="${WORK_TMP}/tmp"
+export TORCH_EXTENSIONS_DIR="${WORK_TMP}/torch_extensions"
+
+cd "${SLURM_SUBMIT_DIR}"
+HOME="${STAGE_HOME}" bash ./install_environment.sh
+
+# Store the virtual environment as a single streaming tarball on shared storage.
+mkdir -p "${REAL_HOME}/.venv"
+tar -cf "${VENV_ARCHIVE}.tmp" -C "${STAGE_HOME}" .venv
+mv -f "${VENV_ARCHIVE}.tmp" "${VENV_ARCHIVE}"
+
+# Copy model weights to shared storage, excluding the HF download cache/locks.
+mkdir -p "${REAL_HOME}/Mixtral-8x7B-v0.1"
+rsync -a --exclude='.cache' "${STAGE_HOME}/Mixtral-8x7B-v0.1/" "${REAL_HOME}/Mixtral-8x7B-v0.1/"
+EOF
+
+cat <<'EOF' > "${WRAPPER_DIR}/.run_train.sbatch"
+#!/bin/bash
+#SBATCH --job-name=mixtral-fsdp
+#SBATCH --nodes=2
+#SBATCH --ntasks-per-node=8
+#SBATCH --gpus-per-node=8
+#SBATCH --partition=a4high
+#SBATCH --output=mixtral-%j.out
+#SBATCH --error=mixtral-%j.err
+set -eo pipefail
+
+REAL_HOME="${HOME}"
+STAGE_HOME="/mnt/localssd/mixtral_stage_home"
+WORK_TMP="/mnt/localssd/train_tmp_${SLURM_JOB_ID:-$$}"
+VENV_ARCHIVE="${REAL_HOME}/.venv/venv-fsdp.tar"
+
+cleanup() {
+  HOME="${REAL_HOME}" srun --ntasks="${SLURM_NNODES}" --ntasks-per-node=1 bash -c "
+    rm -f '${STAGE_HOME}/Mixtral-8x7B-v0.1' '${STAGE_HOME}/outputs'
+    rm -rf '${STAGE_HOME}' '${WORK_TMP}'
+  " || true
+}
+trap cleanup EXIT
+
+mkdir -p "${REAL_HOME}/outputs"
+
+# Unpack the archived venv once on each compute node and symlink the shared
+# model and outputs directories so the unmodified train-mixtral.sh can run with
+# HOME pointed at local NVMe.
+srun --ntasks="${SLURM_NNODES}" --ntasks-per-node=1 bash -c "
+  set -e
+  rm -f '${STAGE_HOME}/Mixtral-8x7B-v0.1' '${STAGE_HOME}/outputs'
+  rm -rf '${STAGE_HOME}' '${WORK_TMP}'
+  mkdir -p '${STAGE_HOME}' '${WORK_TMP}/triton_cache' '${WORK_TMP}/tmp'
+  tar -xf '${VENV_ARCHIVE}' -C '${STAGE_HOME}'
+  ln -sfn '${REAL_HOME}/Mixtral-8x7B-v0.1' '${STAGE_HOME}/Mixtral-8x7B-v0.1'
+  ln -sfn '${REAL_HOME}/outputs' '${STAGE_HOME}/outputs'
+"
+
+export HOME="${STAGE_HOME}"
+export TRITON_CACHE_DIR="${WORK_TMP}/triton_cache"
+export TMPDIR="${WORK_TMP}/tmp"
+
+cd "${SLURM_SUBMIT_DIR}"
+bash "${SLURM_SUBMIT_DIR}/train-mixtral.sh"
+EOF
+
+chmod +x "${WRAPPER_DIR}/.run_env_setup.sbatch" "${WRAPPER_DIR}/.run_train.sbatch"
+scp_to_login_with_retry "${WRAPPER_DIR}/.run_env_setup.sbatch" "${WRAPPER_DIR}/.run_train.sbatch"
+
+# 3. Submit environment setup job via sbatch (avoid holding one long-lived IAP SSH tunnel)
+echo "[$(date)] Submitting environment setup job (install_environment.sh) on login node..."
+ENV_SUBMIT_CMD="chmod +x install_environment.sh && \
+export HF_TOKEN='${HF_TOKEN}' && \
+sbatch --export=ALL ~/.run_env_setup.sbatch"
+
+ENV_OUTPUT=$(ssh_login_with_retry "${ENV_SUBMIT_CMD}")
+echo "${ENV_OUTPUT}"
+
+ENV_JOB_ID=$(echo "${ENV_OUTPUT}" | grep -oP 'Submitted batch job \K\d+' || true)
+if [ -z "${ENV_JOB_ID}" ]; then
+  echo "Error: Failed to submit env-setup Slurm job or parse Job ID." >&2
+  exit 1
+fi
+echo "Successfully submitted env-setup Slurm job ID: ${ENV_JOB_ID}"
+
+poll_slurm_job "${ENV_JOB_ID}" "env-setup" 240
+
+# Verify environment setup completed successfully before submitting training
+ENV_STATE=""
+for attempt in {1..5}; do
   ensure_iap_firewall
-  if SQUEUE_OUTPUT=$(gcloud compute ssh "${LOGIN_NODE}" \
+  ENV_STATE=$(gcloud compute ssh "${LOGIN_NODE}" \
     --project="${PROJECT_ID}" \
     --zone="${ZONE}" \
     --tunnel-through-iap \
-    --command="squeue -j ${JOB_ID} || true" 2>/dev/null); then
-    if ! echo "${SQUEUE_OUTPUT}" | grep -q "${JOB_ID}"; then
-      break
-    fi
-  else
-    echo "Warning: SSH connection to ${LOGIN_NODE} failed while polling job ${JOB_ID}. Retrying..."
+    --command="sacct -j ${ENV_JOB_ID} -X -n -o State | head -n 1 | xargs" 2>/dev/null || echo "")
+  if [ -n "${ENV_STATE}" ] && [ "${ENV_STATE}" != "PENDING" ] && [ "${ENV_STATE}" != "RUNNING" ] && [ "${ENV_STATE}" != "COMPLETING" ]; then
+    break
   fi
-  if [ ${count} -ge ${LIMIT} ]; then
-    echo "Timeout waiting for Slurm job ${JOB_ID} to complete." >&2
-    exit 1
-  fi
-  echo "Job ${JOB_ID} is still running. Waiting 30 seconds... (${count}/${LIMIT})"
-  sleep 30
-  count=$((count+1))
+  sleep 5
 done
+
+echo "[$(date)] env-setup job ${ENV_JOB_ID} finished with state: ${ENV_STATE:-UNKNOWN}"
+if [ -n "${ENV_STATE}" ] && [ "${ENV_STATE}" != "COMPLETED" ]; then
+  echo "Error: env-setup job ${ENV_JOB_ID} failed with state '${ENV_STATE}'. Last logs:" >&2
+  ensure_iap_firewall
+  gcloud compute ssh "${LOGIN_NODE}" \
+    --project="${PROJECT_ID}" \
+    --zone="${ZONE}" \
+    --tunnel-through-iap \
+    --command="tail -n 100 ~/env-setup-${ENV_JOB_ID}.out ~/env-setup-${ENV_JOB_ID}.err 2>/dev/null || true" || true
+  exit 1
+fi
+
+ARTIFACT_CHECK=$(ssh_login_with_retry "if [ -s ~/.venv/venv-fsdp.tar ] && [ -d ~/Mixtral-8x7B-v0.1 ]; then echo MIXTRAL_ARTIFACTS_OK; else echo MIXTRAL_ARTIFACTS_MISSING; fi")
+if ! echo "${ARTIFACT_CHECK}" | grep -q "MIXTRAL_ARTIFACTS_OK"; then
+  echo "Error: Expected environment archive (~/.venv/venv-fsdp.tar) or model directory (~/Mixtral-8x7B-v0.1) is missing. Last logs:" >&2
+  ensure_iap_firewall
+  gcloud compute ssh "${LOGIN_NODE}" \
+    --project="${PROJECT_ID}" \
+    --zone="${ZONE}" \
+    --tunnel-through-iap \
+    --command="tail -n 100 ~/env-setup-${ENV_JOB_ID}.out ~/env-setup-${ENV_JOB_ID}.err 2>/dev/null || true" || true
+  exit 1
+fi
+
+# 4. Submit training job
+echo "[$(date)] Submitting training job (train-mixtral.sh) on login node..."
+TRAIN_OUTPUT=$(ssh_login_with_retry "sbatch ~/.run_train.sbatch")
+echo "${TRAIN_OUTPUT}"
+
+JOB_ID=$(echo "${TRAIN_OUTPUT}" | grep -oP 'Submitted batch job \K\d+' || true)
+if [ -z "${JOB_ID}" ]; then
+  echo "Error: Failed to submit training Slurm job or parse Job ID." >&2
+  exit 1
+fi
+echo "Successfully submitted training Slurm job ID: ${JOB_ID}"
+
+# 5. Poll training job status until it finishes
+poll_slurm_job "${JOB_ID}" "training" 240
 
 echo "[$(date)] Slurm job ${JOB_ID} has finished execution."
 echo "[$(date)] ==================== Workload Execution Complete ===================="

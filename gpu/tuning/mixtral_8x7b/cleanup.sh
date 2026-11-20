@@ -30,21 +30,16 @@ declare -r CLUSTER_TOOLKIT_PATH="${BASEDIR}/cluster_toolkit"
 export PATH="${CLUSTER_TOOLKIT_PATH}:$PATH"
 gcluster --version
 
+# 0. Delete the unmanaged IAP firewall rule created by 2_run_job.sh / *_validation.sh
+# before gcluster destroy, so Terraform can cleanly remove ${DEPLOYMENT_NAME}-net-0.
+echo "[$(date)] Deleting IAP firewall rule allow-ssh-from-iap-${DEPLOYMENT_NAME}-net-0 if present..."
+gcloud compute firewall-rules delete "allow-ssh-from-iap-${DEPLOYMENT_NAME}-net-0" \
+  --project="${PROJECT_ID}" \
+  --quiet 2>/dev/null || true
+
 # 1. Delete Slurm cluster and its associated resources
 echo "[$(date)] Destroying Slurm cluster ${DEPLOYMENT_NAME}..."
 gcluster destroy "${BASEDIR}/${DEPLOYMENT_NAME}" --auto-approve --robust || true
-
-# Cleanup for a VPC network where Managed Lustre quota is created (lines 38-47)
-echo "[$(date)] Ensuring ${LUSTRE_VPC_NETWORK} network and any remaining firewall rules are removed..."
-FW_RULES=$(gcloud compute firewall-rules list \
-  --project="${PROJECT_ID}" \
-  --filter="network~${LUSTRE_VPC_NETWORK}" \
-  --format="value(name)" \
-  --quiet 2>/dev/null || true)
-if [ -n "${FW_RULES}" ]; then
-  gcloud compute firewall-rules delete ${FW_RULES} --project="${PROJECT_ID}" --quiet || true
-fi
-gcloud compute networks delete "${LUSTRE_VPC_NETWORK}" --project="${PROJECT_ID}" --quiet 2>/dev/null || true
 
 # Delete Packer-built custom compute image (not removed by gcluster destroy)
 echo "[$(date)] Deleting custom compute images for ${DEPLOYMENT_NAME} if present..."
