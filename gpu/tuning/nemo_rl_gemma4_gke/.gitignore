@@ -1,0 +1,4 @@
+# Created by the scripts in this directory and removed by cleanup.sh.
+/.tools/
+/kubernetes-engine-samples/
+/logs/

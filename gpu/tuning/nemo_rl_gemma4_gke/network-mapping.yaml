@@ -1,8 +1,3 @@
-# This file is copied from:
-# https://github.com/GoogleCloudPlatform/kubernetes-engine-samples/blob/HEAD/ai-ml/verl-on-gke/network-mapping.yaml
-# Original contents follow:
-
-# [START hypercomputer_gpu_tune_gemma3_27b_nemo_rl_network_mapping_yaml]
 # Copyright 2026 Google LLC. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -17,6 +12,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+# This file is copied from:
+# https://github.com/GoogleCloudPlatform/kubernetes-engine-samples/blob/87fa0575c977b96f6d3af2cab58c9128f3cf0dc3/ai-ml/verl-on-gke/network-mapping.yaml
+
+# [START hypercomputer_gpu_tune_gemma4_12b_nemo_rl_network_mapping_yaml]
 apiVersion: networking.gke.io/v1
 kind: GKENetworkParamSet
 metadata:
@@ -196,4 +195,4 @@ spec:
     group: networking.gke.io
     kind: GKENetworkParamSet
     name: rdma-7
-# [END hypercomputer_gpu_tune_gemma3_27b_nemo_rl_network_mapping_yaml]
+# [END hypercomputer_gpu_tune_gemma4_12b_nemo_rl_network_mapping_yaml]
