@@ -97,7 +97,7 @@ To verify that the workload ran successfully:
 3. Verify that the training checkpoints and converted Hugging Face model files are generated in your Cloud Storage bucket:
 
    ```bash
-   gcloud storage ls "gs://${GCS_BUCKET}/${MODEL_NAME}/trained/sft/checkpoints/1000/model_params/"
+   gcloud storage ls "gs://${GCS_BUCKET}/${MODEL_NAME}/trained/sft/checkpoints/${STEPS}/model_params/"
    gcloud storage ls "gs://${GCS_BUCKET}/${MODEL_NAME}/hf-trained/"
    ```
 

@@ -77,7 +77,7 @@ gcloud storage ls "gs://${GCS_BUCKET:?}/${MODEL_NAME:?}/max-text-format/"
 # [END hypercomputer_tpu_sft_gcluster_train_logs]
 
 # [START hypercomputer_tpu_sft_gcluster_verify_training_checkpoints]
-gcloud storage ls "gs://${GCS_BUCKET:?}/${MODEL_NAME:?}/trained/sft/checkpoints/1000/model_params/"
+gcloud storage ls "gs://${GCS_BUCKET:?}/${MODEL_NAME:?}/trained/sft/checkpoints/${STEPS:?}/model_params/"
 # [END hypercomputer_tpu_sft_gcluster_verify_training_checkpoints]
 
 # [START hypercomputer_tpu_sft_gcluster_convert_hf_logs]
