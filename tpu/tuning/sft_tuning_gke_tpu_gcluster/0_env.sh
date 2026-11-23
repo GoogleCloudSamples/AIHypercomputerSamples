@@ -16,16 +16,16 @@
 
 # [START hypercomputer_tpu_sft_gcluster_env_v2]
 export PROJECT="YOUR_PROJECT_ID"
-export REGION="YOUR_REGION"
-export ZONE="YOUR_ZONE"
-export CLUSTER_NAME="YOUR_CLUSTER_NAME"
-export GCS_BUCKET="YOUR_BUCKET_NAME"
-export CLOUD_IMAGE_NAME="us-docker.pkg.dev/cloud-tpu-images/maxtext-images/tpu_post_training:0.2.4"
-export TPU_TYPE="v6e-32"
-export RESERVATION="YOUR_RESERVATION_NAME"
+export REGION="YOUR_REGION" # for example, us-central1
+export ZONE="YOUR_ZONE" # for example, us-central1-b
+export CLUSTER_NAME="YOUR_CLUSTER_NAME" # maximum 20 chars; start with a-z; only a-z, 0-9, -
+export GCS_BUCKET="YOUR_BUCKET_NAME" # Globally unique Cloud Storage bucket name
+export CLOUD_IMAGE_NAME="us-docker.pkg.dev/cloud-tpu-images/maxtext-images/tpu_post_training:0.2.4" # Prebuilt MaxText post-training container image
+export TPU_TYPE="v6e-32" # TPU accelerator type passed to MaxText job submissions
+export RESERVATION="YOUR_RESERVATION_NAME" # TPU v6e reservation name
 export HF_TOKEN="YOUR_HF_TOKEN"
-export MODEL_NAME="gemma4-31b"
-export CLUSTER_TOOLKIT_VERSION="v1.103.0"
+export MODEL_NAME="gemma4-31b" # MaxText model name for google/gemma-4-31b-it
+export CLUSTER_TOOLKIT_VERSION="v1.103.0" # Cluster Toolkit release version
 # [END hypercomputer_tpu_sft_gcluster_env_v2]
 
 gcloud config set project "${PROJECT:?}"

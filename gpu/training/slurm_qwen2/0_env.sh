@@ -17,8 +17,8 @@
 # [START hypercomputer_gpu_train_qwen2_slurm_env]
 export PROJECT_ID="YOUR_PROJECT_ID"
 export CLUSTER_NAME="YOUR_CLUSTER_NAME"
-export ZONE="YOUR_ZONE"
-export REGION="YOUR_REGION"
+export ZONE="YOUR_ZONE" # for example, us-central1-b
+export REGION="YOUR_REGION" # for example, us-central1
 export RESERVATION_URL="YOUR_RESERVATION_NAME"
 export GCS_BUCKET="YOUR_GCS_BUCKET"
 export HF_TOKEN="YOUR_HF_TOKEN"

@@ -16,18 +16,17 @@
 
 # [START hypercomputer_tpu_tune_gemma4_26b_rl_env_v2]
 export PROJECT="YOUR_PROJECT_ID"
-export REGION="YOUR_REGION"
-export ZONE="YOUR_ZONE"
-export CLUSTER_NAME="YOUR_CLUSTER_NAME"
-export GCS_BUCKET="YOUR_BUCKET_NAME"
-export CLOUD_IMAGE_NAME="us-docker.pkg.dev/cloud-tpu-images/maxtext-images/tpu_post_training:0.2.4"
-export COMPUTE_TYPE="ct6e-standard-4t"
-export TPU_TYPE="v6e-32"
-export TOPOLOGY="4x8"
-export CLUSTER_NODEPOOL_COUNT=1
-export RESERVATION="YOUR_RESERVATION_NAME"
-export MODEL_NAME="gemma4-26b"
-export CLUSTER_TOOLKIT_VERSION="v1.103.0"
+export REGION="YOUR_REGION" # for example, us-central1
+export ZONE="YOUR_ZONE" # for example, us-central1-b
+export CLUSTER_NAME="YOUR_CLUSTER_NAME" # maximum 20 chars; start with a-z; only a-z, 0-9, -
+export GCS_BUCKET="YOUR_BUCKET_NAME" # Globally unique Cloud Storage bucket name
+export CLOUD_IMAGE_NAME="us-docker.pkg.dev/cloud-tpu-images/maxtext-images/tpu_post_training:0.2.4" # Prebuilt MaxText post-training container image
+export COMPUTE_TYPE="ct6e-standard-4t" # GCE machine type for TPU v6e hosts
+export TOPOLOGY="4x8" # TPU slice topology (32 chips on v6e)
+export CLUSTER_NODEPOOL_COUNT=1 # Number of TPU node pools (slices) to provision
+export RESERVATION="YOUR_RESERVATION_NAME" # TPU v6e reservation name
+export MODEL_NAME="gemma4-26b" # MaxText model name for google/gemma-4-26b-a4b-it
+export CLUSTER_TOOLKIT_VERSION="v1.103.0" # Cluster Toolkit release version
 export HF_TOKEN="YOUR_HF_TOKEN"
 # [END hypercomputer_tpu_tune_gemma4_26b_rl_env_v2]
 

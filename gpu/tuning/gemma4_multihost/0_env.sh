@@ -14,12 +14,12 @@
 
 # [START hypercomputer_gpu_tune_gemma4_multihost_gke_env]
 export PROJECT_ID="YOUR_PROJECT_ID"
-export CLUSTER_NAME="YOUR_CLUSTER_NAME"
-export CLUSTER_REGION="YOUR_REGION"
+export CLUSTER_NAME="YOUR_CLUSTER_NAME" # maximum 40 chars; start with a-z; only a-z, 0-9, -
+export CLUSTER_REGION="YOUR_REGION" # for example, us-central1
 export RESERVATION="YOUR_RESERVATION_NAME"
 export HF_TOKEN="YOUR_HF_TOKEN"
-export ARTIFACT_REPO_LOCATION="YOUR_ARTIFACT_REGISTRY_LOCATION"
-export NUM_NODES="YOUR_NUMBER_OF_NODES"
+export ARTIFACT_REPO_LOCATION="YOUR_ARTIFACT_REGISTRY_LOCATION" # for example, us-central1
+export NUM_NODES="YOUR_NUMBER_OF_NODES" # Number of A4 nodes (for example, 2)
 
 gcloud config set project "${PROJECT_ID}"
 gcloud config set billing/quota_project "${PROJECT_ID}"

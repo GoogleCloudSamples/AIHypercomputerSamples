@@ -19,8 +19,9 @@ set -euo pipefail
 # DO NOT PUT ANY SECRET VALUES HERE!
 # [START hypercomputer_tpu_tune_llama_rl_env]
 export PROJECT="YOUR_PROJECT_ID"
-export ZONE="YOUR_ZONE"
-export RESERVATION="YOUR_RESERVATION_NAME"
+export ZONE="YOUR_ZONE" # for example, us-central1-b
+export RESERVATION="YOUR_RESERVATION_NAME" # TPU v6e reservation name
 export TPU_NAME="YOUR_TPU_NAME"
 # [END hypercomputer_tpu_tune_llama_rl_env]
+# Passed to the TPU VM over SSH by 2_run_script.sh during automated runs.
 export HF_TOKEN="YOUR_HF_TOKEN"
