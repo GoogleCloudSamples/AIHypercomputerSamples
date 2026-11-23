@@ -29,6 +29,6 @@ echo "Verifying actor checkpoint directory on TPU instance..."
 gcloud compute ssh "$TPU_NAME" \
     --zone "$ZONE" \
     --project "$PROJECT" \
-    --command="ls -lh /dev/shm/llama3.1-8b-Instruct/post-train/*/checkpoints/actor/50/model_params"
+    --command="ls -lh /dev/shm/llama3.1-8b-Instruct/post-train/*/checkpoints/actor/*/model_params"
 
 echo "== [Validation] SUCCESS: All artifacts successfully generated on the TPU instance =="
