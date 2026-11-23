@@ -77,7 +77,7 @@ kubectl wait --for=condition=Ready pod \
     -l job-name=gemma4-training-pathways-head-0 \
     --timeout=600s
 
-# Stream training logs (runs for 50 steps; wait for "Post RL Training: ... mean_reward=..." and job status Succeeded before converting to Hugging Face)
+# Stream training logs (runs for NUM_BATCHES steps, 50 by default; wait for "Post RL Training: ... mean_reward=..." and job status Succeeded before converting to Hugging Face)
 kubectl logs -f \
     -l job-name=gemma4-training-pathways-head-0 \
     -c workload-container

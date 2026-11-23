@@ -27,6 +27,7 @@ export TOPOLOGY="4x8"
 export CLUSTER_NODEPOOL_COUNT=1
 export RESERVATION="YOUR_RESERVATION_NAME"
 export MODEL_NAME="gemma4-26b"
+export NUM_BATCHES=50
 export CLUSTER_TOOLKIT_VERSION="v1.103.0"
 export HF_TOKEN="YOUR_HF_TOKEN"
 # [END hypercomputer_tpu_tune_gemma4_26b_rl_env_v2]
