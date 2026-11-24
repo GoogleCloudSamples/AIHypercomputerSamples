@@ -18,7 +18,6 @@
 export PROJECT_ID=$(gcloud config get project)
 export PROJECT_NUMBER=$(gcloud projects describe ${PROJECT_ID} --format="value(projectNumber)")
 export CONTROL_PLANE_REGION="YOUR_REGION"
-export NODE_ZONE="YOUR_ZONE"
 export CLUSTER_NAME="YOUR_CLUSTER_NAME"
 export KSA_NAME="YOUR_KSA_NAME"
 export GS_BUCKET="YOUR_GCS_BUCKET"

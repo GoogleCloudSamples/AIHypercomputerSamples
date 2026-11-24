@@ -73,6 +73,8 @@ export RUN_NAME
 export CHIPS_PER_VM=8
 export NUM_BATCHES=50
 export MAXTEXT_CKPT_PATH=$MODEL_CHECKPOINT_DIRECTORY/0/items
+# -- Single-host TPU runtime configuration (consumed by JAX/libtpu) --
+# Bypass Compute Engine metadata server discovery for local v6e-8 execution.
 export TPU_ACCELERATOR_TYPE=v6e-8
 export TPU_WORKER_ID=0
 TPU_NAME=$(hostname)
