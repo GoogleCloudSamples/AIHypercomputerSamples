@@ -15,6 +15,11 @@
 
 set -euo pipefail
 
+# Delete IAP firewall rule created by 2_run_script.sh (if present).
+FIREWALL_RULE_NAME="allow-ssh-from-iap-${TPU_NAME}"
+gcloud compute firewall-rules delete "${FIREWALL_RULE_NAME}" \
+    --project="${PROJECT}" \
+    --quiet 2>/dev/null || true
 
 # Remove all resources created by your sample.
 # [START hypercomputer_tpu_tune_llama_rl_cleanup]

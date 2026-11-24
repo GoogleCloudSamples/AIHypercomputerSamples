@@ -22,6 +22,8 @@ echo "Checking final exported Hugging Face weights on TPU instance..."
 gcloud compute ssh "$TPU_NAME" \
     --zone "$ZONE" \
     --project "$PROJECT" \
+    --tunnel-through-iap \
+    --ssh-key-expire-after=4h \
     --command="ls -lh /dev/shm/llama3.1-8b-Instruct/hf-trained/"
 
 # 2. Check if the actor checkpoint parameter directory exists and is populated
@@ -29,6 +31,8 @@ echo "Verifying actor checkpoint directory on TPU instance..."
 gcloud compute ssh "$TPU_NAME" \
     --zone "$ZONE" \
     --project "$PROJECT" \
+    --tunnel-through-iap \
+    --ssh-key-expire-after=4h \
     --command="ls -lh /dev/shm/llama3.1-8b-Instruct/post-train/*/checkpoints/actor/*/model_params"
 
 echo "== [Validation] SUCCESS: All artifacts successfully generated on the TPU instance =="

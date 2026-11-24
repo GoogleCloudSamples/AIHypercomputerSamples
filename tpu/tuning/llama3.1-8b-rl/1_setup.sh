@@ -19,6 +19,8 @@ set -euo pipefail
 gcloud compute instances create "${TPU_NAME}" \
     --zone="${ZONE}" \
     --project="${PROJECT}" \
+    --network="${NETWORK}" \
+    --tags="${TPU_NAME}" \
     --machine-type=ct6e-standard-8t \
     --image-project=ubuntu-os-accelerator-images \
     --image-family=ubuntu-accel-2204-amd64-tpu-v5e-v5p-v6e \
@@ -41,13 +43,9 @@ while [ "$(gcloud compute instances describe "${TPU_NAME}" --project "${PROJECT}
   count=$((count+1))
 done
 
-LIMIT=30
-count=0
-until gcloud compute ssh "${TPU_NAME}" --zone "${ZONE}" --project "${PROJECT}" --command="true" >/dev/null 2>&1; do
-  if [ "${count}" -ge "${LIMIT}" ]; then
-    echo "Timeout waiting for SSH on ${TPU_NAME}." >&2
-    exit 1
-  fi
-  sleep 10
-  count=$((count+1))
-done
+# Disable OS Login on the ephemeral TPU VM (when allowed by project policy) to avoid
+# hitting the 32 KiB OS Login profile limit on shared CI service accounts.
+gcloud compute instances add-metadata "${TPU_NAME}" \
+    --zone="${ZONE}" \
+    --project="${PROJECT}" \
+    --metadata=enable-oslogin=FALSE || true
