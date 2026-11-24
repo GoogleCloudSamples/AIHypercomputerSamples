@@ -48,7 +48,7 @@ echo "[$(date)] ==================== Submitting Training Workload... ===========
     load_parameters_path=gs://${GCS_BUCKET}/${MODEL_NAME}/max-text-format/0/items/ \
     hf_access_token=${HF_TOKEN:?} \
     data_template_path=maxtext/examples/chat_templates/openmathinstruct2_rl.json \
-    num_batches=50 \
+    num_batches=${NUM_BATCHES:?} \
     batch_size=4 \
     train_micro_batch_size=2 \
     max_target_length=640 \
@@ -105,7 +105,7 @@ echo "[$(date)] ==================== Streaming Training Logs... ================
 # Wait until pod is Ready before tailing logs
 kubectl wait --for=condition=Ready pod/${POD_NAME} --timeout=600s 2>/dev/null || true
 
-# A successful 50-step run outputs "Post RL Training: ... mean_reward=..." with mean_reward > 0.
+# A successful ${NUM_BATCHES}-step run outputs "Post RL Training: ... mean_reward=..." with mean_reward > 0.
 kubectl logs -f "${POD_NAME}" -c workload-container || true
 
 echo "Checking final job status..."
