@@ -82,7 +82,7 @@ kubectl wait --for=condition=Ready pod \
     -l jobset.sigs.k8s.io/replicatedjob-name=pathways-head \
     --timeout=600s
 
-# Stream training logs (runs for 50 steps; wait for "Post RL Training: ... mean_reward=..." and job status Succeeded before converting to Hugging Face)
+# Stream training logs (runs for NUM_BATCHES steps, 50 by default; wait for "Post RL Training: ... mean_reward=..." and job status Succeeded before converting to Hugging Face)
 kubectl logs -f \
     -l jobset.sigs.k8s.io/replicatedjob-name=pathways-head \
     -c workload-container
