@@ -32,7 +32,7 @@ echo "[$(date)] ==================== Submitting Training Workload... ===========
       hf_access_token=${HF_TOKEN:?} \
       dataset_type=hf \
       hf_path=HuggingFaceH4/ultrachat_200k \
-      per_device_batch_size=1 steps=1000 \
+      per_device_batch_size=1 steps=${STEPS:?} \
       profiler=xplane \
       checkpoint_storage_use_zarr3=0 \
       checkpoint_storage_use_ocdbt=0 \

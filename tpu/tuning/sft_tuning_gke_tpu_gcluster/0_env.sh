@@ -25,6 +25,7 @@ export TPU_TYPE="v6e-32"
 export RESERVATION="YOUR_RESERVATION_NAME"
 export HF_TOKEN="YOUR_HF_TOKEN"
 export MODEL_NAME="gemma4-31b"
+export STEPS=1000
 export CLUSTER_TOOLKIT_VERSION="v1.103.0"
 # [END hypercomputer_tpu_sft_gcluster_env_v2]
 
