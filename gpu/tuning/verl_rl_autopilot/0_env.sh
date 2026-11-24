@@ -17,11 +17,11 @@
 # [START hypercomputer_gpu_train_ray_verl_auto_env]
 export PROJECT_ID=$(gcloud config get project)
 export PROJECT_NUMBER=$(gcloud projects describe ${PROJECT_ID} --format="value(projectNumber)")
-export CONTROL_PLANE_REGION="YOUR_REGION" # for example, us-central1
-export CLUSTER_NAME="YOUR_CLUSTER_NAME" # maximum 40 chars; start with a-z; only a-z, 0-9, -
+export CONTROL_PLANE_REGION="YOUR_REGION"
+export CLUSTER_NAME="YOUR_CLUSTER_NAME"
 export KSA_NAME="YOUR_KSA_NAME"
 export GS_BUCKET="YOUR_GCS_BUCKET"
-export NAMESPACE="default" # Kubernetes namespace for Ray and workload resources
+export NAMESPACE="default"
 export GPU_TYPE="YOUR_GPU_TYPE"
 export MACHINE_TYPE="YOUR_MACHINE_TYPE"
 export RESERVATION="YOUR_RESERVATION_NAME"

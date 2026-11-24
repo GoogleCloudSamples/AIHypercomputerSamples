@@ -14,11 +14,11 @@
 
 # [START hypercomputer_gpu_tune_gemma4_gke_env]
 export PROJECT_ID="YOUR_PROJECT_ID"
-export CLUSTER_NAME="YOUR_CLUSTER_NAME" # maximum 40 chars; start with a-z; only a-z, 0-9, -
-export CLUSTER_REGION="YOUR_REGION" # for example, us-central1
+export CLUSTER_NAME="YOUR_CLUSTER_NAME"
+export CLUSTER_REGION="YOUR_REGION"
 export RESERVATION="YOUR_RESERVATION_NAME"
 export HF_TOKEN="YOUR_HF_TOKEN"
-export ARTIFACT_REPO_LOCATION="YOUR_ARTIFACT_REGISTRY_LOCATION" # for example, us-central1
+export ARTIFACT_REPO_LOCATION="YOUR_ARTIFACT_REGISTRY_LOCATION"
 
 gcloud config set project "${PROJECT_ID}"
 gcloud config set billing/quota_project "${PROJECT_ID}"
