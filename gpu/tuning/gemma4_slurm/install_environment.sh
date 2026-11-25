@@ -14,25 +14,25 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
-# [START hypercomputer_gpu_tune_gemma3_slurm_install_environment]
+# [START hypercomputer_gpu_tune_gemma4_slurm_install_environment]
 #!/bin/bash
-# This script should be run ONCE on the login node to set up the
-# shared Python virtual environment.
+set -euo pipefail
 
-set -e
+# Run this script once on the login node to create the shared Python virtual
+# environment.
+TORCH_VERSION="2.11.0"
+
 echo "--- Creating Python virtual environment in /home ---"
 python3 -m venv ~/.venv
-echo "--- Activating virtual environment ---"
-source ~/.venv/bin/activate
 
 echo "--- Installing build dependencies ---"
-pip install --upgrade pip wheel packaging
+~/.venv/bin/pip install --upgrade pip wheel packaging
 
-echo "--- Installing PyTorch for CUDA 12.8 ---"
-pip install torch --index-url https://download.pytorch.org/whl/cu128
+echo "--- Installing PyTorch ${TORCH_VERSION} for CUDA 12.8 ---"
+~/.venv/bin/pip install "torch==${TORCH_VERSION}" --index-url https://download.pytorch.org/whl/cu128
 
 echo "--- Installing application requirements ---"
-pip install -r requirements.txt
+~/.venv/bin/pip install -r requirements.txt "torch==${TORCH_VERSION}"
 
 echo "--- Environment setup complete. You can now submit jobs with sbatch. ---"
-# [END hypercomputer_gpu_tune_gemma3_slurm_install_environment]
+# [END hypercomputer_gpu_tune_gemma4_slurm_install_environment]

@@ -14,15 +14,17 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
-# [START hypercomputer_gpu_tune_gemma3_slurm_env]
+# [START hypercomputer_gpu_tune_gemma4_slurm_env]
 export PROJECT_ID="YOUR_PROJECT_ID"
 export ZONE="YOUR_ZONE"
 export REGION="YOUR_REGION"
 export RESERVATION_URL="YOUR_RESERVATION_NAME"
 export CLUSTER_NAME="YOUR_CLUSTER_NAME"
 export BUCKET_NAME="YOUR_GCS_BUCKET"
+export NUM_NODES="2"
+export MODEL_ID="google/gemma-4-31B-it"
 export HF_TOKEN="YOUR_HF_TOKEN"
 
 gcloud config set project "${PROJECT_ID}"
 gcloud config set billing/quota_project "${PROJECT_ID}"
-# [END hypercomputer_gpu_tune_gemma3_slurm_env]
+# [END hypercomputer_gpu_tune_gemma4_slurm_env]
