@@ -29,11 +29,11 @@ pip3 install ray[default]
 # [END hypercomputer_gpu_train_ray_verl_auto_create_env]  
 
 # 1. Modify runtime-env.yaml based on GPU type if needed
-# (e.g. if we are using H200, we need tuner_config_a3u.txtpb)
+# (e.g. if we are using H200, we need nccl.a3u.conf)
 if [[ "${GPU_TYPE:-}" == *"h200"* ]]; then
-    echo "H200 GPU detected. Updating NCCL_TUNER_CONFIG_PATH in runtime-env.yaml..."
+    echo "H200 GPU detected. Updating NCCL_CONF_FILE in runtime-env.yaml..."
     # [START hypercomputer_gpu_train_ray_verl_auto_seth200]
-    sed -i 's|/usr/local/gib/configs/tuner_config_a4.txtpb|/usr/local/gib/configs/tuner_config_a3u.txtpb|g' runtime-env.yaml
+    sed -i 's|/usr/local/gib/configs/nccl.a4.conf|/usr/local/gib/configs/nccl.a3u.conf|g' runtime-env.yaml
     # [END hypercomputer_gpu_train_ray_verl_auto_seth200]
 fi
 
