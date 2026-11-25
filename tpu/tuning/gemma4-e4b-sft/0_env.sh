@@ -17,11 +17,15 @@ set -euo pipefail
 
 # Set your environment variables here.
 # DO NOT PUT ANY SECRET VALUES HERE!
-# [START hypercomputer_tpu_tune_gemma3_sft_env]
-export PROJECT="YOUR_PROJECT_ID"
+# [START hypercomputer_tpu_tune_gemma4_e4b_sft_env]
+export PROJECT_ID="YOUR_PROJECT_ID"
 export ZONE="YOUR_ZONE"
 export RESERVATION="YOUR_RESERVATION_NAME"
-export NAME="YOUR_TPU_NAME"
+export TPU_NAME="YOUR_TPU_NAME"
 export NETWORK="default"
-# [END hypercomputer_tpu_tune_gemma3_sft_env]
+export MACHINE_TYPE="ct6e-standard-8t"
+export IMAGE_PROJECT="ubuntu-os-accelerator-images"
+export IMAGE_FAMILY="ubuntu-accel-2204-amd64-tpu-v5e-v5p-v6e"
+export BOOT_DISK_SIZE="200GB"
+# [END hypercomputer_tpu_tune_gemma4_e4b_sft_env]
 export HF_TOKEN="YOUR_HF_TOKEN"
