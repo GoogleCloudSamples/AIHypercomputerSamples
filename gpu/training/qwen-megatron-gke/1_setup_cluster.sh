@@ -77,14 +77,16 @@ vars:
   zone: ${ZONE:?}
   static_node_count: ${NODE_COUNT}
   authorized_cidr: "${AUTHORIZED_CIDR}"
-  reservation: ${RESERVATION_NAME:?}
+  reservation_affinity:
+    consume_reservation_type: SPECIFIC_RESERVATION
+    specific_reservations:
+    - name: ${RESERVATION_NAME:?}
 EOF
 # [END hypercomputer_gpu_train_qwen_megatron_gke_deployment_configure]
 
 echo "Deploying the A4 GKE cluster (this takes ~18-20 minutes)..."
 # [START hypercomputer_gpu_train_qwen_megatron_gke_cluster_create]
 ./gcluster deploy \
-  --skip-validators=test_gcsfuse_iam_role_exists \
   --download-dependencies \
   -d examples/gke-a4/gke-a4-deployment.yaml \
   examples/gke-a4/gke-a4.yaml \
