@@ -21,7 +21,7 @@ export ZONE="YOUR_ZONE" # for example, us-central1-b
 export CLUSTER_NAME="YOUR_CLUSTER_NAME" # maximum 20 chars; start with a-z; only a-z, 0-9, -
 export BUCKET_NAME="YOUR_GCS_BUCKET" # globally unique Cloud Storage bucket for Terraform state
 export RESERVATION_NAME="YOUR_RESERVATION_NAME" # reservation name or RESERVATION_NAME/reservationBlocks/RESERVATION_BLOCK_NAME
-export CLUSTER_TOOLKIT_VERSION="v1.104.0"
+export CLUSTER_TOOLKIT_VERSION="v1.109.0"
 export NODE_COUNT=2
 export AUTHORIZED_CIDR="0.0.0.0/0" # or restrict to your workstation IP as a /32
 
