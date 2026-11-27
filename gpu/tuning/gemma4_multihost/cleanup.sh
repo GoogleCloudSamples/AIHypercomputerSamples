@@ -24,6 +24,7 @@ echo "[$(date)] ==================== JobSet deleted. ===================="
 # GKE Autopilot may run background operations (e.g. RESIZE_CLUSTER) that cause
 # "Cluster is running incompatible operation" (HTTP 400) if delete runs immediately.
 wait_for_gke_operations() {
+    local ACTIVE_OPS attempt
     echo "Waiting for in-progress GKE operations on ${CLUSTER_NAME} to finish..."
     for attempt in $(seq 1 80); do
         if ! ACTIVE_OPS=$(gcloud container operations list \
