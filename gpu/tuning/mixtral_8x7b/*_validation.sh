@@ -18,6 +18,9 @@ set -euo pipefail
 
 echo "[$(date)] ==================== Starting Validation... ===================="
 
+# Expire gcloud OS Login SSH keys to avoid hitting the 32 KiB profile limit (refreshed on each call)
+ssh_key_expire_after="1d"
+
 # 1. Identify login node
 echo "[$(date)] Finding login node for cluster ${DEPLOYMENT_NAME}..."
 LOGIN_NODE="$(gcloud compute instances list \
@@ -68,6 +71,7 @@ gcloud compute ssh "${LOGIN_NODE}" \
   --project="${PROJECT_ID}" \
   --zone="${ZONE}" \
   --tunnel-through-iap \
+  --ssh-key-expire-after="${ssh_key_expire_after}" \
   --command="sacct --format=JobID,JobName,State,ExitCode,Elapsed,Start,End" || true
 
 # 4. Fetch Slurm output and error logs from login node
@@ -76,6 +80,7 @@ gcloud compute ssh "${LOGIN_NODE}" \
   --project="${PROJECT_ID}" \
   --zone="${ZONE}" \
   --tunnel-through-iap \
+  --ssh-key-expire-after="${ssh_key_expire_after}" \
   --command="cat ~/mixtral-*.out 2>/dev/null || cat ~/mixtral-*.err 2>/dev/null || echo 'No mixtral log files found yet.'" > slurm_job_logs.txt
 
 echo "--------------------------------------------------------------------------------"

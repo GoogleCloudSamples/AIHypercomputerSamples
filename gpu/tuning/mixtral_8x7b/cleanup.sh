@@ -30,21 +30,15 @@ declare -r CLUSTER_TOOLKIT_PATH="${BASEDIR}/cluster_toolkit"
 export PATH="${CLUSTER_TOOLKIT_PATH}:$PATH"
 gcluster --version
 
+# 0. Delete unmanaged IAP firewall rule so gcluster destroy can remove the VPC
+echo "[$(date)] Deleting IAP firewall rule allow-ssh-from-iap-${DEPLOYMENT_NAME}-net-0 if present..."
+gcloud compute firewall-rules delete "allow-ssh-from-iap-${DEPLOYMENT_NAME}-net-0" \
+  --project="${PROJECT_ID}" \
+  --quiet 2>/dev/null || true
+
 # 1. Delete Slurm cluster and its associated resources
 echo "[$(date)] Destroying Slurm cluster ${DEPLOYMENT_NAME}..."
 gcluster destroy "${BASEDIR}/${DEPLOYMENT_NAME}" --auto-approve --robust || true
-
-# Cleanup for a VPC network where Managed Lustre quota is created (lines 38-47)
-echo "[$(date)] Ensuring ${LUSTRE_VPC_NETWORK} network and any remaining firewall rules are removed..."
-FW_RULES=$(gcloud compute firewall-rules list \
-  --project="${PROJECT_ID}" \
-  --filter="network~${LUSTRE_VPC_NETWORK}" \
-  --format="value(name)" \
-  --quiet 2>/dev/null || true)
-if [ -n "${FW_RULES}" ]; then
-  gcloud compute firewall-rules delete ${FW_RULES} --project="${PROJECT_ID}" --quiet || true
-fi
-gcloud compute networks delete "${LUSTRE_VPC_NETWORK}" --project="${PROJECT_ID}" --quiet 2>/dev/null || true
 
 # Delete Packer-built custom compute image (not removed by gcluster destroy)
 echo "[$(date)] Deleting custom compute images for ${DEPLOYMENT_NAME} if present..."
@@ -69,5 +63,12 @@ rm -rf "${BASEDIR}/.ghpc"
 rm -rf "${BASEDIR}/${DEPLOYMENT_NAME}"
 rm -rf "${CLUSTER_TOOLKIT_PATH}"
 rm -f "${BASEDIR}/gcluster"
+
+# 4. Remove this machine's gcloud SSH key from OS Login to avoid hitting the 32 KiB profile limit (re-added automatically on next SSH)
+ssh_public_key_file="${HOME}/.ssh/google_compute_engine.pub"
+if [ -f "${ssh_public_key_file}" ]; then
+  echo "[$(date)] Removing SSH key ${ssh_public_key_file} from OS Login profile..."
+  gcloud compute os-login ssh-keys remove --key-file="${ssh_public_key_file}" --quiet 2>/dev/null || true
+fi
 
 echo "[$(date)] ==================== Cleanup Complete. ===================="

@@ -33,10 +33,11 @@ source $VENV_PATH/bin/activate
 
 # --- 2. Install Dependencies ---
 echo "--- [STEP 2.1] Upgrading build toolchain ---"
-pip install --upgrade pip wheel packaging
+pip install --upgrade pip wheel packaging ninja
 
-echo "--- [STEP 2.2] Installing PyTorch Nightly ---"
-pip install --force-reinstall --pre torch --index-url https://download.pytorch.org/whl/nightly/cu128
+echo "--- [STEP 2.2] Installing PyTorch ---"
+TORCH_VERSION="2.10.0"
+pip install --force-reinstall "torch==${TORCH_VERSION}" --index-url https://download.pytorch.org/whl/cu128
 
 echo "--- [STEP 2.3] Installing application dependencies ---"
 if [ -f "requirements-fsdp.txt" ]; then
@@ -56,8 +57,10 @@ content = open(p).read().replace('raise RuntimeError(CUDA_MISMATCH_MESSAGE', 'pa
 open(p, 'w').write(content)
 "
 
-# Use all available CPU cores to speed up the build
-MAX_JOBS=$(nproc) pip install flash-attn --no-build-isolation
+# Target B200 (sm_100) only and parallelize builds across all CPU cores
+export FLASH_ATTN_CUDA_ARCHS="100"
+export NVCC_THREADS="1"
+MAX_JOBS=$(nproc) pip install flash-attn==2.8.3 --no-build-isolation
 
 # --- 3. Download the Model ---
 echo "--- [STEP 2.5] Downloading Mixtral model ---"
@@ -66,8 +69,11 @@ if [ -z "$HF_TOKEN" ]; then
 fi
 pip install huggingface_hub[cli]
 
-# Execute the CLI using its full, explicit path
-$VENV_PATH/bin/hf download mistralai/Mixtral-8x7B-v0.1 --local-dir ~/Mixtral-8x7B-v0.1 --token $HF_TOKEN
+# Download only safetensors weights, configs, and tokenizer (skip unused .pt checkpoints)
+# to reduce download and copy time.
+$VENV_PATH/bin/hf download mistralai/Mixtral-8x7B-v0.1 \
+  --include "*.safetensors" "*.json" "tokenizer.model" \
+  --local-dir ~/Mixtral-8x7B-v0.1 --token $HF_TOKEN
 
 echo "--- Environment setup complete. ---"
 # [END hypercomputer_gpu_tune_mixtral_slurm_install_environment]
