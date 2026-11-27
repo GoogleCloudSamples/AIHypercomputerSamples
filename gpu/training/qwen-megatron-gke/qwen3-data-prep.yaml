@@ -1,0 +1,115 @@
+#  Copyright 2026 Google LLC
+#
+#  Licensed under the Apache License, Version 2.0 (the "License");
+#  you may not use this file except in compliance with the License.
+#  You may obtain a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+#  Unless required by applicable law or agreed to in writing, software
+#  distributed under the License is distributed on an "AS IS" BASIS,
+#  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#  See the License for the specific language governing permissions and
+#  limitations under the License.
+
+# [START hypercomputer_gpu_train_qwen_megatron_gke_data_prep_yaml]
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: qwen3-data-prep
+  namespace: default
+  labels:
+    kueue.x-k8s.io/queue-name: a4
+spec:
+  suspend: true
+  backoffLimit: 1
+  ttlSecondsAfterFinished: 3600
+  template:
+    metadata:
+      annotations:
+        gke-gcsfuse/volumes: "true"
+        gke-gcsfuse/cpu-limit: "0"
+        gke-gcsfuse/memory-limit: "0"
+        gke-gcsfuse/ephemeral-storage-limit: "0"
+    spec:
+      serviceAccountName: workload-identity-k8s-sa
+      restartPolicy: Never
+      nodeSelector:
+        cloud.google.com/gke-nodepool: a4-highgpu-8g-a4-pool
+      tolerations:
+      - key: "nvidia.com/gpu"
+        operator: "Exists"
+        effect: "NoSchedule"
+      - key: "cloud.google.com/gke-queued"
+        value: "true"
+        effect: "NoSchedule"
+      volumes:
+      - name: nvidia
+        hostPath:
+          path: /home/kubernetes/bin/nvidia
+      - name: training-data
+        persistentVolumeClaim:
+          claimName: ${TRAINING_PVC}
+      containers:
+      - name: data-prep
+        image: nvcr.io/nvidia/nemo:26.08.01
+        command:
+        - bash
+        - -c
+        - |
+          set -euo pipefail
+          /sbin/ldconfig
+          export LD_LIBRARY_PATH="/usr/lib/$(uname -m)-linux-gnu:/usr/local/nvidia/lib64:${LD_LIBRARY_PATH:-}"
+          if [[ -s /training-data/dataset/c4_qwen3_text_document.bin && \
+                -s /training-data/dataset/c4_qwen3_text_document.idx && \
+                -s /training-data/tokenizer/tokenizer.json ]]; then
+            echo "Tokenized C4 dataset and Qwen3 tokenizer already exist in /training-data:"
+            ls -lh /training-data/tokenizer/ /training-data/dataset/
+            exit 0
+          fi
+          mkdir -p /tmp/prep/tokenizer /training-data/tokenizer /training-data/dataset
+          echo "Downloading public Qwen/Qwen3-30B-A3B Hugging Face tokenizer..."
+          python3 - <<'PYEOF'
+          from transformers import AutoTokenizer
+          tok = AutoTokenizer.from_pretrained("Qwen/Qwen3-30B-A3B")
+          tok.save_pretrained("/tmp/prep/tokenizer")
+          print("Saved tokenizer with vocab size:", len(tok))
+          PYEOF
+          echo "Downloading public C4 English shard (c4-train.00000-of-01024.json.gz)..."
+          curl -fL --retry 3 \
+            "https://huggingface.co/datasets/allenai/c4/resolve/main/en/c4-train.00000-of-01024.json.gz" \
+            -o /tmp/prep/c4.json.gz
+          echo "Extracting 100,000 C4 documents to local NVMe scratch..."
+          gzip -dc /tmp/prep/c4.json.gz > /tmp/prep/c4_full.jsonl
+          head -n 100000 /tmp/prep/c4_full.jsonl > /tmp/prep/c4_en_100k.jsonl
+          rm -f /tmp/prep/c4.json.gz /tmp/prep/c4_full.jsonl
+          PREPROCESS_SCRIPT="/opt/Megatron-Bridge/3rdparty/Megatron-LM/tools/preprocess_data.py"
+          export PYTHONPATH="/opt/Megatron-Bridge/3rdparty/Megatron-LM:${PYTHONPATH:-}"
+          echo "Tokenizing C4 JSONL into Megatron IndexedDataset (.bin/.idx)..."
+          python3 "${PREPROCESS_SCRIPT}" \
+            --input /tmp/prep/c4_en_100k.jsonl \
+            --output-prefix /tmp/prep/c4_qwen3 \
+            --tokenizer-type HuggingFaceTokenizer \
+            --tokenizer-model /tmp/prep/tokenizer \
+            --json-keys text \
+            --append-eod \
+            --workers 16 \
+            --log-interval 25000
+          echo "Persisting tokenized dataset and tokenizer to Cloud Storage FUSE..."
+          cp -rf /tmp/prep/tokenizer/. /training-data/tokenizer/
+          cp -f /tmp/prep/c4_qwen3_text_document.bin /training-data/dataset/c4_qwen3_text_document.bin
+          cp -f /tmp/prep/c4_qwen3_text_document.idx /training-data/dataset/c4_qwen3_text_document.idx
+          sync
+          ls -lh /training-data/tokenizer/ /training-data/dataset/
+          echo "Dataset preparation complete."
+        volumeMounts:
+        - name: nvidia
+          mountPath: /usr/local/nvidia
+        - name: training-data
+          mountPath: /training-data
+        resources:
+          limits:
+            nvidia.com/gpu: 1
+          requests:
+            nvidia.com/gpu: 1
+# [END hypercomputer_gpu_train_qwen_megatron_gke_data_prep_yaml]

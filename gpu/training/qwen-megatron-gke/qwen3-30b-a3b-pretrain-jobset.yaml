@@ -1,0 +1,187 @@
+#  Copyright 2026 Google LLC
+#
+#  Licensed under the Apache License, Version 2.0 (the "License");
+#  you may not use this file except in compliance with the License.
+#  You may obtain a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+#  Unless required by applicable law or agreed to in writing, software
+#  distributed under the License is distributed on an "AS IS" BASIS,
+#  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#  See the License for the specific language governing permissions and
+#  limitations under the License.
+
+# [START hypercomputer_gpu_train_qwen_megatron_gke_pretrain_jobset_yaml]
+apiVersion: jobset.x-k8s.io/v1alpha2
+kind: JobSet
+metadata:
+  name: qwen3-30b-a3b
+  namespace: default
+  labels:
+    kueue.x-k8s.io/queue-name: a4
+spec:
+  ttlSecondsAfterFinished: 3600
+  suspend: true
+  network:
+    enableDNSHostnames: true
+  replicatedJobs:
+  - name: w
+    replicas: 1
+    template:
+      spec:
+        parallelism: 2
+        completions: 2
+        backoffLimit: 0
+        template:
+          metadata:
+            annotations:
+              kueue.x-k8s.io/podset-preferred-topology: "kubernetes.io/hostname"
+              networking.gke.io/default-interface: "eth0"
+              gke-gcsfuse/volumes: "true"
+              gke-gcsfuse/cpu-limit: "0"
+              gke-gcsfuse/memory-limit: "0"
+              gke-gcsfuse/ephemeral-storage-limit: "0"
+          spec:
+            serviceAccountName: workload-identity-k8s-sa
+            restartPolicy: Never
+            setHostnameAsFQDN: true
+            nodeSelector:
+              cloud.google.com/gke-nodepool: a4-highgpu-8g-a4-pool
+            tolerations:
+            - key: "nvidia.com/gpu"
+              operator: "Exists"
+              effect: "NoSchedule"
+            - key: "cloud.google.com/gke-queued"
+              value: "true"
+              effect: "NoSchedule"
+            resourceClaims:
+            - name: rdma
+              resourceClaimTemplateName: default-rdma
+            volumes:
+            - name: nvidia
+              hostPath:
+                path: /home/kubernetes/bin/nvidia
+            - name: shared-memory
+              emptyDir:
+                medium: "Memory"
+                sizeLimit: 512Gi
+            - name: training-data
+              persistentVolumeClaim:
+                claimName: ${TRAINING_PVC}
+                readOnly: true
+            - name: checkpoint-data
+              persistentVolumeClaim:
+                claimName: ${CHECKPOINT_PVC}
+            containers:
+            - name: megatron-bridge
+              image: nvcr.io/nvidia/nemo:26.08.01
+              securityContext:
+                privileged: true
+              env:
+              - name: MASTER_ADDR
+                value: "qwen3-30b-a3b-w-0-0.qwen3-30b-a3b"
+              - name: MASTER_PORT
+                value: "29500"
+              - name: NNODES
+                value: "2"
+              - name: GPUS_PER_NODE
+                value: "8"
+              - name: NODE_RANK
+                valueFrom:
+                  fieldRef:
+                    fieldPath: metadata.annotations['batch.kubernetes.io/job-completion-index']
+              - name: TRAIN_ITERS
+                value: "${TRAIN_ITERS}"
+              - name: GLOO_SOCKET_IFNAME
+                value: "eth0"
+              - name: NCCL_DEBUG
+                value: "WARN"
+              - name: OMP_NUM_THREADS
+                value: "4"
+              # Disable expandable_segments while keeping graph_capture_record_stream_reuse so
+              # PersistentAsyncCaller CUDA IPC does not exhaust driver VA/handles across MoE tensors.
+              - name: PYTORCH_CUDA_ALLOC_CONF
+                value: "expandable_segments:False,max_split_size_mb:512,graph_capture_record_stream_reuse:True"
+              command:
+              - bash
+              - -c
+              - |
+                set -euo pipefail
+                /sbin/ldconfig
+                # Configure NCCL + GPUDirect RDMA (gIB) via NeMo 26.08.01's pre-installed GCP plugin.
+                # Keep /usr/lib/<arch>-linux-gnu ahead of /usr/local/nvidia/lib64 so host libnccl.so
+                # from Cluster Toolkit's nccl-rdma-installer does not shadow the container NCCL.
+                echo "[Node ${NODE_RANK}] Sourcing /etc/gcp_nccl_init.sh"
+                source /etc/gcp_nccl_init.sh
+                export LD_LIBRARY_PATH="/usr/lib/$(uname -m)-linux-gnu:${LD_LIBRARY_PATH:-}:/usr/local/nvidia/lib64"
+                export NCCL_SOCKET_IFNAME="eth0,eth1"
+                if [[ -d /opt/Megatron-Bridge/3rdparty/Megatron-LM/megatron/core/datasets ]]; then
+                  make -C /opt/Megatron-Bridge/3rdparty/Megatron-LM/megatron/core/datasets >/dev/null 2>&1 || true
+                fi
+                echo "[Node ${NODE_RANK}] Staging tokenized C4 dataset and Qwen3 tokenizer to local NVMe..."
+                mkdir -p /tmp/megatron-data/tokenizer /checkpoint-data/qwen3-30b-a3b /checkpoint-data/data-cache /checkpoint-data/tb-logs
+                cp -rf /training-data/tokenizer/. /tmp/megatron-data/tokenizer/
+                cp -f /training-data/dataset/c4_qwen3_text_document.bin /tmp/megatron-data/c4_qwen3_text_document.bin
+                cp -f /training-data/dataset/c4_qwen3_text_document.idx /tmp/megatron-data/c4_qwen3_text_document.idx
+                echo "[Node ${NODE_RANK}] Waiting for Master DNS (${MASTER_ADDR})..."
+                until getent hosts "${MASTER_ADDR}" >/dev/null 2>&1; do
+                  sleep 2
+                done
+                cd /opt/Megatron-Bridge
+                torchrun \
+                  --nproc_per_node="${GPUS_PER_NODE}" \
+                  --nnodes="${NNODES}" \
+                  --node_rank="${NODE_RANK}" \
+                  --master_addr="${MASTER_ADDR}" \
+                  --master_port="${MASTER_PORT}" \
+                  scripts/performance/bootstrap.py \
+                    --model_family_name qwen \
+                    --model_recipe_name qwen3_30b_a3b \
+                    --gpu b200 \
+                    --num_gpus 16 \
+                    --gpus_per_node 8 \
+                    --compute_dtype fp8_mx \
+                    --seq_length 4096 \
+                    --global_batch_size 1024 \
+                    --micro_batch_size 4 \
+                    --tensor_model_parallel_size 1 \
+                    --pipeline_model_parallel_size 1 \
+                    --context_parallel_size 1 \
+                    --expert_model_parallel_size 8 \
+                    --cuda_graph_impl local \
+                    --cuda_graph_scope full_iteration \
+                    --moe_a2a_overlap true \
+                    --moe_flex_dispatcher_backend hybridep \
+                    --max_steps "${TRAIN_ITERS}" \
+                    --data rp2 \
+                    --dataset_paths /tmp/megatron-data/c4_qwen3_text_document \
+                    --index_mapping_dir /checkpoint-data/data-cache \
+                    --save_dir /checkpoint-data/qwen3-30b-a3b \
+                    --load_dir /checkpoint-data/qwen3-30b-a3b \
+                    --save_interval 25 \
+                    tokenizer.tokenizer_model=/tmp/megatron-data/tokenizer \
+                    checkpoint.async_save=True \
+                    checkpoint.use_persistent_ckpt_worker=True \
+                    logger.log_throughput=True \
+                    logger.tensorboard_dir=/checkpoint-data/tb-logs \
+                    train.manual_gc_interval=100 \
+                    train.empty_unused_memory_level=1
+              volumeMounts:
+              - name: nvidia
+                mountPath: /usr/local/nvidia
+              - name: shared-memory
+                mountPath: /dev/shm
+              - name: training-data
+                mountPath: /training-data
+                readOnly: true
+              - name: checkpoint-data
+                mountPath: /checkpoint-data
+              resources:
+                limits:
+                  nvidia.com/gpu: 8
+                requests:
+                  nvidia.com/gpu: 8
+                claims:
+                - name: rdma
+# [END hypercomputer_gpu_train_qwen_megatron_gke_pretrain_jobset_yaml]
