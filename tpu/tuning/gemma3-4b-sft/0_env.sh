@@ -23,5 +23,5 @@ export ZONE="YOUR_ZONE"
 export RESERVATION="YOUR_RESERVATION_NAME"
 export NAME="YOUR_TPU_NAME"
 export NETWORK="default"
-# [END hypercomputer_tpu_tune_gemma3_sft_env]
 export HF_TOKEN="YOUR_HF_TOKEN"
+# [END hypercomputer_tpu_tune_gemma3_sft_env]
